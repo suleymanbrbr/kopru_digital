@@ -1,5 +1,5 @@
-import type { KimlikAdaptoru } from './arayuz';
 import { apiKimlik } from './api';
+import type { KimlikAdaptoru } from './arayuz';
 import { mockKimlik } from './mock';
 
 export { KimlikHatasi } from './arayuz';

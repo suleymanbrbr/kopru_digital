@@ -358,6 +358,9 @@ importers:
       eslint-plugin-react-hooks:
         specifier: 'catalog:'
         version: 7.1.1(eslint@10.14.0(jiti@2.7.0))
+      globals:
+        specifier: 'catalog:'
+        version: 17.14.0
       jsdom:
         specifier: 'catalog:'
         version: 31.0.0

@@ -1,11 +1,6 @@
-import type { KurumBaglami, Oturum, RizaMetni, Uyelik } from '@/oturum/tipler';
+import { KimlikHatasi, type KimlikAdaptoru, type OturumSecimi, type OturumSonucu } from './arayuz';
 
-import {
-  KimlikHatasi,
-  type KimlikAdaptoru,
-  type OturumSecimi,
-  type OturumSonucu,
-} from './arayuz';
+import type { KurumBaglami, Oturum, RizaMetni, Uyelik } from '@/oturum/tipler';
 
 /** Deneme ortaminda her telefon icin gecerli olan kod. */
 export const MOCK_KOD = '123456';

@@ -15,7 +15,8 @@ export function cerezYaz(response: NextResponse, request: NextRequest, deger: st
   response.cookies.set(OTURUM_CEREZI, deger, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: request.nextUrl.protocol === 'https:' || request.headers.get('x-forwarded-proto') === 'https',
+    secure:
+      request.nextUrl.protocol === 'https:' || request.headers.get('x-forwarded-proto') === 'https',
     path: '/',
     maxAge: OTUZ_GUN_SN,
   });
@@ -63,7 +64,9 @@ export async function govdeOku<S extends z.ZodType>(
   return { veri: sonuc.data };
 }
 
-export function oturumGerekli(request: NextRequest): { belirtec: string } | { yanit: NextResponse } {
+export function oturumGerekli(
+  request: NextRequest,
+): { belirtec: string } | { yanit: NextResponse } {
   const belirtec = oturumBelirteci(request);
   return belirtec
     ? { belirtec }

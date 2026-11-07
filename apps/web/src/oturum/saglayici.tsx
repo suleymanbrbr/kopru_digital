@@ -13,14 +13,12 @@ import {
 } from 'react';
 import { z } from 'zod';
 
-import { bffIstek } from '@/lib/api';
-
 import { oturumSema, type Oturum } from './tipler';
 
+import { bffIstek } from '@/lib/api';
+
 export type OturumDurumu =
-  | { tur: 'yukleniyor' }
-  | { tur: 'girissiz' }
-  | { tur: 'hazir'; oturum: Oturum };
+  { tur: 'yukleniyor' } | { tur: 'girissiz' } | { tur: 'hazir'; oturum: Oturum };
 
 /**
  * Erisim belirteci yalnizca bellekte (modul degiskeni) tutulur: localStorage'a ya da
@@ -31,12 +29,12 @@ export const erisimBelirteciAl = (): string | null => bellekBelirteci;
 
 export interface OturumBaglami {
   durum: OturumDurumu;
-  kodIste(telefon: string): Promise<{ yenidenSn: number }>;
-  kodDogrula(telefon: string, kod: string): Promise<Oturum>;
+  kodIste: (telefon: string) => Promise<{ yenidenSn: number }>;
+  kodDogrula: (telefon: string, kod: string) => Promise<Oturum>;
   /** Etkin uyelik/kurum degistirir ya da belirteci yeniler. */
-  yenile(secim?: { uyelikId?: string; kurumId?: string }): Promise<Oturum | null>;
-  rizaKabul(surum: string): Promise<void>;
-  cikis(): Promise<void>;
+  yenile: (secim?: { uyelikId?: string; kurumId?: string }) => Promise<Oturum | null>;
+  rizaKabul: (surum: string) => Promise<void>;
+  cikis: () => Promise<void>;
 }
 
 const Baglam = createContext<OturumBaglami | null>(null);

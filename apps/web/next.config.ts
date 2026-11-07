@@ -5,8 +5,8 @@ const config: NextConfig = {
   poweredByHeader: false,
   // Paylasilan paketler derlenmis (dist) ESM olarak gelir.
   transpilePackages: ['@kopru/i18n', '@kopru/ui-tokens', '@kopru/api-client'],
-  async headers() {
-    return [
+  headers() {
+    return Promise.resolve([
       {
         source: '/:path*',
         headers: [
@@ -15,7 +15,7 @@ const config: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
         ],
       },
-    ];
+    ]);
   },
 };
 

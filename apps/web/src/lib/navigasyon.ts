@@ -33,14 +33,7 @@ export const faz1Roller: readonly Rol[] = ['sahip', 'yonetici', 'ogretmen', 'ogr
  * her zaman acik. Kesin liste backend'de belirlendiginde yalnizca bu birlesim guncellenir.
  */
 export type ModulAnahtari =
-  | 'ders'
-  | 'odev'
-  | 'plan'
-  | 'deneme'
-  | 'soru'
-  | 'kayit'
-  | 'finans'
-  | 'motivasyon';
+  'ders' | 'odev' | 'plan' | 'deneme' | 'soru' | 'kayit' | 'finans' | 'motivasyon';
 
 export type NavGrubu = 'calisma' | 'yonetim';
 
@@ -68,32 +61,199 @@ const tumu = ['sahip', 'yonetici', 'ogretmen', 'ogrenci'] as const satisfies rea
  * Sira, menudeki siradir.
  */
 export const navOgeleri: readonly NavOgesi[] = [
-  { anahtar: 'bugun', yol: 'bugun', baslik: 'nav.bugun', ikon: House, modul: null, roller: tumu, grup: 'calisma', mobilOncelik: 1 },
+  {
+    anahtar: 'bugun',
+    yol: 'bugun',
+    baslik: 'nav.bugun',
+    ikon: House,
+    modul: null,
+    roller: tumu,
+    grup: 'calisma',
+    mobilOncelik: 1,
+  },
 
   // Ogretmen, yonetici, sahip
-  { anahtar: 'takvim', yol: 'takvim', baslik: 'nav.takvim', ikon: CalendarDays, modul: 'ders', roller: personel, grup: 'calisma', mobilOncelik: 2 },
-  { anahtar: 'ogrenciler', yol: 'ogrenciler', baslik: 'nav.ogrenciler', ikon: GraduationCap, modul: null, roller: personel, grup: 'calisma', mobilOncelik: 3 },
-  { anahtar: 'gruplar', yol: 'gruplar', baslik: 'nav.gruplar', ikon: UsersRound, modul: null, roller: personel, grup: 'calisma' },
-  { anahtar: 'odevler', yol: 'odevler', baslik: 'nav.odevler', ikon: ClipboardList, modul: 'odev', roller: personel, grup: 'calisma', mobilOncelik: 4 },
-  { anahtar: 'planlar', yol: 'planlar', baslik: 'nav.planlar', ikon: Target, modul: 'plan', roller: personel, grup: 'calisma' },
-  { anahtar: 'denemeler', yol: 'denemeler', baslik: 'nav.denemeler', ikon: BookOpenCheck, modul: 'deneme', roller: personel, grup: 'calisma' },
-  { anahtar: 'sorular', yol: 'sorular', baslik: 'nav.sorular', ikon: FileQuestion, modul: 'soru', roller: personel, grup: 'calisma' },
-  { anahtar: 'kayitlar', yol: 'kayitlar', baslik: 'nav.kayitlar', ikon: Files, modul: 'kayit', roller: personel, grup: 'calisma' },
-  { anahtar: 'finans', yol: 'finans', baslik: 'nav.finans', ikon: Wallet, modul: 'finans', roller: personel, grup: 'calisma' },
+  {
+    anahtar: 'takvim',
+    yol: 'takvim',
+    baslik: 'nav.takvim',
+    ikon: CalendarDays,
+    modul: 'ders',
+    roller: personel,
+    grup: 'calisma',
+    mobilOncelik: 2,
+  },
+  {
+    anahtar: 'ogrenciler',
+    yol: 'ogrenciler',
+    baslik: 'nav.ogrenciler',
+    ikon: GraduationCap,
+    modul: null,
+    roller: personel,
+    grup: 'calisma',
+    mobilOncelik: 3,
+  },
+  {
+    anahtar: 'gruplar',
+    yol: 'gruplar',
+    baslik: 'nav.gruplar',
+    ikon: UsersRound,
+    modul: null,
+    roller: personel,
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'odevler',
+    yol: 'odevler',
+    baslik: 'nav.odevler',
+    ikon: ClipboardList,
+    modul: 'odev',
+    roller: personel,
+    grup: 'calisma',
+    mobilOncelik: 4,
+  },
+  {
+    anahtar: 'planlar',
+    yol: 'planlar',
+    baslik: 'nav.planlar',
+    ikon: Target,
+    modul: 'plan',
+    roller: personel,
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'denemeler',
+    yol: 'denemeler',
+    baslik: 'nav.denemeler',
+    ikon: BookOpenCheck,
+    modul: 'deneme',
+    roller: personel,
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'sorular',
+    yol: 'sorular',
+    baslik: 'nav.sorular',
+    ikon: FileQuestion,
+    modul: 'soru',
+    roller: personel,
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'kayitlar',
+    yol: 'kayitlar',
+    baslik: 'nav.kayitlar',
+    ikon: Files,
+    modul: 'kayit',
+    roller: personel,
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'finans',
+    yol: 'finans',
+    baslik: 'nav.finans',
+    ikon: Wallet,
+    modul: 'finans',
+    roller: personel,
+    grup: 'calisma',
+  },
 
   // Ogrenci
-  { anahtar: 'gorevler', yol: 'gorevler', baslik: 'nav.gorevler', ikon: ListChecks, modul: 'motivasyon', roller: ['ogrenci'], grup: 'calisma', mobilOncelik: 2 },
-  { anahtar: 'odevlerim', yol: 'odevlerim', baslik: 'nav.odevlerim', ikon: NotebookPen, modul: 'odev', roller: ['ogrenci'], grup: 'calisma', mobilOncelik: 3 },
-  { anahtar: 'soru-sor', yol: 'soru-sor', baslik: 'nav.soruSor', ikon: MessageCircleQuestion, modul: 'soru', roller: ['ogrenci'], grup: 'calisma', mobilOncelik: 4 },
-  { anahtar: 'kayitlarim', yol: 'kayitlarim', baslik: 'nav.kayitlarim', ikon: Layers, modul: 'kayit', roller: ['ogrenci'], grup: 'calisma' },
-  { anahtar: 'karakterim', yol: 'karakterim', baslik: 'nav.karakterim', ikon: PawPrint, modul: 'motivasyon', roller: ['ogrenci'], grup: 'calisma' },
+  {
+    anahtar: 'gorevler',
+    yol: 'gorevler',
+    baslik: 'nav.gorevler',
+    ikon: ListChecks,
+    modul: 'motivasyon',
+    roller: ['ogrenci'],
+    grup: 'calisma',
+    mobilOncelik: 2,
+  },
+  {
+    anahtar: 'odevlerim',
+    yol: 'odevlerim',
+    baslik: 'nav.odevlerim',
+    ikon: NotebookPen,
+    modul: 'odev',
+    roller: ['ogrenci'],
+    grup: 'calisma',
+    mobilOncelik: 3,
+  },
+  {
+    anahtar: 'soru-sor',
+    yol: 'soru-sor',
+    baslik: 'nav.soruSor',
+    ikon: MessageCircleQuestion,
+    modul: 'soru',
+    roller: ['ogrenci'],
+    grup: 'calisma',
+    mobilOncelik: 4,
+  },
+  {
+    anahtar: 'kayitlarim',
+    yol: 'kayitlarim',
+    baslik: 'nav.kayitlarim',
+    ikon: Layers,
+    modul: 'kayit',
+    roller: ['ogrenci'],
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'karakterim',
+    yol: 'karakterim',
+    baslik: 'nav.karakterim',
+    ikon: PawPrint,
+    modul: 'motivasyon',
+    roller: ['ogrenci'],
+    grup: 'calisma',
+  },
 
   // Yonetim (yonetici + sahip); abonelik yalnizca sahip
-  { anahtar: 'kurum', yol: 'kurum', baslik: 'nav.kurum', ikon: Building2, modul: null, roller: yonetim, grup: 'yonetim' },
-  { anahtar: 'ogretmenler', yol: 'ogretmenler', baslik: 'nav.ogretmenler', ikon: School, modul: null, roller: yonetim, grup: 'yonetim' },
-  { anahtar: 'siniflar', yol: 'siniflar', baslik: 'nav.siniflar', ikon: Rows3, modul: null, roller: yonetim, grup: 'yonetim' },
-  { anahtar: 'moduller', yol: 'moduller', baslik: 'nav.moduller', ikon: Puzzle, modul: null, roller: yonetim, grup: 'yonetim' },
-  { anahtar: 'abonelik', yol: 'abonelik', baslik: 'nav.abonelik', ikon: CreditCard, modul: null, roller: ['sahip'], grup: 'yonetim' },
+  {
+    anahtar: 'kurum',
+    yol: 'kurum',
+    baslik: 'nav.kurum',
+    ikon: Building2,
+    modul: null,
+    roller: yonetim,
+    grup: 'yonetim',
+  },
+  {
+    anahtar: 'ogretmenler',
+    yol: 'ogretmenler',
+    baslik: 'nav.ogretmenler',
+    ikon: School,
+    modul: null,
+    roller: yonetim,
+    grup: 'yonetim',
+  },
+  {
+    anahtar: 'siniflar',
+    yol: 'siniflar',
+    baslik: 'nav.siniflar',
+    ikon: Rows3,
+    modul: null,
+    roller: yonetim,
+    grup: 'yonetim',
+  },
+  {
+    anahtar: 'moduller',
+    yol: 'moduller',
+    baslik: 'nav.moduller',
+    ikon: Puzzle,
+    modul: null,
+    roller: yonetim,
+    grup: 'yonetim',
+  },
+  {
+    anahtar: 'abonelik',
+    yol: 'abonelik',
+    baslik: 'nav.abonelik',
+    ikon: CreditCard,
+    modul: null,
+    roller: ['sahip'],
+    grup: 'yonetim',
+  },
 ];
 
 export interface NavBaglami {
@@ -117,9 +277,10 @@ export function bolumDurumu(
   baglam: NavBaglami,
 ): { durum: BolumDurumu; oge?: NavOgesi } {
   const adaylar = navOgeleri.filter((o) => o.yol === yol);
-  if (adaylar.length === 0) return { durum: 'yok' };
+  const ilk = adaylar[0];
+  if (!ilk) return { durum: 'yok' };
   const rolunki = adaylar.find((o) => o.roller.includes(baglam.rol));
-  if (!rolunki) return { durum: 'yetkisiz', oge: adaylar[0] as NavOgesi };
+  if (!rolunki) return { durum: 'yetkisiz', oge: ilk };
   if (rolunki.modul !== null && !baglam.acikModuller.includes(rolunki.modul)) {
     return { durum: 'modul-kapali', oge: rolunki };
   }
