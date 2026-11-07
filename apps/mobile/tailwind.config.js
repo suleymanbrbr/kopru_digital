@@ -25,6 +25,11 @@ module.exports = {
     colors: { transparent: 'transparent', ...colors },
     spacing: {
       px: '1px',
+      // token olceginde olmayan, bilesenlerde kullanilan ek olculer (28/36/44/56 px)
+      7: '28px',
+      9: '36px',
+      11: '44px',
+      14: '56px',
       ...Object.fromEntries(Object.entries(spacing).map(([k, v]) => [k, px(v)])),
     },
     borderRadius: {

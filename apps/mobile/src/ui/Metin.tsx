@@ -18,7 +18,12 @@ interface Props extends TextProps {
 
 /** Inter yazi tipli metin. Sistem yazi boyutuna saygi duyar ama %150 ile sinirlar. */
 export function Metin({ varyant = 'govde', className = '', ...rest }: Props) {
-  return (
-    <Text maxFontSizeMultiplier={1.5} className={`${VARYANTLAR[varyant]} ${className}`} {...rest} />
-  );
+  // className bir metin RENGI veriyorsa varyantin varsayilan rengi atilir (CSS siniflari
+  // yazim sirasina gore degil stil sayfasi sirasina gore uygulanir; cakisma olmasin).
+  const renkVerildi =
+    /(^|\s)text-(?!xs\b|sm\b|md\b|lg\b|xl\b|2xl\b|3xl\b|center\b|left\b|right\b)/.test(className);
+  const taban = renkVerildi
+    ? VARYANTLAR[varyant].replace(/\btext-(?!xs|sm|md|lg|xl|2xl|3xl)\w+/, '')
+    : VARYANTLAR[varyant];
+  return <Text maxFontSizeMultiplier={1.5} className={`${taban} ${className}`} {...rest} />;
 }

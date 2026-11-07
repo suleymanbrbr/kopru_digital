@@ -14,7 +14,7 @@
     },
     "lint": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "*.ts", "*.js", "tsconfig*.json", "package.json"]
+      "inputs": ["src/**", "*.ts", "*.js", "*.mjs", "tsconfig*.json", "package.json"]
     },
     "test": {
       "dependsOn": ["^build"],

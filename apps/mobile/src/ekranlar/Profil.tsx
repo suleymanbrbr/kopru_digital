@@ -4,6 +4,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 
 import { kurumGirisiVarMi } from '../nav/yapilandirma';
 import { ortam } from '../ortam';
+import { useTema } from '../tema/TemaSaglayici';
 import { tercihler, type TemaTercihi } from '../tema/tercihler';
 import { Dugme } from '../ui/Dugme';
 import { Ekran } from '../ui/Ekran';
@@ -51,6 +52,7 @@ export function Profil() {
   const durum = useOturum();
   const aktif = useAktif();
   const t_ = tercihler.kullan();
+  const { renkler } = useTema();
   if (durum.asama !== 'giris' || !aktif) return null;
   const rol = aktif.uyelik.rol;
 
@@ -141,6 +143,7 @@ export function Profil() {
               <Metin varyant="kucuk">{t('mobil.profil.animasyonlarAciklama')}</Metin>
             </View>
             <Switch
+              trackColor={{ true: renkler.birincil }}
               accessibilityLabel={t('mobil.profil.animasyonlar')}
               value={t_.animasyonlar}
               onValueChange={(v) => {

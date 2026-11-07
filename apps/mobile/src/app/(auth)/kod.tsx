@@ -67,47 +67,49 @@ export default function Kod() {
         <Metin varyant="ikincil">{t('mobil.giris.kodAciklama', { telefon })}</Metin>
       </View>
 
-      <Pressable
-        onPress={() => girdi.current?.focus()}
-        accessible={false}
-        importantForAccessibility="no-hide-descendants"
-        className="flex-row justify-between gap-2"
-      >
-        {Array.from({ length: HANE }, (_, i) => {
-          const dolu = kod[i];
-          const aktif = i === Math.min(kod.length, HANE - 1);
-          return (
-            <View
-              key={i}
-              className={`h-14 flex-1 items-center justify-center rounded-orta border-2 bg-yuzey ${
-                hata ? 'border-hata' : aktif ? 'border-birincil' : 'border-kenar'
-              }`}
-            >
-              <Metin varyant="baslik">{dolu ?? ''}</Metin>
-            </View>
-          );
-        })}
-      </Pressable>
-      {/* Gercek girdi: gorunmez ama erisilebilir; SMS otomatik doldurma ve yapistirma icin. */}
-      <TextInput
-        ref={girdi}
-        value={kod}
-        onChangeText={(v) => {
-          const r = rakamlar(v).slice(0, HANE);
-          setKod(r);
-          setHata(null);
-          if (r.length === HANE) void dogrula(r);
-        }}
-        accessibilityLabel={t('mobil.giris.kodGirisiEtiketi')}
-        accessibilityHint={hata ?? undefined}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="sms-otp"
-        maxLength={HANE}
-        autoFocus
-        caretHidden
-        style={{ position: 'absolute', opacity: 0.02, height: 56, width: '100%', top: 0 }}
-      />
+      <View>
+        <Pressable
+          onPress={() => girdi.current?.focus()}
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+          className="flex-row justify-between gap-2"
+        >
+          {Array.from({ length: HANE }, (_, i) => {
+            const dolu = kod[i];
+            const aktif = i === Math.min(kod.length, HANE - 1);
+            return (
+              <View
+                key={i}
+                className={`h-14 flex-1 items-center justify-center rounded-orta border-2 bg-yuzey ${
+                  hata ? 'border-hata' : aktif ? 'border-birincil' : 'border-kenar'
+                }`}
+              >
+                <Metin varyant="baslik">{dolu ?? ''}</Metin>
+              </View>
+            );
+          })}
+        </Pressable>
+        {/* Gercek girdi: gorunmez ama erisilebilir; SMS otomatik doldurma ve yapistirma icin. */}
+        <TextInput
+          ref={girdi}
+          value={kod}
+          onChangeText={(v) => {
+            const r = rakamlar(v).slice(0, HANE);
+            setKod(r);
+            setHata(null);
+            if (r.length === HANE) void dogrula(r);
+          }}
+          accessibilityLabel={t('mobil.giris.kodGirisiEtiketi')}
+          accessibilityHint={hata ?? undefined}
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          autoComplete="sms-otp"
+          maxLength={HANE}
+          autoFocus
+          caretHidden
+          style={{ position: 'absolute', opacity: 0.02, height: 56, left: 0, right: 0, top: 0 }}
+        />
+      </View>
       {hata ? (
         <Metin varyant="ikincil" className="text-hata" accessibilityLiveRegion="polite">
           {hata}

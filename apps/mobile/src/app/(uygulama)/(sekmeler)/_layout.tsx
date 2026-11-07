@@ -32,9 +32,11 @@ export default function SekmeDuzeni() {
         headerShown: false,
         tabBarActiveTintColor: renkler.birincil,
         tabBarInactiveTintColor: renkler.metinIkincil,
-        tabBarStyle: { backgroundColor: renkler.yuzey, borderTopColor: renkler.kenar },
+        tabBarStyle: {
+          backgroundColor: renkler.yuzey,
+          borderTopColor: renkler.kenar,
+        },
         tabBarLabelStyle: { fontFamily: 'Inter_500Medium', fontSize: 11 },
-        tabBarItemStyle: { minHeight: 44 },
       }}
     >
       {sira.map((ad) => {
@@ -49,8 +51,8 @@ export default function SekmeDuzeni() {
                 ? {
                     title: t(tanim.baslik),
                     tabBarAccessibilityLabel: t(tanim.baslik),
-                    tabBarIcon: ({ color, size }) => (
-                      <Ionicons name={tanim.ikon} size={size} color={color as string} />
+                    tabBarIcon: ({ color }) => (
+                      <Ionicons name={tanim.ikon} size={24} color={color as string} />
                     ),
                   }
                 : { href: null }
