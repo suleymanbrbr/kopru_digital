@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+dist
+coverage
+.turbo
+*.sql
+docs/schema
+docs/adr
+docs/karakter
+assets

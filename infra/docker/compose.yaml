@@ -1,0 +1,103 @@
+# Gelistirici makinesi (macOS + Docker Desktop) icin yerel altyapi.
+# Kullanim: pnpm infra:up / pnpm infra:down
+name: kopru
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  nats:
+    # alpine etiketi: saglik kontrolu icin wget gerekir (scratch imajinda kabuk yok).
+    image: nats:alpine
+    command: ['-js', '-sd', '/data', '-m', '8222']
+    ports:
+      - '4222:4222'
+      - '8222:8222'
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8222/healthz || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-kopru}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-kopru-dev-secret}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: 'no'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-kopru}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-kopru-dev-secret}
+      S3_BUCKET: ${S3_BUCKET:-medya}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
+        mc mb --ignore-existing "local/$$S3_BUCKET"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Grafana + Loki + Tempo + Prometheus + OTel collector tek konteynerde.
+  # Grafana 3030'da (3000 web uygulamasina birakildi); OTLP: 4317 (gRPC), 4318 (HTTP).
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    ports:
+      - '3030:3000'
+      - '4317:4317'
+      - '4318:4318'
+    volumes:
+      - lgtm_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://127.0.0.1:3000/api/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  nats_data:
+  minio_data:
+  lgtm_data:

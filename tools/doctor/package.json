@@ -1,0 +1,21 @@
+{
+  "name": "@kopru/doctor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gelistirme ortami kontrolu (pnpm doctor)",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@kopru/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
