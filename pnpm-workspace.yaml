@@ -11,26 +11,56 @@ onlyBuiltDependencies:
 # Surum sabitleme tek yerde: paketler "catalog:" ile referans verir.
 catalog:
   '@eslint/js': 10.0.1
+  '@fontsource-variable/inter': 5.3.0
+  '@hookform/resolvers': 7.0.3
+  '@next/eslint-plugin-next': 16.4.5
   '@opentelemetry/exporter-metrics-otlp-http': 0.301.0
   '@opentelemetry/exporter-trace-otlp-http': 0.301.0
   '@opentelemetry/sdk-metrics': 3.1.0
   '@opentelemetry/sdk-node': 0.301.0
+  '@playwright/test': 1.65.0
+  '@tailwindcss/postcss': 4.3.5
+  '@tanstack/react-query': 5.107.1
+  '@testing-library/jest-dom': 7.0.1
+  '@testing-library/react': 16.3.3
+  '@testing-library/user-event': 14.6.8
   '@types/node': 24.19.2
   '@fastify/cors': 11.4.1
   '@fastify/rate-limit': 11.2.2
   '@fastify/swagger': 9.9.3
+  '@types/react': 19.3.0
+  '@types/react-dom': 19.3.0
+  '@vitejs/plugin-react': 6.2.1
+  class-variance-authority: 0.7.1
+  clsx: 2.1.1
   drizzle-orm: 0.45.4
   eslint: 10.14.0
   eslint-plugin-import-x: 4.18.0
+  eslint-plugin-jsx-a11y: 6.10.2
+  eslint-plugin-react-hooks: 7.1.1
   fastify: 5.12.8
   fastify-type-provider-zod: 7.0.0
   globals: 17.14.0
+  input-otp: 1.5.0
   jose: 6.2.15
+  jsdom: 31.0.0
+  lucide-react: 1.70.0
   nats: 2.29.3
+  next: 16.4.5
+  next-themes: 0.4.6
+  openapi-fetch: 0.17.0
+  openapi-react-query: 0.5.4
+  openapi-typescript: 7.13.0
   pino: 10.4.0
   pino-pretty: 13.2.0
   postgres: 4.1.0
   prettier: 3.9.10
+  radix-ui: 1.8.1
+  react: 19.3.1
+  react-dom: 19.3.1
+  react-hook-form: 7.91.0
+  tailwind-merge: 3.7.0
+  tailwindcss: 4.3.5
   tsx: 4.23.15
   turbo: 2.11.10
   typescript: 5.9.3

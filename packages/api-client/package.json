@@ -1,0 +1,52 @@
+{
+  "name": "@kopru/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Servislerin OpenAPI sozlesmesinden uretilen tipli istemci (openapi-fetch) ve TanStack Query yardimcisi",
+  "files": [
+    "dist",
+    "openapi"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react-query": {
+      "types": "./dist/react-query.d.ts",
+      "default": "./dist/react-query.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "generate": "tsx scripts/uret.ts",
+    "generate:check": "tsx scripts/kontrol.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kopru/contracts": "workspace:*",
+    "openapi-fetch": "catalog:",
+    "openapi-react-query": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "catalog:"
+  },
+  "devDependencies": {
+    "@kopru/api": "workspace:*",
+    "@kopru/bildirim": "workspace:*",
+    "@kopru/config": "workspace:*",
+    "@kopru/medya": "workspace:*",
+    "@kopru/motivasyon": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "openapi-typescript": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
