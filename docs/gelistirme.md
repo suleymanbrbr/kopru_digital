@@ -158,3 +158,49 @@ curl -s -XPOST $B/auth/token -H "authorization: Bearer <oturum_belirteci>" -H "$
 ## CI
 
 `.github/workflows/ci.yml`: PR ve `main` push'larında Node 24 + pnpm ile `format:check`, `lint`, `typecheck`, `test` (postgres:17 service container, `DATABASE_URL` ile) ve `build` çalışır.
+
+## Mobil uygulama (`apps/mobile`)
+
+Expo SDK 58 (React Native 0.88, Expo Router, NativeWind 4, Reanimated 4, MMKV, TanStack Query), iOS + Android tek kod tabanı. Yerel modüller (MMKV, Rive, Nitro) nedeniyle **Expo Go değil, geliştirme derlemesi (development build)** gerekir. Faz 1 rolleri: sahip, yönetici, öğretmen, öğrenci (veli arayüzü yok).
+
+### Çalıştırma (Mac: Xcode + iOS simülatörü / Android emülatörü)
+
+```sh
+pnpm install
+cp apps/mobile/.env.example apps/mobile/.env      # EXPO_PUBLIC_API_MOCK=1 -> backend gerekmez
+cd apps/mobile
+pnpm ios          # ilk seferde: prebuild + pod install + Xcode derlemesi + simülatörde açar (npx expo run:ios)
+pnpm android      # Android emülatörü açıkken (npx expo run:android)
+pnpm start        # sonraki günlerde yalnızca Metro (dev client'a bağlanır)
+```
+
+- `ios/` ve `android/` dizinleri git'e girmez; `app.config.ts` + config plugin'lerden üretilir (`pnpm prebuild:native`, kimlik/plugin değişince `--clean`).
+- `pnpm ios/android/start` önce `@kopru/ui-tokens` ve `@kopru/i18n` paketlerini derler (Metro `dist` çıktısını okur). `packages/i18n` ya da `ui-tokens` değişince Metro'yu yeniden başlatın.
+- Uygulama kimliği `app.config.ts` içinde ortamdan okunur: `APP_BUNDLE_ID` (varsayılan `com.koprudigital.app`, yer tutucu), `APP_ADI`, `APP_SCHEME`.
+- Hızlı UI denemesi için tarayıcıda: `pnpm --filter @kopru/mobile web` (Rive/MMKV/SecureStore web karşılıklarıyla çalışır; yalnızca geliştirme amaçlı).
+
+### Mock modu
+
+`EXPO_PUBLIC_API_MOCK=1` iken `AuthAdapter`/`VeriAdapter` sahte uygulamaları devrede (`src/api/mock.ts`). Giriş kodu her zaman `123456`. Telefonun **son hanesi** rolü seçer: `...1` öğretmen, `...2` öğrenci, `...3` yönetici, `...4` sahip (+ öğretmen üyeliği), `...5` çok kurumlu (öğretmen/öğrenci/veli; "Atlas" kurumunda vurgu rengi yeşil ve "Soru sor" modülü kapalı). Mock kapalıyken gerçek `packages/api-client` bağlanana kadar adaptörler `yapilandirma` hatası verir (`src/api/index.ts`, `TODO(orkestrator)`).
+
+### Mimari notları
+
+- **Yönlendirme:** Expo Router; oturum durumuna göre `Stack.Protected` ile korunan gruplar: `(auth)` -> KVKK onayı (kabul edilmeden uygulamaya geçilemez) -> kurum seçimi -> `(uygulama)`. Sunucu `403 riza_gerekli` dönerse oturum yöneticisi KVKK ekranına geri alır, `401` oturumu kapatır.
+- **Rol -> sekme:** tek yapılandırma `src/nav/yapilandirma.ts`; her sekmenin bir modül anahtarı vardır (`hesap.modul_ayarlari` kodları). Kapalı ya da bilinmeyen modülün sekmesi gizlenir.
+- **Tema:** `tailwind.config.js` renkleri `@kopru/ui-tokens` anahtarlarından CSS değişkenine (`--renk-*`) bağlar; değerleri `TemaSaglayici` çalışma anında (açık/koyu + kurum `vurgu` rengi) atar. Vurgu üzerindeki metin rengi kontrasta göre seçilir.
+- **Oturum:** belirteçler `expo-secure-store` (Keychain/Keystore); TanStack Query önbelleği MMKV'de kalıcı (çıkışta ve kurum değişiminde temizlenir).
+- **Çevrimdışı kuyruk:** `src/offline/kuyruk.ts` kalıcı, sıralı bir mutasyon kuyruğudur. Her iş istemcide üretilen `istek_id` (UUIDv7) taşır ve her denemede aynı gönderilir (sunucu idempotent işler). Bağlantı gelince NetInfo ile boşaltılır; ağ/5xx hatalarında üstel geri çekilme, 4xx'te `basarisiz` listesi. Yoklama gibi akışlar `kuyruk.kaydet('yoklama.kaydet', isleyici)` + `kuyruk.ekle(...)` ile kullanır.
+- **Yol arkadaşı (`Companion`):** Rive kaynağı verilmediği sürece `assets/karakter/placeholder/*.svg` statik yer tutucuları kullanılır; harita `pnpm --filter @kopru/mobile karakter:uret` ile üretilir (elle çoğaltma yok). Hareket azaltma (işletim sistemi ya da Profil > Animasyonlar) açıkken Rive hiç çalışmaz. Geliştirmede Profil > "Geliştirici: Bileşenler" ekranı 15 yer tutucuyu gösterir.
+
+### Doğrulama
+
+```sh
+pnpm --filter @kopru/mobile typecheck
+pnpm --filter @kopru/mobile lint
+pnpm --filter @kopru/mobile test
+cd apps/mobile && npx expo-doctor
+EXPO_PUBLIC_API_MOCK=1 npx expo export --platform ios     # paket derlenir mi
+npx expo prebuild --no-install --clean                    # native yapılandırma üretilir mi
+```
+
+Ekran görüntüleri: `apps/mobile/docs/ekranlar/`.

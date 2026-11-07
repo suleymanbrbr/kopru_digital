@@ -103,3 +103,34 @@ jobs:
             apps/web/playwright-report
             apps/web/test-results
           retention-days: 7
+
+  # Mobil: lint/typecheck/test ana "verify" isinde de calisir (turbo tum paketleri kosar);
+  # bu is ek olarak Expo bagimlilik/paket sagligini ve JS paketinin derlendigini dogrular.
+  mobil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Bagimliliklari derle (ui-tokens, i18n)
+        run: pnpm --filter @kopru/mobile run deps:build
+      - name: Lint
+        run: pnpm --filter @kopru/mobile lint
+      - name: Tip kontrolu
+        run: pnpm --filter @kopru/mobile typecheck
+      - name: Test
+        run: pnpm --filter @kopru/mobile test
+      - name: Expo doctor
+        run: npx expo-doctor
+        working-directory: apps/mobile
+        continue-on-error: true # ag gerektiren kontroller (exp.host) CI'da dalgalanabilir
+      - name: iOS JS paketi derleme kontrolu
+        run: npx expo export --platform ios --output-dir /tmp/expo-ios
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_API_MOCK: '1'

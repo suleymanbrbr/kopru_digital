@@ -16,3 +16,7 @@ apps/web/public/karakter
 apps/web/src/styles/tema.generated.css
 apps/admin/src/app/tema.generated.css
 packages/api-client/openapi
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/.expo
+apps/mobile/src/karakter/gorseller.generated.ts
