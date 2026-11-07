@@ -22,6 +22,16 @@ export const errorCodes = {
   rateLimited: 'cok_fazla_istek',
   unavailable: 'hizmet_kullanilamiyor',
   internal: 'sunucu_hatasi',
+  // Alan hata kodlari (ADR 0006: Turkce ASCII)
+  rizaGerekli: 'riza_gerekli',
+  kurumGerekli: 'kurum_gerekli',
+  abonelikGerekli: 'abonelik_gerekli',
+  modulKapali: 'modul_kapali',
+  izinYok: 'izin_yok',
+  taklitSaltOkunur: 'taklit_salt_okunur',
+  ustDuzeyKapali: 'ust_duzey_kapali',
+  gecersizTelefon: 'gecersiz_telefon',
+  kodGecersiz: 'kod_gecersiz',
 } as const;
 
 export type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
