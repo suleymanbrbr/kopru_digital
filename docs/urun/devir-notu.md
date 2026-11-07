@@ -51,7 +51,7 @@ Bunlardan sonra plana göre sıradaki blok **hafta 10–14: takvim, yoklama, fin
 
 ## Bilinen açıklar ve kararlar
 
-- **KVKK onayı hesap düzeyinde, kurumdan önce.** Hem hesap modülü hem mobil böyle uyguladı. ADR 0004 ilk hâlinde kurum başına diyordu. ADR'yi bu karara göre güncelle.
+- **KVKK onayı hesap düzeyinde, kurumdan önce.** ADR 0004'e değişiklik notu olarak işlendi (7 Kasım 2026).
 - **Rive sözleşmesi.** `@rive-app/react-native` 0.5.x'te girdiler (inputs) kullanımdan kalkıyor, View Model veri bağlama öneriliyor. `docs/karakter/rive-yapisi.md`'yi `Companion_VM` View Model'ine göre güncelle (özellikler: `asama`, `ruh_hali`, tetikleyiciler). Ya da eski runtime'da kal. Karar verilmeli; illüstratöre brief gitmeden önce netleşmeli.
 - **Kıvılcım yer tutucusu** bilinen bir ejderha karakterine fazla benziyor. Bu yalnızca yer tutucu. Nihai çizimde özgün bir siluet şart (`docs/karakter/brief-illustrator.md`).
 - **Hesap modülünde eksik uçlar:** davetler, gruplar, öğretmen–öğrenci atamaları, platform yönetimi/impersonation, e-posta doğrulama.

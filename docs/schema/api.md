@@ -460,7 +460,7 @@ Profil: `D`. RLS: evet, iki kollu (`kurum_id = aktif_kurum() OR kullanici_id = a
 | `user_agent` | text | evet | | |
 | `govde_sha256` | bytea | hayır | | Kabul anındaki metin özeti (kopya) |
 
-Güncel durum, `(kullanici_id, kurum_id, riza_metni.tur)` için `created_at` en yeni satırdır (`v_guncel_rizalar`). Giriş denetimi: kullanıcının o kurum için tüm zorunlu `tur` değerlerinde güncel sürümü `kabul` etmiş olması. Yeni sürüm yayınlanınca kullanıcı bir sonraki girişte ekranı yeniden görür. İndeks: `(kullanici_id, kurum_id, riza_metni_id, created_at DESC)`.
+Güncel durum, `(kullanici_id, riza_metni_id)` için `created_at` en yeni satırdır. Giriş denetimi **hesap düzeyindedir** ([ADR 0004 değişiklik notu](../adr/0004-kimlik-dogrulama-ve-yetkilendirme.md#değişiklik-notu-2026-11-07-kvkk-rızası-hesap-düzeyinde)): kullanıcının zorunlu türlerin (`kvkk_aydinlatma`, `kullanim_kosullari`) güncel sürümünü `kabul` etmiş olması. Bu akışta `kurum_id` NULL yazılır. Dolu `kurum_id` kuruma özgü metinler için ayrılmıştır (Faz 2). Yeni sürüm yayınlanınca bir sonraki istekte `403 riza_gerekli` döner. İndeks: `(kullanici_id, kurum_id, riza_metni_id, created_at DESC)`.
 Olaylar: yok (Faz 1'de tüketicisi yoktur).
 
 ### Denetim ve taklit
