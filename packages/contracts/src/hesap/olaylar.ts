@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 import { defineEvent, type EventOf } from '../event.js';
-import { ModulKoduSema, RolSema } from './izinler.js';
+import { RolSema } from './izinler.js';
+import { ModulKoduSema } from './moduller.js';
 
 /**
  * `hesap` olaylari (docs/schema/olaylar.md). Yukler `snake_case`, iletisim bilgisi (telefon, e-posta)

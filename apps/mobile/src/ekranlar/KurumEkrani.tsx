@@ -23,7 +23,7 @@ export function KurumEkrani() {
         </Metin>
         {acik.length === 0 ? <Metin varyant="ikincil">{t('mobil.kurum.modulYok')}</Metin> : null}
         {acik.map((m) => (
-          <Metin key={m}>{t(`mobil.kurum.modul.${m}`)}</Metin>
+          <Metin key={m}>{t(`modul.${m}`)}</Metin>
         ))}
       </Kart>
     </Ekran>
