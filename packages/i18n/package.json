@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@kopru/config": "workspace:*",
+    "@kopru/contracts": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",

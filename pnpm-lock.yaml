@@ -641,6 +641,9 @@ importers:
       '@kopru/config':
         specifier: workspace:*
         version: link:../config
+      '@kopru/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2

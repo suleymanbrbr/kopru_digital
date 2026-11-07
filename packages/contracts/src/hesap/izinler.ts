@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { ModulKodu } from './moduller.js';
+
 /**
  * Rol -> izin -> kapsam sozlugu (ADR 0004). Tek dogruluk kaynagi bu dosyadir:
  *  - api, migrate sirasinda `hesap.roller / izinler / rol_izinleri` tablolarini bundan esitler,
@@ -16,22 +18,6 @@ export type Rol = z.infer<typeof RolSema>;
 export const KAPSAMLAR = ['kendi', 'grup', 'sube', 'kurum'] as const;
 export const KapsamSema = z.enum(KAPSAMLAR);
 export type Kapsam = z.infer<typeof KapsamSema>;
-
-export const MODUL_KODLARI = [
-  'takvim',
-  'yoklama',
-  'geri_bildirim',
-  'kayitlar',
-  'finans',
-  'odev',
-  'haftalik_plan',
-  'deneme',
-  'soru_sor',
-  'oyunlastirma',
-  'duyuru',
-] as const;
-export const ModulKoduSema = z.enum(MODUL_KODLARI);
-export type ModulKodu = z.infer<typeof ModulKoduSema>;
 
 /** Izin anahtari -> ait oldugu modul (null: cekirdek, kapatilamaz) ve aciklama. */
 export const IZINLER = {

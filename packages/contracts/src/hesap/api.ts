@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { KapsamSema, ModulKoduSema, RolSema } from './izinler.js';
+import { KapsamSema, RolSema } from './izinler.js';
+import { ModulKoduSema } from './moduller.js';
 import { kurumDurumSema, kurumTurSema, uyelikDurumSema } from './olaylar.js';
 
 /**
