@@ -16,14 +16,15 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "doctor": "pnpm --filter @kopru/doctor run start",
-    "infra:up": "docker compose -f infra/docker/compose.yaml up -d --wait",
+    "doctor": "tsx tools/doctor/src/main.ts",
+    "infra:up": "docker compose -f infra/docker/compose.yaml up -d",
     "infra:down": "docker compose -f infra/docker/compose.yaml down"
   },
   "prettier": "@kopru/config/prettier",
   "devDependencies": {
     "@kopru/config": "workspace:*",
     "prettier": "catalog:",
+    "tsx": "catalog:",
     "turbo": "catalog:"
   }
 }
