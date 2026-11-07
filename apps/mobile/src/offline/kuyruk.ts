@@ -1,5 +1,5 @@
-import type { KvDepo } from '../depo/kv';
 import { apiHatasiMi } from '../api/tipler';
+import type { KvDepo } from '../depo/kv';
 
 /** Kuyrukta bekleyen bir degisiklik (ornegin yoklama). */
 export interface KuyrukIsi {
@@ -103,7 +103,9 @@ export class OfflineKuyruk {
   /** Isi ekler. Ayni `istekId` zaten kuyrukta/basarisizsa tekrar eklenmez. */
   ekle(tur: string, yuk: unknown, secenek?: { istekId?: string }): KuyrukIsi {
     const istekId = secenek?.istekId ?? this.sec.yeniId();
-    const var_ = [...this.durum.bekleyen, ...this.durum.basarisiz].find((i) => i.istekId === istekId);
+    const var_ = [...this.durum.bekleyen, ...this.durum.basarisiz].find(
+      (i) => i.istekId === istekId,
+    );
     if (var_) return var_;
     const is: KuyrukIsi = {
       istekId,
@@ -195,7 +197,11 @@ export class OfflineKuyruk {
         const deneme = is.deneme + 1;
         const hata = e instanceof Error ? e.message : String(e);
         if (tekrar && deneme < enFazla) {
-          this.guncelle(is, { deneme, sonHata: hata, sonrakiDenemeAt: this.simdi() + gecikme(deneme) });
+          this.guncelle(is, {
+            deneme,
+            sonHata: hata,
+            sonrakiDenemeAt: this.simdi() + gecikme(deneme),
+          });
           break;
         }
         this.durum = {

@@ -2,7 +2,6 @@ import { t } from '@kopru/i18n';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useTema } from '../tema/TemaSaglayici';
-
 import { Dugme } from './Dugme';
 import { Ikon } from './Ikon';
 import { Metin } from './Metin';
@@ -27,7 +26,11 @@ interface BosProps {
 export function BosDurum({ mesaj, baslik, ikon = 'sparkles' }: BosProps) {
   const { renkler } = useTema();
   return (
-    <View className="items-center gap-2 px-4 py-6" accessible accessibilityLabel={`${baslik ?? ''} ${mesaj}`.trim()}>
+    <View
+      className="items-center gap-2 px-4 py-6"
+      accessible
+      accessibilityLabel={`${baslik ?? ''} ${mesaj}`.trim()}
+    >
       <Ikon ad={ikon} boyut={28} renk={renkler.metinIkincil} />
       {baslik ? <Metin varyant="etiket">{baslik}</Metin> : null}
       <Metin varyant="ikincil" className="text-center">

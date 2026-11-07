@@ -64,8 +64,7 @@ export const tr = {
       cikis: 'Kabul etmiyorum, çıkış yap',
       yukleniyor: 'Aydınlatma metni yükleniyor…',
       onayKutusuEtiketi: 'Aydınlatma metnini okudum ve kabul ediyorum',
-      ozet:
-        'Verilerin yalnızca eğitim hizmetini sunmak için, kurumunun ve senin kontrolünde işlenir. Ayrıntılar aydınlatma metnindedir.',
+      ozet: 'Verilerin yalnızca eğitim hizmetini sunmak için, kurumunun ve senin kontrolünde işlenir. Ayrıntılar aydınlatma metnindedir.',
     },
     kurumSec: {
       baslik: 'Kurum seç',

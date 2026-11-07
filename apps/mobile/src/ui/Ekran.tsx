@@ -14,7 +14,13 @@ interface Props {
 }
 
 /** Guvenli alan + opsiyonel kaydirma/klavye isleme ile ekran iskeleti. */
-export function Ekran({ children, kaydir = true, klavye = false, kenarlar = ['top', 'bottom', 'left', 'right'], className = '' }: Props) {
+export function Ekran({
+  children,
+  kaydir = true,
+  klavye = false,
+  kenarlar = ['top', 'bottom', 'left', 'right'],
+  className = '',
+}: Props) {
   const ins = useSafeAreaInsets();
   const stil = {
     paddingTop: kenarlar.includes('top') ? ins.top : 0,
@@ -36,7 +42,10 @@ export function Ekran({ children, kaydir = true, klavye = false, kenarlar = ['to
   return (
     <View className="flex-1 bg-arkaPlan" style={stil}>
       {klavye ? (
-        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           {icerik}
         </KeyboardAvoidingView>
       ) : (

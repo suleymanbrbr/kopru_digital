@@ -1,9 +1,4 @@
-import type {
-  OgrenciBugun,
-  OgretmenBugun,
-  OturumBilgisi,
-  UyelikBaglami,
-} from './tipler';
+import type { OgrenciBugun, OgretmenBugun, OturumBilgisi, UyelikBaglami } from './tipler';
 
 /**
  * Kimlik dogrulama ve oturum adaptoru (ADR 0004). Belirtec saklama/yenileme adaptorun isidir;

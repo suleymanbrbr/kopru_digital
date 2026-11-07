@@ -1,3 +1,5 @@
+import { t } from '@kopru/i18n';
+
 import type { Beceriler, CompanionProps, RuhHali, TurKodu } from './tipler';
 
 /**
@@ -7,7 +9,20 @@ import type { Beceriler, CompanionProps, RuhHali, TurKodu } from './tipler';
 export const RIVE = {
   artboard: 'main',
   stateMachine: 'Companion_SM',
-  sayilar: ['stage', 'level', 'variant', 'skill_sayisal', 'skill_sozel', 'skill_fen', 'skill_sosyal', 'skill_dil', 'cos_hat', 'cos_accessory', 'cos_background', 'cos_theme'],
+  sayilar: [
+    'stage',
+    'level',
+    'variant',
+    'skill_sayisal',
+    'skill_sozel',
+    'skill_fen',
+    'skill_sosyal',
+    'skill_dil',
+    'cos_hat',
+    'cos_accessory',
+    'cos_background',
+    'cos_theme',
+  ],
   mantiksal: ['focus', 'sleepy', 'reduce_motion'],
   tetikleyiciler: ['happy', 'celebrate', 'evolve'],
   olaylar: ['evo_midpoint', 'evo_done', 'celebrate_done', 'happy_done', 'wake_done'],
@@ -60,7 +75,10 @@ export function riveGirdileri(p: CompanionProps, hareketAzalt: boolean): RiveGir
 }
 
 /** Ruh hali degisiminde tetiklenecek bir-seferlik girdiler (yalnizca gecici hallere girisi). */
-export function ruhHaliTetikleri(onceki: RuhHali | undefined, yeni: RuhHali | undefined): RiveTetikleyiciAdi[] {
+export function ruhHaliTetikleri(
+  onceki: RuhHali | undefined,
+  yeni: RuhHali | undefined,
+): RiveTetikleyiciAdi[] {
   if (onceki === yeni) return [];
   if (yeni === 'mutlu') return ['happy'];
   if (yeni === 'kutlama') return ['celebrate'];
@@ -75,14 +93,33 @@ export function evrimGerekli(onceki: number | undefined, yeni: number): boolean 
 /** Rive olay adina gore uygulama tepkisi (evo_midpoint gelmezse zaman asimi ayni isi yapar). */
 export const EVRIM_ZAMAN_ASIMI_MS = 2500;
 
-export const TUR_ADLARI: Record<TurKodu, 'mobil.karakter.kivilcim' | 'mobil.karakter.dinamo' | 'mobil.karakter.sedir'> = {
+export const TUR_ADLARI: Record<
+  TurKodu,
+  'mobil.karakter.kivilcim' | 'mobil.karakter.dinamo' | 'mobil.karakter.sedir'
+> = {
   kivilcim: 'mobil.karakter.kivilcim',
   dinamo: 'mobil.karakter.dinamo',
   sedir: 'mobil.karakter.sedir',
 };
 
 /** Statik gorsel anahtari: once `<tur>-<asama>-v<varyant>` (nihai gorseller), yoksa `<tur>-<asama>`. */
-export function statikAnahtarlar(tur: TurKodu, asama: number, varyant: 0 | 1 | undefined): string[] {
+export function statikAnahtarlar(
+  tur: TurKodu,
+  asama: number,
+  varyant: 0 | 1 | undefined,
+): string[] {
   const a = asamaSinirla(asama);
   return [`${tur}-${a}-v${varyant ?? 0}`, `${tur}-${a}`];
+}
+
+/** Ekran okuyucu etiketi (Rive icinde metin yok; etiketi uygulama verir). */
+export function companionEtiketi(
+  p: Pick<CompanionProps, 'tur' | 'ad' | 'asama' | 'ruhHali'>,
+): string {
+  const ruhHali = t(`mobil.karakter.ruhHali.${p.ruhHali ?? 'normal'}`);
+  return t('mobil.karakter.etiket', {
+    ad: p.ad ?? t(TUR_ADLARI[p.tur]),
+    asama: asamaSinirla(p.asama),
+    ruhHali,
+  });
 }

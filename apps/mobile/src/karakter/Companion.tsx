@@ -1,26 +1,15 @@
-import { t } from '@kopru/i18n';
 import { lazy, Suspense, useCallback, useState } from 'react';
 import { Platform, View } from 'react-native';
 
 import { useHareketAzalt } from '../hooks/useHareketAzalt';
-
 import { CompanionStatik } from './CompanionStatik';
-import { TUR_ADLARI, asamaSinirla } from './girdiler';
+import { companionEtiketi } from './girdiler';
 import type { CompanionProps } from './tipler';
 
 // Rive native modulu yalnizca kaynak verildiginde yuklenir (web/jest/statik durumda hic gerekmez).
 const CompanionRive = lazy(() =>
   import('./CompanionRive').then((m) => ({ default: m.CompanionRive })),
 );
-
-export function companionEtiketi(p: Pick<CompanionProps, 'tur' | 'ad' | 'asama' | 'ruhHali'>): string {
-  const ruhHali = t(`mobil.karakter.ruhHali.${p.ruhHali ?? 'normal'}`);
-  return t('mobil.karakter.etiket', {
-    ad: p.ad ?? t(TUR_ADLARI[p.tur]),
-    asama: asamaSinirla(p.asama),
-    ruhHali,
-  });
-}
 
 /**
  * Yol arkadasi. `riveKaynagi` varsa ve hareket serbestse Rive ile; aksi halde (su an) SVG yer tutucu.
@@ -36,7 +25,8 @@ export function Companion(props: CompanionProps) {
     setRiveHatali(true);
   }, []);
 
-  const riveKullan = !!riveKaynagi && !statik && !hareketAzalt && !riveHatali && Platform.OS !== 'web';
+  const riveKullan =
+    !!riveKaynagi && !statik && !hareketAzalt && !riveHatali && Platform.OS !== 'web';
   const statikGorsel = (
     <CompanionStatik
       tur={tur}

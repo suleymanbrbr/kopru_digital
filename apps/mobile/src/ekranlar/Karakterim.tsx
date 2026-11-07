@@ -4,13 +4,12 @@ import { View } from 'react-native';
 import { Companion } from '../karakter/Companion';
 import { TUR_ADLARI } from '../karakter/girdiler';
 import type { Beceriler } from '../karakter/tipler';
-import { Ekran } from '../ui/Ekran';
 import { HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { Ekran } from '../ui/Ekran';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { hataMesaji } from '../uygulama/hatalar';
 import { useOgrenciBugun } from '../uygulama/sorgular';
-
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
 const BECERILER: (keyof Beceriler)[] = ['sayisal', 'sozel', 'fen', 'sosyal', 'dil'];
@@ -26,7 +25,9 @@ export function Karakterim() {
           {t('mobil.karakterim.baslik')}
         </Metin>
         {sorgu.isPending ? <Yukleniyor /> : null}
-        {sorgu.isError ? <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} /> : null}
+        {sorgu.isError ? (
+          <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+        ) : null}
         {k ? (
           <>
             <Kart className="items-center gap-2">
@@ -59,7 +60,10 @@ export function Karakterim() {
                 >
                   <Metin varyant="ikincil">{t(`mobil.karakter.beceri.${b}`)}</Metin>
                   <View className="h-2 overflow-hidden rounded-tam bg-yuzeyIkincil">
-                    <View className="h-2 rounded-tam bg-vurgu" style={{ width: `${k.beceriler[b] * 10}%` }} />
+                    <View
+                      className="h-2 rounded-tam bg-vurgu"
+                      style={{ width: `${k.beceriler[b] * 10}%` }}
+                    />
                   </View>
                 </View>
               ))}

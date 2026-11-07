@@ -52,7 +52,10 @@ export function Odaklan() {
         ruhHali={bitti ? 'kutlama' : calisiyor ? 'odak' : 'normal'}
         boyut={200}
       />
-      <View accessible accessibilityLabel={t('mobil.odaklan.sureEtiketi', { sure: sureBicimle(kalan) })}>
+      <View
+        accessible
+        accessibilityLabel={t('mobil.odaklan.sureEtiketi', { sure: sureBicimle(kalan) })}
+      >
         <Metin varyant="baslik" className="text-center text-3xl">
           {sureBicimle(kalan)}
         </Metin>

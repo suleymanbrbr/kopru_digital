@@ -1,7 +1,6 @@
 import { ActivityIndicator, Pressable, View, type PressableProps } from 'react-native';
 
 import { useTema } from '../tema/TemaSaglayici';
-
 import { Metin } from './Metin';
 
 const ZEMIN = {

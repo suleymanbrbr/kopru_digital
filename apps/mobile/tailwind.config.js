@@ -23,10 +23,19 @@ module.exports = {
   darkMode: 'class',
   theme: {
     colors: { transparent: 'transparent', ...colors },
-    spacing: { px: '1px', ...Object.fromEntries(Object.entries(spacing).map(([k, v]) => [k, px(v)])) },
-    borderRadius: { none: '0px', ...Object.fromEntries(Object.entries(radius).map(([k, v]) => [k, px(v)])) },
+    spacing: {
+      px: '1px',
+      ...Object.fromEntries(Object.entries(spacing).map(([k, v]) => [k, px(v)])),
+    },
+    borderRadius: {
+      none: '0px',
+      ...Object.fromEntries(Object.entries(radius).map(([k, v]) => [k, px(v)])),
+    },
     fontSize: Object.fromEntries(
-      Object.entries(typography.boyut).map(([k, v]) => [k, [px(v), { lineHeight: px(Math.round(v * 1.4)) }]]),
+      Object.entries(typography.boyut).map(([k, v]) => [
+        k,
+        [px(v), { lineHeight: px(Math.round(v * 1.4)) }],
+      ]),
     ),
     fontFamily: {
       govde: ['Inter_400Regular'],

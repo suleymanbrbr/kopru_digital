@@ -1,5 +1,5 @@
-import { depoOlustur } from '../lib/store';
 import { kv } from '../depo/kv';
+import { depoOlustur } from '../lib/store';
 
 export type TemaTercihi = 'sistem' | 'acik' | 'koyu';
 

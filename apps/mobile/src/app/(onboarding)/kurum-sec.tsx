@@ -43,7 +43,10 @@ export default function KurumSec() {
         <Pressable
           key={u.uyelikId}
           accessibilityRole="button"
-          accessibilityLabel={t('mobil.kurumSec.secimEtiketi', { kurum: u.kurumAd, rol: t(`roller.${u.rol}`) })}
+          accessibilityLabel={t('mobil.kurumSec.secimEtiketi', {
+            kurum: u.kurumAd,
+            rol: t(`roller.${u.rol}`),
+          })}
           accessibilityState={{ busy: secilen === u.uyelikId, disabled: secilen !== null }}
           disabled={secilen !== null}
           onPress={() => void sec(u.uyelikId)}
@@ -66,7 +69,11 @@ export default function KurumSec() {
           {hata}
         </Metin>
       ) : null}
-      <Dugme varyant="hayalet" etiket={t('mobil.profil.cikis')} onPress={() => void oturum.cikis()} />
+      <Dugme
+        varyant="hayalet"
+        etiket={t('mobil.profil.cikis')}
+        onPress={() => void oturum.cikis()}
+      />
     </Ekran>
   );
 }

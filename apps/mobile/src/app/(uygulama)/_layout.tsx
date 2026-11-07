@@ -16,7 +16,10 @@ export default function UygulamaDuzeni() {
       }}
     >
       <Stack.Screen name="(sekmeler)" options={{ headerShown: false }} />
-      <Stack.Screen name="odaklan" options={{ title: t('mobil.odaklan.baslik'), presentation: 'modal' }} />
+      <Stack.Screen
+        name="odaklan"
+        options={{ title: t('mobil.odaklan.baslik'), presentation: 'modal' }}
+      />
       <Stack.Screen name="kurum" options={{ title: t('mobil.kurum.baslik') }} />
       <Stack.Protected guard={ortam.gelistirici}>
         <Stack.Screen name="bilesenler" options={{ title: t('mobil.bilesenler.baslik') }} />

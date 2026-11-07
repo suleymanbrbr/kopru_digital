@@ -80,7 +80,7 @@ export interface OgrenciBugun {
   karakter: KarakterOzeti;
 }
 
-const HATA_KODLARI = [
+export const HATA_KODLARI = [
   'ag',
   'zaman_asimi',
   'yetkisiz',
@@ -103,7 +103,11 @@ export class ApiHata extends Error {
   readonly durum: number | undefined;
   readonly yenidenDenenebilir: boolean;
 
-  constructor(kod: ApiHataKodu, mesaj?: string, secenekler?: { durum?: number; yenidenDenenebilir?: boolean }) {
+  constructor(
+    kod: ApiHataKodu,
+    mesaj?: string,
+    secenekler?: { durum?: number; yenidenDenenebilir?: boolean },
+  ) {
     super(mesaj ?? kod);
     this.name = 'ApiHata';
     this.kod = kod;

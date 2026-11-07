@@ -1,10 +1,8 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import { ortam } from '../ortam';
-
 import type { Adaptorler } from './adaptorler';
 import { mockAdaptorler } from './mock';
 import { ApiHata } from './tipler';
-
 
 /** Gercek istemci baglanana kadar: her cagri `yapilandirma` hatasi verir. */
 function baglanmamisAdaptorler(): Adaptorler {
@@ -30,4 +28,3 @@ export function adaptorleriOlustur(depo: BelirtecDeposu): Adaptorler {
   if (ortam.apiMock) return mockAdaptorler(depo);
   return baglanmamisAdaptorler();
 }
-

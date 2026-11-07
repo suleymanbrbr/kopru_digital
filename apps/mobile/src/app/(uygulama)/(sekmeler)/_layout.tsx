@@ -1,5 +1,5 @@
-import { t } from '@kopru/i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '@kopru/i18n';
 import { Redirect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 
@@ -21,7 +21,10 @@ export default function SekmeDuzeni() {
     rolSekmeleri.filter((s) => modulAcikMi(aktif.moduller, s.modul)).map((s) => s.ad),
   );
   // Sira: role ait sekmeler yapilandirma sirasinda, sonra gizli olanlar.
-  const sira = [...rolSekmeleri.map((s) => s.ad), ...TUM_SEKME_ADLARI.filter((a) => !rolSekmeleri.some((s) => s.ad === a))];
+  const sira = [
+    ...rolSekmeleri.map((s) => s.ad),
+    ...TUM_SEKME_ADLARI.filter((a) => !rolSekmeleri.some((s) => s.ad === a)),
+  ];
 
   return (
     <Tabs

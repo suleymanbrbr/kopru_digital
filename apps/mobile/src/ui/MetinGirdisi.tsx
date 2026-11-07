@@ -2,7 +2,6 @@ import { forwardRef, type ComponentRef } from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 
 import { useTema } from '../tema/TemaSaglayici';
-
 import { Metin } from './Metin';
 
 interface Props extends TextInputProps {

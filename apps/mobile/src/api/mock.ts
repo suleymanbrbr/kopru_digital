@@ -1,5 +1,4 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
-
 import type { Adaptorler } from './adaptorler';
 import {
   ApiHata,
@@ -58,7 +57,6 @@ function moduller(rol: MobilRol | Rol, kurum: 'a' | 'b') {
 export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorler {
   let telefon: string | null = null;
   let kvkkSurum: string | null = null;
-  let etkin: Uyelik | null = null;
 
   async function oturumGerekli() {
     if (!(await depo.oku())) throw new ApiHata('yetkisiz', undefined, { durum: 401 });
@@ -84,7 +82,8 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
       async oturumBilgisi(): Promise<OturumBilgisi> {
         await bekle(gecikmeMs / 2);
         await oturumGerekli();
-        const tel = telefon ?? (await depo.oku())?.erisim.replace('mock-erisim-', '') ?? '5550000001';
+        const tel =
+          telefon ?? (await depo.oku())?.erisim.replace('mock-erisim-', '') ?? '5550000001';
         telefon = tel;
         return {
           kullanici: { id: `kullanici-${tel}`, adSoyad: 'Deniz Yılmaz', telefon: tel },
@@ -102,7 +101,6 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
         await oturumGerekli();
         const uyelik = uyelikleriUret(telefon ?? '5550000001').find((x) => x.uyelikId === uyelikId);
         if (!uyelik) throw new ApiHata('bulunamadi', undefined, { durum: 404 });
-        etkin = uyelik;
         const k = uyelik.kurumId === 'kurum-b' ? 'b' : 'a';
         return { uyelik, moduller: moduller(uyelik.rol, k), vurgu: kurumlar[k].vurgu };
       },
@@ -110,7 +108,6 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
         await bekle(100);
         await depo.sil();
         telefon = null;
-        etkin = null;
       },
     },
     veri: {
@@ -122,7 +119,6 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
       async ogrenciBugun() {
         await bekle(gecikmeMs);
         await oturumGerekli();
-        void etkin;
         return {
           seri: 3,
           gorevler: [],

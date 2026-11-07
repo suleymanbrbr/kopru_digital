@@ -55,12 +55,16 @@ export function renkDegiskenleri(sema: Sema, vurgu?: string | null): Record<stri
   const renkler: ThemeColors = { ...themes[sema] };
   if (gecerliHex(vurgu)) renkler.vurgu = vurgu;
   const cikti: Record<string, string> = {};
-  for (const [anahtar, hex] of Object.entries(renkler)) cikti[degiskenAdi(anahtar)] = rgbKanallari(hex);
+  for (const [anahtar, hex] of Object.entries(renkler) as [string, string][])
+    cikti[degiskenAdi(anahtar)] = rgbKanallari(hex);
   cikti[degiskenAdi('vurguUzeri')] = rgbKanallari(okunurUstRenk(renkler.vurgu));
   return cikti;
 }
 
-export function etkinRenkler(sema: Sema, vurgu?: string | null): ThemeColors & { vurguUzeri: string } {
+export function etkinRenkler(
+  sema: Sema,
+  vurgu?: string | null,
+): ThemeColors & { vurguUzeri: string } {
   const renkler: ThemeColors = { ...themes[sema] };
   if (gecerliHex(vurgu)) renkler.vurgu = vurgu;
   return { ...renkler, vurguUzeri: okunurUstRenk(renkler.vurgu) };

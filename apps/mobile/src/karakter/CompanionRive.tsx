@@ -40,7 +40,9 @@ export function CompanionRive({ props, kaynak, boyut, hata }: Props) {
     async: true,
     artboardName: RIVE.artboard,
   });
-  const onceki = useRef<{ ruhHali: CompanionProps['ruhHali']; asama: number } | undefined>(undefined);
+  const onceki = useRef<{ ruhHali: CompanionProps['ruhHali']; asama: number } | undefined>(
+    undefined,
+  );
   const [gorunenAsama, setGorunenAsama] = useState(props.asama);
 
   useEffect(() => {

@@ -39,7 +39,9 @@ export function guvenliBelirtecDeposu(): BelirtecDeposu {
   return {
     oku: async () =>
       ayristir(
-        web ? globalThis.localStorage.getItem(ANAHTAR) : await SecureStore.getItemAsync(ANAHTAR, sec),
+        web
+          ? globalThis.localStorage.getItem(ANAHTAR)
+          : await SecureStore.getItemAsync(ANAHTAR, sec),
       ),
     yaz: async (b) => {
       const ham = JSON.stringify(b);

@@ -66,7 +66,13 @@ export default function Kvkk() {
           {hata}
         </Metin>
       ) : null}
-      <Dugme etiket={t('mobil.kvkk.kabulEt')} buyuk disabled={!onay} yukleniyor={yukleniyor} onPress={() => void kabul()} />
+      <Dugme
+        etiket={t('mobil.kvkk.kabulEt')}
+        buyuk
+        disabled={!onay}
+        yukleniyor={yukleniyor}
+        onPress={() => void kabul()}
+      />
       <Dugme varyant="hayalet" etiket={t('mobil.kvkk.cikis')} onPress={() => void oturum.cikis()} />
     </Ekran>
   );

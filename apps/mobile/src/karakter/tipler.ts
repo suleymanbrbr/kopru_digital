@@ -26,7 +26,7 @@ export type RiveKaynagi = number | { uri: string };
 
 export interface CompanionProps {
   tur: TurKodu;
-  asama: Asama | number;
+  asama: number;
   seviye: number;
   ruhHali?: RuhHali;
   beceriler?: Partial<Beceriler>;

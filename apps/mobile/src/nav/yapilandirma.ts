@@ -13,14 +13,7 @@ export type SekmeAdi =
   | 'karakterim';
 
 export type IkonAdi =
-  | 'today'
-  | 'book'
-  | 'people'
-  | 'chatbubbles'
-  | 'person'
-  | 'checkbox'
-  | 'help-circle'
-  | 'sparkles';
+  'today' | 'book' | 'people' | 'chatbubbles' | 'person' | 'checkbox' | 'help-circle' | 'sparkles';
 
 export interface SekmeTanimi {
   /** Rota dosyasi adi: src/app/(uygulama)/(sekmeler)/<ad>.tsx */
@@ -31,8 +24,18 @@ export interface SekmeTanimi {
   modul: ModulKodu | 'cekirdek';
 }
 
-const bugun: SekmeTanimi = { ad: 'bugun', baslik: 'mobil.sekmeler.bugun', ikon: 'today', modul: 'cekirdek' };
-const profil: SekmeTanimi = { ad: 'profil', baslik: 'mobil.sekmeler.profil', ikon: 'person', modul: 'cekirdek' };
+const bugun: SekmeTanimi = {
+  ad: 'bugun',
+  baslik: 'mobil.sekmeler.bugun',
+  ikon: 'today',
+  modul: 'cekirdek',
+};
+const profil: SekmeTanimi = {
+  ad: 'profil',
+  baslik: 'mobil.sekmeler.profil',
+  ikon: 'person',
+  modul: 'cekirdek',
+};
 
 const ogretmenSekmeleri: readonly SekmeTanimi[] = [
   bugun,
@@ -51,7 +54,12 @@ export const ROL_SEKMELERI: Record<MobilRol, readonly SekmeTanimi[]> = {
     bugun,
     { ad: 'gorevler', baslik: 'mobil.sekmeler.gorevler', ikon: 'checkbox', modul: 'odev' },
     { ad: 'soru-sor', baslik: 'mobil.sekmeler.soruSor', ikon: 'help-circle', modul: 'soru_sor' },
-    { ad: 'karakterim', baslik: 'mobil.sekmeler.karakterim', ikon: 'sparkles', modul: 'oyunlastirma' },
+    {
+      ad: 'karakterim',
+      baslik: 'mobil.sekmeler.karakterim',
+      ikon: 'sparkles',
+      modul: 'oyunlastirma',
+    },
     profil,
   ],
 };

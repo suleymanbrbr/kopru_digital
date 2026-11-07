@@ -11,16 +11,26 @@ import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useAktif, useOturum, useServisler } from '../uygulama/baglam';
-
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
-const TEMALAR: { deger: TemaTercihi; anahtar: 'mobil.profil.temaSistem' | 'mobil.profil.temaAcik' | 'mobil.profil.temaKoyu' }[] = [
+const TEMALAR: {
+  deger: TemaTercihi;
+  anahtar: 'mobil.profil.temaSistem' | 'mobil.profil.temaAcik' | 'mobil.profil.temaKoyu';
+}[] = [
   { deger: 'sistem', anahtar: 'mobil.profil.temaSistem' },
   { deger: 'acik', anahtar: 'mobil.profil.temaAcik' },
   { deger: 'koyu', anahtar: 'mobil.profil.temaKoyu' },
 ];
 
-function Satir({ etiket, onPress, ikon }: { etiket: string; onPress: () => void; ikon: 'business' | 'swap-horizontal' | 'apps' }) {
+function Satir({
+  etiket,
+  onPress,
+  ikon,
+}: {
+  etiket: string;
+  onPress: () => void;
+  ikon: 'business' | 'swap-horizontal' | 'apps';
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -78,7 +88,13 @@ export function Profil() {
             />
           ) : null}
           {durum.uyelikler.length > 1 ? (
-            <Satir ikon="swap-horizontal" etiket={t('mobil.profil.kurumDegistir')} onPress={() => oturum.kurumDegistir()} />
+            <Satir
+              ikon="swap-horizontal"
+              etiket={t('mobil.profil.kurumDegistir')}
+              onPress={() => {
+                oturum.kurumDegistir();
+              }}
+            />
           ) : null}
           {ortam.gelistirici ? (
             <Satir

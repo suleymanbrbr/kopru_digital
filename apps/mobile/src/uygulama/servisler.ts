@@ -1,4 +1,4 @@
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 
@@ -20,7 +20,7 @@ export interface Servisler {
   adaptorler: Adaptorler;
   oturum: OturumYoneticisi;
   queryClient: QueryClient;
-  persister: ReturnType<typeof createSyncStoragePersister>;
+  persister: ReturnType<typeof createAsyncStoragePersister>;
   cacheBuster: string;
   kuyruk: OfflineKuyruk;
   agGozlemcisi: ReturnType<typeof netInfoGozlemcisi>;
@@ -69,7 +69,7 @@ export function servisleriKur(): Servisler {
     adaptorler,
     oturum,
     queryClient,
-    persister: createSyncStoragePersister({
+    persister: createAsyncStoragePersister({
       storage: webDeposuOlarak(kv()),
       key: 'kopru.sorgu-cache',
       throttleTime: 1000,

@@ -18,5 +18,7 @@ interface Props extends TextProps {
 
 /** Inter yazi tipli metin. Sistem yazi boyutuna saygi duyar ama %150 ile sinirlar. */
 export function Metin({ varyant = 'govde', className = '', ...rest }: Props) {
-  return <Text maxFontSizeMultiplier={1.5} className={`${VARYANTLAR[varyant]} ${className}`} {...rest} />;
+  return (
+    <Text maxFontSizeMultiplier={1.5} className={`${VARYANTLAR[varyant]} ${className}`} {...rest} />
+  );
 }

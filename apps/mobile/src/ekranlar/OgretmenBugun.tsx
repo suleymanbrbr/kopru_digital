@@ -8,7 +8,6 @@ import { Metin } from '../ui/Metin';
 import { useOturum } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
 import { useOgretmenBugun } from '../uygulama/sorgular';
-
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
 function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
@@ -45,7 +44,10 @@ export function OgretmenBugun() {
           <>
             <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
               {sorgu.data.dersler.length === 0 ? (
-                <BosDurum ikon="calendar-outline" mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')} />
+                <BosDurum
+                  ikon="calendar-outline"
+                  mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')}
+                />
               ) : (
                 sorgu.data.dersler.map((d) => (
                   <Metin key={d.id}>
@@ -56,7 +58,10 @@ export function OgretmenBugun() {
             </Bolum>
             <Bolum baslik={t('mobil.bugun.ogretmen.bekleyenSorular')}>
               {sorgu.data.bekleyenSorular.length === 0 ? (
-                <BosDurum ikon="chatbubbles-outline" mesaj={t('mobil.bugun.ogretmen.bekleyenSorularBos')} />
+                <BosDurum
+                  ikon="chatbubbles-outline"
+                  mesaj={t('mobil.bugun.ogretmen.bekleyenSorularBos')}
+                />
               ) : (
                 sorgu.data.bekleyenSorular.map((s) => (
                   <Metin key={s.id}>

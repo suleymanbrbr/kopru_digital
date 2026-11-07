@@ -2,8 +2,8 @@ import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { modulAcikMi } from '../nav/yapilandirma';
 import { Companion } from '../karakter/Companion';
+import { modulAcikMi } from '../nav/yapilandirma';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
@@ -13,7 +13,6 @@ import { Metin } from '../ui/Metin';
 import { useAktif, useOturum } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
 import { useOgrenciBugun } from '../uygulama/sorgular';
-
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
 export function OgrenciBugun() {
@@ -55,12 +54,16 @@ export function OgrenciBugun() {
                   className="flex-row items-center gap-2 rounded-tam bg-yuzeyIkincil px-4 py-2"
                   accessible
                   accessibilityLabel={`${t('mobil.bugun.ogrenci.seri')}: ${
-                    d.seri > 0 ? t('mobil.bugun.ogrenci.seriGun', { n: d.seri }) : t('mobil.bugun.ogrenci.seriYok')
+                    d.seri > 0
+                      ? t('mobil.bugun.ogrenci.seriGun', { n: d.seri })
+                      : t('mobil.bugun.ogrenci.seriYok')
                   }`}
                 >
                   <Ikon ad="flame" renk="#FF8A3D" />
                   <Metin varyant="etiket">
-                    {d.seri > 0 ? t('mobil.bugun.ogrenci.seriGun', { n: d.seri }) : t('mobil.bugun.ogrenci.seriYok')}
+                    {d.seri > 0
+                      ? t('mobil.bugun.ogrenci.seriGun', { n: d.seri })
+                      : t('mobil.bugun.ogrenci.seriYok')}
                   </Metin>
                 </View>
               </Kart>
@@ -70,7 +73,10 @@ export function OgrenciBugun() {
                 {t('mobil.bugun.ogrenci.bugunkuGorevler')}
               </Metin>
               {d.gorevler.length === 0 ? (
-                <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.bugun.ogrenci.bugunkuGorevlerBos')} />
+                <BosDurum
+                  ikon="checkmark-circle-outline"
+                  mesaj={t('mobil.bugun.ogrenci.bugunkuGorevlerBos')}
+                />
               ) : (
                 d.gorevler.map((g) => <Metin key={g.id}>{g.baslik}</Metin>)
               )}

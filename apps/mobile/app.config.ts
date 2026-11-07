@@ -7,16 +7,17 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
  *  APP_SCHEME     derin baglanti semasi
  * EXPO_PUBLIC_* degiskenleri istemci kodunda dogrudan okunur (bkz. src/ortam.ts).
  */
-const bundleId = process.env.APP_BUNDLE_ID ?? 'com.koprudigital.app';
+const env = (ad: string) => (process.env as Record<string, string | undefined>)[ad];
+const bundleId = env('APP_BUNDLE_ID') ?? 'com.koprudigital.app';
 const arkaPlan = '#2F7BF6';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: process.env.APP_ADI ?? 'Köprü',
+  name: env('APP_ADI') ?? 'Köprü',
   slug: 'kopru-mobil',
   version: '0.1.0',
   orientation: 'portrait',
-  scheme: process.env.APP_SCHEME ?? 'kopru',
+  scheme: env('APP_SCHEME') ?? 'kopru',
   userInterfaceStyle: 'automatic',
   icon: './assets/ikon.png',
   ios: {

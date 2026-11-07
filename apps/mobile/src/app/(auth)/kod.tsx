@@ -15,7 +15,7 @@ const HANE = 6;
 export default function Kod() {
   const router = useRouter();
   const { adaptorler, oturum } = useServisler();
-  const { telefon = '', sn = '30' } = useLocalSearchParams<{ telefon: string; sn: string }>();
+  const { telefon, sn } = useLocalSearchParams<{ telefon: string; sn: string }>();
   const [kod, setKod] = useState('');
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -123,11 +123,21 @@ export default function Kod() {
       />
       <Dugme
         varyant="hayalet"
-        etiket={kalan > 0 ? t('mobil.giris.yenidenGonderSn', { sn: kalan }) : t('mobil.giris.yenidenGonder')}
+        etiket={
+          kalan > 0
+            ? t('mobil.giris.yenidenGonderSn', { sn: kalan })
+            : t('mobil.giris.yenidenGonder')
+        }
         disabled={kalan > 0}
         onPress={() => void yenidenGonder()}
       />
-      <Dugme varyant="hayalet" etiket={t('mobil.giris.numaraDegistir')} onPress={() => router.back()} />
+      <Dugme
+        varyant="hayalet"
+        etiket={t('mobil.giris.numaraDegistir')}
+        onPress={() => {
+          router.back();
+        }}
+      />
     </Ekran>
   );
 }

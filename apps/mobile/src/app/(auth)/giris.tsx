@@ -10,8 +10,8 @@ import { Dugme } from '../../ui/Dugme';
 import { Ekran } from '../../ui/Ekran';
 import { Metin } from '../../ui/Metin';
 import { MetinGirdisi } from '../../ui/MetinGirdisi';
-import { hataMesaji } from '../../uygulama/hatalar';
 import { useServisler } from '../../uygulama/baglam';
+import { hataMesaji } from '../../uygulama/hatalar';
 
 export default function Giris() {
   const router = useRouter();
@@ -63,7 +63,12 @@ export default function Giris() {
         onSubmitEditing={() => void gonder()}
         autoFocus
       />
-      <Dugme etiket={t('giris.kodGonder')} buyuk yukleniyor={yukleniyor} onPress={() => void gonder()} />
+      <Dugme
+        etiket={t('giris.kodGonder')}
+        buyuk
+        yukleniyor={yukleniyor}
+        onPress={() => void gonder()}
+      />
       {ortam.apiMock ? (
         <Metin varyant="kucuk" className="text-center">
           {t('mobil.giris.mockIpucu').replace('123456', MOCK_OTP)}

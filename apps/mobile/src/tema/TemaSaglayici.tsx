@@ -28,12 +28,14 @@ interface Props {
 
 /** Acik/koyu temayi ve kurum vurgusunu NativeWind CSS degiskenleri olarak kok gorunume uygular. */
 export function TemaSaglayici({ vurgu, children }: Props) {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const cs = useColorScheme();
+  const { colorScheme } = cs;
   const tercih = tercihler.kullan((t) => t.tema);
 
   useEffect(() => {
-    setColorScheme(tercih === 'sistem' ? 'system' : tercih === 'acik' ? 'light' : 'dark');
-  }, [tercih, setColorScheme]);
+    cs.setColorScheme(tercih === 'sistem' ? 'system' : tercih === 'acik' ? 'light' : 'dark');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setColorScheme kararli
+  }, [tercih]);
 
   const sema: Sema = colorScheme === 'dark' ? 'koyu' : 'acik';
   const baglam = useMemo<TemaBaglami>(

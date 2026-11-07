@@ -28,5 +28,5 @@ export function queryOnlineYonetiminiBagla(): () => void {
       ayarla(cevrimiciMi(s));
     }),
   );
-  return () => {};
+  return () => undefined;
 }
