@@ -86,7 +86,9 @@ function KullaniciAlani() {
   return (
     <div className="flex flex-col gap-3 border-t border-kenar pt-4">
       <div className="flex items-center justify-between gap-2 px-1">
-        <span className="min-w-0 truncate text-sm font-medium">{kullaniciAd}</span>
+        <span className="min-w-0 truncate text-sm font-medium">
+          {kullaniciAd || t('kabuk.kullaniciMenusu')}
+        </span>
         <TemaAnahtari />
       </div>
       <button

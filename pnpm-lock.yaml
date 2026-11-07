@@ -421,6 +421,9 @@ importers:
       '@kopru/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@kopru/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@kopru/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n

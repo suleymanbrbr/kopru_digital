@@ -22,6 +22,7 @@
     "@fontsource-variable/inter": "catalog:",
     "@hookform/resolvers": "catalog:",
     "@kopru/api-client": "workspace:*",
+    "@kopru/contracts": "workspace:*",
     "@kopru/i18n": "workspace:*",
     "@kopru/ui-tokens": "workspace:*",
     "@tailwindcss/postcss": "catalog:",

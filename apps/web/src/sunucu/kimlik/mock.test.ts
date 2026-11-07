@@ -24,7 +24,10 @@ describe('mock kimlik adaptoru', () => {
       'sahip',
     ]);
 
-    const kabul = await adaptor.rizaKabul(oturumBelirteci, MOCK_RIZA_SURUMU);
+    const kabul = await adaptor.rizaKabul(oturumBelirteci, {
+      surum: MOCK_RIZA_SURUMU,
+      metinIdleri: ['mock-riza-1'],
+    });
     const son = await adaptor.oturumAl(kabul.oturumBelirteci);
     expect(son.oturum.rizaGerekli).toBe(false);
   });

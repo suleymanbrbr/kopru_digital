@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const oturum = oturumGerekli(request);
   if ('yanit' in oturum) return oturum.yanit;
   try {
-    const { oturumBelirteci } = await kimlik().rizaKabul(oturum.belirtec, govde.veri.surum);
+    const { oturumBelirteci } = await kimlik().rizaKabul(oturum.belirtec, govde.veri);
     const yanit = new NextResponse(null, { status: 204 });
     cerezYaz(yanit, request, oturumBelirteci);
     return yanit;

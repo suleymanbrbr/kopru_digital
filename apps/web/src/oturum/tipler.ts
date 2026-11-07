@@ -1,3 +1,4 @@
+import { ModulKoduSema } from '@kopru/contracts';
 import { z } from 'zod';
 
 /**
@@ -33,7 +34,7 @@ export type Oturum = z.infer<typeof oturumSema>;
 export const kurumBaglamiSema = z.object({
   kurumId: z.string(),
   /** Kurum/kademe/grup onceligi cozulmus, acik modul kodlari. */
-  moduller: z.array(z.string()),
+  moduller: z.array(ModulKoduSema),
 });
 export type KurumBaglami = z.infer<typeof kurumBaglamiSema>;
 
@@ -41,6 +42,8 @@ export const rizaMetniSema = z.object({
   surum: z.string(),
   baslik: z.string(),
   bolumler: z.array(z.object({ baslik: z.string(), metin: z.string() })),
+  /** Onaylanacak metin kimlikleri (api her metni ayri kaydeder). */
+  metinIdleri: z.array(z.string()),
 });
 export type RizaMetni = z.infer<typeof rizaMetniSema>;
 
@@ -67,4 +70,5 @@ export const yenileGovdeSema = z.object({
   uyelikId: z.string().optional(),
   kurumId: z.string().optional(),
 });
-export const rizaKabulGovdeSema = z.object({ surum: z.string() });
+export const rizaKabulGovdeSema = z.object({ surum: z.string(), metinIdleri: z.array(z.string()) });
+export type RizaKabul = z.infer<typeof rizaKabulGovdeSema>;

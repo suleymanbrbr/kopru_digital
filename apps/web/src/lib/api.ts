@@ -23,11 +23,15 @@ const bilinenKodlar = new Set([
   'cok_fazla_istek',
   'yetkisiz',
   'riza_gerekli',
+  'modul_kapali',
+  'izin_yok',
+  'abonelik_gerekli',
   'ag',
 ]);
 
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
+  if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
   if (hata instanceof UygulamaHatasi && bilinenKodlar.has(hata.kod)) {
     return t(`hata.${hata.kod}` as MessageKey);
   }

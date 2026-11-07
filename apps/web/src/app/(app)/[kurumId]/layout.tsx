@@ -52,6 +52,19 @@ export default function KurumDuzeni({ children }: { children: ReactNode }) {
       }),
   });
 
+  // 401: oturum gecersiz (yenileme de 401 verirse oturum kapanir, girise donulur).
+  // 403 `riza_gerekli`: oturum durumu yenilenir, koruma KVKK ekranina yonlendirir.
+  const baglamHatasi = baglam.error instanceof UygulamaHatasi ? baglam.error : null;
+  const oturumuYenile =
+    baglamHatasi?.durum === 401 ||
+    (baglamHatasi?.durum === 403 && baglamHatasi.kod === 'riza_gerekli');
+  useEffect(() => {
+    if (oturumuYenile)
+      yenile(oturum?.aktifUyelikId ? { uyelikId: oturum.aktifUyelikId } : {}).catch(
+        () => undefined,
+      );
+  }, [oturumuYenile, yenile, oturum?.aktifUyelikId]);
+
   const deger = useMemo<KurumBaglami | null>(
     () =>
       etkin && baglam.data && oturum

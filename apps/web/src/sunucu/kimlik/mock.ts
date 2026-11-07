@@ -1,3 +1,5 @@
+import { MODUL_KODLARI, type ModulKodu } from '@kopru/contracts';
+
 import { KimlikHatasi, type KimlikAdaptoru, type OturumSecimi, type OturumSonucu } from './arayuz';
 
 import type { KurumBaglami, Oturum, RizaMetni, Uyelik } from '@/oturum/tipler';
@@ -6,10 +8,11 @@ import type { KurumBaglami, Oturum, RizaMetni, Uyelik } from '@/oturum/tipler';
 export const MOCK_KOD = '123456';
 export const MOCK_RIZA_SURUMU = '2026-11';
 
-const tumModuller = ['ders', 'odev', 'plan', 'deneme', 'soru', 'kayit', 'finans', 'motivasyon'];
+/** Faz 1'de web'in sundugu moduller; kodlar `@kopru/contracts` MODUL_KODLARI'ndandir. */
+const tumModuller: ModulKodu[] = [...MODUL_KODLARI];
 
 /** Deneme kurumlari: her biri farkli rol, vurgu rengi ve modul kumesi gosterir. */
-const kurumlar: Record<string, { uyelik: Uyelik; moduller: string[] }> = {
+const kurumlar: Record<string, { uyelik: Uyelik; moduller: ModulKodu[] }> = {
   'kurum-ege': {
     uyelik: {
       id: 'uyelik-ege-ogretmen',
@@ -83,6 +86,7 @@ function belirtecOku(belirtec: string): BelirtecIcerigi {
 const rizaMetni: RizaMetni = {
   surum: MOCK_RIZA_SURUMU,
   baslik: 'Kişisel verilerin işlenmesine ilişkin aydınlatma metni',
+  metinIdleri: ['mock-riza-1'],
   bolumler: [
     {
       baslik: 'Veri sorumlusu',
@@ -177,7 +181,7 @@ export function mockKimlik(): KimlikAdaptoru {
       });
     },
 
-    rizaKabul(oturumBelirteci, surum) {
+    rizaKabul(oturumBelirteci, { surum }) {
       return dene(() => {
         const icerik = belirtecOku(oturumBelirteci);
         if (surum !== MOCK_RIZA_SURUMU) {

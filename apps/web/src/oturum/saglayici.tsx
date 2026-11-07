@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { z } from 'zod';
 
-import { oturumSema, type Oturum } from './tipler';
+import { oturumSema, type Oturum, type RizaKabul } from './tipler';
 
 import { bffIstek } from '@/lib/api';
 
@@ -33,7 +33,7 @@ export interface OturumBaglami {
   kodDogrula: (telefon: string, kod: string) => Promise<Oturum>;
   /** Etkin uyelik/kurum degistirir ya da belirteci yeniler. */
   yenile: (secim?: { uyelikId?: string; kurumId?: string }) => Promise<Oturum | null>;
-  rizaKabul: (surum: string) => Promise<void>;
+  rizaKabul: (kabul: RizaKabul) => Promise<void>;
   cikis: () => Promise<void>;
 }
 
@@ -119,8 +119,8 @@ export function OturumSaglayici({ children }: { children: ReactNode }) {
         return oturum;
       },
       yenile,
-      rizaKabul: async (surum) => {
-        await bffIstek('/api/oturum/riza', { govde: { surum } });
+      rizaKabul: async (kabul) => {
+        await bffIstek('/api/oturum/riza', { govde: kabul });
         await yenile(
           durumRef.current.tur === 'hazir' && durumRef.current.oturum.aktifUyelikId
             ? { uyelikId: durumRef.current.oturum.aktifUyelikId }

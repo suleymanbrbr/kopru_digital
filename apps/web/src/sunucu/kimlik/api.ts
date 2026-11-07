@@ -1,128 +1,172 @@
-import { z } from 'zod';
+import { ApiHatasi, createServisIstemcileri } from '@kopru/api-client';
+import { MODUL_KODLARI } from '@kopru/contracts';
 
 import { KimlikHatasi, type KimlikAdaptoru } from './arayuz';
 
-import { kurumBaglamiSema, rizaMetniSema, rolSema } from '@/oturum/tipler';
+import type { Oturum, Uyelik } from '@/oturum/tipler';
 
 /**
- * `api` servisindeki Better Auth'a baglanan gercek adaptor (ADR 0004).
+ * `api` servisine (`hesap` modulu) baglanan gercek adaptor (ADR 0004). Butun cagrilar
+ * `@kopru/api-client` (openapi-fetch) uzerinden yapilir; yol ve govde sekilleri
+ * `packages/api-client/openapi/api.json` ile tiplenmistir.
  *
- * NOT: `hesap` modulunun rotalari henuz yok; uc nokta yollari ve yanit sekilleri ADR 0004 ve
- * Better Auth varsayilanlarindan turetilmistir. Rotalar yayinlaninca yalnizca bu dosya
- * (ve `@kopru/api-client` tipleri) guncellenir; geri kalan uygulama `KimlikAdaptoru` arayuzunu kullanir.
+ * Tarayicidaki httpOnly cerez `oturum_belirteci`ni (opak, 30 gun) tasir; hesap ve kiraci
+ * uc noktalari icin gerektiginde `POST /auth/token` ile 15 dk'lik erisim belirteci alinir.
  */
 
 const apiAdresi = () => process.env.API_URL ?? 'http://localhost:4000';
 
-const hataGovdeSema = z.object({
-  error: z.object({ code: z.string(), message: z.string() }).optional(),
-  code: z.string().optional(),
-  message: z.string().optional(),
-});
+/** `api` servisinin hata kodlarini web'in bildigi (i18n'li) kodlara cevirir. */
+const kodEsleme: Record<string, string> = {
+  gecersiz_telefon: 'telefon_gecersiz',
+  kod_gecersiz: 'otp_gecersiz',
+};
 
-async function cagir(
-  yol: string,
-  secenekler: { yontem?: string; govde?: unknown; belirtec?: string } = {},
-): Promise<Response> {
-  let yanit: Response;
+/** Istek basina istemci: belirtec o istege baglanir, yanit onbelleklenmez. */
+function istemci(belirtec?: string) {
+  return createServisIstemcileri({
+    adresler: { api: apiAdresi() },
+    tokenAl: () => belirtec,
+    fetch: (istek) => fetch(istek, { cache: 'no-store' }),
+  }).api;
+}
+
+function hataCevir(durum: number, govde: unknown): KimlikHatasi {
+  const hata = ApiHatasi.from(durum, govde, 'İstek başarısız.');
+  return new KimlikHatasi(hata.durum, kodEsleme[hata.kod] ?? hata.kod, hata.message);
+}
+
+/**
+ * openapi-fetch cagrisini sarar: ag hatasi -> 502, basarisiz yanit -> `KimlikHatasi`.
+ * 401, 403 `riza_gerekli` / `modul_kapali` / `izin_yok` ve 402 `abonelik_gerekli` kodlari oldugu
+ * gibi gecer; BFF bunlari standart hata govdesine, arayuz i18n metnine cevirir.
+ */
+async function cagir<T>(
+  is: () => Promise<{ data?: T; error?: unknown; response: Response }>,
+): Promise<T> {
+  let sonuc: Awaited<ReturnType<typeof is>>;
   try {
-    yanit = await fetch(`${apiAdresi()}${yol}`, {
-      method: secenekler.yontem ?? (secenekler.govde === undefined ? 'GET' : 'POST'),
-      headers: {
-        'content-type': 'application/json',
-        ...(secenekler.belirtec ? { authorization: `Bearer ${secenekler.belirtec}` } : {}),
-      },
-      ...(secenekler.govde === undefined ? {} : { body: JSON.stringify(secenekler.govde) }),
-      cache: 'no-store',
-    });
+    sonuc = await is();
   } catch {
     throw new KimlikHatasi(502, 'hizmet_kullanilamiyor', 'Sunucuya ulaşılamadı.');
   }
-  if (yanit.ok) return yanit;
-
-  const ham: unknown = await yanit.json().catch(() => null);
-  const govde = hataGovdeSema.safeParse(ham);
-  const kod = govde.success ? (govde.data.error?.code ?? govde.data.code) : undefined;
-  const mesaj = govde.success ? (govde.data.error?.message ?? govde.data.message) : undefined;
-  throw new KimlikHatasi(yanit.status, kod ?? 'sunucu_hatasi', mesaj ?? 'İstek başarısız.');
+  if (sonuc.data === undefined) throw hataCevir(sonuc.response.status, sonuc.error);
+  return sonuc.data;
 }
 
-const erisimYanitSema = z.object({
-  access_token: z.string(),
-  expires_in: z.number(),
-  kullanici: z.object({ id: z.string(), ad: z.string(), telefon: z.string() }),
-  uyelikler: z.array(
-    z.object({
-      id: z.string(),
-      kurum_id: z.string(),
-      kurum_ad: z.string(),
-      rol: rolSema,
-      vurgu_rengi: z.string().nullable().default(null),
+const bearer = (belirtec: string) => ({ Authorization: `Bearer ${belirtec}` });
+
+function uyelikCevir(u: {
+  uyelik_id: string;
+  kurum_id: string;
+  kurum_ad: string | null;
+  rol: Uyelik['rol'];
+}): Uyelik {
+  return {
+    id: u.uyelik_id,
+    kurumId: u.kurum_id,
+    kurumAd: u.kurum_ad ?? '',
+    rol: u.rol,
+    // Vurgu rengi kurum ayarlarindadir (`GET /v1/hesap/kurumlar/{id}`); secim ekrani icin ek istek atilmaz.
+    vurguRengi: null,
+  };
+}
+
+/** `POST /auth/token`: oturum belirtecini erisim belirtecine cevirir (govde `{}` ya da kurum/uyelik). */
+function erisimAl(oturumBelirteci: string, secim?: { uyelikId?: string; kurumId?: string }) {
+  return cagir(() =>
+    istemci().POST('/auth/token', {
+      body: {
+        ...(secim?.uyelikId ? { uyelik_id: secim.uyelikId } : {}),
+        ...(secim?.kurumId ? { kurum_id: secim.kurumId } : {}),
+      },
+      headers: bearer(oturumBelirteci),
     }),
-  ),
-  aktif_uyelik_id: z.string().nullable().default(null),
-  riza_gerekli: z.boolean().default(false),
-});
+  );
+}
 
 export function apiKimlik(): KimlikAdaptoru {
   return {
     async kodIste(telefon) {
-      await cagir('/api/auth/phone-number/send-otp', { govde: { phoneNumber: telefon } });
+      await cagir(() => istemci().POST('/auth/otp/gonder', { body: { telefon } }));
+      // Sunucu yalnizca kodun gecerlilik suresini verir; yeniden gonderme beklemesi arayuzde sabittir.
       return { yenidenSn: 60 };
     },
 
     async kodDogrula(telefon, kod) {
-      const yanit = await cagir('/api/auth/phone-number/verify', {
-        govde: { phoneNumber: telefon, code: kod },
-      });
-      // bearer eklentisi oturum belirtecini `set-auth-token` basligiyla verir.
-      const belirtec = yanit.headers.get('set-auth-token');
-      if (!belirtec) throw new KimlikHatasi(502, 'sunucu_hatasi', 'Oturum belirteci alınamadı.');
-      return { oturumBelirteci: belirtec };
+      const veri = await cagir(() =>
+        istemci().POST('/auth/otp/dogrula', { body: { telefon, kod } }),
+      );
+      return { oturumBelirteci: veri.oturum_belirteci };
     },
 
     async oturumAl(oturumBelirteci, secim) {
-      const yanit = await cagir('/auth/token', {
-        belirtec: oturumBelirteci,
-        govde: { kurum_id: secim?.kurumId, uyelik_id: secim?.uyelikId },
-      });
-      const veri = erisimYanitSema.parse(await yanit.json());
-      return {
-        oturum: {
-          erisimBelirteci: veri.access_token,
-          bitisAt: new Date(Date.now() + veri.expires_in * 1000).toISOString(),
-          kullanici: veri.kullanici,
-          uyelikler: veri.uyelikler.map((u) => ({
-            id: u.id,
-            kurumId: u.kurum_id,
-            kurumAd: u.kurum_ad,
-            rol: u.rol,
-            vurguRengi: u.vurgu_rengi,
-          })),
-          aktifUyelikId: veri.aktif_uyelik_id,
-          rizaGerekli: veri.riza_gerekli,
+      const token = await erisimAl(oturumBelirteci, secim);
+      // Kullanici ozeti ve riza durumu `ben` ucundan gelir (riza gerekli iken de acik, ADR 0004).
+      const ben = await cagir(() =>
+        istemci().GET('/v1/hesap/ben', { headers: bearer(token.access_token) }),
+      );
+      const oturum: Oturum = {
+        erisimBelirteci: token.access_token,
+        bitisAt: new Date(Date.now() + token.expires_in * 1000).toISOString(),
+        kullanici: {
+          id: ben.kullanici.id,
+          ad: ben.kullanici.gorunen_ad ?? '',
+          telefon: ben.kullanici.telefon_e164 ?? '',
         },
+        uyelikler: token.uyelikler.filter((u) => u.durum === 'aktif').map(uyelikCevir),
+        aktifUyelikId: token.uyelik_id,
+        rizaGerekli: ben.onay_gerekli,
       };
+      return { oturum };
     },
 
-    async kurumBaglami(_oturum, erisimBelirteci, kurumId) {
-      const yanit = await cagir('/v1/hesap/moduller', { belirtec: erisimBelirteci });
-      const { moduller } = z.object({ moduller: z.array(z.string()) }).parse(await yanit.json());
-      return kurumBaglamiSema.parse({ kurumId, moduller });
+    async kurumBaglami(_oturumBelirteci, erisimBelirteci, kurumId) {
+      // `etkin` ucu bir seferde tek modul sorar (kurum > kademe > grup); butun kodlar paralel sorulur.
+      const api = istemci(erisimBelirteci);
+      const yanitlar = await Promise.all(
+        MODUL_KODLARI.map((modulKodu) =>
+          cagir(() =>
+            api.GET('/v1/hesap/modul-ayarlari/etkin', {
+              params: { query: { modul_kodu: modulKodu } },
+            }),
+          ),
+        ),
+      );
+      return { kurumId, moduller: yanitlar.filter((y) => y.acik).map((y) => y.modul_kodu) };
     },
 
     async rizaMetni(oturumBelirteci) {
-      const yanit = await cagir('/v1/hesap/riza/guncel', { belirtec: oturumBelirteci });
-      return rizaMetniSema.parse(await yanit.json());
+      const { access_token: erisim } = await erisimAl(oturumBelirteci);
+      const veri = await cagir(() =>
+        istemci().GET('/v1/hesap/rizalar/guncel', { headers: bearer(erisim) }),
+      );
+      // Her metin ayri onaylanir; arayuz tek onay kutusuyla bekleyenlerin hepsini gosterir.
+      const bekleyen = veri.metinler.filter((m) => !m.kabul_edildi);
+      const gosterilecek = bekleyen.length > 0 ? bekleyen : veri.metinler;
+      return {
+        surum: [...new Set(gosterilecek.map((m) => m.surum))].join(', '),
+        baslik: gosterilecek.length === 1 ? (gosterilecek[0]?.baslik ?? '') : '',
+        bolumler: gosterilecek.map((m) => ({ baslik: m.baslik, metin: m.govde_markdown })),
+        metinIdleri: bekleyen.map((m) => m.id),
+      };
     },
 
-    async rizaKabul(oturumBelirteci, surum) {
-      await cagir('/v1/hesap/riza', { belirtec: oturumBelirteci, govde: { surum } });
+    async rizaKabul(oturumBelirteci, kabul) {
+      const { access_token: erisim } = await erisimAl(oturumBelirteci);
+      for (const rizaMetniId of kabul.metinIdleri) {
+        await cagir(() =>
+          istemci().POST('/v1/hesap/rizalar', {
+            body: { riza_metni_id: rizaMetniId, karar: 'kabul', kaynak: 'web' },
+            headers: bearer(erisim),
+          }),
+        );
+      }
       return { oturumBelirteci };
     },
 
     async cikis(oturumBelirteci) {
-      await cagir('/api/auth/sign-out', { belirtec: oturumBelirteci, govde: {} }).catch(
+      await cagir(() => istemci().POST('/auth/cikis', { headers: bearer(oturumBelirteci) })).catch(
         () => undefined,
       );
     },
