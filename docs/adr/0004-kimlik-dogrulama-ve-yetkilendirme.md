@@ -16,7 +16,7 @@ Girişler telefon OTP, Apple ve Google ile yapılır. Web (Next.js) ve mobil (Ex
 - Better Auth tabloları `hesap` şemasına, kendi adlarımızla eşlenir: `user` -> `hesap.kullanicilar`, `session` -> `hesap.oturumlar`, `account` -> `hesap.hesaplar`, `verification` -> `hesap.dogrulamalar`, `jwks` -> `hesap.jwks`. Eşleme Better Auth `modelName`/`fields` yapılandırmasıyla yapılır.
 - OTP: 6 hane, 5 dakika geçerli, en çok 5 yanlış deneme, telefon başına saatte 5 istek, IP başına saatte 20 istek. OTP SMS'i `bildirim` servisinin iç uç noktasına senkron gönderilir. Kod olaya yazılmaz ([0002](0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)).
 - Oturum: opak, veritabanında saklanan yenileme belirteci (30 gün, kayan). Web için `httpOnly; Secure; SameSite=Lax` çerez. Mobil için güvenli depoda (Keychain/Keystore) taşıyıcı belirteç. Çıkışta ve şüpheli kullanımda `oturumlar.iptal_at` doldurulur.
-- İlk girişte KVKK rıza ekranı zorunludur. Kullanıcı o kurum için güncel `riza_metinleri` sürümünü kabul etmeden `api` kiracı uç noktaları `403 riza_gerekli` döner. Rıza kaydı `hesap.rizalar`a yazılır.
+- İlk girişte KVKK rıza ekranı zorunludur. Rıza **hesap düzeyindedir ve kurum seçiminden önce** alınır: kullanıcı zorunlu metin türlerinin (`kvkk_aydinlatma`, `kullanim_kosullari`) güncel yayınlanmış sürümünü kabul etmeden muaf olmayan her uç nokta `403 riza_gerekli` döner. Rıza kaydı `hesap.rizalar`a `kurum_id = NULL` ile yazılır. Ayrıntı ve gerekçe: aşağıdaki "Değişiklik notu".
 
 ### Erişim belirteci (JWT)
 
@@ -78,7 +78,7 @@ Kapsam, istek anında repository'ye bir süzgeç olarak çözülür (`KapsamSuzg
 Her kiracı isteğinde sıra sabittir. Her adım başarısızsa sonraki adıma geçilmez:
 
 1. **Kimlik:** JWT imzası, `exp`, `aud`; `sid` kara listede mi. Hata: `401`.
-2. **Rıza:** güncel KVKK sürümü kabul edilmiş mi (rıza ekranı uç noktaları hariç). Hata: `403 riza_gerekli`.
+2. **Rıza:** kullanıcı (kurumdan bağımsız) zorunlu metinlerin güncel sürümünü kabul etmiş mi. Muaf uçlar: `/auth/*`, `/.well-known/*`, `/v1/hesap/ben`, `/v1/hesap/rizalar*`. Hata: `403 riza_gerekli`.
 3. **Kiracı:** `kurum_id` claim'i ve `withTenant` bağlamı. URL'de kurum kimliği varsa claim ile eşleşmeli. Hata: `403`.
 4. **Abonelik durumu:** kurum aboneliği `askida` ya da `sona_erdi` ise yalnızca okuma ve abonelik uç noktaları açıktır. Hata: `402 abonelik_gerekli`.
 5. **Modül:** uç noktanın ait olduğu modül, istek bağlamındaki kademe/grup için açık mı (aşağıdaki öncelik kuralı). Hata: `403 modul_kapali`.
@@ -105,6 +105,30 @@ Alt düzeyler yalnızca daraltabilir. Kurum kapalıyken kademe satırı `acik=tr
 
 - `hesap.kullanicilar.platform_rolu` doluysa JWT'ye `plat` claim'i girer. Platform uç noktaları ayrı rotadır (`/platform/*`) ve `_sistem` rolü kullanır.
 - Taklit: platform yöneticisi hedef kullanıcı, kurum ve zorunlu neden metniyle `POST /platform/taklit` çağırır. `hesap.taklit_kayitlari`na satır yazılır, 15 dakikalık JWT üretilir (`imp` claim'i, `sub` hedef kullanıcıdır, `aktor` olayı yöneticiyi gösterir). Yenilenemez. Her istek `denetim_kayitlari`na düşer. Yazma yapılamaz (kontrol sırası 8).
+
+## Değişiklik notu (2026-11-07): KVKK rızası hesap düzeyinde
+
+İlk hâlinde bu ADR rızayı kurum başına tanımlıyordu ("kullanıcı o kurum için güncel sürümü kabul etmeden"). Uygulama (`services/api/src/modules/hesap/riza.ts`, `kimlik.ts`) ve istemciler (web, mobil) rızayı **hesap düzeyinde ve kurum seçiminden önce** aldı. Bu not kararı uygulamaya göre günceller.
+
+**Karar**
+
+- Rıza kullanıcıya bağlıdır, kuruma değil. `hesap.rizalar.kurum_id` bu akışta `NULL` yazılır. Kullanıcı yeni bir kuruma katıldığında yeniden onay istenmez.
+- Akış: giriş (OTP/Apple/Google) → kurum içermeyen erişim belirteci → KVKK ekranı → kurum seçimi/oluşturma. Kurum seçimi ve kurum oluşturma da rıza kapısının arkasındadır.
+- Zorunlu türler `kvkk_aydinlatma` ve `kullanim_kosullari`dır. Her tür için güncel sürüm: yayınlanmış ve `gecerli_baslangic_at <= now()` olan en yüksek `surum`. `riza_metinleri.rol_kapsami` kullanıcının belirteçteki rolleriyle süzülür; kurumsuz belirteçte (rol yok) tüm zorunlu metinler sayılır.
+- Yeni sürüm yayınlanınca bir sonraki istekte `403 riza_gerekli` döner ve istemci KVKK ekranını yeniden gösterir.
+- Denetim kapısı `api` içinde `onRequest` kancasıdır ve kontrol sırasındaki 2. adımdır (kimlikten sonra, kiracıdan önce).
+
+**Gerekçe**
+
+- Kullanıcı kurum seçmeden önce de kişisel veri işleniyor (telefon, oturum, cihaz). Aydınlatma bu noktada yapılmalı.
+- Faz 1 metinleri platform metnidir. Veri sorumlusu kurum bazında ayrışmadığı sürece kurum başına onay kullanıcıya tekrar eden ekran gösterir, hukuki kazanç getirmez.
+- Kurum başına rıza, kurum seçimi ile rıza ekranı arasında döngüsel bir bağımlılık yaratıyordu (kurum seçmek için rıza, rıza için kurum).
+
+**Açık kalanlar**
+
+- Kuruma özgü metin (ör. kurumun kendi aydınlatma metni, 18 yaş altı veli onayı) Faz 2'de gelirse `riza_metinleri`ne kurum kapsamı eklenir ve `rizalar.kurum_id` dolu satırlar kullanılır. Şema iki kollu RLS ile buna hazırdır.
+- Kapı her istekte rıza durumunu veritabanından okur. Ölçümle gerekli görülürse süreç içi kısa önbellek (kullanıcı + metin sürümü anahtarı) eklenir.
+- Diğer servisler (`motivasyon`, `bildirim`, `medya`) rızayı kendileri denetlemez. İstemci bunlara yalnızca `api` rıza kapısını geçtikten sonra ulaşır. Bir servis istemciye doğrudan açılırsa bu karar yeniden değerlendirilir.
 
 ## Sonuçlar
 
