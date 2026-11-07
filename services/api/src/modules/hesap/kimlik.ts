@@ -30,6 +30,7 @@ export interface YetkiBaglami {
 export interface KimlikHizmeti {
   env: Env;
   issuer: string;
+  audience: string;
   db: Database;
   /** `api_sistem` havuzu; DATABASE_SISTEM_URL yoksa null. */
   sistemDb: Database | null;
@@ -63,6 +64,7 @@ export interface KimlikSecenekleri {
  */
 export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
   const issuer = env.JWT_ISSUER ?? env.PUBLIC_URL;
+  const audience = env.JWT_AUDIENCE ?? JWT_AUDIENCE;
   const holder: { db: Database | null } = { db: null };
   const anahtarlar = new AnahtarDeposu(() => {
     if (!holder.db) throw new Error('DATABASE_URL tanımlı değil');
@@ -72,7 +74,7 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
   const verifyJwt: VerifyJwt = createJwtVerifier({
     keySet: anahtarlar.keySet,
     issuer,
-    audience: env.JWT_AUDIENCE ?? JWT_AUDIENCE,
+    audience,
     allowNoKurum: true,
   });
 
@@ -92,6 +94,7 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
       const hizmet: KimlikHizmeti = {
         env,
         issuer,
+        audience,
         db,
         sistemDb,
         sms,

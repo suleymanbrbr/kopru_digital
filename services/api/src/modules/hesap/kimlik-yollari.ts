@@ -286,14 +286,19 @@ export const kimlikYollari: ServicePlugin = (app) => {
           son_kullanim_at: new Date(),
         })
         .where(eq(oturumlar.id, oturum.session.id));
-      const accessToken = await erisimBelirteciUret(kimlik.anahtarlar, kimlik.issuer, {
-        kullaniciId,
-        sessionId: oturum.session.id,
-        kurumId: secim?.kurum_id ?? null,
-        uyelikId: secim?.uyelik_id ?? null,
-        rol: secim?.rol ?? null,
-        roller,
-      });
+      const accessToken = await erisimBelirteciUret(
+        kimlik.anahtarlar,
+        kimlik.issuer,
+        kimlik.audience,
+        {
+          kullaniciId,
+          sessionId: oturum.session.id,
+          kurumId: secim?.kurum_id ?? null,
+          uyelikId: secim?.uyelik_id ?? null,
+          rol: secim?.rol ?? null,
+          roller,
+        },
+      );
       const yanit: TokenYanit = {
         access_token: accessToken,
         token_type: 'Bearer',

@@ -71,6 +71,8 @@ Genel eşleme (ayrıntılı tablo `packages/izinler/src/esleme.ts`):
 
 Kapsam, istek anında repository'ye bir süzgeç olarak çözülür (`KapsamSuzgeci`): `kendi` -> `ogrenci_id = :uyelik`, `grup` -> `grup_id IN (atanan gruplar)`, `sube` -> `sube_id = :sube`. Liste uç noktaları süzgeci SQL'e ekler. Tekil kayıt uç noktaları getirip kapsamı doğrular; kapsam dışıysa `404` döner (varlığı ifşa etmez).
 
+> **Uygulama notu.** JWT'de `rol` (etkin üyelik rolü) yanında `roller` (kullanıcının o kurumdaki tüm etkin rolleri) de taşınır; izin kararı yalnızca etkin üyeliğin `rol`ü ile verilir ve `requirePermission` üyeliğin hâlâ etkin olduğunu doğrular (belirteç ömrü içindeki ayrılma anında etkili olur). Kurum seçilmemiş kullanıcı (ilk giriş) `kurum_id`/`uyelik_id` claim'i olmayan belirteç alır. Rol-izin sözlüğü şimdilik `@kopru/contracts` içindedir (`packages/izinler` ayrı paket olarak açılmadı).
+
 ### Kontrol sırası
 
 Her kiracı isteğinde sıra sabittir. Her adım başarısızsa sonraki adıma geçilmez:

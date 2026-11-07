@@ -20,6 +20,7 @@ export interface BelirtecIddiasi {
 export async function erisimBelirteciUret(
   anahtarlar: AnahtarDeposu,
   issuer: string,
+  audience: string,
   iddia: BelirtecIddiasi,
 ): Promise<string> {
   const { kid, key } = await anahtarlar.imzaAnahtari();
@@ -34,7 +35,7 @@ export async function erisimBelirteciUret(
     .setProtectedHeader({ alg: 'EdDSA', kid, typ: 'JWT' })
     .setSubject(iddia.kullaniciId)
     .setIssuer(issuer)
-    .setAudience(JWT_AUDIENCE)
+    .setAudience(audience)
     .setIssuedAt()
     .setExpirationTime(`${String(ERISIM_BELIRTECI_OMRU_SN)}s`)
     .setJti(uuidv7())
