@@ -14,8 +14,8 @@ export const bytea = customType<{ data: Buffer; driverData: Buffer }>({
  * Better Auth `boolean` bekler (`emailVerified`, `phoneNumberVerified`); veritabaninda ise
  * dogrulanma ani (`timestamptz`, NULL = dogrulanmadi) saklanir. Yazarken `true` -> `now()` ani.
  */
-export const dogrulandiMi = customType<{ data: boolean; driverData: string | Date | null }>({
+export const dogrulandiMi = customType<{ data: boolean; driverData: string | null }>({
   dataType: () => 'timestamptz',
-  toDriver: (value) => (value ? new Date() : null),
+  toDriver: (value) => (value ? new Date().toISOString() : null),
   fromDriver: (value) => value !== null,
 });

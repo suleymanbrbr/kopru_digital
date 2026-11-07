@@ -85,6 +85,7 @@ export const kullanicilar = hesap.table('kullanicilar', {
   eposta: citext('eposta'),
   eposta_dogrulandi_at: dogrulandiMi('eposta_dogrulandi_at').notNull(),
   avatar_dosya_id: uuid('avatar_dosya_id'),
+  avatar_url: text('avatar_url'),
   dil: text('dil').notNull().default('tr'),
   saat_dilimi: text('saat_dilimi').notNull().default('Europe/Istanbul'),
   durum: text('durum').notNull().default('aktif'),

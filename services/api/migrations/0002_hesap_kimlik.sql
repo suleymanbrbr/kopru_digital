@@ -16,6 +16,7 @@ create table hesap.kullanicilar (
   eposta                  citext,
   eposta_dogrulandi_at    timestamptz,
   avatar_dosya_id         uuid,
+  avatar_url              text,
   dil                     text        not null default 'tr',
   saat_dilimi             text        not null default 'Europe/Istanbul',
   durum                   text        not null default 'aktif',

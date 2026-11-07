@@ -56,6 +56,7 @@ export function createBetterAuth({ env, db, sms }: BetterAuthGirdisi) {
         name: 'gorunen_ad',
         email: 'eposta',
         emailVerified: 'eposta_dogrulandi_at',
+        image: 'avatar_url',
         createdAt: 'created_at',
         updatedAt: 'updated_at',
       },
