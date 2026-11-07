@@ -1,5 +1,6 @@
 'use client';
 
+import type { ModulKodu } from '@kopru/contracts';
 import { createContext, useContext } from 'react';
 
 import type { Rol } from '@/lib/navigasyon';
@@ -10,7 +11,7 @@ export interface KurumBaglami {
   rol: Rol;
   kullaniciAd: string;
   /** Kurum/kademe/grup onceligi cozulmus acik moduller. */
-  acikModuller: readonly string[];
+  acikModuller: readonly ModulKodu[];
 }
 
 export const KurumKutusu = createContext<KurumBaglami | null>(null);

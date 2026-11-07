@@ -1,3 +1,4 @@
+import { MODUL_KODLARI, type ModulKodu } from '@kopru/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,8 +10,8 @@ import {
   type Rol,
 } from './navigasyon';
 
-const tumModuller = ['ders', 'odev', 'plan', 'deneme', 'soru', 'kayit', 'finans', 'motivasyon'];
-const yollar = (rol: Rol, acikModuller: readonly string[] = tumModuller) =>
+const tumModuller: readonly ModulKodu[] = MODUL_KODLARI;
+const yollar = (rol: Rol, acikModuller: readonly ModulKodu[] = tumModuller) =>
   gorunurOgeler({ rol, acikModuller }).map((o) => o.yol);
 
 describe('navigasyon yapilandirmasi', () => {
@@ -70,8 +71,16 @@ describe('navigasyon yapilandirmasi', () => {
   });
 });
 
+describe('modul kodlari', () => {
+  it('her nav ogesinin modulu sozlesmedeki kodlardan biridir', () => {
+    for (const oge of navOgeleri) {
+      if (oge.modul !== null) expect(MODUL_KODLARI).toContain(oge.modul);
+    }
+  });
+});
+
 describe('bolumDurumu', () => {
-  const ogretmen = { rol: 'ogretmen', acikModuller: ['ders'] } as const;
+  const ogretmen = { rol: 'ogretmen', acikModuller: ['takvim'] } as const;
 
   it('acik, modul kapali, yetkisiz ve bilinmeyen bolumleri ayirir', () => {
     expect(bolumDurumu('takvim', ogretmen).durum).toBe('acik');
