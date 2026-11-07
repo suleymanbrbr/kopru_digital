@@ -1,0 +1,91 @@
+import { errorCodes } from '@kopru/contracts';
+import type { FastifyInstance } from 'fastify';
+import { createRemoteJWKSet, jwtVerify, type JWTPayload, type JWTVerifyGetKey } from 'jose';
+
+import { AppError } from './errors.js';
+
+/** Dogrulanmis istek kimligi. Token claim'leri: `sub`, `kurum_id`, `roller` (dizi veya bosluklu string). */
+export interface AuthContext {
+  kullaniciId: string;
+  kurumId: string;
+  roller: string[];
+  claims: JWTPayload;
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    /** `AUTH_ENABLED=false` iken veya public rotalarda `null`. */
+    auth: AuthContext | null;
+  }
+  interface FastifyContextConfig {
+    /** true ise JWT istenmez (health, ready, openapi). */
+    public?: boolean;
+  }
+}
+
+export type VerifyJwt = (token: string) => Promise<AuthContext>;
+
+export interface JwtVerifierOptions {
+  jwksUrl?: string;
+  /** Testler / ozel anahtar kaynaklari icin `jwksUrl` yerine verilebilir. */
+  keySet?: JWTVerifyGetKey;
+  issuer?: string;
+  audience?: string;
+}
+
+const unauthorized = () =>
+  new AppError(401, errorCodes.unauthorized, 'Oturumunuz geçersiz veya süresi dolmuş.');
+
+function toRoles(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
+  if (typeof value === 'string') return value.split(/\s+/).filter((item) => item.length > 0);
+  return [];
+}
+
+export function createJwtVerifier(options: JwtVerifierOptions): VerifyJwt {
+  const keySet =
+    options.keySet ?? (options.jwksUrl ? createRemoteJWKSet(new URL(options.jwksUrl)) : undefined);
+  if (!keySet) throw new Error('JWT doğrulaması için jwksUrl veya keySet gerekli');
+
+  return async (token) => {
+    try {
+      const { payload } = await jwtVerify(token, keySet, {
+        ...(options.issuer ? { issuer: options.issuer } : {}),
+        ...(options.audience ? { audience: options.audience } : {}),
+      });
+      const kurumId = payload.kurum_id;
+      if (!payload.sub || typeof kurumId !== 'string') throw unauthorized();
+      return {
+        kullaniciId: payload.sub,
+        kurumId,
+        roller: toRoles(payload.roller),
+        claims: payload,
+      };
+    } catch (err) {
+      throw err instanceof AppError ? err : unauthorized();
+    }
+  };
+}
+
+/**
+ * `request.auth` alanini doldurur. `enabled` false ise hicbir sey dogrulanmaz (auth = null).
+ * `config.public === true` olan rotalar (health, ready, openapi) her zaman acik kalir.
+ */
+export function installAuth(
+  app: FastifyInstance,
+  options: { enabled: boolean; verify?: VerifyJwt },
+): void {
+  app.decorateRequest('auth', null);
+  if (!options.enabled) return;
+  const { verify } = options;
+  if (!verify) throw new Error('AUTH_ENABLED iken verifyJwt sağlanmalı');
+
+  app.addHook('onRequest', async (request) => {
+    if (request.routeOptions.config.public === true) return;
+    const header = request.headers.authorization;
+    const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : undefined;
+    if (!token) throw unauthorized();
+    request.auth = await verify(token);
+    request.log = request.log.child({ kurumId: request.auth.kurumId });
+  });
+}
