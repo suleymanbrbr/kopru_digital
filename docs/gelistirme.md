@@ -43,9 +43,11 @@ docker compose -f infra/docker/compose.yaml ps   # sağlık durumu
 | ------------- | ------------------------------------------- | ------------------------------------------------------------------------------- |
 | PostgreSQL 17 | `localhost:5432`                            | `api`, `motivasyon`, `bildirim`, `medya` db + kullanıcı (şifre = kullanıcı adı) |
 | NATS          | `localhost:4222` (izleme: `8222`)           | JetStream açık, kalıcı volume                                                   |
-| MinIO         | S3 `9000`, konsol `http://localhost:9001`   | `medya` bucket'ı otomatik oluşur                                                |
+| S3 (RustFS)   | S3 `9000`, konsol `http://localhost:9001`   | `medya` bucket'ı otomatik oluşur (MinIO imajları Docker Hub'dan kalktı)         |
 | Mailpit       | SMTP `1025`, arayüz `http://localhost:8025` | Giden e-postalar burada görünür                                                 |
 | Grafana       | `http://localhost:3030`                     | Loki, Tempo, Prometheus + OTLP `4317` / `4318`                                  |
+
+5432 başka bir yerel Postgres tarafından kullanılıyorsa `KOPRU_PG_PORT=5433 pnpm infra:up` çalıştırın ve `.env` içindeki `localhost:5432` adreslerini `5433` yapın.
 
 Postgres init betiği (`infra/docker/postgres/init/`) yalnızca veri dizini ilk oluşturulurken çalışır. Sıfırlamak için `pnpm infra:down` ve ardından `docker volume rm kopru_postgres_data`.
 

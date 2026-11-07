@@ -17,8 +17,11 @@ declare module 'vitest' {
   }
 }
 
-export const TEST_APP_PASSWORD = 'test_app_pw';
-export const TEST_SISTEM_PASSWORD = 'test_sistem_pw';
+// Roller kume (cluster) genelidir: testler ayni Postgres'te yerel gelistirme ile birlikte calisir.
+// Farkli bir parola atamak `pnpm test` sonrasinda yerel api'nin baglanmasini bozuyordu; bu yuzden
+// degerler infra/docker/postgres/init betigindeki gelistirme parolalariyla aynidir.
+export const TEST_APP_PASSWORD = 'api_app';
+export const TEST_SISTEM_PASSWORD = 'api_sistem';
 
 export function withDatabase(url: string, name: string, user?: string, password?: string): string {
   const u = new URL(url);
