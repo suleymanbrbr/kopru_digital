@@ -6,3 +6,6 @@ import { afterEach } from 'vitest';
 afterEach(() => {
   cleanup();
 });
+
+// input-otp, jsdom'da bulunmayan elementFromPoint'i cagirir.
+document.elementFromPoint = () => null;

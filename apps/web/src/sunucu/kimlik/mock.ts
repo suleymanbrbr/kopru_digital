@@ -128,6 +128,17 @@ function oturumKur(icerik: BelirtecIcerigi): Oturum {
   };
 }
 
+/** Esenkron hata semantigi: senkron firlatmalar reddedilmis Promise'a donusur. */
+function dene<T>(is: () => T): Promise<T> {
+  return new Promise((coz, reddet) => {
+    try {
+      coz(is());
+    } catch (hata) {
+      reddet(hata instanceof Error ? hata : new Error(String(hata)));
+    }
+  });
+}
+
 export function mockKimlik(): KimlikAdaptoru {
   return {
     kodIste(telefon) {
@@ -147,44 +158,54 @@ export function mockKimlik(): KimlikAdaptoru {
     },
 
     oturumAl(oturumBelirteci, secim?: OturumSecimi): Promise<OturumSonucu> {
-      const icerik = belirtecOku(oturumBelirteci);
-      const secilen = secim?.uyelikId
-        ? uyelikler.find((u) => u.id === secim.uyelikId)
-        : secim?.kurumId
-          ? uyelikler.find((u) => u.kurumId === secim.kurumId)
-          : undefined;
-      if ((secim?.uyelikId ?? secim?.kurumId) && !secilen) {
-        return Promise.reject(new KimlikHatasi(403, 'yasak', 'Bu kurumda üyeliğin yok.'));
-      }
-      const yeni: BelirtecIcerigi = secilen ? { ...icerik, a: secilen.id } : icerik;
-      return Promise.resolve({
-        oturum: oturumKur(yeni),
-        ...(secilen ? { oturumBelirteci: belirtecYaz(yeni) } : {}),
-      });
+      return dene(() => oturumAlSenkron(oturumBelirteci, secim));
     },
 
     kurumBaglami(oturumBelirteci, _erisim, kurumId): Promise<KurumBaglami> {
-      belirtecOku(oturumBelirteci);
-      const kurum = kurumlar[kurumId];
-      if (!kurum) return Promise.reject(new KimlikHatasi(404, 'bulunamadi', 'Kurum bulunamadı.'));
-      return Promise.resolve({ kurumId, moduller: kurum.moduller });
+      return dene(() => {
+        belirtecOku(oturumBelirteci);
+        const kurum = kurumlar[kurumId];
+        if (!kurum) throw new KimlikHatasi(404, 'bulunamadi', 'Kurum bulunamadı.');
+        return { kurumId, moduller: kurum.moduller };
+      });
     },
 
     rizaMetni(oturumBelirteci) {
-      belirtecOku(oturumBelirteci);
-      return Promise.resolve(rizaMetni);
+      return dene(() => {
+        belirtecOku(oturumBelirteci);
+        return rizaMetni;
+      });
     },
 
     rizaKabul(oturumBelirteci, surum) {
-      const icerik = belirtecOku(oturumBelirteci);
-      if (surum !== MOCK_RIZA_SURUMU) {
-        return Promise.reject(new KimlikHatasi(409, 'cakisma', 'Metin sürümü güncel değil.'));
-      }
-      return Promise.resolve({ oturumBelirteci: belirtecYaz({ ...icerik, r: surum }) });
+      return dene(() => {
+        const icerik = belirtecOku(oturumBelirteci);
+        if (surum !== MOCK_RIZA_SURUMU) {
+          throw new KimlikHatasi(409, 'cakisma', 'Metin sürümü güncel değil.');
+        }
+        return { oturumBelirteci: belirtecYaz({ ...icerik, r: surum }) };
+      });
     },
 
     cikis() {
       return Promise.resolve();
     },
+  };
+}
+
+function oturumAlSenkron(oturumBelirteci: string, secim?: OturumSecimi): OturumSonucu {
+  const icerik = belirtecOku(oturumBelirteci);
+  const secilen = secim?.uyelikId
+    ? uyelikler.find((u) => u.id === secim.uyelikId)
+    : secim?.kurumId
+      ? uyelikler.find((u) => u.kurumId === secim.kurumId)
+      : undefined;
+  if ((secim?.uyelikId ?? secim?.kurumId) && !secilen) {
+    throw new KimlikHatasi(403, 'yasak', 'Bu kurumda üyeliğin yok.');
+  }
+  const yeni: BelirtecIcerigi = secilen ? { ...icerik, a: secilen.id } : icerik;
+  return {
+    oturum: oturumKur(yeni),
+    ...(secilen ? { oturumBelirteci: belirtecYaz(yeni) } : {}),
   };
 }

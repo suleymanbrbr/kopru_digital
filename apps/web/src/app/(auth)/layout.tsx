@@ -43,9 +43,9 @@ function KemerCizimi() {
 export default function KimlikDuzeni({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <aside className="relative hidden overflow-hidden bg-marka-900 p-12 text-notr-0 lg:flex lg:flex-col">
+      <aside className="relative hidden overflow-hidden bg-marka-900 p-12 text-notr-0 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
         <MarkaAdi />
-        <div className="mt-auto mb-64 max-w-md">
+        <div className="mt-[14vh] max-w-md">
           <p className="text-3xl font-semibold leading-tight tracking-tight">{t('marka.slogan')}</p>
           <p className="mt-4 text-base leading-relaxed text-marka-100/80">
             {t('marka.sloganAciklama')}
