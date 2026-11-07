@@ -208,10 +208,10 @@ select
   'KVKK Aydınlatma Metni (YER TUTUCU)', m.govde, digest(m.govde, 'sha256'),
   '{ogrenci,ogretmen,yonetici,sahip,veli}', '2026-11-07T00:00:00Z', '2026-11-07T00:00:00Z'
 from (select
-  E'> **YER TUTUCU METİN - HUKUKİ İNCELEME BEKLİYOR.** Bu metin yalnızca geliştirme ve test içindir; yayına çıkmadan önce hukuk danışmanı tarafından hazırlanan gerçek aydınlatma metniyle (yeni sürüm olarak) değiştirilmelidir.\n\n'
-  E'## Kişisel Verilerin Korunması Aydınlatma Metni\n\n'
-  E'Bu platform üzerinde ad, iletişim bilgileri, ders ve ödev kayıtları gibi kişisel verileriniz, eğitim hizmetinin yürütülmesi amacıyla 6698 sayılı KVKK kapsamında işlenir. '
-  E'Veri sorumlusu, işleme amaçları, aktarım, saklama süreleri ve haklarınız bu metnin nihai sürümünde yer alacaktır.\n\n'
+  E'> **YER TUTUCU METİN - HUKUKİ İNCELEME BEKLİYOR.** Bu metin yalnızca geliştirme ve test içindir; yayına çıkmadan önce hukuk danışmanı tarafından hazırlanan gerçek aydınlatma metniyle (yeni sürüm olarak) değiştirilmelidir.\n\n' ||
+  E'## Kişisel Verilerin Korunması Aydınlatma Metni\n\n' ||
+  E'Bu platform üzerinde ad, iletişim bilgileri, ders ve ödev kayıtları gibi kişisel verileriniz, eğitim hizmetinin yürütülmesi amacıyla 6698 sayılı KVKK kapsamında işlenir. ' ||
+  E'Veri sorumlusu, işleme amaçları, aktarım, saklama süreleri ve haklarınız bu metnin nihai sürümünde yer alacaktır.\n\n' ||
   E'Devam ederek bu yer tutucu metni okuduğunuzu ve kabul ettiğinizi onaylarsınız.' as govde) m;
 
 -- Riza kararlari: yalnizca ekleme. kurum_id bos olabilir: hesap duzeyi riza (ilk giris, henuz kurum yok).

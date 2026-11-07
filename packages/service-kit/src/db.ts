@@ -60,3 +60,19 @@ export async function withTenant<T>(
     return fn(tx);
   });
 }
+
+/**
+ * Kurum secilmeden kullanici duzeyinde islem (ornegin giris sonrasi uyelik listesi). Yalnizca
+ * `app.kullanici_id` ayarlanir; `app.kurum_id` bos kalir, kurum politikalari satir dondurmez.
+ */
+export async function withUser<T>(
+  db: Pick<Database, 'orm'>,
+  context: { kullaniciId: string },
+  fn: (tx: Tx) => Promise<T>,
+): Promise<T> {
+  const kullaniciId = z.uuid().parse(context.kullaniciId);
+  return db.orm.transaction(async (tx) => {
+    await tx.execute(sql`select set_config('app.kullanici_id', ${kullaniciId}, true)`);
+    return fn(tx);
+  });
+}
