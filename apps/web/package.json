@@ -41,6 +41,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
     "@kopru/config": "workspace:*",
     "@next/eslint-plugin-next": "catalog:",
     "@playwright/test": "catalog:",

@@ -267,7 +267,7 @@ export function GirisAkisi({ denemeIpucu }: { denemeIpucu: boolean }) {
       )}
 
       {denemeIpucu ? (
-        <p className="rounded-orta bg-uyari-yumusak px-3 py-2.5 text-sm text-uyari">
+        <p className="rounded-orta bg-yuzey-ikincil px-3 py-2.5 text-sm text-metin">
           {t('oturum.denemeIpucu')}
         </p>
       ) : (
