@@ -1,0 +1,29 @@
+{
+  "name": "kopru-digital",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Egitim operasyon platformu - monorepo",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "doctor": "pnpm --filter @kopru/doctor run start",
+    "infra:up": "docker compose -f infra/docker/compose.yaml up -d --wait",
+    "infra:down": "docker compose -f infra/docker/compose.yaml down"
+  },
+  "prettier": "@kopru/config/prettier",
+  "devDependencies": {
+    "@kopru/config": "workspace:*",
+    "prettier": "catalog:",
+    "turbo": "catalog:"
+  }
+}
