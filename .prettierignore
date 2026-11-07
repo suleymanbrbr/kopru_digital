@@ -7,3 +7,11 @@ docs/schema
 docs/adr
 docs/karakter
 assets
+**/src/generated
+**/.next
+**/next-env.d.ts
+**/playwright-report
+**/test-results
+apps/web/public/karakter
+apps/web/src/styles/tema.generated.css
+apps/admin/src/app/tema.generated.css

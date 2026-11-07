@@ -59,3 +59,47 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # Servis OpenAPI anlikleri ve uretilen istemci tipleri guncel olmali.
+      # Eskiyse: pnpm build && pnpm --filter @kopru/api-client generate
+      - name: OpenAPI anlığı güncel mi
+        run: pnpm --filter @kopru/api-client generate:check
+
+  web-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Mock API modu: gercek api servisi olmadan giris -> KVKK -> kurum secimi akisi calisir.
+      - name: Web build (mock API)
+        run: pnpm turbo run build --filter=@kopru/web
+        env:
+          NEXT_PUBLIC_API_MOCK: '1'
+
+      - name: Playwright tarayıcısı
+        run: pnpm --filter @kopru/web exec playwright install --with-deps chromium
+
+      - name: Playwright e2e (masaüstü + mobil)
+        run: pnpm --filter @kopru/web e2e
+        env:
+          E2E_HAZIR: '1'
+          NEXT_PUBLIC_API_MOCK: '1'
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-rapor
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7

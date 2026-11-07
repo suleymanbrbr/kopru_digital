@@ -1,0 +1,120 @@
+/*
+ * Uretilmis dosya: `pnpm --filter <uygulama> hazirla` ile @kopru/ui-tokens degerlerinden uretilir.
+ * Elle degistirmeyin; degisiklik icin packages/ui-tokens veya apps/web/scripts/tema.ts.
+ */
+
+:root {
+  color-scheme: light;
+  --arka-plan: #F7F8FA;
+  --yuzey: #FFFFFF;
+  --yuzey-ikincil: #EEF0F3;
+  --kenar: #DDE1E7;
+  --metin: #161B26;
+  --metin-ikincil: #5B6577;
+  --birincil: #1F63D6;
+  --birincil-uzeri: #FFFFFF;
+  --vurgu: #FF8A3D;
+  --basari: #14703D;
+  --uyari: #9A6B00;
+  --hata: #A12520;
+
+  /* Vurgu rengi uzerindeki metin. Kurum rengi verilince calisma aninda yeniden hesaplanir. */
+  --vurgu-uzeri: #161B26;
+
+  /* Turetilmis yumusak zeminler: durum ve vurgu renklerinin seffaf karisimi. */
+  --birincil-yumusak: color-mix(in oklab, var(--birincil) 12%, transparent);
+  --vurgu-yumusak: color-mix(in oklab, var(--vurgu) 16%, transparent);
+  --basari-yumusak: color-mix(in oklab, var(--basari) 12%, transparent);
+  --uyari-yumusak: color-mix(in oklab, var(--uyari) 14%, transparent);
+  --hata-yumusak: color-mix(in oklab, var(--hata) 10%, transparent);
+}
+
+.dark {
+  color-scheme: dark;
+  --arka-plan: #0B0E14;
+  --yuzey: #161B26;
+  --yuzey-ikincil: #2A3140;
+  --kenar: #2A3140;
+  --metin: #F7F8FA;
+  --metin-ikincil: #9AA3B2;
+  --birincil: #8EC1FF;
+  --birincil-uzeri: #0B0E14;
+  --vurgu: #FFC38A;
+  --basari: #1F9D57;
+  --uyari: #E0A100;
+  --hata: #F2847E;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
+
+  --color-arka-plan: var(--arka-plan);
+  --color-yuzey: var(--yuzey);
+  --color-yuzey-ikincil: var(--yuzey-ikincil);
+  --color-kenar: var(--kenar);
+  --color-metin: var(--metin);
+  --color-metin-ikincil: var(--metin-ikincil);
+  --color-birincil: var(--birincil);
+  --color-birincil-uzeri: var(--birincil-uzeri);
+  --color-vurgu: var(--vurgu);
+  --color-basari: var(--basari);
+  --color-uyari: var(--uyari);
+  --color-hata: var(--hata);
+  --color-vurgu-uzeri: var(--vurgu-uzeri);
+  --color-birincil-yumusak: var(--birincil-yumusak);
+  --color-vurgu-yumusak: var(--vurgu-yumusak);
+  --color-basari-yumusak: var(--basari-yumusak);
+  --color-uyari-yumusak: var(--uyari-yumusak);
+  --color-hata-yumusak: var(--hata-yumusak);
+
+  --color-marka-50: #EEF6FF;
+  --color-marka-100: #D9EAFF;
+  --color-marka-300: #8EC1FF;
+  --color-marka-500: #2F7BF6;
+  --color-marka-600: #1F63D6;
+  --color-marka-700: #1A4FAD;
+  --color-marka-900: #132F63;
+  --color-vurgu-300: #FFC38A;
+  --color-vurgu-500: #FF8A3D;
+  --color-vurgu-700: #C85A12;
+  --color-basari-100: #DDF5E6;
+  --color-basari-500: #1F9D57;
+  --color-basari-700: #14703D;
+  --color-uyari-100: #FFF1D6;
+  --color-uyari-500: #E0A100;
+  --color-uyari-700: #9A6B00;
+  --color-hata-100: #FDE2E1;
+  --color-hata-300: #F2847E;
+  --color-hata-500: #D93A33;
+  --color-hata-700: #A12520;
+  --color-notr-0: #FFFFFF;
+  --color-notr-50: #F7F8FA;
+  --color-notr-100: #EEF0F3;
+  --color-notr-200: #DDE1E7;
+  --color-notr-400: #9AA3B2;
+  --color-notr-600: #5B6577;
+  --color-notr-800: #2A3140;
+  --color-notr-900: #161B26;
+  --color-notr-1000: #0B0E14;
+
+  --radius-kucuk: 6px;
+  --radius-orta: 10px;
+  --radius-buyuk: 16px;
+  --radius-tam: 9999px;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.4285714285714286;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.4444444444444444;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.3636363636363635;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.2142857142857142;
+  --text-3xl: 2.125rem;
+  --text-3xl--line-height: 1.1764705882352942;
+}
