@@ -36,7 +36,7 @@ export default function SekmeDuzeni() {
           backgroundColor: renkler.yuzey,
           borderTopColor: renkler.kenar,
         },
-        tabBarLabelStyle: { fontFamily: 'Inter_500Medium', fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: 'Inter_500Medium', fontSize: 11, lineHeight: 14 },
       }}
     >
       {sira.map((ad) => {

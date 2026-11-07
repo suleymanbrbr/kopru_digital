@@ -7,3 +7,7 @@ docs/schema
 docs/adr
 docs/karakter
 assets
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/.expo
+apps/mobile/src/karakter/gorseller.generated.ts
