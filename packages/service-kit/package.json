@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "description": "Servis ortak katmani: Fastify, log, env, hata, DB/tenant, outbox, auth, telemetri",
-  "files": ["dist", "migrations"],
+  "files": [
+    "dist",
+    "migrations"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

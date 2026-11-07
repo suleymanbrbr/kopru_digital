@@ -96,6 +96,17 @@ export function createService(options: CreateServiceOptions): Service {
     loggerInstance: logger,
     requestIdHeader: false,
     genReqId: (request) => headerValue(request.headers['x-request-id']) ?? uuidv7(),
+    // correlationId tum istek loglarinda (gelen/biten istek dahil) gorunsun.
+    childLoggerFactory: (log, bindings, options, request) => {
+      const reqId: unknown = bindings.reqId;
+      return log.child(
+        {
+          ...bindings,
+          correlationId: headerValue(request.headers['x-correlation-id']) ?? reqId,
+        },
+        options,
+      );
+    },
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
@@ -125,7 +136,6 @@ export function createService(options: CreateServiceOptions): Service {
   // --- Istek kimlikleri ------------------------------------------------------
   app.addHook('onRequest', async (request, reply) => {
     request.correlationId = headerValue(request.headers['x-correlation-id']) ?? request.id;
-    request.log = request.log.child({ correlationId: request.correlationId });
     void reply.header('x-request-id', request.id);
     void reply.header('x-correlation-id', request.correlationId);
   });

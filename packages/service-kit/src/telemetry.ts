@@ -5,7 +5,7 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 
 export interface Telemetry {
   enabled: boolean;
-  shutdown(): Promise<void>;
+  shutdown: () => Promise<void>;
 }
 
 /**
