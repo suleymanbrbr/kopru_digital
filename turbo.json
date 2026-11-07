@@ -5,21 +5,50 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "migrations/**", "tsconfig*.json", "package.json"],
-      "outputs": ["dist/**"]
+      "inputs": [
+        "src/**",
+        "migrations/**",
+        "public/**",
+        "scripts/**",
+        "*.config.*",
+        "tsconfig*.json",
+        "package.json"
+      ],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "env": ["NEXT_PUBLIC_*", "API_URL"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "*.ts", "tsconfig*.json", "package.json"]
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "e2e/**",
+        "ekran/**",
+        "*.ts",
+        "*.js",
+        "*.mjs",
+        "tsconfig*.json",
+        "package.json"
+      ]
     },
     "lint": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "*.ts", "*.js", "tsconfig*.json", "package.json"]
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "e2e/**",
+        "ekran/**",
+        "*.ts",
+        "*.js",
+        "*.mjs",
+        "tsconfig*.json",
+        "package.json"
+      ]
     },
     "test": {
       "dependsOn": ["^build"],
       "env": ["DATABASE_URL", "NATS_URL"],
-      "inputs": ["src/**", "migrations/**", "*.ts", "tsconfig*.json", "package.json"]
+      "inputs": ["src/**", "migrations/**", "scripts/**", "*.ts", "tsconfig*.json", "package.json"]
     },
     "dev": {
       "dependsOn": ["^build"],

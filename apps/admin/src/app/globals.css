@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/wght.css';
+@import './tema.generated.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    background: var(--arka-plan);
+    color: var(--metin);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--birincil);
+    outline-offset: 2px;
+  }
+}
