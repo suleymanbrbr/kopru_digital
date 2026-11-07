@@ -132,7 +132,7 @@ Profil: `GS`. RLS: hayır (giriş öncesi sorgulanır; erişim yalnızca `AuthRe
 | `anonimlestirildi_at` | timestamptz | evet | | |
 
 Kısıtlar: `UNIQUE (telefon_e164)` ve `UNIQUE (eposta)` (NULL'lar serbest). `CHECK (telefon_e164 ~ '^\+[1-9][0-9]{7,14}$')`. `CHECK (telefon_e164 IS NOT NULL OR eposta IS NOT NULL OR durum = 'silindi')`. İndeks: `ad_arama gin_trgm_ops`.
-Olaylar: `hesap.kullanici.degisti.v1` (oluşturma ve güncelleme), `hesap.kullanici.silindi.v1` (anonimleştirme).
+Olaylar: `hesap.kullanici.degisti.v1` (oluşturma ve güncelleme), `hesap.kullanici.silindi.v1` (anonimleştirme). Olay yükü yalnızca `kullanici_id`, `dil`, `durum` taşır. Telefon/e-posta/ad `GET /ic/kullanicilar/:id/iletisim` iç uç noktasıyla (yalnızca `scope=iletisim.oku` servis JWT'si, çağrı denetim günlüğüne yazılır) `bildirim`e verilir.
 
 #### `hesap.oturumlar`
 
@@ -566,10 +566,13 @@ Profil: `KS`. RLS: evet.
 | `online_baglanti` | text | evet | | |
 | `yer` | text | evet | | |
 | `cakisma_onayli` | boolean | hayır | false | Öğretmen çakışması bilerek onaylandı |
+| `iptal_kaynagi` | text | evet | | CHECK `IN ('ogretmen','ogrenci','yonetici')`. İptalde zorunlu. |
+| `gec_iptal` | boolean | hayır | false | Öğrenci iptali `baslangic_at - gec_iptal_saat` sınırından sonra yapıldı (sunucu hesaplar) |
 
 Kısıtlar:
 - `CHECK (bitis_at > baslangic_at)` (`dersler_zaman_chk`).
-- `CHECK (durum <> 'iptal' OR iptal_at IS NOT NULL)`.
+- `CHECK (durum <> 'iptal' OR (iptal_at IS NOT NULL AND iptal_kaynagi IS NOT NULL))`.
+- `CHECK (NOT gec_iptal OR iptal_kaynagi = 'ogrenci')`.
 - `CHECK (telafi OR telafi_kaynak_ders_id IS NULL)`.
 - `UNIQUE (kurum_id, id)`.
 - `UNIQUE (seri_id, seri_sirasi) WHERE seri_id IS NOT NULL` (seri üretiminin idempotent olması).
@@ -750,9 +753,29 @@ Modül bağımlılığı: `finans` modülü kapalıysa (kurum/kademe/grup) kredi
 
 ### `finans.kredi_politikalari`
 
-Hangi yoklama durumları kredi düşer.
+**Kurum bazlı** kredi düşüm politikası. Hangi yoklama durumlarının ve iptal türlerinin kredi düşeceğini belirler. Paket bazlı geçersiz kılma `paketler.kredi_politikasi` (jsonb) ile yapılır.
 
-Profil: `K` (kurum başına tek satır). RLS: evet. Sütunlar: `geldi_dusurur boolean NOT NULL DEFAULT true`, `gec_dusurur boolean NOT NULL DEFAULT true`, `gelmedi_dusurur boolean NOT NULL DEFAULT true`, `izinli_dusurur boolean NOT NULL DEFAULT false`, `dusuk_kredi_esigi smallint NOT NULL DEFAULT 2`. `UNIQUE (kurum_id)`. Satır yoksa varsayılanlar kullanılır. Olaylar: yok.
+Profil: `KS` (kurum başına tek satır). RLS: evet. `UNIQUE (kurum_id)`. Satır yoksa varsayılanlar kullanılır.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `geldi_dusurur` | boolean | hayır | true | |
+| `gec_dusurur` | boolean | hayır | true | |
+| `gelmedi_dusurur` | boolean | hayır | true | |
+| `izinli_dusurur` | boolean | hayır | false | |
+| `ogrenci_gec_iptal_dusurur` | boolean | hayır | true | Öğrenci kaynaklı **geç** iptalde kredi düşer |
+| `gec_iptal_saat` | smallint | hayır | 24 | Ders başlangıcına bu kadar saatten az kala yapılan öğrenci iptali "geç"tir. CHECK `BETWEEN 0 AND 168` |
+| `dusuk_kredi_esigi` | smallint | hayır | 2 | |
+
+**Politika çözümü** (yoklama veya iptal anında, alan alan): ilgili paket satışının `paketler.kredi_politikasi` anahtarı varsa o, yoksa kurum satırı, yoksa varsayılan. Düşüm hangi paket havuzundan yapılacaksa o havuzun paketi esas alınır; havuz yoksa kurum politikası.
+
+**İptal kuralları** (ders `durum='iptal'` olduğunda, `finans.krediVeUcretiUygula` aynı işlemde çalışır; katılımcı başına):
+- `iptal_kaynagi = 'ogretmen'` veya `'yonetici'`: **hiçbir koşulda kredi/ücret düşmez.** Dersin katılımcıları için etkin bir düşüm varsa ters çevrilir (`iade`).
+- `iptal_kaynagi = 'ogrenci'` ve `gec_iptal = false`: düşmez.
+- `iptal_kaynagi = 'ogrenci'` ve `gec_iptal = true` ve politika `ogrenci_gec_iptal_dusurur`: katılımcı için `tur='iptal_dusum'` kredi satırı eklenir (yoklama olmadığı için `ders_id` + `ogrenci_id` ile tekil: `UNIQUE (ders_id, ogrenci_id) WHERE tur = 'iptal_dusum'`). `ders_basi` modelinde aynı kural ücret satırı için geçerlidir (`tur='ders_ucreti'`, `kaynak_turu='ders_iptal'`).
+- Gruplu derste öğrenci tek başına ders iptal edemez; kendi devamsızlığı yoklamada `izinli`/`gelmedi` ile işlenir. Öğrenci iptali `birebir` gruplarda ders iptali olarak çalışır.
+
+Olaylar: yok.
 
 ### `finans.ogrenci_finans_profilleri`
 
@@ -771,6 +794,7 @@ Profil: `KS`. RLS: evet.
 | `ad` | text | hayır | | |
 | `kredi_adedi` | int | hayır | | CHECK `> 0` |
 | `fiyat_kurus` | bigint | hayır | | CHECK `>= 0` |
+| `kredi_politikasi` | jsonb | evet | | Paket bazlı geçersiz kılma: `kredi_politikalari` anahtarlarından (`geldi_dusurur`,`gec_dusurur`,`gelmedi_dusurur`,`izinli_dusurur`,`ogrenci_gec_iptal_dusurur`) bir alt küme. NULL = kurum politikası. |
 | `gecerlilik_gun` | int | evet | | NULL = süresiz |
 | `grup_turu` | text | evet | | CHECK `IN ('birebir','grup','sinif','etut')`, NULL = hepsi |
 | `brans_kodu` | text | evet | | FK `ortak.bransler` |
@@ -813,8 +837,8 @@ Profil: `D`. RLS: evet.
 | --- | --- | --- | --- | --- |
 | `ogrenci_id` | uuid | hayır | | |
 | `paket_satisi_id` | uuid | evet | | NULL = havuzsuz (negatif bakiye) |
-| `tur` | text | hayır | | CHECK `IN ('satin_alma','dusum','iade','duzeltme','son_kullanma','ters_kayit')`. `iade`: yoklama değişikliğinde ters kayıt; `ters_kayit`: diğer iptaller. |
-| `miktar` | int | hayır | | İşaretli. CHECK `miktar <> 0`. `satin_alma`/`iade` pozitif, `dusum`/`son_kullanma` negatif. |
+| `tur` | text | hayır | | CHECK `IN ('satin_alma','dusum','iptal_dusum','iade','duzeltme','son_kullanma','ters_kayit')`. `iade`: yoklama/iptal değişikliğinde ters kayıt; `ters_kayit`: diğer iptaller; `iptal_dusum`: öğrenci kaynaklı geç ders iptali. |
+| `miktar` | int | hayır | | İşaretli. CHECK `miktar <> 0`. `satin_alma`/`iade` pozitif, `dusum`/`iptal_dusum`/`son_kullanma` negatif. |
 | `ders_id` | uuid | evet | | |
 | `yoklama_id` | uuid | evet | | |
 | `yoklama_surumu` | bigint | evet | | |
@@ -829,7 +853,7 @@ Kısıtlar:
 - Etkin düşüm tanımı: ters çevrilmemiş `dusum` satırı.
 Yoklama değişikliği algoritması (aynı `tx`, `yoklamalar` satırı `FOR UPDATE` kilitliyken):
 1. Bu yoklamanın ters çevrilmemiş `dusum` satırını bul. Varsa ve yeni durum artık düşürmüyorsa ya da yoklama silindiyse: `iade` ekle (`ters_cevrilen_id = dusum.id`, `miktar = -dusum.miktar`), `kredi_bakiyeleri` +.
-2. Yeni durum `kredi_politikalari`na göre düşürüyorsa ve etkin düşüm yoksa: `yoklama_surumu = yoklamalar.surum` ile `dusum` ekle.
+2. Yeni durum çözümlenen kredi politikasına (paket > kurum > varsayılan) göre düşürüyorsa ve etkin düşüm yoksa: `yoklama_surumu = yoklamalar.surum` ile `dusum` ekle.
 3. Durum değişmediyse (`geldi` -> `geldi`) hiçbir şey eklenmez.
 İndeks: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, paket_satisi_id)`, `(kurum_id, yoklama_id)`.
 Görünüm: `v_kredi_hareketleri_net`. Olaylar: `finans.kredi.azaldi.v1` (bakiye eşiğin altına inince, yalnızca eşiği geçtiği hareketle).
@@ -1109,7 +1133,7 @@ Profil: `GS` + `kurum_id uuid NULL`. RLS: karma (global okur, kurum özel kural�
 | `gecerli_yil` | int | evet | | Kural yılı (ör. 2026). Yıl değişince yeni satır, eskisi kalır. |
 | `aktif` | boolean | hayır | true | |
 
-Kısıtlar: `UNIQUE (COALESCE(kurum_id, '00000000-0000-0000-0000-000000000000'), kod, COALESCE(gecerli_yil, 0))`. `CHECK (yanlis_katsayisi >= 0 AND yanlis_katsayisi <= 1)`. Not: katsayı değerleri tohum verisidir ve resmi sınav kılavuzlarıyla doğrulanıp tohumlanmalıdır. İndeks: `(kurum_id, aktif)`. Olaylar: yok.
+Kısıtlar: `UNIQUE (COALESCE(kurum_id, '00000000-0000-0000-0000-000000000000'), kod, COALESCE(gecerli_yil, 0))`. `CHECK (yanlis_katsayisi >= 0 AND yanlis_katsayisi <= 1)`. Tohum notu: LGS 1/3, TYT/AYT/YDT 1/4 değerleri **resmi kılavuzdan doğrulanacak** (doğrulanana kadar yer tutucudur). İndeks: `(kurum_id, aktif)`. Olaylar: yok.
 
 #### `ogrenme.denemeler`
 

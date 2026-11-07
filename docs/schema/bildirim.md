@@ -10,6 +10,7 @@ Tek şema: `bildirim` (+ `ortak`). Roller: `bildirim_owner`, `bildirim_app`, `bi
 - Servis, içeriği olaydan üretir: olay -> kategori -> şablon -> alıcı çözümü -> tercih ve sessiz saat süzgeci -> kanal başına gönderim.
 - **Kanallar:** `kutu` (gelen kutusu, her zaman yazılır), `push`, `eposta`, `sms`.
 - **Gizlilik (KVKK):** push ve SMS gövdesi kişisel veri taşımaz (öğrenci adı, not, ödev metni yok). Genel metin + derin bağlantı. Push sağlayıcıları (Expo/APNs/FCM) yurt dışındadır ([ADR 0005](../adr/0005-dagitim-docker-kamal.md)). SMS ve e-posta sağlayıcıları Türkiye'de olmalıdır.
+- **İletişim bilgisi saklanmaz.** Telefon, e-posta ve ad olaylarda taşınmaz ve bu serviste kopyalanmaz. Gönderim işi `sms`/`eposta` kanalında, gönderim anında `api`dan `GET /ic/kullanicilar/:id/iletisim` ile (servis JWT'si, `aud=api`) alır; yanıt `{gorunen_ad, telefon_e164, eposta, dil}`; bellekte tutulur, yazılmaz. `api` yanıtı vermezse (`5xx`/zaman aşımı) gönderim geçici hata sayılır ve yeniden denenir; kullanıcı silinmişse (`404`) `atlandi`. `gonderimler.hedef_anahtar` HMAC özetidir, düz adres günlüğe yazılmaz.
 - **Gizli içerik** (OTP, davet bağlantısı) olaydan değil, iç uç noktadan gelir: `POST /ic/sms` (servis JWT'si, `aud=bildirim`). Bu içerik `gonderimler.govde`ye yazılmaz (yalnızca `sablon_kodu` ve maske).
 - Tercihler ve kota tüketici tarafında uygulanır. Kullanıcı tercihi kapalı kategorilerde `kutu` yazılır, diğer kanallar atlanır (`atlandi`).
 - Duyuru: içeriğin sahibi bu servistir (`api`da duyuru tablosu yoktur).
@@ -109,7 +110,7 @@ Yalnızca olay tüketicisi yazar. RLS: evet (`kurum_id`), `kullanici_kopyalari` 
 
 | Tablo | Kaynak olay | Sütunlar | Neden gerekli |
 | --- | --- | --- | --- |
-| `kullanici_kopyalari` | `hesap.kullanici.degisti.v1` | `kullanici_id` PK, `gorunen_ad`, `telefon_e164`, `eposta`, `dil`, `durum`, `surum` | SMS/e-posta adresi, ad. **KVKK:** PII kopyasıdır; RLS yok (kullanıcı düzeyi), yalnızca `_sistem`/tüketici okur. Silme olayında satır silinir. |
+| `kullanici_kopyalari` | `hesap.kullanici.degisti.v1` | `kullanici_id` PK, `dil`, `durum`, `surum` | Dil ve hesap durumu. **İletişim bilgisi (telefon, e-posta, ad) kopyalanmaz.** RLS yok (kullanıcı düzeyi). Silme olayında satır silinir. |
 | `kurum_kopyalari` | `hesap.kurum.degisti.v1`, `abonelik.abonelik.degisti.v1` | `kurum_id` PK, `ad`, `durum`, `saat_dilimi`, `plan_kodu`, `abonelik_durumu`, `sms_aylik_limit`, `surum`, `abonelik_surumu` | Kurum adı (e-posta), SMS kotası, askıdaki kurumda gönderim durdurma |
 | `uyelik_kopyalari` | `hesap.uyelik.degisti.v1` | `uyelik_id` PK, `kurum_id`, `kullanici_id`, `rol`, `durum`, `kademe_id`, `surum` | Alıcı çözümü (uyelik -> kullanici) ve rol bazlı hedefleme |
 | `kademe_kopyalari` | `hesap.kademe.degisti.v1` | `kademe_id` PK, `kurum_id`, `ad`, `arsivlendi`, `surum` | Duyuru hedefi `kademe` |
@@ -284,6 +285,8 @@ Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya
 
 Faz 1'de yoktur. `ortak.outbox` tablosu şemada bulunur (ileride `bildirim.gonderim.basarisiz` gibi olaylar için).
 
-## İç uç noktalar (olay değil)
+## İç çağrılar (olay değil)
+
+- Giden: `GET api /ic/kullanicilar/:id/iletisim` (yukarıda). Önbelleğe alınmaz, aynı gönderim işinde bir kez çağrılır.
 
 - `POST /ic/sms`: `{sablon_kodu, telefon_e164, degiskenler}`. Çağıran: `api` (OTP, davet SMS'i). Yanıt: `202`, `gonderim_id`. Hız sınırı çağıran tarafta. `hedef_maske` yazılır, düz numara saklanmaz.

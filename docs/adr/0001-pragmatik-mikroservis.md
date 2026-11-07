@@ -32,7 +32,7 @@ Sınır kuralları:
 
 1. `api` içinde her modül ayrı PostgreSQL şemasına sahiptir. Modüller birbirinin tablosuna yazmaz. Başka modülün verisi, o modülün dışa açtığı TypeScript arayüzü üzerinden okunur.
 2. Yoklama ve kredi/ücret düşümü `ders` ve `finans` modüllerinde, aynı veritabanı işleminde yapılır. Bu işlem servis sınırını geçmez.
-3. Servisler arası iletişim varsayılan olarak asenkron olaylardır (bkz. [0002](0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)). İki istisna vardır: gizli içerik taşıyan SMS (OTP, davet bağlantısı) `bildirim` servisinin iç uç noktasına senkron gider, ve dosya okuma adresi üretimi `api` tarafından `medya` iç uç noktasından istenir.
+3. Servisler arası iletişim varsayılan olarak asenkron olaylardır (bkz. [0002](0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)). Üç istisna vardır: gizli içerik taşıyan SMS (OTP, davet bağlantısı) `bildirim` servisinin iç uç noktasına senkron gider, dosya okuma adresi `api` tarafından `medya` iç uç noktasından istenir ve `bildirim`, gönderim anında kullanıcı iletişim bilgisini `api` iç uç noktasından (`GET /ic/kullanicilar/:id/iletisim`) alır. Telefon ve e-posta olaylara girmez ve başka serviste kalıcı kopyalanmaz.
 4. Bir servis, ihtiyaç duyduğu üyelik/grup verisini olaylardan beslenen yerel okuma kopyalarında tutar. Kopya tablolar `*_kopyalari` adını taşır ve yalnızca olay tüketicisi yazar.
 5. Yeni bir servis, ancak aşağıdaki üç koşuldan en az ikisi sağlandığında açılır: ayrı ölçekleme profili, ayrı hata bağımsızlığı ihtiyacı, çekirdek işlemlerle atomik tutarlılık gerektirmemesi.
 

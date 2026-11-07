@@ -29,7 +29,7 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
-| `hesap.kullanici.degisti.v1` | - | Kullanıcı oluşturulunca, ad/telefon/e-posta/dil/durum değişince. Özne: `kullanici`. | `kullanici_id`, `gorunen_ad`, `telefon_e164`, `eposta`, `dil`, `durum` | `bildirim` (`kullanici_kopyalari`) |
+| `hesap.kullanici.degisti.v1` | - | Kullanıcı oluşturulunca, dil/durum değişince. Özne: `kullanici`. **Telefon, e-posta ve ad olayda taşınmaz** (KVKK); `bildirim` iletişim bilgisini gönderim anında `api`dan alır (`GET /ic/kullanicilar/:id/iletisim`). | `kullanici_id`, `dil`, `durum` | `bildirim` (`kullanici_kopyalari`) |
 | `hesap.kullanici.silindi.v1` | - | KVKK silme/anonimleştirme tamamlanınca. | `kullanici_id`, `uyelik_idleri[]`, `anonimlestirildi_at` | `bildirim`, `motivasyon`, `medya` |
 | `hesap.kurum.degisti.v1` | K | Kurum oluşturma, ad/tür/saat dilimi/durum değişimi. Özne: `kurum`. | `kurum_id`, `ad`, `tur`, `saat_dilimi`, `durum` (`aktif`,`askida`,`kapali`) | `bildirim`, `motivasyon`, `medya` |
 | `hesap.kademe.degisti.v1` | K | Kademe oluşturma/güncelleme/arşiv. | `kademe_id`, `ad`, `seviye`, `arsivlendi` (bool) | `bildirim` |
@@ -46,9 +46,9 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
-| `ders.ders.degisti.v1` | K | Ders planlanınca, ertelenince, iptal edilince, tamamlanınca, bilgisi güncellenince. Özne: `ders`. | `ders_id`, `degisim_turu` (`planlandi`,`ertelendi`,`iptal_edildi`,`tamamlandi`,`guncellendi`), `seri_id`, `grup_id`, `ogretmen_id`, `brans_kodu`, `baslangic_at`, `bitis_at`, `onceki_baslangic_at`, `durum`, `telafi`, `online` (bool), `ogrenci_idleri[]` (parçalı), `iptal_nedeni` | `bildirim` |
-| `ders.yoklama.kaydedildi.v1` | K | Yoklama eklenince ya da durumu değişince (kredi/ücret işlemiyle aynı işlemde). Özne: `yoklama`. | `yoklama_id`, `ders_id`, `grup_id`, `ogrenci_id`, `durum`, `onceki_durum`, `gec_dakika`, `isaretlenme_at`, `yoklama_surumu` | `motivasyon`, `bildirim` |
-| `ders.geri_bildirim.verildi.v1` | K | Öğrenci geri bildirim verince/değiştirince (ilk verişte). | `geri_bildirim_id`, `ders_id`, `ogrenci_id`, `deger`, `konu_id` | `motivasyon` |
+| `ders.ders.degisti.v1` | K | Ders planlanınca, ertelenince, iptal edilince, tamamlanınca, bilgisi güncellenince. Özne: `ders`. | `ders_id`, `degisim_turu` (`planlandi`,`ertelendi`,`iptal_edildi`,`tamamlandi`,`guncellendi`), `seri_id`, `grup_id`, `ogretmen_id`, `brans_kodu`, `baslangic_at`, `bitis_at`, `onceki_baslangic_at`, `durum`, `telafi`, `online` (bool), `ogrenci_idleri[]` (parçalı), `iptal_nedeni`, `iptal_kaynagi` (`ogretmen`,`ogrenci`,`yonetici`), `gec_iptal` (bool) | `bildirim` |
+| `ders.yoklama.kaydedildi.v1` | K | Yoklama eklenince ya da durumu değişince (kredi/ücret işlemiyle aynı işlemde). Özne: `yoklama`. | `yoklama_id`, `ders_id`, `grup_id`, `ogrenci_id`, `brans_kodu`, `durum`, `onceki_durum`, `gec_dakika`, `isaretlenme_at`, `yoklama_surumu`. Durum `geldi`/`gec`ten başka bir duruma değişince `motivasyon` ters XP satırı yazar. | `motivasyon`, `bildirim` |
+| `ders.geri_bildirim.verildi.v1` | K | Öğrenci geri bildirim verince/değiştirince (ilk verişte). | `geri_bildirim_id`, `ders_id`, `ogrenci_id`, `brans_kodu`, `deger`, `konu_id` | `motivasyon` |
 | `ders.kaynak.eklendi.v1` | K | Ders kaydı/materyal eklenince ve görünürlüğü öğrencilere açıksa. | `kaynak_id`, `tur`, `ders_id`, `grup_id`, `baslik`, `gorunurluk`, `ekleyen_id`, `ogrenci_idleri[]` (parçalı; `secili_ogrenciler` ya da katılımcılar, `grup` türünde boş = grup üyeleri) | `bildirim` |
 | `ders.kaynak.izlendi.v1` | K | Öğrenci "izledim" işaretleyince (ilk işaret). | `kaynak_id`, `ogrenci_id`, `izledi_at` | `motivasyon` |
 | `ders.kaynak.sorun_bildirildi.v1` | K | Bozuk bağlantı bildirimi eklenince. | `sorun_id`, `kaynak_id`, `bildiren_id`, `neden`, `ekleyen_id` | `bildirim` |
@@ -66,13 +66,13 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
 | `ogrenme.odev.yayinlandi.v1` | K | Fan-out tamamlandıktan sonra (parça başına bir olay). | `odev_id`, `baslik`, `brans_kodu`, `son_teslim_at`, `veren_id`, `hedef_turu`, `hedef_id`, `ogrenci_idleri[]`, `parca_no`, `parca_sayisi` | `bildirim` |
-| `ogrenme.odev.teslim_edildi.v1` | K | Öğrenci teslim edince (yeniden teslimde tekrar). Özne: `ogrenci_odevi`. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `veren_id`, `yapilan_soru_sayisi`, `dosya_sayisi`, `gec_teslim`, `yeniden_teslim` (bool) | `motivasyon`, `bildirim` |
-| `ogrenme.odev.incelendi.v1` | K | Öğretmen inceleyince. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `inceleyen_id`, `inceleme_sonucu` (`tamam`,`eksik`,`tekrar`) | `motivasyon`, `bildirim` |
+| `ogrenme.odev.teslim_edildi.v1` | K | Öğrenci teslim edince (yeniden teslimde tekrar). Özne: `ogrenci_odevi`. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `veren_id`, `brans_kodu`, `yapilan_soru_sayisi`, `dosya_sayisi`, `gec_teslim`, `yeniden_teslim` (bool) | `motivasyon`, `bildirim` |
+| `ogrenme.odev.incelendi.v1` | K | Öğretmen inceleyince. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `inceleyen_id`, `brans_kodu`, `inceleme_sonucu` (`tamam`,`eksik`,`tekrar`) | `motivasyon`, `bildirim` |
 | `ogrenme.plan_gorevi.guncellendi.v1` | K | Görevin `gerceklesen_miktar`ı veya durumu değişince. | `gorev_id`, `plan_id`, `ogrenci_id`, `hafta_baslangic`, `gun`, `brans_kodu`, `hedef_turu`, `hedef_miktar`, `gerceklesen_miktar`, `onceki_gerceklesen_miktar`, `durum`, `onceki_durum` | `motivasyon` |
 | `ogrenme.deneme.girildi.v1` | K | Deneme sonucu kaydedilince. | `deneme_id`, `ogrenci_id`, `kural_kodu`, `sinav_tarihi`, `toplam_net` | `motivasyon` |
 | `ogrenme.soru.sorildi.v1` | K | Soru oluşturulunca. | `soru_id`, `ogrenci_id`, `brans_kodu`, `yonlendirme`, `atanan_ogretmen_id`, `masa_id`, `hedef_ogretmen_idleri[]` | `bildirim`, `motivasyon` |
 | `ogrenme.soru_mesaji.eklendi.v1` | K | Cevap veya takip sorusu eklenince. Özne: `soru`. | `soru_id`, `mesaj_id`, `tur` (`cevap`,`takip`), `yazar_id`, `ogrenci_id`, `alici_idleri[]` | `bildirim` |
-| `ogrenme.soru.cozuldu.v1` | K | Soru `cozuldu` olunca. | `soru_id`, `ogrenci_id`, `cozuldu_at`, `dosya_idleri[]` (soru ve cevap fotoğraf/çizim dosyaları), `silinecek_at` (= `cozuldu_at` + 30 gün) | `medya` |
+| `ogrenme.soru.cozuldu.v1` | K | Soru `cozuldu` olunca. | `soru_id`, `ogrenci_id`, `brans_kodu`, `cozuldu_at`, `dosya_idleri[]` (soru ve cevap fotoğraf/çizim dosyaları), `silinecek_at` (= `cozuldu_at` + 30 gün) | `medya`, `motivasyon` (`soru_anladim` XP) |
 | `ogrenme.soru.yeniden_acildi.v1` | K | Çözülmüş soru takip sorusuyla yeniden açılınca. | `soru_id`, `ogrenci_id`, `dosya_idleri[]` | `medya` |
 
 ## `api` / abonelik
@@ -95,9 +95,9 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
 | `motivasyon.seviye.atladi.v1` | K | Toplam XP seviye eşiğini geçince. | `ogrenci_id`, `eski_seviye`, `yeni_seviye`, `toplam_xp` | `bildirim` |
-| `motivasyon.seri.risk.v1` | K | 19:30 yerel gün işi: bugün henüz seri günü olmayan ve `mevcut_seri >= 3` öğrenciler. | `ogrenci_id`, `mevcut_seri`, `bitis_saati` (yerel 24:00 UTC karşılığı), `dondurma_hakki` | `bildirim` |
+| `motivasyon.seri.risk.v1` | K | 21:00 yerel iş: bugün (04:00 kuralı) henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler. | `ogrenci_id`, `mevcut_seri`, `gun_bitis_at` (ertesi gün 04:00'ün UTC karşılığı), `dondurma_stogu` | `bildirim` |
 | `motivasyon.seri.bozuldu.v1` | K | Gece değerlendirmesinde seri bozulunca. | `ogrenci_id`, `onceki_seri`, `onarilabilir` (bool), `onarim_son_gun` | `bildirim` |
-| `motivasyon.seri.kilometre_tasi.v1` | K | Seri 7, 14, 30, 60, 100, 200, 365'e ulaşınca. | `ogrenci_id`, `seri` | `bildirim` |
+| `motivasyon.seri.kilometre_tasi.v1` | K | Seri 3, 7, 14, 30, 60, 100, 365'e ulaşınca. | `ogrenci_id`, `seri` | `bildirim` |
 | `motivasyon.rozet.kazanildi.v1` | K | Yeni rozet kazanılınca (ilk eklemede). | `ogrenci_id`, `rozet_kodu`, `kazanildi_at` | `bildirim` |
 | `motivasyon.karakter.evrildi.v1` | K | Karakter aşaması yükselince. | `ogrenci_id`, `tur_kodu`, `eski_asama`, `yeni_asama` | `bildirim` |
 
@@ -117,7 +117,7 @@ Faz 1'de olay üretmez.
 
 | Tüketici servis (tüketici adı) | Olaylar |
 | --- | --- |
-| `motivasyon.xp` | `ders.yoklama.kaydedildi`, `ders.geri_bildirim.verildi`, `ders.kaynak.izlendi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.plan_gorevi.guncellendi`, `ogrenme.deneme.girildi`, `ogrenme.soru.sorildi` |
+| `motivasyon.xp` | `ders.yoklama.kaydedildi`, `ders.geri_bildirim.verildi`, `ders.kaynak.izlendi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.plan_gorevi.guncellendi`, `ogrenme.deneme.girildi`, `ogrenme.soru.sorildi`, `ogrenme.soru.cozuldu` |
 | `motivasyon.kopya` | `hesap.kurum.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti`, `hesap.kullanici.silindi` |
 | `bildirim.kopya` | `hesap.kullanici.degisti`, `hesap.kullanici.silindi`, `hesap.kurum.degisti`, `hesap.kademe.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti`, `abonelik.abonelik.degisti` |
 | `bildirim.uretim` | `ders.*` (4), `finans.*` (3), `ogrenme.odev.yayinlandi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.soru.sorildi`, `ogrenme.soru_mesaji.eklendi`, `abonelik.*` (3), `motivasyon.*` (6), `hesap.davet.kabul_edildi` |

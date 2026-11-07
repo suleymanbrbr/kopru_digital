@@ -19,7 +19,7 @@ Bu doküman tüm servis şemaları için ortak kuralları tanımlar. Servis dok�
 
 1. PostgreSQL 17 veya üstü. Uzantılar: `btree_gist`, `citext`, `pgcrypto`, `pg_trgm`.
 2. Kimlikler UUIDv7'dir. **Uygulama üretir** (`uuidv7()` kitaplığı), veritabanı `DEFAULT` vermez. Böylece kimlik, işlem öncesinde olaya ve ilişkili satırlara yazılabilir ve zamana göre sıralanır.
-3. Zamanlar `timestamptz` (UTC). Yalnızca takvim günü anlamı taşıyan değerler `date`, günün saati `time` olur. Haftalar ve seri günleri `Europe/Istanbul` yerel gününe göredir. Gün hesabı sunucuda yapılır, istemci saatine güvenilmez.
+3. Zamanlar `timestamptz` (UTC). Yalnızca takvim günü anlamı taşıyan değerler `date`, günün saati `time` olur. Haftalar (planlar) `Europe/Istanbul` yerel takvimine göredir. Oyunlaştırma günü (XP tavanı, seri) kurum saat diliminde 04:00'te değişir ([motivasyon.md](motivasyon.md#gün-tanımı)). Gün hesabı sunucuda yapılır, istemci saatine güvenilmez.
 4. Para: `bigint` kuruş, sütun soneki `_kurus` ([ADR 0007](../adr/0007-para-ve-defterler.md)).
 5. Enum yerine `text` + `CHECK (kolon IN (...))`. Değerler Türkçe ASCII ([ADR 0006](../adr/0006-adlandirma-ve-dil-kurallari.md)).
 6. Serbest metin uzunluk sınırı `CHECK (char_length(kolon) <= N)` ile belirtilir (başlıklar 200, açıklamalar 4000, notlar 2000).

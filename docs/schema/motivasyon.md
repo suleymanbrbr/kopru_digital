@@ -6,11 +6,11 @@ Tek şema: `motivasyon` (+ `ortak`). Roller: `motivasyon_owner`, `motivasyon_app
 
 ## Tasarım kuralları
 
-- Oyunlaştırma durumu **üyelik (`ogrenci_id` = `hesap.uyelikler.id`) başınadır**. Aynı kullanıcının iki kurumdaki karakteri ayrıdır (bkz. açık soru Q3).
+- **Karar:** Oyunlaştırma durumu **üyelik (`ogrenci_id` = `hesap.uyelikler.id`) başınadır**, yani kurum başınadır. Aynı kullanıcının iki kurumdaki karakteri, XP'si ve serisi ayrıdır. Gerekçe: kiracı izolasyonu ([ADR 0003](../adr/0003-kiraci-izolasyonu-rls.md)); kurumlar arası veri birleştirmesi yapılmaz.
 - XP, seri ve rozet hesapları yeniden oynatılabilir olmalıdır. Her XP satırı `kaynak_olay_id` ile bir olaya bağlıdır ve `(kaynak_olay_id, kural_kodu)` tekildir.
-- **Gün sınırı** `Europe/Istanbul` yerel günüdür (`gun` sütunları `date`). Gün, olayın `olusma_zamani`ndan sunucuda hesaplanır, istemci saatinden değil.
+- **Gün sınırı** kurumun saat diliminde **04:00**'tür (bkz. "Gün tanımı"). Gün, olayın `olusma_zamani`ndan sunucuda hesaplanır.
 - Oyunlaştırma modülü kapalıysa (kurum/kademe/grup, bkz. `modul_ayari_kopyalari`) olay işlenir ama XP verilmez ve kullanıcıya gösterilmez (`pasif_olay` sayacı artar). Modül sonradan açılırsa geçmiş XP geriye dönük verilmez.
-- Öğretmen/yönetici, öğrencinin XP'sini elle değiştiremez. Tek istisna seri duraklatma (`seri_duraklatmalari`).
+- Öğretmen/yönetici, öğrencinin XP'sini elle değiştiremez. İstisnalar: grup bazlı seri duraklatma (`seri_duraklatmalari`) ve "haftanın yıldızı" (`haftanin_yildizlari`).
 
 ```mermaid
 erDiagram
@@ -19,7 +19,12 @@ erDiagram
   ogrenci_durumlari ||--o{ xp_gunluk_toplamlari : "gunluk"
   ogrenci_durumlari ||--|| seriler : "seri"
   seriler ||--o{ seri_gunleri : "gun"
-  seriler ||--o{ seri_duraklatmalari : "duraklatma"
+  grup_kopyalari ||--o{ seri_duraklatmalari : "duraklatma"
+  ogrenci_durumlari ||--o{ ogrenci_gunluk_aktivite : "aktivite"
+  ogrenci_durumlari ||--o{ haftanin_yildizlari : "yildiz"
+  ogrenci_durumlari ||--o{ deneme_gecmisi : "net gecmisi"
+  beceri_tanimlari ||--o{ brans_beceri_eslemesi : "brans"
+  xp_tavanlari ||--o{ xp_kurallari : "tavan"
   rozet_tanimlari ||--o{ ogrenci_rozetleri : "kazanim"
   karakter_turleri ||--o{ karakter_asamalari : "asama"
   ogrenci_durumlari ||--|| ogrenci_karakterleri : "karakter"
@@ -36,25 +41,57 @@ erDiagram
 
 Tohum verisidir, migrasyonla gelir. Profil: `G`.
 
+### `motivasyon.xp_tavanlari`
+
+Günlük tavan grupları. `kod text PK`, `gunluk_ust_sinir int NOT NULL CHECK (> 0)`, `aciklama text`. Tohum: `genel` 300 (bütün tavana tabi kurallar toplamı), `plan` 40, `odak` 120, `soru` 20, `kayit` 15.
+
 ### `motivasyon.xp_kurallari`
 
 Hangi olay ne kadar XP verir.
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
-| `kod` | text | hayır | | `UNIQUE`. Ör. `yoklama_geldi`, `odev_teslim`, `odev_tamam`, `plan_gorevi_tamam`, `deneme_girisi`, `kayit_izledi`, `geri_bildirim`, `soru_sorma`, `odak_oturumu` |
-| `olay_turu` | text | hayır | | Tüketilen olay (`ders.yoklama.kaydedildi`) |
+| `kod` | text | hayır | | `UNIQUE`. Aşağıdaki tohum listesi |
+| `olay_turu` | text | hayır | | Tüketilen olay (`ders.yoklama.kaydedildi`) veya `istemci` (odak, haftanın yıldızı) |
 | `kosul` | jsonb | hayır | `'{}'` | Yük süzgeci, ör. `{"durum":["geldi","gec"]}` |
-| `xp` | int | hayır | | CHECK `>= 0` |
-| `gunluk_ust_sinir` | int | evet | | Bu kuraldan bir günde en çok toplam XP. NULL = sınırsız. |
-| `seri_sayilir` | boolean | hayır | false | Bu kuraldan XP kazanmak o günü seri için "aktif" yapar |
+| `xp` | int | hayır | | CHECK `>= 0`. Sabit kuralda olay başına XP, birim kuralında birim başına XP |
+| `birim` | text | evet | | NULL = sabit; `dakika` (odak), `net` (net artışı) |
+| `olay_basi_ust_sinir` | int | evet | | Tek olaydan en çok XP (net artışı için 50) |
+| `gec_carpani` | numeric(3,2) | hayır | 1.00 | Geç teslimde çarpan (ödev teslimi 0.50, aşağı yuvarlanır) |
+| `tavan_grubu` | text | evet | | FK `xp_tavanlari(kod)` (kural grubu tavanı; NULL = grup tavanı yok) |
+| `genel_tavana_tabi` | boolean | hayır | true | `genel` günlük tavanına dahil mi |
 | `aktif` | boolean | hayır | true | |
 
-Başlangıç değerleri (ayar niteliğinde, ürün tarafından onaylanmalı): `yoklama_geldi` 10 (günde 30), `odev_teslim` 15 (günde 60), `plan_gorevi_tamam` 5 (günde 40), `deneme_girisi` 30 (günde 60), `kayit_izledi` 5 (günde 15), `geri_bildirim` 2 (günde 6), `soru_sorma` 3 (günde 9), `odak_oturumu` dakika başı 1 (günde 60). Kısıtlar: `UNIQUE (kod)`, `CHECK (gunluk_ust_sinir IS NULL OR gunluk_ust_sinir >= xp)`. Kural güncellemesi yeni olayları etkiler, geçmiş XP değişmez.
+Tohum (ürün şartnamesi):
+
+| `kod` | Olay | XP | Tavan grubu |
+| --- | --- | --- | --- |
+| `yoklama_geldi` | `ders.yoklama.kaydedildi` (`geldi`,`gec`) | 20 | genel |
+| `odev_teslim` | `ogrenme.odev.teslim_edildi` | 15 (geç: 7) | genel |
+| `odev_onay` | `ogrenme.odev.incelendi` (`tamam`) | 10 | genel |
+| `plan_gorevi_tamam` | `ogrenme.plan_gorevi.guncellendi` | 5 | `plan` (40) |
+| `odak_oturumu` | istemci (odak oturumu) | 1 / dakika | `odak` (120) |
+| `deneme_girisi` | `ogrenme.deneme.girildi` | 10 | genel |
+| `deneme_net_artisi` | `ogrenme.deneme.girildi` | 5 / net, deneme başına en çok 50 | genel |
+| `soru_sorma` | `ogrenme.soru.sorildi` | 3 | `soru` (20) |
+| `soru_anladim` | `ogrenme.soru.cozuldu` | 5 | `soru` (20) |
+| `geri_bildirim` | `ders.geri_bildirim.verildi` | 2 | genel |
+| `kayit_izledi` | `ders.kaynak.izlendi` | 5 | `kayit` (15) |
+| `haftanin_yildizi` | istemci (öğretmen) | 50 + rozet | yok (`genel_tavana_tabi=false`) |
+
+Kısıtlar: `UNIQUE (kod)`. Tek günde bütün tavana tabi kurallardan en çok 300 XP.
+
+### `motivasyon.motivasyon_ayarlari`
+
+Anahtar/değer yapılandırması. `anahtar text PK`, `deger jsonb NOT NULL`, `aciklama text`. Anahtarlar: `seri.plan_esigi` (1), `seri.odak_dk_esigi` (20), `seri.odev_esigi` (1), `seri.soru_esigi` (1), `seri.dondurma_haftalik` (1), `seri.dondurma_azami` (2), `seri.onarim_aylik` (1), `seri.kilometre_taslari` ([3,7,14,30,60,100,365]), `haftanin_yildizi.ogretmen_haftalik_limit` (3).
+
+### `motivasyon.yapilandirma_gecmisi`
+
+Yapılandırma değişikliklerinin günlüğü (yalnızca ekleme, kiracısız, RLS: hayır). Sütunlar: `tablo text`, `anahtar text`, `once jsonb`, `sonra jsonb`, `degistiren_kullanici_id uuid`, `neden text`, `created_at`.
 
 ### `motivasyon.seviyeler`
 
-Seviye eşikleri. Sütunlar: `seviye int PK`, `gereken_toplam_xp bigint NOT NULL`, `ad text NULL`. CHECK `seviye >= 1`, `gereken_toplam_xp >= 0`; seviye 1 = 0 XP. Artan, `gereken_toplam_xp` seviye ile kesin artan (uygulama doğrular). Başlangıç eğrisi: `gereken = 50 * (seviye-1)^2` (ayar).
+Seviye eşikleri (başlangıç eğrisi yer tutucudur, ürün onayı gerekir). Sütunlar: `seviye int PK`, `gereken_toplam_xp bigint NOT NULL`, `ad text NULL`. CHECK `seviye >= 1`, `gereken_toplam_xp >= 0`; seviye 1 = 0 XP. Artan, `gereken_toplam_xp` seviye ile kesin artan (uygulama doğrular). Başlangıç eğrisi: `gereken = 50 * (seviye-1)^2` (ayar).
 
 ### `motivasyon.rozet_tanimlari`
 
@@ -62,15 +99,19 @@ Seviye eşikleri. Sütunlar: `seviye int PK`, `gereken_toplam_xp bigint NOT NULL
 
 ### `motivasyon.karakter_turleri`
 
-3 tür. `kod text UNIQUE`, `ad text`, `aktif boolean`. Kodlar tohumdur (ürün adlandırması bekleniyor, bkz. Q4).
+3 tür. `kod text UNIQUE`, `ad text`, `aktif boolean`. Tohum kodları: `kivilcim`, `dinamo`, `sedir` (ayrıntı için ana daldaki `docs/karakter`).
 
 ### `motivasyon.karakter_asamalari`
 
-Tür x aşama (1-5). `tur_kodu text FK`, `asama smallint CHECK BETWEEN 1 AND 5`, `gereken_seviye int NOT NULL`, `ad text`. `PK (tur_kodu, asama)`. `gereken_seviye` aşama ile kesin artar.
+Tür x aşama (1-5). `tur_kodu text FK`, `asama smallint CHECK BETWEEN 1 AND 5`, `gereken_seviye int NOT NULL`, `ad text`. `PK (tur_kodu, asama)`. Tohum `gereken_seviye`: aşama 1 = seviye 1, aşama 2 = 5, aşama 3 = 12, aşama 4 = 25, aşama 5 = 40 (üç tür için aynı).
 
 ### `motivasyon.beceri_tanimlari`
 
-5 beceri. `kod text PK` (başlangıç: `odak`, `azim`, `merak`, `duzen`, `hiz`; ürün onayı bekler, Q4), `ad`, `aciklama`, `kaynak_kural_kodlari text[]` (hangi XP kuralları bu beceriyi besler). Beceri puanı, kaynak kuralların kazandırdığı XP'nin yüzdesidir (aşağıda).
+5 beceri, branş tabanlı. `kod text PK`, `ad`, `sira`. Tohum: `sayisal` (Sayısal), `sozel` (Sözel), `fen` (Fen), `sosyal` (Sosyal), `dil` (Dil).
+
+### `motivasyon.brans_beceri_eslemesi`
+
+Hangi branşta kazanılan XP hangi beceriyi besler. `brans_kodu text PK` (`ortak.bransler.kod`, FK yok), `beceri_kodu text NOT NULL FK beceri_tanimlari(kod)`. Tohum: `matematik`, `geometri` -> `sayisal`; `turkce`, `edebiyat` -> `sozel`; `fizik`, `kimya`, `biyoloji`, `fen_bilimleri` -> `fen`; `tarih`, `cografya`, `felsefe`, `din_kulturu`, `sosyal_bilgiler`, `inkilap_tarihi` -> `sosyal`; `ingilizce`, `almanca` -> `dil`. `diger` eşlenmez. Yeni branş eklenince eşleme eklenir; eşlemesi olmayan branş becerisiz XP verir. Platform yöneticisi tarafından değiştirilebilir (`yapilandirma_gecmisi`).
 
 ### `motivasyon.kozmetik_tanimlari`
 
@@ -97,6 +138,8 @@ Güncelleme: XP satırı eklenen aynı işlemde `UPDATE ... SET toplam_xp = topl
 
 ## XP
 
+XP **geçmişe dönük düzeltilebilir ama defter değişmezdir**: düzeltme, ters çeviren bir satırdır (negatif XP).
+
 ### `motivasyon.xp_hareketleri`
 
 XP defteri (yalnızca ekleme).
@@ -109,45 +152,55 @@ Profil: `D`. RLS: evet. Aylık bölümlenir (eşik 20 milyon satır).
 | `kural_kodu` | text | hayır | | FK `xp_kurallari(kod)` |
 | `kaynak_olay_id` | uuid | hayır | | Tetikleyen olay `id` |
 | `kaynak_ozne_id` | uuid | evet | | Olayın öznesi (yoklama, ödev vb.) |
-| `xp` | int | hayır | | CHECK `> 0`. Verilen XP (günlük tavan nedeniyle kuraldan az olabilir) |
-| `gun` | date | hayır | | Yerel gün |
+| `kaynak_ozne_surumu` | bigint | hayır | 0 | Yoklamada `yoklama_surumu`, diğerlerinde 0 |
+| `brans_kodu` | text | evet | | Beceri puanı için (olay yükünden) |
+| `xp` | int | hayır | | CHECK `<> 0`. Pozitif = kazanım (günlük tavan nedeniyle kuraldan az olabilir), negatif = ters kayıt |
+| `gun` | date | hayır | | Gün (04:00 kuralı, aşağıda) |
 | `kismi` | boolean | hayır | false | Tavan nedeniyle kırpıldı |
+| `ters_cevrilen_id` | uuid | evet | | FK `xp_hareketleri(id)`; yalnızca negatif satırlarda dolu |
+| `neden` | text | evet | | Ters kayıtta zorunlu (`yoklama_degisti`) |
 
-Kısıtlar: `UNIQUE (kaynak_olay_id, kural_kodu)` (aynı olay iki kez XP vermez; `processed_events` ile çift emniyet). **Aynı özneden tekrar XP engeli:** `UNIQUE (ogrenci_id, kural_kodu, kaynak_ozne_id) WHERE kaynak_ozne_id IS NOT NULL AND kural_kodu IN ('odev_teslim','deneme_girisi','kayit_izledi','geri_bildirim','yoklama_geldi')`. Aynı ödevi tekrar teslim edip XP kazanmak engellenir. Yoklama düzeltmesinde XP geri alınmaz (hileye açık yan etkiyi kabul ediyoruz, bkz. Q5).
-İndeks: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, ogrenci_id, gun)`.
+Kısıtlar: `UNIQUE (kaynak_olay_id, kural_kodu)` (aynı olay iki kez işlenmez). `UNIQUE (ters_cevrilen_id) WHERE ters_cevrilen_id IS NOT NULL` (bir kazanım bir kez ters çevrilir). `CHECK ((xp < 0) = (ters_cevrilen_id IS NOT NULL))`. **Aynı özneden tekrar XP engeli:** `UNIQUE (ogrenci_id, kural_kodu, kaynak_ozne_id, kaynak_ozne_surumu) WHERE xp > 0 AND kaynak_ozne_id IS NOT NULL`. Aynı ödevi yeniden teslim ederek XP kazanılamaz. Yoklamada her `yoklama_surumu` ayrı özne sürümüdür, böylece geldi -> izinli -> geldi sırasında ters kayıttan sonra yeniden kazanım mümkündür.
+
+**Yoklama ters kaydı.** `ders.yoklama.kaydedildi.v1` işlenirken: (a) bu `yoklama_id` için `yoklama_geldi` kuralında ters çevrilmemiş pozitif satır var ve yeni durum `geldi`/`gec` değil ise, `xp = -(özgün.xp)` ve `ters_cevrilen_id` ile ters kayıt eklenir; (b) ters çevrilmemiş satır yok ve yeni durum `geldi`/`gec` ise kazanım eklenir. Durum `geldi` -> `gec` gibi XP etkisiz geçişlerde hiçbir şey yazılmaz. Ters kayıt, orijinal `gun` için tavan sayaçlarından aynı miktarı düşer (en az 0). `ogrenci_durumlari.toplam_xp` azalabilir; `seviye` ve karakter aşaması **geri düşmez** (ulaşılan en yüksek seviye korunur), XP yeniden kazanılınca yeniden artış olmaz (seviye atlama olayı yalnızca daha önce ulaşılmamış seviyede yayımlanır).
+
+İndeks: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, ogrenci_id, gun)`, `(kurum_id, ogrenci_id, kural_kodu, kaynak_ozne_id)`.
 Olaylar: yok (özet olaylar `seviye.atladi` vb.).
+
+### Gün tanımı
+
+Tüm "gün" alanları (`xp_hareketleri.gun`, tavan sayaçları, seri) **kurumun saat diliminde 04:00'te** değişir: `gun = ((olusma_zamani AT TIME ZONE kurum.saat_dilimi) - interval '4 hours')::date`. Gün sunucuda olayın `olusma_zamani`ndan hesaplanır, istemci saatine güvenilmez. Haftalık sayaçlar Pazartesi 04:00'te başlar.
 
 ### `motivasyon.xp_gunluk_toplamlari`
 
-Günlük tavan kontrolü için sayaç.
+Günlük tavan sayaçları. Profil: `K` (UUID `id` yok). PK `(ogrenci_id, gun, tavan_grubu)`. RLS: evet. Sütunlar: `ogrenci_id`, `gun date`, `tavan_grubu text` (FK `xp_tavanlari(kod)`; `genel` dahil), `toplam int NOT NULL DEFAULT 0 CHECK (toplam >= 0)`.
 
-Profil: `K` (UUID `id` yok). PK `(ogrenci_id, gun, kural_kodu)`. RLS: evet. Sütunlar: `ogrenci_id`, `gun date`, `kural_kodu text`, `toplam int NOT NULL DEFAULT 0`.
+Tavan algoritması (aynı işlem içinde, `ogrenci_id` için `pg_advisory_xact_lock`):
+1. Kuralın `tavan_grubu` (varsa) ve, kural `genel_tavana_tabi` ise `genel` grubu için satırları `INSERT ... ON CONFLICT DO NOTHING` ile aç, `FOR UPDATE` ile kilitle.
+2. `verilecek = LEAST(hesaplanan_xp, grup_tavani - grup_toplam, genel_tavan - genel_toplam)`, en az 0.
+3. `verilecek = 0` ise satır yazılmaz. Aksi halde `xp_hareketleri` (kısmi ise `kismi=true`) yazılır ve ilgili sayaçlar `verilecek` kadar artar.
 
-Tavan algoritması (aynı işlem içinde):
+### `motivasyon.ogrenci_gunluk_aktivite`
 
-```sql
--- :xp kural değeri, :tavan kuralın gunluk_ust_sinir değeri (NULL = sınırsız)
-INSERT INTO motivasyon.xp_gunluk_toplamlari (kurum_id, ogrenci_id, gun, kural_kodu, toplam)
-VALUES (:kurum, :ogrenci, :gun, :kural, LEAST(:xp, COALESCE(:tavan, :xp)))
-ON CONFLICT (ogrenci_id, gun, kural_kodu) DO UPDATE
-  SET toplam = xp_gunluk_toplamlari.toplam + LEAST(:xp, COALESCE(:tavan, :xp) - xp_gunluk_toplamlari.toplam)
-  WHERE COALESCE(:tavan, :xp + xp_gunluk_toplamlari.toplam) > xp_gunluk_toplamlari.toplam
-RETURNING toplam;
-```
-
-Verilen XP = yeni `toplam` - önceki `toplam`; 0 ise `xp_hareketleri` satırı yazılmaz. Kısmi verilirse `kismi=true`. Olaylar: yok.
+Seri ve onarım için günlük aktivite sayaçları. Profil: `K` (UUID `id` yok). PK `(ogrenci_id, gun)`. RLS: evet. Sütunlar: `plan_gorevi_sayisi int`, `odak_sn int`, `odev_teslim_sayisi int`, `soru_anladim_sayisi int` (hepsi `NOT NULL DEFAULT 0`). Her ilgili olay/oturum işlenirken aynı işlemde artar. Plan görevi tamamlama bir `ters` ile geri alınırsa (durum `tamam`dan çıkarsa) azalır.
 
 ### `motivasyon.ogrenci_sayaclari`
 
-Rozet koşulları için sayaçlar. Profil: `K` (UUID `id` yok). PK `(ogrenci_id, sayac_kodu)`. RLS: evet. Sütunlar: `sayac_kodu text` (`toplam_odev_teslim`, `toplam_yoklama`, `toplam_deneme`, `en_uzun_seri`, `toplam_odak_dk`, `toplam_kayit_izleme`, `toplam_soru`), `deger bigint NOT NULL DEFAULT 0`. Güncelleme olay işleme işlemindedir, ardından eşiği geçen `rozet_tanimlari` değerlendirilir. Olaylar: yok.
+Rozet koşulları için sayaçlar. Profil: `K` (UUID `id` yok). PK `(ogrenci_id, sayac_kodu)`. RLS: evet. Sütunlar: `sayac_kodu text` (`toplam_odev_teslim`, `toplam_yoklama`, `toplam_deneme`, `en_uzun_seri`, `toplam_odak_dk`, `toplam_kayit_izleme`, `toplam_soru`, `haftanin_yildizi`), `deger bigint NOT NULL DEFAULT 0`. Güncelleme olay işleme işlemindedir, ardından eşiği geçen `rozet_tanimlari` değerlendirilir.
 
 ### `motivasyon.beceri_puanlari`
 
-Karakterin 5 beceri değeri. Profil: `K` (UUID `id` yok). PK `(ogrenci_id, beceri_kodu)`. RLS: evet. Sütunlar: `beceri_kodu text FK beceri_tanimlari`, `puan int NOT NULL DEFAULT 0 CHECK (puan >= 0)`. XP satırı yazılırken, kuralın `beceri_tanimlari.kaynak_kural_kodlari` listesinde olduğu becerilerin `puan` değeri verilen XP kadar artırılır. Seviyeyi etkilemez, yalnızca karakter ekranında görünür.
+Karakterin 5 beceri değeri (`sayisal`, `sozel`, `fen`, `sosyal`, `dil`). Profil: `K` (UUID `id` yok). PK `(ogrenci_id, beceri_kodu)`. RLS: evet. Sütunlar: `beceri_kodu text FK beceri_tanimlari`, `puan int NOT NULL DEFAULT 0 CHECK (puan >= 0)`. Bir branşta kazanılan XP, `brans_beceri_eslemesi` ile eşleşen becerinin puanını **verilen XP kadar** artırır (ters kayıt aynı miktarda azaltır, en az 0). `brans_kodu` boş olan veya eşlemesi olmayan kazanım (ör. deneme girişi, haftanın yıldızı) beceriyi etkilemez. Beceri puanı seviyeyi etkilemez, karakter ekranında görünür.
 
 ## Seri
 
-Seri: ardışık "aktif" günlerin sayısıdır. Bir gün, o gün `seri_sayilir` kuraldan XP kazanıldığında `aktif` sayılır.
+**Gün tanımı** yukarıdadır (04:00). Bir gün, `ogrenci_gunluk_aktivite` değerleri şu koşullardan **en az birini** sağlıyorsa seri için `aktif` sayılır:
+- `plan_gorevi_sayisi >= 1`,
+- `odak_sn >= 1200` (20 dakika),
+- `odev_teslim_sayisi >= 1`,
+- `soru_anladim_sayisi >= 1` (cevaplanan soru "anladım" ile çözüldü).
+
+Eşikler `motivasyon_ayarlari` tablosundadır (`seri.plan_esigi`, `seri.odak_dk_esigi`, `seri.odev_esigi`, `seri.soru_esigi`). Gün koşulu ilk sağlandığında anında `seri_gunleri` yazılır (gece işi beklenmez).
 
 ### `motivasyon.seriler`
 
@@ -158,47 +211,69 @@ Profil: `KS`. RLS: evet. `UNIQUE (kurum_id, ogrenci_id)`.
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
 | `ogrenci_id` | uuid | hayır | | |
-| `mevcut_seri` | int | hayır | 0 | |
+| `mevcut_seri` | int | hayır | 0 | `seri_gunleri`nden türetilir (aşağıda) |
 | `en_uzun_seri` | int | hayır | 0 | |
-| `son_aktif_gun` | date | evet | | Seri sayılan son gün |
-| `dondurma_hakki` | smallint | hayır | 2 | Kullanılabilir seri dondurma. CHECK `0..5`. |
-| `dondurma_yenileme_haftasi` | date | evet | | Son yenilenen hafta (Pazartesi). Her hafta +1, üst sınır 2. |
-| `onarim_hakki` | smallint | hayır | 1 | Ayda bir seri onarımı. CHECK `0..2`. |
-| `onarim_yenileme_ayi` | date | evet | | Ayın ilk günü |
-| `bozulan_seri` | int | evet | | Son bozulan serinin değeri (onarım için) |
-| `bozulma_gunu` | date | evet | | |
-| `onarim_son_gun` | date | evet | | Onarım için son gün (bozulma + 2 gün) |
+| `son_aktif_gun` | date | evet | | |
+| `dondurma_stogu` | smallint | hayır | 0 | Biriken dondurma. CHECK `BETWEEN 0 AND 2`. |
+| `dondurma_son_hafta` | date | evet | | Son tahakkuk edilen hafta (Pazartesi) |
+| `onarim_hakki` | smallint | hayır | 1 | Ayda bir. CHECK `BETWEEN 0 AND 1` |
+| `onarim_son_ay` | date | evet | | Hakkın yenilendiği ayın ilk günü |
+| `bozulan_seri` | int | evet | | Son bozulan serinin değeri |
+| `bozulan_gun` | date | evet | | Kaçırılan gün |
+| `onarim_bitis_at` | timestamptz | evet | | Onarım penceresi sonu = kaçırılan günü izleyen günün sonu (kaçırılan gün + 2 gün 04:00) |
 
 Kurallar:
-- **Günlük değerlendirme** (gece 00:10 yerel, pg-boss): dün `aktif` değilse ve `seri_duraklatmalari` o günü kapsamıyorsa: `dondurma_hakki > 0` ise otomatik dondurma kullanılır (`seri_gunleri.durum='dondurma'`, hak -1, seri korunur); yoksa seri bozulur (`bozulan_seri = mevcut_seri`, `mevcut_seri = 0`, `onarim_son_gun = bozulma + 2`). 
-- **Onarım:** `onarim_son_gun` içinde ve `onarim_hakki > 0` ise öğrenci onarım isteyebilir: kaçırılan gün `seri_gunleri.durum='onarim'` yazılır, `mevcut_seri = bozulan_seri + 1` (bozulan günün atlanmış kabulü; ürün onayı Q6), hak -1.
-- **Öğretmen duraklatması:** Öğretmen, atandığı öğrenci için bir tarih aralığı duraklatır (hastalık, sınav); aralıktaki günler seriyi bozmaz ve sayılmaz (artırmaz).
-- Haftalık dondurma yenilemesi ve aylık onarım yenilemesi gece işinde yapılır.
+- **Dondurma:** haftada 1 tahakkuk eder (Pazartesi 04:00 işi), en çok 2 birikir. Gün kaçırılınca **otomatik** kullanılır (`seri_gunleri.durum='dondurma'`, stok -1). Dondurma günü seriyi korur ama artırmaz.
+- **Kaçırma:** gece işi (her kurumun 04:10'unda) bir önceki günü değerlendirir. Gün `aktif` değil, öğretmen duraklatması yok ve dondurma stoğu yoksa gün `kacirildi` olur, `bozulan_seri`/`bozulan_gun`/`onarim_bitis_at` yazılır.
+- **Onarım:** `onarim_hakki = 1` ve `now() < onarim_bitis_at` iken, kaçırılan günü izleyen gün (yani kaçırılandan sonraki 24 saatlik pencerede) aktivite **günlük hedefin 2 katına** ulaşırsa kaçırılan gün `onarim` olur, hak 0 olur. Günlük hedefin 2 katı: `plan_gorevi_sayisi >= 2 * plan_esigi` veya `odak_sn >= 2 * odak_dk_esigi * 60` veya `odev_teslim_sayisi >= 2 * odev_esigi` veya `soru_anladim_sayisi >= 2 * soru_esigi`. Hak her ayın ilk günü 1'e döner. Bozulmuş seri onarımla geri gelir.
+- **Türetme:** `mevcut_seri` = bugünden geriye doğru ardışık `aktif`/`onarim` günlerinin sayısı; `dondurma` ve `duraklatma` günleri sayılmaz ama zinciri kırmaz; `kacirildi` kırar. Her `seri_gunleri` değişiminde aynı işlemde yeniden hesaplanır.
+- **Öğretmen duraklatması (grup bazlı):** bir grup için duraklatma aralığı varsa, o aralıktaki günlerde grubun etkin üyeleri için `duraklatma` yazılır; seri bozulmaz, dondurma harcanmaz.
+- Kilometre taşları: 3, 7, 14, 30, 60, 100, 365.
 Kısıtlar: `CHECK (mevcut_seri >= 0 AND en_uzun_seri >= mevcut_seri)`. İndeks: `UNIQUE (kurum_id, ogrenci_id)`, `(son_aktif_gun)` (gece işi taraması, `_sistem`).
-Olaylar: `motivasyon.seri.bozuldu.v1`, `motivasyon.seri.kilometre_tasi.v1` (7, 14, 30, 60, 100, 200, 365), `motivasyon.seri.risk.v1` (19:30 yerel, bugün henüz aktif olmayan ve `mevcut_seri >= 3` öğrenciler).
+Olaylar: `motivasyon.seri.bozuldu.v1`, `motivasyon.seri.kilometre_tasi.v1`, `motivasyon.seri.risk.v1` (21:00 yerel, bugün henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler).
 
 ### `motivasyon.seri_gunleri`
 
-Gün bazlı seri kaydı (yeniden hesaplama ve geçmiş takvim için).
-
-Profil: `D`-benzeri (UUID `id` yok). PK `(ogrenci_id, gun)`. RLS: evet. Sütunlar: `ogrenci_id uuid`, `gun date`, `durum text NOT NULL` (CHECK `IN ('aktif','dondurma','duraklatma','onarim','kacirildi')`), `kaynak_olay_id uuid NULL`. Tekil gün yazımı `ON CONFLICT (ogrenci_id, gun) DO UPDATE SET durum = ... WHERE seri_gunleri.durum IN ('kacirildi')` ile yalnızca `kacirildi`den yukarı doğru değiştirilir. `aktif` en yüksek önceliktir. İndeks: PK yeterli.
+Gün bazlı seri kaydı. Profil: `D`-benzeri (UUID `id` yok). PK `(ogrenci_id, gun)`. RLS: evet. Sütunlar: `ogrenci_id uuid`, `gun date`, `durum text NOT NULL` (CHECK `IN ('aktif','dondurma','duraklatma','onarim','kacirildi')`), `kaynak_olay_id uuid NULL`. Yazım: `ON CONFLICT (ogrenci_id, gun) DO UPDATE SET durum = EXCLUDED.durum WHERE seri_gunleri.durum = 'kacirildi'` (yalnızca `kacirildi` gün yükseltilebilir; `aktif` en yüksek öncelikli).
 
 ### `motivasyon.seri_duraklatmalari`
 
-Öğretmen duraklatmaları.
+Öğretmen duraklatmaları (grup başına tarih aralığı).
 
 Profil: `KS`. RLS: evet.
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
-| `ogrenci_id` | uuid | hayır | | |
+| `grup_id` | uuid | hayır | | `grup_kopyalari` |
 | `veren_ogretmen_id` | uuid | hayır | | `atama_kopyalari` ile ilişki doğrulanır |
 | `baslangic_gun` | date | hayır | | |
 | `bitis_gun` | date | hayır | | CHECK `bitis_gun >= baslangic_gun AND bitis_gun - baslangic_gun <= 30` |
 | `neden` | text | evet | | ≤ 200 |
 | `iptal_at` | timestamptz | evet | | |
 
-Kısıtlar: aynı öğrenci için çakışan aktif aralık yok: `EXCLUDE USING gist (ogrenci_id WITH =, daterange(baslangic_gun, bitis_gun, '[]') WITH &&) WHERE (iptal_at IS NULL)`. Yetki: öğretmenin, öğrencinin grubunda `atama_kopyalari` ile aktif ataması olmalıdır; yönetici kapsamda hepsi. İndeks: `(kurum_id, ogrenci_id, baslangic_gun)`. Olaylar: yok.
+Kısıtlar: `EXCLUDE USING gist (grup_id WITH =, daterange(baslangic_gun, bitis_gun, '[]') WITH &&) WHERE (iptal_at IS NULL)`. Yetki: öğretmenin `atama_kopyalari`nda grupta aktif ataması olmalı; yönetici kapsamda hepsi. Değerlendirme gece işinde `grup_uyesi_kopyalari` ile yapılır. İndeks: `(kurum_id, grup_id, baslangic_gun)`. Olaylar: yok.
+
+### `motivasyon.haftanin_yildizlari`
+
+Öğretmenin seçtiği "haftanın yıldızı". Öğretmen doğrudan `motivasyon` servisine yazar (JWT; atama doğrulaması `atama_kopyalari`). Profil: `K`. RLS: evet.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ogrenci_id` | uuid | hayır | | |
+| `veren_ogretmen_id` | uuid | hayır | | |
+| `grup_id` | uuid | hayır | | Öğrencinin bu öğretmenle ortak grubu |
+| `hafta_baslangic` | date | hayır | | Pazartesi (04:00 kuralı) |
+| `gerekce` | text | evet | | ≤ 200 |
+
+Kısıtlar: `UNIQUE (ogrenci_id, hafta_baslangic)` (öğrenci haftada bir kez). **Öğretmen haftalık sınırı:** öğretmen başına haftada en çok `motivasyon_ayarlari['haftanin_yildizi.ogretmen_haftalik_limit']` (varsayılan 3, ürün onayı gerekir) kayıt; ekleme işleminde `pg_advisory_xact_lock(ogretmen)` ile sayılır, aşımda `409 haftalik_limit_asildi`. Ekleme: 50 XP (`haftanin_yildizi` kuralı, tavandan muaf) + `haftanin_yildizi` sayacı +1 (rozet). İndeks: `(kurum_id, veren_ogretmen_id, hafta_baslangic)`. Olaylar: yok.
+
+### `motivasyon.deneme_gecmisi`
+
+Net artışı hesabı için öğrencinin kendi deneme geçmişi. Profil: `K`. RLS: evet. Sütunlar: `ogrenci_id`, `deneme_id uuid NOT NULL`, `kural_kodu text NOT NULL`, `sinav_tarihi date NOT NULL`, `toplam_net numeric(6,2) NOT NULL`. `UNIQUE (deneme_id)`. İndeks: `(kurum_id, ogrenci_id, kural_kodu, sinav_tarihi DESC)`. `net artışı = max(0, toplam_net - ortalama(aynı kural_kodu'ndaki en son 3 önceki deneme))`; önceki deneme yoksa 0. Kazanım: `deneme_net_artisi` kuralı, net başına 5 XP, deneme başına en çok 50.
+
+## Yapılandırma ve kural tabloları
+
+Tüm XP değerleri, tavanlar ve seri eşikleri bu tablolardadır, **platform yöneticisi tarafından değiştirilebilir** (`PUT /platform/motivasyon/*`, `_sistem` rolü). Her değişiklik `motivasyon.yapilandirma_gecmisi`ne (yalnızca ekleme; `tablo`, `anahtar`, `once jsonb`, `sonra jsonb`, `degistiren_kullanici_id`, `neden`) yazılır. Değişiklik yeni olayları etkiler, geçmiş XP değişmez.
 
 ## Rozet
 
@@ -208,7 +283,7 @@ Kazanılan rozetler. Profil: `K`. RLS: evet. Sütunlar: `ogrenci_id uuid`, `roze
 
 ## Karakter
 
-Gelişen yoldaş karakter: 3 tür x 5 aşama, 5 beceri, kozmetikler. Aşama, öğrenci **seviyesine** bağlıdır (`karakter_asamalari.gereken_seviye`); XP kaybı olmadığı için aşama geri dönmez.
+Gelişen yoldaş karakter: 3 tür x 5 aşama, 5 branş tabanlı beceri, kozmetikler. Aşama, öğrenci **seviyesine** bağlıdır (`karakter_asamalari.gereken_seviye`: 1, 5, 12, 25, 40). Ters XP kaydı seviyeyi düşürmediği için aşama geri dönmez.
 
 ### `motivasyon.ogrenci_karakterleri`
 
@@ -254,8 +329,8 @@ Profil: `KS`. RLS: evet.
 | `plan_gorev_id` | uuid | evet | | `ogrenme.plan_gorevleri.id` |
 | `cihaz` | text | evet | | |
 
-Kısıtlar: `UNIQUE (kurum_id, ogrenci_id, istemci_id)`. Aynı anda tek `devam` oturumu: `UNIQUE (ogrenci_id) WHERE durum = 'devam'`. 6 saatten uzun `devam` oturum gece işiyle `yarida` yapılır. XP: `durum='tamam'` ve `gerceklesen_sn >= 600` olan oturumdan `odak_oturumu` kuralıyla `floor(gerceklesen_sn/60)` XP (günlük tavan), kaynak olay yerine oturum kimliği `kaynak_olay_id`dir (sentetik, `odak:{id}` UUIDv5). İndeks: `(kurum_id, ogrenci_id, baslangic_at DESC)`.
-Olaylar: yok (başarılı oturum `ogrenci_sayaclari`'nı etkiler).
+Kısıtlar: `UNIQUE (kurum_id, ogrenci_id, istemci_id)`. Aynı anda tek `devam` oturumu: `UNIQUE (ogrenci_id) WHERE durum = 'devam'`. 6 saatten uzun `devam` oturum gece işiyle `yarida` yapılır. XP: `durum='tamam'` (veya `yarida` ama `gerceklesen_sn >= 60`) oturumdan `odak_oturumu` kuralıyla `floor(gerceklesen_sn/60)` XP (`odak` günlük tavanı 120). `odak_sn` aktivite sayacı oturum kapanışında artar (20 dakika seri koşulu). Kaynak olay yerine oturum kimliği `kaynak_olay_id`dir (sentetik, `odak:{id}` UUIDv5). İndeks: `(kurum_id, ogrenci_id, baslangic_at DESC)`.
+Olaylar: yok.
 
 ## Yerel okuma kopyaları
 
@@ -276,14 +351,15 @@ Yalnızca olay tüketicisi yazar. Her kopya `ozne_surumu` ile eski olayı yok sa
 
 | Olay | İşleme |
 | --- | --- |
-| `ders.yoklama.kaydedildi.v1` | Durum `geldi`/`gec` ise `yoklama_geldi` XP (özne: `yoklama_id`). |
+| `ders.yoklama.kaydedildi.v1` | `yoklama_geldi` XP kazanımı ya da **ters kaydı** (XP bölümü). Özne: `yoklama_id`, özne sürümü `yoklama_surumu`. |
 | `ders.geri_bildirim.verildi.v1` | `geri_bildirim` XP. |
 | `ders.kaynak.izlendi.v1` | `kayit_izledi` XP. |
-| `ogrenme.odev.teslim_edildi.v1` | `odev_teslim` XP (geç teslimde yarısı). `toplam_odev_teslim` sayacı. |
-| `ogrenme.odev.incelendi.v1` | `inceleme_sonucu='tamam'` ise `odev_tamam` XP. |
-| `ogrenme.plan_gorevi.guncellendi.v1` | `durum='tamam'` geçişinde `plan_gorevi_tamam` XP (özne: `gorev_id`). |
-| `ogrenme.deneme.girildi.v1` | `deneme_girisi` XP. |
+| `ogrenme.odev.teslim_edildi.v1` | `odev_teslim` XP (`gec_teslim` ise yarısı); `odev_teslim_sayisi` aktivite sayacı; `toplam_odev_teslim` sayacı. |
+| `ogrenme.odev.incelendi.v1` | `inceleme_sonucu='tamam'` ise `odev_onay` XP. |
+| `ogrenme.plan_gorevi.guncellendi.v1` | `durum='tamam'` geçişinde `plan_gorevi_tamam` XP; `plan_gorevi_sayisi` sayacı. |
+| `ogrenme.deneme.girildi.v1` | `deneme_girisi` + `deneme_net_artisi` XP; `deneme_gecmisi` satırı. |
 | `ogrenme.soru.sorildi.v1` | `soru_sorma` XP. |
+| `ogrenme.soru.cozuldu.v1` | `soru_anladim` XP; `soru_anladim_sayisi` sayacı. |
 | `hesap.*` kopya olayları | Kopya upsert (yukarıdaki tablo). |
 | `hesap.kullanici.silindi.v1` | Veri temizliği. |
 
@@ -295,7 +371,6 @@ Her tüketici `ortak.processed_events` ile idempotent çalışır ([ADR 0002](..
 
 ## Açık sorular (bu servis)
 
-- Q3: Gamification durumu üyelik başına mı, kullanıcı başına mı? Varsayım: üyelik başına.
-- Q4: Karakter türü adları ve 5 beceri kodları ürün tarafından onaylanmadı. Tohum değerleri yer tutucudur.
-- Q5: Yoklama düzeltildiğinde XP geri alınmaz varsayımı.
-- Q6: Seri onarımı sonrası seri değeri formülü.
+- Seviye eşik eğrisi (`seviyeler`) ve rozet listesi ürün tarafından henüz verilmedi; tohumlar yer tutucudur.
+- `haftanin_yildizi.ogretmen_haftalik_limit` varsayılanı (3) ürün onayı bekler.
+- Net artışı referansı: öğrencinin aynı sınav türündeki önceki 3 denemesinin ortalaması ve 50 XP sınırı yalnızca net artışı bonusu için varsayıldı (toplam deneme XP'si en çok 60).

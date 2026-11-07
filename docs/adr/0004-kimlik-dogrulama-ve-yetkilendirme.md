@@ -40,9 +40,15 @@ Diğer servisler `GET /.well-known/jwks.json` adresindeki anahtarları önbelle�
 
 Belirteç iptali: 15 dakikalık ömür kabul edilen penceredir. `api`, oturum iptalini kendi kontrol eder (yenilemede). Diğer servisler anında iptal görmez. Acil durumda (hesap askıya alma) `sid` kara listesi NATS KV'ye (`kv.iptal`) yazılır ve servisler istek başına bu anahtarı kontrol eder.
 
+### Servisler arası çağrı kimliği
+
+İç uç noktalar (`/ic/*`) kullanıcı JWT'sini kabul etmez. Çağıran servis, `api` tarafından JWKS ile imzalanan kısa ömürlü (5 dk) servis JWT'si kullanır (`sub=servis:bildirim`, `aud=api`, `scope=iletisim.oku`). Servis anahtarları dağıtım sırrıdır. Örnek: `bildirim` -> `GET /ic/kullanicilar/:id/iletisim` yalnızca `scope=iletisim.oku` ile çalışır ve telefon, e-posta, görünen ad, dil döner. Her çağrı `api` tarafında denetim günlüğüne (`denetim_kayitlari`, `eylem='iletisim.oku'`) yazılır.
+
 ### Rol -> izin anahtarları
 
 İzin anahtarı: `{kaynak}.{eylem}`, ör. `yoklama.yaz`, `odev.ver`, `odev.incele`, `finans.tahsilat.yaz`, `duyuru.yaz`, `kurum.ayar.yaz`. Rol-izin-kapsam eşlemesi `hesap.rol_izinleri` tablosundadır (`rol_kodu`, `izin_kodu`, `kapsam`) ve `packages/izinler` içinde TypeScript sabiti olarak da derlenir. Tablo ve sabit aynı tohum betiğinden üretilir, CI aralarındaki farkı yakalar. Servisler izinleri bu paketten okur; veritabanı sorgusu yapmaz. Faz 1'de özel rol yoktur, yalnızca sistem rolleri vardır.
+
+Bir kullanıcı aynı kurumda birden çok rol taşıyabilir (`hesap.uyelikler` bir kullanıcı x kurum x rol için bir satırdır). Tek kişilik kurumda öğretmen hem `sahip` hem `ogretmen` üyeliğine sahiptir. JWT her zaman tek bir etkin `uyelik_id` taşır; istemci üyelikler arası geçişi `POST /auth/token` ile yeni belirteç alarak yapar. Ders ve atama kayıtları `ogretmen` üyeliğine, kurum yönetimi `sahip` üyeliğine bağlıdır.
 
 ### Kapsamlar
 

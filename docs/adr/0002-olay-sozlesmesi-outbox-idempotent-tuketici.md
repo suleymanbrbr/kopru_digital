@@ -49,7 +49,7 @@ NATS konusu (subject): `{uretici}.{tur}.v{surum}`, ör. `api.ders.yoklama.kayded
 3. Tüketiciler bilinmeyen alanları yok sayar (Zod `.passthrough()` değil, `.strip()`).
 4. Tüketici bilmediği `surum` ile karşılaşırsa mesajı `term` ile reddeder ve uyarı üretir. Sessizce atlamaz.
 5. Katalog [schema/olaylar.md](../schema/olaylar.md) tek doğruluk kaynağıdır. Yük değişikliği aynı PR'da katalogu günceller.
-6. Gizli içerik (OTP kodu, davet belirteci, parola) olay yüküne girmez.
+6. Gizli içerik (OTP kodu, davet belirteci, parola) ve iletişim bilgisi (telefon, e-posta) olay yüküne girmez. İletişim bilgisine ihtiyaç duyan tüketici (`bildirim`) bunu gönderim anında üreticiden senkron alır (istisna, aşağıda).
 
 ### Idempotent tüketiciler
 
@@ -78,7 +78,7 @@ Her tüketici servis veritabanında `ortak.processed_events (tuketici, olay_id)`
 
 ### İstisnalar
 
-Senkron iç çağrı yalnızca iki durumda kullanılır ve [0001](0001-pragmatik-mikroservis.md) maddesi 3'te listelenmiştir. İç çağrılar servis JWT'si (`aud=bildirim` / `aud=medya`) ile yetkilendirilir.
+Senkron iç çağrı yalnızca üç durumda kullanılır ve [0001](0001-pragmatik-mikroservis.md) maddesi 3'te listelenmiştir: gizli SMS gönderimi, dosya okuma adresi ve `GET /ic/kullanicilar/:id/iletisim`. İç çağrılar servis JWT'si (`aud=bildirim` / `aud=medya`) ile yetkilendirilir.
 
 ## Sonuçlar
 
