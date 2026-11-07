@@ -7,5 +7,1945 @@
     "version": "0.0.0"
   },
   "openapi": "3.0.3",
-  "paths": {}
+  "paths": {
+    "/.well-known/jwks.json": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "keys": {
+                      "items": {
+                        "additionalProperties": {},
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "keys"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "JWT dogrulama anahtarlari (JWKS)",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/cikis": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "cikis": {
+                      "enum": [
+                        true
+                      ],
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "cikis"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Oturumu kapat",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/eposta/giris": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "eposta": {
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                    "type": "string"
+                  },
+                  "parola": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "eposta",
+                  "parola"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kullanici": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "dil": {
+                          "type": "string"
+                        },
+                        "eposta": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "gorunen_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "telefon_e164": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "gorunen_ad",
+                        "telefon_e164",
+                        "eposta",
+                        "dil"
+                      ],
+                      "type": "object"
+                    },
+                    "oturum_belirteci": {
+                      "description": "Opak oturum belirteci. `POST /auth/token` için Bearer olarak gönderilir.",
+                      "type": "string"
+                    },
+                    "yeni_kullanici": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "oturum_belirteci",
+                    "kullanici",
+                    "yeni_kullanici"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "E-posta ve parola ile giris",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/eposta/kayit": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "eposta": {
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                    "type": "string"
+                  },
+                  "gorunen_ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "parola": {
+                    "maxLength": 128,
+                    "minLength": 8,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "eposta",
+                  "parola"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kullanici": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "dil": {
+                          "type": "string"
+                        },
+                        "eposta": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "gorunen_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "telefon_e164": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "gorunen_ad",
+                        "telefon_e164",
+                        "eposta",
+                        "dil"
+                      ],
+                      "type": "object"
+                    },
+                    "oturum_belirteci": {
+                      "description": "Opak oturum belirteci. `POST /auth/token` için Bearer olarak gönderilir.",
+                      "type": "string"
+                    },
+                    "yeni_kullanici": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "oturum_belirteci",
+                    "kullanici",
+                    "yeni_kullanici"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "E-posta ve parola ile kayit",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/otp/dogrula": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "kod": {
+                    "pattern": "^[0-9]{6}$",
+                    "type": "string"
+                  },
+                  "telefon": {
+                    "description": "Telefon: 05xx..., 5xx..., 90 5xx... veya +905xx... biçiminde. Sunucu E.164e çevirir.",
+                    "maxLength": 20,
+                    "minLength": 7,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "telefon",
+                  "kod"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kullanici": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "dil": {
+                          "type": "string"
+                        },
+                        "eposta": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "gorunen_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "telefon_e164": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "gorunen_ad",
+                        "telefon_e164",
+                        "eposta",
+                        "dil"
+                      ],
+                      "type": "object"
+                    },
+                    "oturum_belirteci": {
+                      "description": "Opak oturum belirteci. `POST /auth/token` için Bearer olarak gönderilir.",
+                      "type": "string"
+                    },
+                    "yeni_kullanici": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "oturum_belirteci",
+                    "kullanici",
+                    "yeni_kullanici"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "OTP kodunu dogrula; oturum ac (kullanici yoksa olusturur)",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/otp/gonder": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "telefon": {
+                    "description": "Telefon: 05xx..., 5xx..., 90 5xx... veya +905xx... biçiminde. Sunucu E.164e çevirir.",
+                    "maxLength": 20,
+                    "minLength": 7,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "telefon"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "gecerlilik_sn": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "gonderildi": {
+                      "enum": [
+                        true
+                      ],
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "gonderildi",
+                    "gecerlilik_sn"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Telefona giris/kayit kodu (OTP) gonder",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/token": {
+      "post": {
+        "description": "Authorization: Bearer <oturum_belirteci> (veya oturum çerezi) ile çağrılır.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "properties": {
+                  "kurum_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "uyelik_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "kurum_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "rol": {
+                      "enum": [
+                        "sahip",
+                        "yonetici",
+                        "ogretmen",
+                        "ogrenci",
+                        "veli"
+                      ],
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "roller": {
+                      "items": {
+                        "enum": [
+                          "sahip",
+                          "yonetici",
+                          "ogretmen",
+                          "ogrenci",
+                          "veli"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "token_type": {
+                      "enum": [
+                        "Bearer"
+                      ],
+                      "type": "string"
+                    },
+                    "uyelik_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "uyelikler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "davetli",
+                              "aktif",
+                              "askida",
+                              "ayrildi"
+                            ],
+                            "type": "string"
+                          },
+                          "kurum_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kurum_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kurum_tur": {
+                            "enum": [
+                              "bireysel",
+                              "ekip",
+                              "kurum"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "rol": {
+                            "enum": [
+                              "sahip",
+                              "yonetici",
+                              "ogretmen",
+                              "ogrenci",
+                              "veli"
+                            ],
+                            "type": "string"
+                          },
+                          "sube_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "uyelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uyelik_id",
+                          "kurum_id",
+                          "kurum_ad",
+                          "kurum_tur",
+                          "rol",
+                          "durum",
+                          "sube_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "access_token",
+                    "token_type",
+                    "expires_in",
+                    "kurum_id",
+                    "uyelik_id",
+                    "rol",
+                    "roller",
+                    "uyelikler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Erisim JWT uret / kurum-uyelik degistir",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/v1/hesap/ben": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kullanici": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "dil": {
+                          "type": "string"
+                        },
+                        "eposta": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "gorunen_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "telefon_e164": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "gorunen_ad",
+                        "telefon_e164",
+                        "eposta",
+                        "dil"
+                      ],
+                      "type": "object"
+                    },
+                    "onay_gerekli": {
+                      "type": "boolean"
+                    },
+                    "uyelikler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "davetli",
+                              "aktif",
+                              "askida",
+                              "ayrildi"
+                            ],
+                            "type": "string"
+                          },
+                          "kurum_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kurum_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kurum_tur": {
+                            "enum": [
+                              "bireysel",
+                              "ekip",
+                              "kurum"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "rol": {
+                            "enum": [
+                              "sahip",
+                              "yonetici",
+                              "ogretmen",
+                              "ogrenci",
+                              "veli"
+                            ],
+                            "type": "string"
+                          },
+                          "sube_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "uyelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uyelik_id",
+                          "kurum_id",
+                          "kurum_ad",
+                          "kurum_tur",
+                          "rol",
+                          "durum",
+                          "sube_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kullanici",
+                    "onay_gerekli",
+                    "uyelikler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Oturum acan kullanici, riza durumu ve uyelikleri",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/kurumlar": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "gorunen_ad": {
+                    "description": "Üyelikte kullanılacak ad.",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "saat_dilimi": {
+                    "default": "Europe/Istanbul",
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tur": {
+                    "enum": [
+                      "bireysel",
+                      "ekip",
+                      "kurum"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ad",
+                  "tur"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kurum": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ad": {
+                          "type": "string"
+                        },
+                        "ayarlar": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ders_hatirlatma_dk": {
+                              "maximum": 1440,
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "logo_url": {
+                              "format": "uri",
+                              "maxLength": 2000,
+                              "type": "string"
+                            },
+                            "sessiz_saat_varsayilan": {
+                              "type": "string"
+                            },
+                            "vurgu_rengi": {
+                              "pattern": "^#[0-9A-Fa-f]{6}$",
+                              "type": "string"
+                            },
+                            "yoklama_kilit_gun": {
+                              "maximum": 365,
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "aktif",
+                            "askida",
+                            "kapali"
+                          ],
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kisa_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "saat_dilimi": {
+                          "type": "string"
+                        },
+                        "surum": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "tur": {
+                          "enum": [
+                            "bireysel",
+                            "ekip",
+                            "kurum"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ad",
+                        "tur",
+                        "kisa_ad",
+                        "saat_dilimi",
+                        "durum",
+                        "ayarlar",
+                        "surum",
+                        "created_at"
+                      ],
+                      "type": "object"
+                    },
+                    "uyelikler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "davetli",
+                              "aktif",
+                              "askida",
+                              "ayrildi"
+                            ],
+                            "type": "string"
+                          },
+                          "kurum_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kurum_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kurum_tur": {
+                            "enum": [
+                              "bireysel",
+                              "ekip",
+                              "kurum"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "rol": {
+                            "enum": [
+                              "sahip",
+                              "yonetici",
+                              "ogretmen",
+                              "ogrenci",
+                              "veli"
+                            ],
+                            "type": "string"
+                          },
+                          "sube_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "uyelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uyelik_id",
+                          "kurum_id",
+                          "kurum_ad",
+                          "kurum_tur",
+                          "rol",
+                          "durum",
+                          "sube_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kurum",
+                    "uyelikler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum olustur (onboarding): olusturan sahip olur; bireysel ise ogretmen de olur",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/kurumlar/{kurum_id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "ayarlar": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ders_hatirlatma_dk": {
+                          "maximum": 1440,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "logo_url": {
+                          "format": "uri",
+                          "maxLength": 2000,
+                          "type": "string"
+                        },
+                        "sessiz_saat_varsayilan": {
+                          "type": "string"
+                        },
+                        "vurgu_rengi": {
+                          "pattern": "^#[0-9A-Fa-f]{6}$",
+                          "type": "string"
+                        },
+                        "yoklama_kilit_gun": {
+                          "maximum": 365,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "durum": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kisa_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "saat_dilimi": {
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "tur": {
+                      "enum": [
+                        "bireysel",
+                        "ekip",
+                        "kurum"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ad",
+                    "tur",
+                    "kisa_ad",
+                    "saat_dilimi",
+                    "durum",
+                    "ayarlar",
+                    "surum",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum bilgileri",
+        "tags": [
+          "hesap"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "logo_url": {
+                    "format": "uri",
+                    "maxLength": 2000,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "saat_dilimi": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "vurgu_rengi": {
+                    "nullable": true,
+                    "pattern": "^#[0-9A-Fa-f]{6}$",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "ayarlar": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ders_hatirlatma_dk": {
+                          "maximum": 1440,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "logo_url": {
+                          "format": "uri",
+                          "maxLength": 2000,
+                          "type": "string"
+                        },
+                        "sessiz_saat_varsayilan": {
+                          "type": "string"
+                        },
+                        "vurgu_rengi": {
+                          "pattern": "^#[0-9A-Fa-f]{6}$",
+                          "type": "string"
+                        },
+                        "yoklama_kilit_gun": {
+                          "maximum": 365,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "durum": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kisa_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "saat_dilimi": {
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "tur": {
+                      "enum": [
+                        "bireysel",
+                        "ekip",
+                        "kurum"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ad",
+                    "tur",
+                    "kisa_ad",
+                    "saat_dilimi",
+                    "durum",
+                    "ayarlar",
+                    "surum",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum temel bilgileri: ad, saat dilimi, logo adresi, vurgu rengi",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/kurumlar/{kurum_id}/modul-ayarlari": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ayarlar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "acik": {
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kapsam": {
+                            "enum": [
+                              "kurum",
+                              "kademe",
+                              "grup"
+                            ],
+                            "type": "string"
+                          },
+                          "kapsam_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "modul_kodu": {
+                            "enum": [
+                              "takvim",
+                              "yoklama",
+                              "geri_bildirim",
+                              "kayitlar",
+                              "finans",
+                              "odev",
+                              "haftalik_plan",
+                              "deneme",
+                              "soru_sor",
+                              "oyunlastirma",
+                              "duyuru"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "modul_kodu",
+                          "kapsam",
+                          "kapsam_id",
+                          "acik"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "kurum_etkin": {
+                      "additionalProperties": {
+                        "type": "boolean"
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "ayarlar",
+                    "kurum_etkin"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Modul ayarlari (kurum/kademe/grup satirlari)",
+        "tags": [
+          "hesap"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "acik": {
+                    "description": "null: mirasa dön (satır silinir).",
+                    "nullable": true,
+                    "type": "boolean"
+                  },
+                  "kapsam": {
+                    "enum": [
+                      "kurum",
+                      "kademe",
+                      "grup"
+                    ],
+                    "type": "string"
+                  },
+                  "kapsam_id": {
+                    "description": "`kurum` kapsamında boş bırakılabilir.",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "modul_kodu": {
+                    "enum": [
+                      "takvim",
+                      "yoklama",
+                      "geri_bildirim",
+                      "kayitlar",
+                      "finans",
+                      "odev",
+                      "haftalik_plan",
+                      "deneme",
+                      "soru_sor",
+                      "oyunlastirma",
+                      "duyuru"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "modul_kodu",
+                  "kapsam",
+                  "acik"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ayar": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "acik": {
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kapsam": {
+                          "enum": [
+                            "kurum",
+                            "kademe",
+                            "grup"
+                          ],
+                          "type": "string"
+                        },
+                        "kapsam_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "modul_kodu": {
+                          "enum": [
+                            "takvim",
+                            "yoklama",
+                            "geri_bildirim",
+                            "kayitlar",
+                            "finans",
+                            "odev",
+                            "haftalik_plan",
+                            "deneme",
+                            "soru_sor",
+                            "oyunlastirma",
+                            "duyuru"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "modul_kodu",
+                        "kapsam",
+                        "kapsam_id",
+                        "acik"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "ayar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Modul ayari yaz; acik=null mirasa dondurur. Alt duzey yalnizca daraltabilir.",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/kurumlar/{kurum_id}/uyelikler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "rol",
+            "required": false,
+            "schema": {
+              "enum": [
+                "sahip",
+                "yonetici",
+                "ogretmen",
+                "ogrenci",
+                "veli"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Önceki sayfanın `sonraki_imlec` değeri.",
+            "in": "query",
+            "name": "imlec",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kapsam": {
+                      "enum": [
+                        "kendi",
+                        "grup",
+                        "sube",
+                        "kurum"
+                      ],
+                      "type": "string"
+                    },
+                    "sonraki_imlec": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "uyeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "davetli",
+                              "aktif",
+                              "askida",
+                              "ayrildi"
+                            ],
+                            "type": "string"
+                          },
+                          "gorunen_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kademe_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "katildi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "kullanici_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "rol": {
+                            "enum": [
+                              "sahip",
+                              "yonetici",
+                              "ogretmen",
+                              "ogrenci",
+                              "veli"
+                            ],
+                            "type": "string"
+                          },
+                          "sube_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "uyelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uyelik_id",
+                          "kullanici_id",
+                          "rol",
+                          "durum",
+                          "gorunen_ad",
+                          "sube_id",
+                          "kademe_id",
+                          "katildi_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "uyeler",
+                    "kapsam",
+                    "sonraki_imlec"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Uyeleri listele; kapsam rolun izin kapsamina gore daralir (kurum/sube/grup/kendi)",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/modul-ayarlari/etkin": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "modul_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "takvim",
+                "yoklama",
+                "geri_bildirim",
+                "kayitlar",
+                "finans",
+                "odev",
+                "haftalik_plan",
+                "deneme",
+                "soru_sor",
+                "oyunlastirma",
+                "duyuru"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kademe_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "grup_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "acik": {
+                      "type": "boolean"
+                    },
+                    "modul_kodu": {
+                      "enum": [
+                        "takvim",
+                        "yoklama",
+                        "geri_bildirim",
+                        "kayitlar",
+                        "finans",
+                        "odev",
+                        "haftalik_plan",
+                        "deneme",
+                        "soru_sor",
+                        "oyunlastirma",
+                        "duyuru"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "modul_kodu",
+                    "acik"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Modul bu kademe/grup icin acik mi? (kurum > kademe > grup)",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/rizalar": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "karar": {
+                    "default": "kabul",
+                    "enum": [
+                      "kabul",
+                      "ret",
+                      "geri_cekildi"
+                    ],
+                    "type": "string"
+                  },
+                  "kaynak": {
+                    "default": "web",
+                    "enum": [
+                      "web",
+                      "ios",
+                      "android"
+                    ],
+                    "type": "string"
+                  },
+                  "riza_metni_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "riza_metni_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "karar": {
+                      "enum": [
+                        "kabul",
+                        "ret",
+                        "geri_cekildi"
+                      ],
+                      "type": "string"
+                    },
+                    "onay_gerekli": {
+                      "type": "boolean"
+                    },
+                    "riza_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "riza_id",
+                    "karar",
+                    "onay_gerekli"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "KVKK metni icin karar (kabul / ret / geri cekme) kaydet",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/rizalar/guncel": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "metinler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "baslik": {
+                            "type": "string"
+                          },
+                          "dil": {
+                            "type": "string"
+                          },
+                          "govde_markdown": {
+                            "type": "string"
+                          },
+                          "govde_sha256": {
+                            "description": "Hex",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kabul_edildi": {
+                            "type": "boolean"
+                          },
+                          "surum": {
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "kvkk_aydinlatma",
+                              "acik_riza",
+                              "kullanim_kosullari",
+                              "veli_onayi"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "tur",
+                          "surum",
+                          "dil",
+                          "baslik",
+                          "govde_markdown",
+                          "govde_sha256",
+                          "kabul_edildi"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "onay_gerekli": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "metinler",
+                    "onay_gerekli"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Guncel KVKK metin surumleri ve kullanicinin onay durumu",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/uyeliklerim": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "uyelikler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "davetli",
+                              "aktif",
+                              "askida",
+                              "ayrildi"
+                            ],
+                            "type": "string"
+                          },
+                          "kurum_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kurum_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kurum_tur": {
+                            "enum": [
+                              "bireysel",
+                              "ekip",
+                              "kurum"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "rol": {
+                            "enum": [
+                              "sahip",
+                              "yonetici",
+                              "ogretmen",
+                              "ogrenci",
+                              "veli"
+                            ],
+                            "type": "string"
+                          },
+                          "sube_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "uyelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uyelik_id",
+                          "kurum_id",
+                          "kurum_ad",
+                          "kurum_tur",
+                          "rol",
+                          "durum",
+                          "sube_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "uyelikler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Uyeliklerim (tum kurumlar)",
+        "tags": [
+          "hesap"
+        ]
+      }
+    }
+  }
 }

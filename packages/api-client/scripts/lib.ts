@@ -38,13 +38,20 @@ interface ServisAyari {
 
 /**
  * Servisin Fastify uygulamasini ag ve veritabani olmadan, bellek icinde ayaga kaldirir
- * ve OpenAPI belgesini alir. DATABASE_URL / NATS_URL verilmedigi icin hicbir baglanti acilmaz.
+ * ve OpenAPI belgesini alir. NATS_URL verilmez; DATABASE_URL sahte bir adrestir ve hic kullanilmaz.
  */
 export async function openapiAl(servis: Servis): Promise<string> {
   const app = (await import(`../../../services/${servis}/src/app.ts`)) as ServisUygulamasi;
   const config = (await import(`../../../services/${servis}/src/config.ts`)) as ServisAyari;
   const service = app.buildService(
-    config.loadServiceEnv({ NODE_ENV: 'test', LOG_LEVEL: 'silent', AUTH_ENABLED: 'false' }),
+    config.loadServiceEnv({
+      NODE_ENV: 'test',
+      LOG_LEVEL: 'silent',
+      AUTH_ENABLED: 'false',
+      // Rotalari DB'ye bagli kaydeden servisler icin (api/hesap). postgres.js tembel
+      // baglandigi icin bu adrese hic baglanilmaz; yalnizca rota kaydi tetiklenir.
+      DATABASE_URL: 'postgres://openapi:openapi@127.0.0.1:1/openapi',
+    }),
   );
   try {
     await service.app.ready();

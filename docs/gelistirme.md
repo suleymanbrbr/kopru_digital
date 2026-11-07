@@ -113,9 +113,45 @@ Kurallar `packages/config/eslint.js` içindeki `boundaryConfigs` ile `services/*
 3. `pnpm install`, ardından `pnpm lint typecheck test build`. Sınır kuralları yeni servisi otomatik tanır.
 4. Gerekirse `src/app.ts` içinde `createService({ plugins: [...] })` ile rotaları, `src/worker.ts` içinde `runWorker({ setup })` ile arka plan işlerini ekleyin.
 
+## api: veritabanı, migration ve yerel giriş
+
+`api` üç veritabanı rolüyle çalışır ([ADR 0003](adr/0003-kiraci-izolasyonu-rls.md)): `api_owner` (tabloların sahibi, yalnızca migration), `api_app` (uygulama, `NOBYPASSRLS`) ve `api_sistem` (`BYPASSRLS`, yalnızca `withSistem()`). Docker Postgres init betiği bu rolleri oluşturur; `.env.example` üç bağlantıyı da içerir (`API_DATABASE_URL`, `API_DATABASE_SISTEM_URL`, `API_DATABASE_OWNER_URL`).
+
+```sh
+pnpm infra:up
+pnpm --filter @kopru/api db:migrate          # bekleyen SQL migration'ları (services/api/migrations) uygular
+pnpm --filter @kopru/api db:generate yeni_ad # siradaki numarayla bos migration dosyasi
+pnpm --filter @kopru/api dev                 # API http://localhost:4000
+```
+
+- Migration'lar düz SQL'dir (RLS, roller ve yetkiler drizzle-kit ile üretilemediği için). Runner `SET ROLE api_owner` ile çalışır, uygulanmış dosyanın özetini (`ortak.migrasyonlar`) denetler ve rol/izin sözlüğünü `@kopru/contracts` sabitiyle eşitler. Drizzle tabloları `src/db/schema.ts` içindedir; `schema.test.ts` sütunların migration sonucuyla aynı olduğunu doğrular. Migration'ı değiştirmek yerine yeni dosya ekleyin.
+- Tablo sahibi RLS'i atladığı için kiracı tablolarında `ortak.kiraci_tablosu_koru('sema', 'tablo')` çağrılır (RLS ENABLE + FORCE, politika, tetikleyiciler).
+- `ortak.outbox` olayları iş verisiyle aynı işlemde yazılır; worker (`dev:worker`) `api_sistem` bağlantısıyla relay'i çalıştırır.
+
+### Yerelde giriş ve kurum oluşturma (curl)
+
+OTP kodu `API_SMS_SAGLAYICI=log` iken API loguna `[DEV SMS]` satırı olarak düşer. Gerçek Netgsm gönderimi `bildirim` servisiyle gelecek (`SmsGonderici` arayüzü).
+
+```sh
+B=localhost:4000; H='content-type: application/json'
+curl -s -XPOST $B/auth/otp/gonder -H "$H" -d '{"telefon":"0532 111 22 33"}'
+# loglardaki 6 haneli kodu alin
+curl -s -XPOST $B/auth/otp/dogrula -H "$H" -d '{"telefon":"05321112233","kod":"123456"}'   # -> oturum_belirteci
+curl -s -XPOST $B/auth/token -H "authorization: Bearer <oturum_belirteci>" -H "$H" -d '{}' # -> access_token (15 dk)
+curl -s $B/v1/hesap/rizalar/guncel -H "authorization: Bearer <access_token>"                # KVKK metni
+curl -s -XPOST $B/v1/hesap/rizalar -H "authorization: Bearer <access_token>" -H "$H" -d '{"riza_metni_id":"<id>"}'
+curl -s -XPOST $B/v1/hesap/kurumlar -H "authorization: Bearer <access_token>" -H "$H" -d '{"ad":"Deneme","tur":"kurum"}'
+curl -s -XPOST $B/auth/token -H "authorization: Bearer <oturum_belirteci>" -H "$H" -d '{"kurum_id":"<kurum_id>"}' # kuruma bagli token
+```
+
+- Rıza verilmeden `riza_gerekli` (403) döner; muaf uç noktalar: `/auth/*`, `/.well-known/*`, `/v1/hesap/ben`, `/v1/hesap/rizalar*`.
+- Diğer servisler `JWKS_URL=http://localhost:4000/.well-known/jwks.json`, `JWT_ISSUER`, `JWT_AUDIENCE=kopru` ile `AUTH_ENABLED=true` çalıştırır.
+- Yetki kapısı: rotada `preHandler: requirePermission('izin.kodu', { scope })` ([ADR 0004](adr/0004-kimlik-dogrulama-ve-yetkilendirme.md) kontrol sırası). Rol -> izin -> kapsam sözlüğü `packages/contracts/src/hesap/izinler.ts` içindedir.
+- Testler: `DATABASE_URL` (superuser) verildiğinde `vitest` global kurulumu sıfırdan migrate edilmiş geçici bir veritabanı oluşturur ve sonunda siler; verilmezse DB testleri atlanır.
+
 ## Outbox ve olay akışı
 
-- Tablo şablonu: `packages/service-kit/migrations/outbox.sql` (`renderOutboxMigration(schema)` ile şema adı doldurulur). Her servis bunu kendi migration'larına dahil eder.
+- Tablo şablonu: `packages/service-kit/migrations/outbox.sql` (api'de `ortak.outbox`, migration içinde `-- @outbox-sablonu ortak` satırıyla eklenir) (`renderOutboxMigration(schema)` ile şema adı doldurulur). Her servis bunu kendi migration'larına dahil eder.
 - Worker süreci (`src/worker.ts`) `DATABASE_URL` ve `NATS_URL` tanımlıysa `EVENTS` stream'ini (`evt.>`) oluşturur ve `startOutboxRelay` ile bekleyen olayları `FOR UPDATE SKIP LOCKED` kullanarak JetStream'e yayınlar. `Nats-Msg-Id` olay id'sidir; tekrar gönderimler JetStream'in duplicate penceresinde elenir.
 - Outbox tablosu migration ile oluşturulmadan worker çalıştırılırsa relay her saniye hata loglar; önce migration'ı uygulayın.
 

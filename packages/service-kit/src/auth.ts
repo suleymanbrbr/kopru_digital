@@ -7,7 +7,12 @@ import { AppError } from './errors.js';
 /** Dogrulanmis istek kimligi. Token claim'leri: `sub`, `kurum_id`, `roller` (dizi veya bosluklu string). */
 export interface AuthContext {
   kullaniciId: string;
-  kurumId: string;
+  /** Kurum secilmemis (ilk giris, uyeligi olmayan kullanici) belirtecte `null`. */
+  kurumId: string | null;
+  uyelikId: string | null;
+  /** Etkin uyelik rolu (`rol` claim'i). */
+  rol: string | null;
+  sessionId: string | null;
   roller: string[];
   claims: JWTPayload;
 }
@@ -31,6 +36,8 @@ export interface JwtVerifierOptions {
   keySet?: JWTVerifyGetKey;
   issuer?: string;
   audience?: string;
+  /** true ise `kurum_id` claim'i olmayan belirtec de gecerlidir (varsayilan: false). */
+  allowNoKurum?: boolean;
 }
 
 const unauthorized = () =>
@@ -53,11 +60,15 @@ export function createJwtVerifier(options: JwtVerifierOptions): VerifyJwt {
         ...(options.issuer ? { issuer: options.issuer } : {}),
         ...(options.audience ? { audience: options.audience } : {}),
       });
-      const kurumId = payload.kurum_id;
-      if (!payload.sub || typeof kurumId !== 'string') throw unauthorized();
+      const str = (value: unknown) => (typeof value === 'string' ? value : null);
+      const kurumId = str(payload.kurum_id);
+      if (!payload.sub || (kurumId === null && !options.allowNoKurum)) throw unauthorized();
       return {
         kullaniciId: payload.sub,
         kurumId,
+        uyelikId: str(payload.uyelik_id),
+        rol: str(payload.rol),
+        sessionId: str(payload.sid),
         roller: toRoles(payload.roller),
         claims: payload,
       };
@@ -86,6 +97,6 @@ export function installAuth(
     const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : undefined;
     if (!token) throw unauthorized();
     request.auth = await verify(token);
-    request.log = request.log.child({ kurumId: request.auth.kurumId });
+    request.log = request.log.child({ kurumId: request.auth.kurumId ?? undefined });
   });
 }

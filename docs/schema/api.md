@@ -105,6 +105,19 @@ Kavramlar: kullanıcı global kimliktir. Kiracı verisi `uyelik`e bağlanır. `o
 
 ### Kimlik tabloları (Better Auth eşlemesi)
 
+> **Uygulama notları (`feat/hesap-kimlik`).** Aşağıdaki tasarımdan bilinçli sapmalar:
+> - `oturumlar`: Better Auth belirteci düz saklar; `belirtec_hash bytea` yerine `belirtec text UNIQUE` kullanılır. İstemciye giden değer Better Auth sırrıyla imzalıdır, veritabanı sızıntısı tek başına oturum açmaya yetmez.
+> - `hesaplar`: `saglayici` değerlerine Better Auth'un e-posta/parola sabiti `credential` eklendi; belirteç sütunları `text` (OAuth belirteçleri Better Auth tarafından şifrelenir), `parola_hash` eklendi.
+> - `dogrulamalar`: Better Auth'un `identifier/value/expiresAt` yapısı (`tanimlayici`, `deger`, `expires_at`) kullanılır; `kod_hash/amac/deneme_sayisi` yoktur (deneme sayısı ve süre `deger` içinde, 5 dakika / 5 deneme). Telefon başına saatlik OTP sınırı için `hesap.otp_istekleri` tablosu eklendi.
+> - `kullanicilar`: Better Auth `image` alanı için `avatar_url`; `eposta_dogrulandi_at` / `telefon_dogrulandi_at` Better Auth'a boolean olarak görünür. Telefonla kayıtta geçici e-posta (`...@telefon.invalid`) veritabanına yazılmaz (`eposta` NULL kalır).
+> - `jwks`: Better Auth `jwt` eklentisi yerine access JWT'yi api kendisi üretir (claim seti ve kurum/üyelik seçimi gerektiği için); anahtarlar bu tabloda, `id` = `kid`. Özel anahtar `BETTER_AUTH_SECRET`'tan HKDF ile türetilen anahtarla AES-256-GCM şifreli.
+> - `rizalar.kurum_id` NULL olabilir (hesap düzeyi rıza: ilk girişte henüz kurum yoktur). Politika: kullanıcı kendi kayıtlarını görür/ekler; kurum kayıtlarını ayrıca kurum bağlamı görür.
+> - `uyelikler` ve `kurumlar` RLS: kullanıcı kolu yalnızca `SELECT` içindir (yazma yalnızca kurum bağlamında).
+> - `davet_coz` / `katilim_kodu_coz`: `FORCE RLS` sahibi de kapsadığı için tablolara yalnızca `api_owner` rolü için `SELECT` politikası eklendi; fonksiyonlar `api_owner` sahipliğinde `SECURITY DEFINER`'dır (api_app bu politikadan yararlanamaz).
+> - Kurum `tur` değerleri `bireysel`, `ekip`, `kurum` (ürün dilindeki "butik" = `ekip`). `ayarlar` jsonb'ye `vurgu_rengi` ve `logo_url` eklendi (medya servisi gelene kadar logo adresi).
+> - Rıza hata kodu `riza_gerekli` (ADR 0006 alan hata kodu kuralı).
+> - Olaylar: mevcut `@kopru/contracts` zarfı (`kurumId`, `type`, `version`) kullanılır; `hesap.kullanici.*` olayları zarf kullanıcı düzeyini desteklemediği için henüz yayımlanmaz. Outbox tablosu service-kit şablonudur (`ortak.outbox`: `subject`, `payload`, `sent_at`).
+
 Better Auth tabloları [ADR 0004](../adr/0004-kimlik-dogrulama-ve-yetkilendirme.md) uyarınca bu adlarla eşlenir. Better Auth'ın kendi zorunlu sütunları (ör. `emailVerified`, `createdAt`) `fields` yapılandırmasıyla aşağıdaki sütunlara bağlanır. Aşağıdaki liste Better Auth sütunlarının üst kümesidir.
 
 #### `hesap.kullanicilar`

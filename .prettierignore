@@ -15,3 +15,4 @@ assets
 apps/web/public/karakter
 apps/web/src/styles/tema.generated.css
 apps/admin/src/app/tema.generated.css
+packages/api-client/openapi

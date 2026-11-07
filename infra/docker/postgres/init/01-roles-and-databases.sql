@@ -20,3 +20,11 @@ revoke connect on database api from public;
 revoke connect on database motivasyon from public;
 revoke connect on database bildirim from public;
 revoke connect on database medya from public;
+
+-- api servisi (ADR 0003): migration kullanicisi `api` (db sahibi) api_owner rolune gecerek tablolari olusturur.
+-- Uygulama `api_app` (NOBYPASSRLS), sistem isleri `api_sistem` (BYPASSRLS) ile baglanir.
+-- Sifreler yalnizca gelistirme icindir (= rol adi); uretimde gizli yoneticiden gelir.
+create role api_owner nologin;
+create role api_app login nosuperuser nobypassrls password 'api_app';
+create role api_sistem login nosuperuser bypassrls password 'api_sistem';
+grant api_owner to api;

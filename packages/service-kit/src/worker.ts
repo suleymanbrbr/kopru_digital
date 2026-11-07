@@ -18,6 +18,8 @@ export interface WorkerContext {
 export interface WorkerOptions {
   name: string;
   env: BaseEnv;
+  /** Outbox tablosu (varsayilan `outbox`; semali: `ortak.outbox`). */
+  outboxTable?: string;
   /** Servise ozel is/consumer baslatici; kapanista cagrilacak bir temizleyici dondurebilir. */
   setup?: (context: WorkerContext) => Promise<(() => Promise<void>) | undefined>;
   /** Kapanista (kaynaklar kapandiktan sonra) calisir; ornek: telemetry.shutdown */
@@ -43,7 +45,12 @@ export async function runWorker(options: WorkerOptions): Promise<{ stop(): Promi
 
   if (db && nats) {
     await ensureEventStream(nats);
-    const relay = startOutboxRelay({ db, nats, logger: log });
+    const relay = startOutboxRelay({
+      db,
+      nats,
+      logger: log,
+      ...(options.outboxTable ? { table: options.outboxTable } : {}),
+    });
     cleanups.push(() => relay.stop());
   } else {
     log.info('outbox relay devre dışı (DATABASE_URL ve NATS_URL gerekli)');
