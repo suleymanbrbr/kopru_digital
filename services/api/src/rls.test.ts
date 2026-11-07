@@ -72,10 +72,12 @@ describe.skipIf(dbYok())('RLS kiraci izolasyonu (api_app)', () => {
     }
   });
 
-  it("A baglamindan B kurumuna INSERT reddedilir (WITH CHECK)", async () => {
+  it('A baglamindan B kurumuna INSERT reddedilir (WITH CHECK)', async () => {
     const metin = await hataMetni(
       withTenant(app, ctx(kurumA, kullaniciA), (tx) =>
-        tx.execute(sql`insert into hesap.gruplar (id, kurum_id, tur, ad) values (${uuidv7()}, ${kurumB}, 'grup', 'sizinti')`),
+        tx.execute(
+          sql`insert into hesap.gruplar (id, kurum_id, tur, ad) values (${uuidv7()}, ${kurumB}, 'grup', 'sizinti')`,
+        ),
       ),
     );
     expect(metin).toMatch(/row-level security/);
@@ -83,7 +85,9 @@ describe.skipIf(dbYok())('RLS kiraci izolasyonu (api_app)', () => {
 
   it('A baglami B satirini guncelleyemez/silemez (0 satir etkilenir)', async () => {
     const guncel = await withTenant(app, ctx(kurumA, kullaniciA), (tx) =>
-      tx.execute(sql`update hesap.gruplar set ad = 'ele gecirildi' where id = ${grupB} returning id`),
+      tx.execute(
+        sql`update hesap.gruplar set ad = 'ele gecirildi' where id = ${grupB} returning id`,
+      ),
     );
     expect(guncel).toHaveLength(0);
     const silinen = await withTenant(app, ctx(kurumA, kullaniciA), (tx) =>
@@ -109,7 +113,9 @@ describe.skipIf(dbYok())('RLS kiraci izolasyonu (api_app)', () => {
     expect(liste.map((r) => r.kurum_id).sort()).toEqual([kurumA, kurumB].sort());
 
     const guncel = await withUser(app, { kullaniciId: kullaniciCift }, (tx) =>
-      tx.execute(sql`update hesap.uyelikler set rol = 'sahip' where kullanici_id = ${kullaniciCift} returning id`),
+      tx.execute(
+        sql`update hesap.uyelikler set rol = 'sahip' where kullanici_id = ${kullaniciCift} returning id`,
+      ),
     );
     expect(guncel).toHaveLength(0);
     // baska kullanicinin uyeligi kullanici kolunda gorunmez
@@ -120,22 +126,37 @@ describe.skipIf(dbYok())('RLS kiraci izolasyonu (api_app)', () => {
   });
 
   it('api_app: defter UPDATE/DELETE yok, taklit kayitlari ve api_owner erisimi yok', async () => {
-    expect(await hataMetni(app.orm.execute(sql`delete from hesap.rizalar`))).toMatch(/permission denied/);
-    expect(await hataMetni(app.orm.execute(sql`update hesap.denetim_kayitlari set neden = 'x'`))).toMatch(/permission denied/);
-    expect(await hataMetni(app.orm.execute(sql`select * from hesap.taklit_kayitlari`))).toMatch(/permission denied/);
-    expect(await hataMetni(app.orm.execute(sql`set role api_owner`))).toMatch(/permission denied|must be member|cannot/);
-    expect(await hataMetni(app.orm.execute(sql`set role api_sistem`))).toMatch(/permission denied|must be member|cannot/);
-    expect(await hataMetni(app.orm.execute(sql`update ortak.outbox set sent_at = now()`))).toMatch(/permission denied/);
+    expect(await hataMetni(app.orm.execute(sql`delete from hesap.rizalar`))).toMatch(
+      /permission denied/,
+    );
+    expect(
+      await hataMetni(app.orm.execute(sql`update hesap.denetim_kayitlari set neden = 'x'`)),
+    ).toMatch(/permission denied/);
+    expect(await hataMetni(app.orm.execute(sql`select * from hesap.taklit_kayitlari`))).toMatch(
+      /permission denied/,
+    );
+    expect(await hataMetni(app.orm.execute(sql`set role api_owner`))).toMatch(
+      /permission denied|must be member|cannot/,
+    );
+    expect(await hataMetni(app.orm.execute(sql`set role api_sistem`))).toMatch(
+      /permission denied|must be member|cannot/,
+    );
+    expect(await hataMetni(app.orm.execute(sql`update ortak.outbox set sent_at = now()`))).toMatch(
+      /permission denied/,
+    );
   });
 
   it('api_sistem RLS atlar (BYPASSRLS)', async () => {
-    const [r] = await sistem`select count(*)::int n from hesap.gruplar where id in (${grupA}, ${grupB})`;
+    const [r] =
+      await sistem`select count(*)::int n from hesap.gruplar where id in (${grupA}, ${grupB})`;
     expect(r?.n).toBe(2);
   });
 
   it('SECURITY DEFINER davet_coz: kiraci baglami olmadan yalnizca dar kimlik doner', async () => {
     const hash = Buffer.from(uuidv7().replaceAll('-', ''), 'hex');
-    const [eden] = await sistem`select id from hesap.uyelikler where kurum_id = ${kurumA} and rol = 'sahip'`;
+    const [eden] = await sistem<
+      { id: string }[]
+    >`select id from hesap.uyelikler where kurum_id = ${kurumA} and rol = 'sahip'`;
     await sistem`insert into hesap.davetler (id, kurum_id, kanal, rol, belirtec_hash, davet_eden_id, expires_at)
                  values (${uuidv7()}, ${kurumA}, 'baglanti', 'ogrenci', ${hash}, ${eden?.id ?? ''}, now() + interval '1 day')`;
     const bulunan = await app.orm.execute<{ kurum_id: string; durum: string }>(
@@ -150,7 +171,9 @@ describe.skipIf(dbYok())('RLS kiraci izolasyonu (api_app)', () => {
   it('son sahip ayrilamaz (ertelenmis kisit)', async () => {
     const metin = await hataMetni(
       withTenant(app, ctx(kurumA, kullaniciA), (tx) =>
-        tx.execute(sql`update hesap.uyelikler set durum = 'ayrildi', ayrildi_at = now() where kurum_id = ${kurumA} and rol = 'sahip'`),
+        tx.execute(
+          sql`update hesap.uyelikler set durum = 'ayrildi', ayrildi_at = now() where kurum_id = ${kurumA} and rol = 'sahip'`,
+        ),
       ),
     );
     expect(metin).toMatch(/son_sahip_ayrilamaz/);

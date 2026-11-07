@@ -1,13 +1,19 @@
 import { randomInt } from 'node:crypto';
 
 import type { Service } from '@kopru/service-kit';
+import postgres from 'postgres';
 import { inject } from 'vitest';
 
 import { buildService } from '../app.js';
 import { loadServiceEnv } from '../config.js';
+import { migrate } from '../db/migrate.js';
 import { YakalayanSmsGonderici } from '../modules/hesap/index.js';
-
-import type { TestDbUrls } from './global-setup.js';
+import {
+  TEST_APP_PASSWORD,
+  TEST_SISTEM_PASSWORD,
+  withDatabase,
+  type TestDbUrls,
+} from './global-setup.js';
 
 export function testDb(): TestDbUrls | null {
   return inject('testDb');
@@ -24,8 +30,10 @@ export interface TestServisi {
   sms: YakalayanSmsGonderici;
 }
 
-export function testServisi(ekEnv: Record<string, string> = {}): TestServisi {
-  const urls = testDb();
+export function testServisi(
+  ekEnv: Record<string, string> = {},
+  urls: TestDbUrls | null = testDb(),
+): TestServisi {
   if (!urls) throw new Error('testDb yok');
   const sms = new YakalayanSmsGonderici();
   const env = loadServiceEnv({
@@ -40,7 +48,8 @@ export function testServisi(ekEnv: Record<string, string> = {}): TestServisi {
 
 let ipSayaci = randomInt(1, 200);
 /** Her giris icin ayri istemci IP'si: OTP IP hiz siniri testler arasi sizmasin. */
-export const yeniIp = () => `10.${String(randomInt(0, 255))}.${String(ipSayaci++ % 250)}.${String(randomInt(1, 254))}`;
+export const yeniIp = () =>
+  `10.${String(randomInt(0, 255))}.${String(ipSayaci++ % 250)}.${String(randomInt(1, 254))}`;
 
 export const rastgeleTelefon = () => `+9055${String(randomInt(10_000_000, 99_999_999))}`;
 
@@ -160,4 +169,35 @@ export async function hataMetni(islem: Promise<unknown>): Promise<string> {
     return parcalar.join(' | ');
   }
   throw new Error('İşlem reddedilmeliydi');
+}
+
+/** Paylasilan veritabanini etkilememesi gereken testler icin ayri, sifirdan migrate edilmis veritabani. */
+export async function izoleVeritabani(): Promise<{
+  urls: TestDbUrls;
+  temizle: () => Promise<void>;
+}> {
+  const kok = testDb();
+  if (!kok) throw new Error('testDb yok');
+  const name = `kopru_api_iz_${String(process.pid)}_${Date.now().toString(36)}`;
+  const admin = postgres(kok.adminUrl, { max: 1, onnotice: () => undefined });
+  await admin.unsafe(`create database ${name}`);
+  const ownerUrl = withDatabase(kok.adminUrl, name);
+  await migrate({
+    url: ownerUrl,
+    appPassword: TEST_APP_PASSWORD,
+    sistemPassword: TEST_SISTEM_PASSWORD,
+  });
+  return {
+    urls: {
+      adminUrl: kok.adminUrl,
+      ownerUrl,
+      appUrl: withDatabase(kok.adminUrl, name, 'api_app', TEST_APP_PASSWORD),
+      sistemUrl: withDatabase(kok.adminUrl, name, 'api_sistem', TEST_SISTEM_PASSWORD),
+      name,
+    },
+    temizle: async () => {
+      await admin.unsafe(`drop database if exists ${name} with (force)`);
+      await admin.end();
+    },
+  };
 }

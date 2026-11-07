@@ -1,14 +1,9 @@
-import {
-  IZIN_KODLARI,
-  ROLLER,
-  ROL_IZINLERI,
-} from '@kopru/contracts';
+import { IZIN_KODLARI, ROLLER, ROL_IZINLERI } from '@kopru/contracts';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { dbYok, testDb } from '../test/yardimcilar.js';
 import { withDatabase } from '../test/global-setup.js';
-
+import { dbYok, testDb } from '../test/yardimcilar.js';
 import { migrate } from './migrate.js';
 
 describe.skipIf(dbYok())('migrations (sifirdan)', () => {
@@ -42,7 +37,9 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
   });
 
   it('roller: api_app BYPASSRLS degil, api_sistem BYPASSRLS, hicbiri superuser degil', async () => {
-    const roller = await owner<{ rolname: string; rolbypassrls: boolean; rolsuper: boolean; rolcanlogin: boolean }[]>`
+    const roller = await owner<
+      { rolname: string; rolbypassrls: boolean; rolsuper: boolean; rolcanlogin: boolean }[]
+    >`
       select rolname, rolbypassrls, rolsuper, rolcanlogin from pg_roles
       where rolname in ('api_owner', 'api_app', 'api_sistem') order by rolname`;
     expect(roller).toEqual([
@@ -99,7 +96,9 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
     const beklenen = ROLLER.flatMap((rol) =>
       Object.entries(ROL_IZINLERI[rol]).map(([izin, kapsam]) => `${rol}|${izin}|${kapsam}`),
     ).sort();
-    expect(eslemeler.map((e) => `${e.rol_kodu}|${e.izin_kodu}|${e.kapsam}`).sort()).toEqual(beklenen);
+    expect(eslemeler.map((e) => `${e.rol_kodu}|${e.izin_kodu}|${e.kapsam}`).sort()).toEqual(
+      beklenen,
+    );
   });
 
   it('tohum: yer tutucu KVKK metni yayinlanmis ve degistirilemez', async () => {

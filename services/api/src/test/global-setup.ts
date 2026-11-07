@@ -43,7 +43,11 @@ export default async function setup(project: TestProject) {
   await admin.unsafe(`create database ${name}`);
   await admin.end();
   const ownerUrl = withDatabase(base, name);
-  await migrate({ url: ownerUrl, appPassword: TEST_APP_PASSWORD, sistemPassword: TEST_SISTEM_PASSWORD });
+  await migrate({
+    url: ownerUrl,
+    appPassword: TEST_APP_PASSWORD,
+    sistemPassword: TEST_SISTEM_PASSWORD,
+  });
   project.provide('testDb', {
     adminUrl: base,
     ownerUrl,
