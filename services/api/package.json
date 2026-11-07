@@ -20,7 +20,14 @@
   "dependencies": {
     "@kopru/contracts": "workspace:*",
     "@kopru/service-kit": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
+    "fastify": "catalog:",
+    "fastify-type-provider-zod": "catalog:",
+    "jose": "catalog:",
+    "postgres": "catalog:",
+    "uuidv7": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@kopru/config": "workspace:*",
