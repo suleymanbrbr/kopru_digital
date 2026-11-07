@@ -1,0 +1,20 @@
+{
+  "extends": ["@kopru/config/tsconfig.base.json", "expo/tsconfig.base"],
+  "compilerOptions": {
+    "types": ["jest", "node"],
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": [
+    "src",
+    "scripts",
+    "*.ts",
+    "*.js",
+    "*.mjs",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}
