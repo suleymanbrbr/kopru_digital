@@ -10,7 +10,7 @@ import {
   type IzinKodu,
 } from '@kopru/contracts';
 import { renderOutboxMigration } from '@kopru/service-kit';
-import postgres, { type Sql } from 'postgres';
+import postgres, { type Sql, type TransactionSql } from 'postgres';
 import { uuidv7 } from 'uuidv7';
 
 export const migrationsDir = new URL('../../migrations/', import.meta.url);
@@ -37,6 +37,7 @@ async function ensureRole(sql: Sql, name: string, definition: string) {
     if (code === '42710' || code === '23505') return; // es zamanli olusturma
     throw new Error(
       `Rol ${name} yok ve oluşturulamadı (${String(err)}). Altyapı betiği (infra/docker/postgres/init) ile oluşturun.`,
+      { cause: err },
     );
   }
 }
@@ -70,7 +71,7 @@ async function bootstrap(sql: Sql, options: MigrateOptions) {
 }
 
 /** `contracts` izin sozlugunu veritabani tablolariyla esitler (idempotent). */
-export async function izinTablolariniEsitle(sql: Sql): Promise<void> {
+export async function izinTablolariniEsitle(sql: TransactionSql): Promise<void> {
   for (const kod of ROLLER) {
     await sql`insert into hesap.roller (id, kod, ad) values (${uuidv7()}, ${kod}, ${ROL_ADLARI[kod]})
               on conflict (kod) do update set ad = excluded.ad`;
@@ -115,9 +116,9 @@ export async function migrate(options: MigrateOptions): Promise<string[]> {
       await sql.unsafe(`create table if not exists ortak.migrasyonlar (
         id text primary key, sha256 text not null, uygulandi_at timestamptz not null default now())`);
       const done = new Map(
-        (await sql<{ id: string; sha256: string }[]>`select id, sha256 from ortak.migrasyonlar`).map(
-          (r) => [r.id, r.sha256],
-        ),
+        (
+          await sql<{ id: string; sha256: string }[]>`select id, sha256 from ortak.migrasyonlar`
+        ).map((r) => [r.id, r.sha256]),
       );
       const files = (await readdir(migrationsDir)).filter((f) => f.endsWith('.sql')).sort();
       for (const file of files) {

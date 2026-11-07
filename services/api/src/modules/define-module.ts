@@ -5,6 +5,8 @@ export interface ApiModule {
   name: string;
   prefix: string;
   plugin: ServicePlugin;
+  /** Onek olmadan kaydedilen rotalar (ornek: `/auth/*`, `/.well-known/*`). */
+  rootPlugin?: ServicePlugin;
 }
 
 const empty: ServicePlugin = () => Promise.resolve();
@@ -14,6 +16,15 @@ const empty: ServicePlugin = () => Promise.resolve();
  * Baska moduller ve servis kodu yalnizca bu dosyayi import edebilir (ESLint zorlar).
  * Rotalar eklendiginde: `defineModule('ders', dersRoutes)`.
  */
-export function defineModule(name: string, plugin: ServicePlugin = empty): ApiModule {
-  return { name, prefix: `/v1/${name}`, plugin };
+export function defineModule(
+  name: string,
+  plugin: ServicePlugin = empty,
+  options: { rootPlugin?: ServicePlugin } = {},
+): ApiModule {
+  return {
+    name,
+    prefix: `/v1/${name}`,
+    plugin,
+    ...(options.rootPlugin ? { rootPlugin: options.rootPlugin } : {}),
+  };
 }

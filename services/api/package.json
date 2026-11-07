@@ -26,6 +26,7 @@
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "fastify": "catalog:",
+    "fastify-plugin": "catalog:",
     "fastify-type-provider-zod": "catalog:",
     "jose": "catalog:",
     "postgres": "catalog:",

@@ -246,7 +246,9 @@ export const kurumlar = hesap.table('kurumlar', {
   logo_dosya_id: uuid('logo_dosya_id'),
   saat_dilimi: text('saat_dilimi').notNull().default('Europe/Istanbul'),
   durum: text('durum').notNull().default('aktif'),
-  ayarlar: jsonb('ayarlar').notNull().default(sql`'{}'::jsonb`),
+  ayarlar: jsonb('ayarlar')
+    .notNull()
+    .default(sql`'{}'::jsonb`),
   olusturan_kullanici_id: uuid('olusturan_kullanici_id')
     .notNull()
     .references(() => kullanicilar.id),
@@ -320,7 +322,9 @@ export const grupUyeleri = hesap.table(
     ...surumlu(),
     grup_id: uuid('grup_id').notNull(),
     ogrenci_id: uuid('ogrenci_id').notNull(),
-    baslangic_tarihi: date('baslangic_tarihi').notNull().default(sql`current_date`),
+    baslangic_tarihi: date('baslangic_tarihi')
+      .notNull()
+      .default(sql`current_date`),
     bitis_tarihi: date('bitis_tarihi'),
     katilim_yolu: text('katilim_yolu').notNull().default('yonetici'),
   },
@@ -339,7 +343,9 @@ export const atamalar = hesap.table('atamalar', {
   brans_kodu: text('brans_kodu')
     .notNull()
     .references(() => bransler.kod),
-  baslangic_tarihi: date('baslangic_tarihi').notNull().default(sql`current_date`),
+  baslangic_tarihi: date('baslangic_tarihi')
+    .notNull()
+    .default(sql`current_date`),
   bitis_tarihi: date('bitis_tarihi'),
   ana_ogretmen: boolean('ana_ogretmen').notNull().default(false),
 });

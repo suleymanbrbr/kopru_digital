@@ -21,13 +21,17 @@ if (command === 'generate') {
   console.log(`oluşturuldu: migrations/${file}`);
 } else {
   const url =
-    process.env.API_DATABASE_OWNER_URL ?? process.env.DATABASE_OWNER_URL ?? process.env.DATABASE_URL;
+    process.env.API_DATABASE_OWNER_URL ??
+    process.env.DATABASE_OWNER_URL ??
+    process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_OWNER_URL (veya DATABASE_URL) tanımlı değil');
   const applied = await migrate({
     url,
     ...(process.env.API_APP_PASSWORD ? { appPassword: process.env.API_APP_PASSWORD } : {}),
     ...(process.env.API_SISTEM_PASSWORD ? { sistemPassword: process.env.API_SISTEM_PASSWORD } : {}),
-    log: (m) => console.log(m),
+    log: (m) => {
+      console.log(m);
+    },
   });
   console.log(applied.length > 0 ? `${String(applied.length)} migration uygulandı.` : 'Güncel.');
 }

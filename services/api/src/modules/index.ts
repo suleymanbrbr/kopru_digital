@@ -18,6 +18,7 @@ export const modules: readonly ApiModule[] = [
 /** Tum modulleri `/v1/<modul>` onekiyle kaydeder. */
 export const modulesPlugin: ServicePlugin = async (app) => {
   for (const mod of modules) {
+    if (mod.rootPlugin) await app.register(mod.rootPlugin);
     await app.register(mod.plugin, { prefix: mod.prefix });
   }
 };
