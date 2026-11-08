@@ -358,6 +358,7 @@ export const davetler = hesap.table('davetler', {
   rol: text('rol').notNull(),
   belirtec_hash: bytea('belirtec_hash').notNull(),
   hedef_telefon_e164: text('hedef_telefon_e164'),
+  hedef_eposta: citext('hedef_eposta'),
   hedef_ad: text('hedef_ad'),
   grup_id: uuid('grup_id'),
   kademe_id: uuid('kademe_id'),
