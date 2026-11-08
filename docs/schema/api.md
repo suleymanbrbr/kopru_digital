@@ -389,7 +389,9 @@ Profil: `KS`. RLS: evet. Kod çözme: `hesap.katilim_kodu_coz(kod text)` (`SECUR
 | `iptal_at` | timestamptz | evet | | |
 
 Kısıtlar: `UNIQUE (kod)`. Bir grup için tek etkin kod: `UNIQUE (grup_id) WHERE aktif`. Yenileme eski kodu `aktif=false` yapar. `grup_id` türü `sinif` olmalıdır (tetikleyici `sinif_katilim_kodlari_tur_trg`). Kod çözme hız sınırı: IP başına dakikada 10, başarısız çözüm 5'te 15 dakika bekleme.
-Olaylar: yok. Katılım `grup_uyeleri` yazımıyla (`katilim_yolu='sinif_kodu'`) olay üretir.
+Olaylar: yok. Öğretmen onayından sonra katılım `grup_uyeleri` yazımıyla (`katilim_yolu='sinif_kodu'`) olay üretir.
+
+**Karar (8 Kasım 2026):** Kodla katılım öğretmen onayı ister. Kod kullanıldığında öğrenci önce bekleyen istek olarak kaydedilir; onaylanınca gruba eklenir, reddedilirse eklenmez. Bekleyen istek tablosu uygulama sırasında bu bölüme eklenecek.
 
 #### `hesap.modul_ayarlari`
 

@@ -24,7 +24,7 @@ Tekrar çalıştırılabilir uçtan uca betikler: `services/api/scripts/davet-ak
 
 1. **KVKK metnini gerçekten göster.** Mobil sabit bir özet gösteriyor (`apps/mobile/src/app/(onboarding)/kvkk.tsx`), web `govde_markdown`'ı ham gösteriyor (`##`, `**` ekranda). Kullanıcı onayladığı metnin tamamını okunur görmeli. Markdown renderer yeni bağımlılık kararıdır.
 2. **`hesap.uyelik.degisti` olayındaki `gorunen_ad`'ı kaldır.** "Olaylarda kişisel veri yok" kuralına aykırı. Sözleşme değişikliği: `docs/schema/olaylar.md` ve ADR 0002 sürümleme kurallarına göre yapılmalı.
-3. **Hesap modülünün kalan uçları:** oturum listesi ve "tüm cihazlardan çıkış" (altyapı hazır: `app.iptal.iptalEt(sid)`), sınıf katılım kodu (`hesap.sinif_katilim_kodlari`; tablo var, uç yok), toplu davet, platform yönetimi ve taklit.
+3. **Hesap modülünün kalan uçları:** oturum listesi ve "tüm cihazlardan çıkış" (altyapı hazır: `app.iptal.iptalEt(sid)`), sınıf katılım kodu (`hesap.sinif_katilim_kodlari`; tablo var, uç yok; karar: 8 karakter + öğretmen onayı), toplu davet, platform yönetimi ve taklit.
 4. **E-posta doğrulama sayfası.** `GET /auth/eposta/dogrula` JSON döndürüyor; bağlantı web'de kullanıcıya görünen bir sayfaya gitmeli. Bağlantılar `PUBLIC_URL`'den kuruluyor (api adresi); davet ve doğrulama bağlantıları için ayrı bir web adresi ortam değişkeni gerekiyor.
 5. **Toplu modül ucu.** `GET /v1/hesap/modul-ayarlari/etkin` tek modül döndürüyor; web ve mobil kurum başına 11 istek atıyor.
 6. **Android doğrulaması.** Emülatörde hiç denenmedi; `10.0.2.2` çevirisi yalnız birim testinde.
