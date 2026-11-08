@@ -5,8 +5,12 @@ import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
 import {
   ApiHata,
+  type GrupKatilimIstegi,
+  type KatilimIstegi,
+  type KatilimKodu,
   type MobilRol,
   type OturumBilgisi,
+  type OturumKaydi,
   type RizaMetni,
   type Rol,
   type Uyelik,
@@ -48,6 +52,51 @@ function rizaMetniCevir(m: ApiRizaMetni): RizaMetni {
   };
 }
 
+/**
+ * Govdesiz mutasyonlar icin acik bos JSON govdesi. Bazi calisma ortamlari (React Native fetch)
+ * govdesiz isteklere `content-type: application/json` ekleyebilir; api bunu bos govdeyle 400
+ * reddeder. `{}` gondermek hem guvenli hem tipli istemcinin beklentisiyle uyumludur.
+ */
+export const BOS_GOVDE = {} as never;
+
+interface ApiKatilimIstegi {
+  id: string;
+  kurum_id: string;
+  kurum_ad: string | null;
+  grup_id: string;
+  grup_ad: string | null;
+  durum: KatilimIstegi['durum'];
+  created_at: string;
+}
+
+function katilimIstegiCevir(i: ApiKatilimIstegi): KatilimIstegi {
+  return {
+    id: i.id,
+    kurumId: i.kurum_id,
+    kurumAd: i.kurum_ad ?? '',
+    grupId: i.grup_id,
+    grupAd: i.grup_ad ?? '',
+    durum: i.durum,
+    olusturma: i.created_at,
+  };
+}
+
+interface ApiKatilimKodu {
+  kod: string;
+  expires_at: string | null;
+  max_kullanim: number | null;
+  kullanim_sayisi: number;
+}
+
+function katilimKoduCevir(k: ApiKatilimKodu): KatilimKodu {
+  return {
+    kod: k.kod,
+    bitis: k.expires_at,
+    maxKullanim: k.max_kullanim,
+    kullanimSayisi: k.kullanim_sayisi,
+  };
+}
+
 interface ApiUyelik {
   uyelik_id: string;
   kurum_id: string;
@@ -58,12 +107,14 @@ interface ApiUyelik {
 
 /**
  * HTTP yanitini adaptor hata modeline cevirir (ADR 0004 hata kodlari).
- * 401 -> yetkisiz, 402 -> abonelik_gerekli, 403 -> riza_gerekli | modul_kapali | izin_yok.
+ * 401 -> yetkisiz, 402 -> abonelik_gerekli, 403 -> riza_gerekli | modul_kapali | izin_yok,
+ * 410 -> kod_gecersiz | davet_gecersiz, 409 -> zaten_uye | cakisma, 429 -> cok_istek.
+ * OTP adaptorleri 429'u `otp_cok_deneme`ye cevirir.
  */
 export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
   const kod = hataGovdesiMi(govde) ? govde.error.code : undefined;
   const mesaj = hataGovdesiMi(govde) ? govde.error.message : undefined;
-  const sec = { durum };
+  const sec = { durum, ...(kod ? { ayrinti: kod } : {}) };
   if (durum === 401) return new ApiHata('yetkisiz', mesaj, sec);
   if (durum === 402 || kod === 'abonelik_gerekli') {
     return new ApiHata('abonelik_gerekli', mesaj, sec);
@@ -74,8 +125,14 @@ export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
     // izin_yok, yasak, kurum_gerekli, taklit_salt_okunur ... : kullaniciya tek tip "yetkin yok"
     return new ApiHata('izin_yok', mesaj, sec);
   }
+  // Sinif kodu / davet: 410 (tum "kullanilamaz" nedenleri ayni yanit).
+  if (durum === 410 && kod === 'davet_gecersiz') return new ApiHata('davet_gecersiz', mesaj, sec);
+  if (durum === 410) return new ApiHata('kod_gecersiz', mesaj, sec);
+  if (durum === 409 && kod === 'zaten_uye') return new ApiHata('zaten_uye', mesaj, sec);
+  if (durum === 409) return new ApiHata('cakisma', mesaj, sec);
+  // OTP dogrulamada yanlis kod 400 kod_gecersiz doner (sinif kodunun 410'undan farkli).
   if (kod === 'kod_gecersiz') return new ApiHata('otp_gecersiz', mesaj, sec);
-  if (durum === 429) return new ApiHata('otp_cok_deneme', mesaj, sec);
+  if (durum === 429) return new ApiHata('cok_istek', mesaj, sec);
   if (durum === 404) return new ApiHata('bulunamadi', mesaj, sec);
   if (durum >= 500) return new ApiHata('sunucu', mesaj, sec);
   return new ApiHata('dogrulama', mesaj, sec);
@@ -189,6 +246,31 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     return sonuc.data;
   }
 
+  /** OTP uclarinda 429 "cok deneme" olarak bilinir. */
+  function otpAl<T>(sonuc: { data?: T; error?: unknown; response: Response }): T {
+    try {
+      return veriAl(sonuc);
+    } catch (e) {
+      if (e instanceof ApiHata && e.kod === 'cok_istek') {
+        throw new ApiHata('otp_cok_deneme', e.message, { durum: e.durum ?? 429 });
+      }
+      throw e;
+    }
+  }
+
+  /** Etkin kurum: ogretmen/yonetici uclari yolda `kurum_id` ister. */
+  function etkinKurum(): string {
+    if (!aktif) throw new ApiHata('bulunamadi', undefined, { durum: 404 });
+    return aktif.kurumId;
+  }
+
+  /** Kendi oturumu sonlandiginda yerel belirtec ve baglam silinir. */
+  async function yerelOturumuKapat(): Promise<void> {
+    aktif = null;
+    uyelikOnbellek = [];
+    await depo.sil();
+  }
+
   function uyelikCevir(u: ApiUyelik): Uyelik {
     return { uyelikId: u.uyelik_id, kurumId: u.kurum_id, kurumAd: u.kurum_ad ?? '', rol: u.rol };
   }
@@ -196,13 +278,13 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   return {
     auth: {
       async otpIste(telefon) {
-        veriAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));
+        otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));
         // Api yeniden gonderme bekleme suresi dondurmez; istemci tarafi sabit bekleme.
         return { yenidenGondermeSn: 30 };
       },
 
       async otpDogrula(telefon, kod) {
-        const d = veriAl(await ham.POST('/auth/otp/dogrula', { body: { telefon, kod } }));
+        const d = otpAl(await ham.POST('/auth/otp/dogrula', { body: { telefon, kod } }));
         aktif = null;
         uyelikOnbellek = [];
         // Erisim belirteci tembel alinir (`erisimBitis: 0` -> ilk istekte `/auth/token`).
@@ -283,17 +365,10 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         const uyelik = uyelikCevir({ ...hedef, rol });
         if (!mobilRolMu(rol)) return { uyelik, moduller: {}, vurgu: null };
 
-        const sonuclar = await Promise.all(
-          MODUL_KODLARI.map(async (modul_kodu) => {
-            const m = veriAl(
-              await yetkili.GET('/v1/hesap/modul-ayarlari/etkin', {
-                params: { query: { modul_kodu } },
-              }),
-            );
-            return [modul_kodu, m.acik] as const;
-          }),
+        const tum = veriAl(await yetkili.GET('/v1/hesap/modul-ayarlari/etkin-tumu'));
+        const moduller: ModulDurumu = Object.fromEntries(
+          MODUL_KODLARI.map((kodu) => [kodu, tum.moduller[kodu] === true] as const),
         );
-        const moduller: ModulDurumu = Object.fromEntries(sonuclar);
         // Kurum vurgu rengi icin api'de henuz alan yok.
         return { uyelik, moduller, vurgu: null };
       },
@@ -304,7 +379,10 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
           if (b) {
             // En iyi caba: sunucu tarafi iptal basarisiz olsa da yerel oturum kapanir.
             await ham
-              .POST('/auth/cikis', { headers: { Authorization: `Bearer ${b.yenileme}` } })
+              .POST('/auth/cikis', {
+                headers: { Authorization: `Bearer ${b.yenileme}` },
+                body: BOS_GOVDE,
+              })
               .catch(() => undefined);
           }
         } finally {
@@ -312,6 +390,145 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
           uyelikOnbellek = [];
           await depo.sil();
         }
+      },
+    },
+
+    hesap: {
+      async sinifKoduKatil(kod) {
+        return katilimIstegiCevir(
+          veriAl(await yetkili.POST('/v1/hesap/sinif-kodu/katil', { body: { kod } })),
+        );
+      },
+      async sinifKoduIsteklerim() {
+        const d = veriAl(await yetkili.GET('/v1/hesap/sinif-kodu/istekler'));
+        return d.istekler.map(katilimIstegiCevir);
+      },
+      async sinifKoduIstegiIptal(istekId) {
+        veriAl(
+          await yetkili.POST('/v1/hesap/sinif-kodu/istekler/{istek_id}/iptal', {
+            params: { path: { istek_id: istekId } },
+            body: BOS_GOVDE,
+          }),
+        );
+      },
+
+      async sinifBekleyenleri() {
+        const kurumId = etkinKurum();
+        const gruplar: { id: string; ad: string; uyeSayisi: number }[] = [];
+        let imlec: string | undefined;
+        for (let sayfa = 0; sayfa < 10; sayfa++) {
+          const d = veriAl(
+            await yetkili.GET('/v1/hesap/kurumlar/{kurum_id}/gruplar', {
+              params: {
+                path: { kurum_id: kurumId },
+                query: { tur: 'sinif', durum: 'aktif', ...(imlec ? { imlec } : {}) },
+              },
+            }),
+          );
+          for (const g of d.gruplar) gruplar.push({ id: g.id, ad: g.ad, uyeSayisi: g.uye_sayisi });
+          if (!d.sonraki_imlec) break;
+          imlec = d.sonraki_imlec;
+        }
+        return Promise.all(
+          gruplar.map(async (grup) => {
+            const d = veriAl(
+              await yetkili.GET(
+                '/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-istekleri',
+                {
+                  params: {
+                    path: { kurum_id: kurumId, grup_id: grup.id },
+                    query: { durum: 'bekliyor', limit: 200 },
+                  },
+                },
+              ),
+            );
+            const istekler: GrupKatilimIstegi[] = d.istekler.map((i) => ({
+              id: i.id,
+              grupId: i.grup_id,
+              kullaniciId: i.kullanici_id,
+              gorunenAd: i.gorunen_ad ?? '',
+              olusturma: i.created_at,
+            }));
+            return { grup, istekler };
+          }),
+        );
+      },
+      async katilimIstegiOnayla(grupId, istekId) {
+        veriAl(
+          await yetkili.POST(
+            '/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-istekleri/{istek_id}/onayla',
+            {
+              params: { path: { kurum_id: etkinKurum(), grup_id: grupId, istek_id: istekId } },
+              body: BOS_GOVDE,
+            },
+          ),
+        );
+      },
+      async katilimIstegiReddet(grupId, istekId) {
+        veriAl(
+          await yetkili.POST(
+            '/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-istekleri/{istek_id}/reddet',
+            {
+              params: { path: { kurum_id: etkinKurum(), grup_id: grupId, istek_id: istekId } },
+              body: BOS_GOVDE,
+            },
+          ),
+        );
+      },
+      async katilimKodu(grupId) {
+        const sonuc = await yetkili.GET(
+          '/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-kodu',
+          { params: { path: { kurum_id: etkinKurum(), grup_id: grupId } } },
+        );
+        // Etkin kod yoksa 404: hata degil, "kod yok".
+        if (sonuc.response.status === 404) return null;
+        return katilimKoduCevir(veriAl(sonuc));
+      },
+      async katilimKoduYenile(grupId) {
+        return katilimKoduCevir(
+          veriAl(
+            await yetkili.POST('/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-kodu', {
+              params: { path: { kurum_id: etkinKurum(), grup_id: grupId } },
+              body: {},
+            }),
+          ),
+        );
+      },
+
+      async davetKabul(belirtec) {
+        const d = veriAl(await yetkili.POST('/v1/hesap/davetler/kabul', { body: { belirtec } }));
+        return { kurumId: d.kurum_id, uyelikId: d.uyelik_id, rol: d.rol };
+      },
+
+      async oturumlar() {
+        const d = veriAl(await yetkili.GET('/v1/hesap/oturumlar'));
+        return d.oturumlar.map((o): OturumKaydi => ({
+          id: o.id,
+          olusturma: o.created_at,
+          sonKullanim: o.son_kullanim_at,
+          cihaz: o.cihaz,
+          ipMaskeli: o.ip_maskeli,
+          buOturum: o.bu_oturum,
+        }));
+      },
+      async oturumSonlandir(oturumId, buOturum) {
+        veriAl(
+          await yetkili.DELETE('/v1/hesap/oturumlar/{oturum_id}', {
+            params: { path: { oturum_id: oturumId } },
+            body: BOS_GOVDE,
+          }),
+        );
+        if (buOturum) await yerelOturumuKapat();
+        return { kendiOturumuKapandi: buOturum };
+      },
+      async oturumlariKapat(mevcutHaric) {
+        const d = veriAl(
+          await yetkili.POST('/v1/hesap/oturumlar/tumunu-kapat', {
+            body: { mevcut_haric: mevcutHaric },
+          }),
+        );
+        if (!mevcutHaric) await yerelOturumuKapat();
+        return { kapatilan: d.kapatilan, kendiOturumuKapandi: !mevcutHaric };
       },
     },
 

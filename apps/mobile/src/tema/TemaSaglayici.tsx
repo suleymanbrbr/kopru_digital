@@ -1,9 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider, type Theme } from 'expo-router';
-import { useColorScheme, vars } from 'nativewind';
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { vars } from 'nativewind';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { etkinRenkler, renkDegiskenleri, type Sema } from './degiskenler';
+import { GERCEK_TEMA_PORTU, semaCoz, temaDenetleyicisiOlustur } from './sema';
 import { tercihler } from './tercihler';
 
 type Renkler = ReturnType<typeof etkinRenkler>;
@@ -26,18 +27,18 @@ interface Props {
   children: ReactNode;
 }
 
-/** Acik/koyu temayi ve kurum vurgusunu NativeWind CSS degiskenleri olarak kok gorunume uygular. */
+/**
+ * Acik/koyu temayi ve kurum vurgusunu NativeWind CSS degiskenleri olarak kok gorunume uygular.
+ * Etkin sema `sema.ts` denetleyicisinden gelir (NativeWind `setColorScheme` kullanilmaz).
+ */
 export function TemaSaglayici({ vurgu, children }: Props) {
-  const cs = useColorScheme();
-  const { colorScheme } = cs;
+  const [denetleyici] = useState(() => temaDenetleyicisiOlustur(GERCEK_TEMA_PORTU, tercihler));
   const tercih = tercihler.kullan((t) => t.tema);
+  const sistem = denetleyici.durum.kullan((d) => d.sistem);
 
-  useEffect(() => {
-    cs.setColorScheme(tercih === 'sistem' ? 'system' : tercih === 'acik' ? 'light' : 'dark');
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- setColorScheme kararli
-  }, [tercih]);
+  useEffect(() => denetleyici.baglan(), [denetleyici]);
 
-  const sema: Sema = colorScheme === 'dark' ? 'koyu' : 'acik';
+  const sema: Sema = semaCoz(tercih, sistem);
   const baglam = useMemo<TemaBaglami>(
     () => ({ sema, renkler: etkinRenkler(sema, vurgu) }),
     [sema, vurgu],

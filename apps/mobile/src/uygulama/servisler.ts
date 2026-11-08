@@ -5,8 +5,11 @@ import Constants from 'expo-constants';
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
 import { apiHatasiMi } from '../api/tipler';
+import { davetYoneticisiOlustur, type DavetYoneticisi } from '../davet/yonetici';
 import { guvenliBelirtecDeposu } from '../depo/belirtecDeposu';
+import { guvenliDavetDeposu } from '../depo/davetDeposu';
 import { kv, webDeposuOlarak } from '../depo/kv';
+import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
 import { netInfoGozlemcisi } from '../offline/ag';
 import { OfflineKuyruk } from '../offline/kuyruk';
@@ -19,6 +22,7 @@ const CACHE_SURUMU = '1';
 export interface Servisler {
   adaptorler: Adaptorler;
   oturum: OturumYoneticisi;
+  davet: DavetYoneticisi;
   queryClient: QueryClient;
   persister: ReturnType<typeof createAsyncStoragePersister>;
   cacheBuster: string;
@@ -28,10 +32,17 @@ export interface Servisler {
 
 /** Uygulama omru boyunca tek kez kurulan servisler. */
 export function servisleriKur(): Servisler {
-  const adaptorler = adaptorleriOlustur(guvenliBelirtecDeposu());
+  const agGozlemcisi = netInfoGozlemcisi();
+  const ham = adaptorleriOlustur(guvenliBelirtecDeposu());
+  // Sinif kodu / davet / oturum islemleri kuyruga girmez: cevrimdisiyken acik hata verir.
+  const adaptorler: Adaptorler = {
+    ...ham,
+    hesap: cevrimiciKorumali(ham.hesap, () => agGozlemcisi.cevrimiciMi()),
+  };
 
   const oturumRef: { current: OturumYoneticisi | null } = { current: null };
   const hataIsle = (e: unknown) => oturumRef.current?.hataIsle(e);
+  const davetRef: { current: DavetYoneticisi | null } = { current: null };
 
   const queryClient = new QueryClient({
     queryCache: new QueryCache({ onError: hataIsle }),
@@ -51,10 +62,20 @@ export function servisleriKur(): Servisler {
     temizle: () => {
       queryClient.clear();
     },
+    // Paylasilan cihazda baska biri giris yapinca onceki kullanicinin daveti kabul edilmesin.
+    kullaniciCikisi: () => {
+      void davetRef.current?.unut();
+    },
   });
   oturumRef.current = oturum;
 
-  const agGozlemcisi = netInfoGozlemcisi();
+  const davet = davetYoneticisiOlustur({
+    depo: guvenliDavetDeposu(),
+    hesap: adaptorler.hesap,
+    oturum,
+  });
+  davetRef.current = davet;
+
   const kuyruk = new OfflineKuyruk({
     depo: kv(),
     yeniId: yeniIstekId,
@@ -68,6 +89,7 @@ export function servisleriKur(): Servisler {
   return {
     adaptorler,
     oturum,
+    davet,
     queryClient,
     persister: createAsyncStoragePersister({
       storage: webDeposuOlarak(kv()),

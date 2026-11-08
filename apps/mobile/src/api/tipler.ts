@@ -83,6 +83,65 @@ export interface OgrenciBugun {
   karakter: KarakterOzeti;
 }
 
+/** Sinif koduyla katilim istegi (ogrencinin kendi istegi; kurum ve grup adiyla). */
+export type KatilimDurumu = 'bekliyor' | 'onaylandi' | 'reddedildi' | 'iptal';
+export interface KatilimIstegi {
+  id: string;
+  kurumId: string;
+  kurumAd: string;
+  grupId: string;
+  grupAd: string;
+  durum: KatilimDurumu;
+  /** Istegin acilis zamani (ISO). */
+  olusturma: string;
+}
+
+/** Ogretmenin gordugu istek: yalnizca gorunen ad (telefon/e-posta donmez). */
+export interface GrupKatilimIstegi {
+  id: string;
+  grupId: string;
+  kullaniciId: string;
+  gorunenAd: string;
+  olusturma: string;
+}
+
+export interface SinifGrubu {
+  id: string;
+  ad: string;
+  uyeSayisi: number;
+}
+
+export interface KatilimKodu {
+  /** 8 karakter, buyuk harf. */
+  kod: string;
+  /** Bitis (ISO) ya da suresiz ise null. */
+  bitis: string | null;
+  maxKullanim: number | null;
+  kullanimSayisi: number;
+}
+
+/** `ogrenciler` sekmesi: sinif grubu + bekleyen istekleri. */
+export interface SinifBekleyenleri {
+  grup: SinifGrubu;
+  istekler: GrupKatilimIstegi[];
+}
+
+export interface OturumKaydi {
+  id: string;
+  olusturma: string;
+  sonKullanim: string;
+  cihaz: string | null;
+  ipMaskeli: string | null;
+  /** Istegi yapan (bu cihazdaki) oturum. */
+  buOturum: boolean;
+}
+
+export interface DavetSonucu {
+  kurumId: string;
+  uyelikId: string;
+  rol: Rol;
+}
+
 export const HATA_KODLARI = [
   'ag',
   'zaman_asimi',
@@ -97,6 +156,18 @@ export const HATA_KODLARI = [
   'yapilandirma',
   'otp_gecersiz',
   'otp_cok_deneme',
+  /** Genel hiz siniri (429); OTP disinda. */
+  'cok_istek',
+  /** Sinif kodu gecersiz/kapali/suresi dolmus (410). */
+  'kod_gecersiz',
+  /** Kullanici zaten bu kurumun uyesi (409 zaten_uye). */
+  'zaten_uye',
+  /** Davet gecersiz/kullanilmis/suresi dolmus (410). */
+  'davet_gecersiz',
+  /** Durum cakismasi (409): kapasite_dolu, istek_beklemiyor ...; ayrinti `ayrinti`da. */
+  'cakisma',
+  /** Islem baglanti gerektirir ve cihaz cevrimdisi (istek gonderilmedi). */
+  'cevrimdisi',
 ] as const;
 export type ApiHataKodu = (typeof HATA_KODLARI)[number];
 
@@ -105,16 +176,19 @@ export class ApiHata extends Error {
   readonly kod: ApiHataKodu;
   readonly durum: number | undefined;
   readonly yenidenDenenebilir: boolean;
+  /** Api hata kodu (ornegin `kapasite_dolu`); kullaniciya ozel mesaj secmek icin. */
+  readonly ayrinti: string | undefined;
 
   constructor(
     kod: ApiHataKodu,
     mesaj?: string,
-    secenekler?: { durum?: number; yenidenDenenebilir?: boolean },
+    secenekler?: { durum?: number; yenidenDenenebilir?: boolean; ayrinti?: string },
   ) {
     super(mesaj ?? kod);
     this.name = 'ApiHata';
     this.kod = kod;
     this.durum = secenekler?.durum;
+    this.ayrinti = secenekler?.ayrinti;
     this.yenidenDenenebilir =
       secenekler?.yenidenDenenebilir ?? (kod === 'ag' || kod === 'zaman_asimi' || kod === 'sunucu');
   }

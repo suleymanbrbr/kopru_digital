@@ -184,7 +184,7 @@ pnpm start        # sonraki günlerde yalnızca Metro (dev client'a bağlanır)
 
 ### Mock modu
 
-`EXPO_PUBLIC_API_MOCK=1` iken `AuthAdapter`/`VeriAdapter` sahte uygulamaları devrede (`src/api/mock.ts`). Giriş kodu her zaman `123456`. Telefonun **son hanesi** rolü seçer: `...1` öğretmen, `...2` öğrenci, `...3` yönetici, `...4` sahip (+ öğretmen üyeliği), `...5` çok kurumlu (öğretmen/öğrenci/veli; "Atlas" kurumunda vurgu rengi yeşil ve "Soru sor" modülü kapalı). Mock kapalıyken gerçek `packages/api-client` bağlanana kadar adaptörler `yapilandirma` hatası verir (`src/api/index.ts`, `TODO(orkestrator)`).
+`EXPO_PUBLIC_API_MOCK=1` iken `AuthAdapter`/`VeriAdapter` sahte uygulamaları devrede (`src/api/mock.ts`). Giriş kodu her zaman `123456`. Telefonun **son hanesi** rolü seçer: `...1` öğretmen, `...2` öğrenci, `...3` yönetici, `...4` sahip (+ öğretmen üyeliği), `...5` çok kurumlu (öğretmen/öğrenci/veli; "Atlas" kurumunda vurgu rengi yeşil ve "Soru sor" modülü kapalı). `...6` üyeliksiz kullanıcı (sınıf koduyla katılma akışı). Mock sınıf kodları: `MATEM234` (başarılı), `ZATEN234` (zaten üye), `BEKLE234` (429). Davet derin bağlantısı `kopru://davet/<belirtec>`. Mock kapalıyken gerçek `packages/api-client` bağlanana kadar adaptörler `yapilandirma` hatası verir (`src/api/index.ts`, `TODO(orkestrator)`).
 
 ### Mimari notları
 

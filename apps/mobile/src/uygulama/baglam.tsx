@@ -29,7 +29,19 @@ export function UygulamaSaglayicilari({ children }: { children: ReactNode }) {
   useEffect(() => {
     queryOnlineYonetiminiBagla();
     void servisler.oturum.baslat();
-    return servisler.kuyruk.baglan(servisler.agGozlemcisi);
+    // Saklanan davet (uygulama kapaliyken gelmis olabilir) geri yuklenir; oturum akisi
+    // ilerledikce kabul edilir.
+    let davetAboneligi: (() => void) | undefined;
+    let kapandi = false;
+    void servisler.davet.yukle().then(() => {
+      if (!kapandi) davetAboneligi = servisler.davet.baglan();
+    });
+    const kuyrukAboneligi = servisler.kuyruk.baglan(servisler.agGozlemcisi);
+    return () => {
+      kapandi = true;
+      davetAboneligi?.();
+      kuyrukAboneligi();
+    };
   }, [servisler]);
 
   return (

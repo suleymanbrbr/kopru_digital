@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DavetBildirimi } from '../ekranlar/DavetBildirimi';
 import { kvkkOnayliMi } from '../oturum/yonetici';
 import { TemaSaglayici, useTema } from '../tema/TemaSaglayici';
 import { UygulamaSaglayicilari, useOturum } from '../uygulama/baglam';
@@ -42,6 +43,7 @@ function Yonlendirme() {
         </Stack.Protected>
         <Stack.Protected guard={giris && kvkk && !aktif}>
           <Stack.Screen name="(onboarding)/kurum-sec" />
+          <Stack.Screen name="(onboarding)/sinif-kodu" />
         </Stack.Protected>
         <Stack.Protected guard={giris && kvkk && aktif}>
           <Stack.Screen name="(uygulama)" />
@@ -81,6 +83,7 @@ export default function KokDuzen() {
         <VurguluTema>
           <Acilis>
             <Yonlendirme />
+            <DavetBildirimi />
           </Acilis>
         </VurguluTema>
       </UygulamaSaglayicilari>

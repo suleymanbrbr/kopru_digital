@@ -1,3 +1,5 @@
+import { MODUL_KODLARI } from '@kopru/contracts';
+
 import { bellekBelirtecDeposu, type BelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
 import { OfflineKuyruk } from '../offline/kuyruk';
@@ -54,11 +56,18 @@ const rizaYaniti = (kabul: boolean) => ({
   ],
 });
 
+/** `etkin-tumu` yaniti: her modul kodu icin boolean (varsayilan hepsi acik). */
+const tumModuller = (ezilen: Partial<Record<(typeof MODUL_KODLARI)[number], boolean>> = {}) =>
+  Object.fromEntries(MODUL_KODLARI.map((k) => [k, ezilen[k] ?? true]));
+
 interface Cagri {
   yol: string;
   yontem: string;
   yetki: string | null;
   govde: unknown;
+  /** Ham govde metni (bos govde ayrimi icin). */
+  govdeMetni: string;
+  icerikTuru: string | null;
   istekId: string | null;
 }
 type Yonlendirici = (c: Cagri, sira: number) => Response | Promise<Response>;
@@ -74,6 +83,8 @@ function sahteFetch(yonlendir: Yonlendirici) {
       yontem: girdi.method,
       yetki: girdi.headers.get('authorization'),
       govde: metin ? (JSON.parse(metin) as unknown) : undefined,
+      govdeMetni: metin,
+      icerikTuru: girdi.headers.get('content-type'),
       istekId: girdi.headers.get('idempotency-key'),
     };
     cagrilar.push(c);
@@ -333,9 +344,8 @@ describe('gercek adaptor: KVKK ve uyelik secimi', () => {
           roller: ['sahip'],
         });
       }
-      if (c.yol.startsWith('/v1/hesap/modul-ayarlari/etkin')) {
-        const kod = new URL(`http://x${c.yol}`).searchParams.get('modul_kodu');
-        return json({ modul_kodu: kod, acik: kod !== 'finans' });
+      if (c.yol === '/v1/hesap/modul-ayarlari/etkin-tumu') {
+        return json({ moduller: tumModuller({ finans: false }) });
       }
       return hata(404, 'bulunamadi');
     });
@@ -353,8 +363,11 @@ describe('gercek adaptor: KVKK ve uyelik secimi', () => {
     expect(b.moduller.takvim).toBe(true);
     expect(b.moduller.finans).toBe(false);
     expect(Object.keys(b.moduller)).toHaveLength(11);
+    // 11 tekil istek yerine tek `etkin-tumu` istegi.
     const modulIstekleri = cagrilar.filter((c) => c.yol.includes('modul-ayarlari'));
-    expect(modulIstekleri.every((c) => c.yetki === 'Bearer kurum-erisim')).toBe(true);
+    expect(modulIstekleri).toHaveLength(1);
+    expect(modulIstekleri[0]?.yol).toBe('/v1/hesap/modul-ayarlari/etkin-tumu');
+    expect(modulIstekleri[0]?.yetki).toBe('Bearer kurum-erisim');
 
     // Erisim bitince yenileme ayni kurum/uyelik ile yapilir.
     zaman.t += 20 * 60_000;
@@ -393,7 +406,12 @@ describe('hata esleme (ADR 0004)', () => {
     [403, 'izin_yok', 'izin_yok'],
     [403, 'taklit_salt_okunur', 'izin_yok'],
     [400, 'kod_gecersiz', 'otp_gecersiz'],
-    [429, 'cok_fazla_istek', 'otp_cok_deneme'],
+    [429, 'cok_fazla_istek', 'cok_istek'],
+    [410, 'kod_gecersiz', 'kod_gecersiz'],
+    [410, 'davet_gecersiz', 'davet_gecersiz'],
+    [409, 'zaten_uye', 'zaten_uye'],
+    [409, 'kapasite_dolu', 'cakisma'],
+    [409, 'istek_beklemiyor', 'cakisma'],
     [404, 'bulunamadi', 'bulunamadi'],
     [422, 'dogrulama_hatasi', 'dogrulama'],
     [503, 'hizmet_kullanilamiyor', 'sunucu'],
