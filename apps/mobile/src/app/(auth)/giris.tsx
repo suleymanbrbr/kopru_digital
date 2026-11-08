@@ -15,7 +15,8 @@ import { hataMesaji } from '../../uygulama/hatalar';
 
 export default function Giris() {
   const router = useRouter();
-  const { adaptorler } = useServisler();
+  const { adaptorler, davet } = useServisler();
+  const davetBekliyor = davet.durum.kullan((d) => d.asama === 'bekliyor');
   const [girdi, setGirdi] = useState('');
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -69,6 +70,11 @@ export default function Giris() {
         yukleniyor={yukleniyor}
         onPress={() => void gonder()}
       />
+      {davetBekliyor ? (
+        <Metin varyant="ikincil" accessibilityLiveRegion="polite">
+          {t('mobil.davet.saklandi')}
+        </Metin>
+      ) : null}
       {ortam.apiMock ? (
         <Metin varyant="kucuk" className="text-center">
           {t('mobil.giris.mockIpucu').replace('123456', MOCK_OTP)}
