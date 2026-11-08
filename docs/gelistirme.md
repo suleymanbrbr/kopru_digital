@@ -62,6 +62,7 @@ pnpm --filter @kopru/api dev:worker        # aynı servisin worker süreci
 - Her servis kök `.env` dosyasını okur. `API_PORT`, `API_DATABASE_URL` gibi `<SERVİS>_<ANAHTAR>` değişkenleri `PORT`, `DATABASE_URL` değişkenlerinden önce okunur; üretimde konteyner yalnızca önekli olmayanları alır.
 - Portlar: api `4000`, motivasyon `4001`, bildirim `4002`, medya `4003`.
 - Uç noktalar: `GET /health` (liveness, bağımlılık kontrol etmez), `GET /ready` (DB ve NATS tanımlıysa kontrol eder, aksi halde 503), `GET /openapi.json` (production dışında). Kimlik doğrulama `AUTH_ENABLED=true` ile açılır; `/health`, `/ready`, `/openapi.json` her zaman açıktır.
+- `TRUST_PROXY` (güvenilen proxy IP/CIDR listesi, [ADR 0009](adr/0009-guvenilir-proxy-istemci-ip.md)) yerelde **boş** bırakılır; doğrudan bağlanan istemcinin IP'si kullanılır. Üretimde yalnız özel ağdaki proxy/web adresleri verilir; `*`/`true` reddedilir.
 - Geçersiz ortam değişkeni → servis açık bir hata mesajıyla hemen durur.
 - Docker imajı: `docker build -f services/api/Dockerfile -t kopru/api .` (kök dizinden). Aynı imaj worker olarak `docker run kopru/api node dist/worker.js` ile çalışır.
 

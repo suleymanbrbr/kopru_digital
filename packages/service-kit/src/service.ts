@@ -100,6 +100,9 @@ export function createService(options: CreateServiceOptions): Service {
   const app: ServiceApp = Fastify({
     loggerInstance: logger,
     requestIdHeader: false,
+    // ADR 0009: yalniz acik IP/CIDR listesindeki proxy'lerin X-Forwarded-For'una guvenilir;
+    // bos liste = baslik yok sayilir (`true`/`*` env semasinda reddedilir).
+    trustProxy: env.TRUST_PROXY.length > 0 ? env.TRUST_PROXY : false,
     genReqId: (request) => headerValue(request.headers['x-request-id']) ?? uuidv7(),
     // correlationId tum istek loglarinda (gelen/biten istek dahil) gorunsun.
     childLoggerFactory: (log, bindings, options, request) => {
