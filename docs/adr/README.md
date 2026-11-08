@@ -11,6 +11,7 @@ Biçim: Michael Nygard. Her kayıt `Başlık`, `Durum`, `Bağlam`, `Karar`, `Son
 | [0005](0005-dagitim-docker-kamal.md) | Dağıtım: Docker, Kamal ve Türkiye'de barındırma | Kabul edildi |
 | [0006](0006-adlandirma-ve-dil-kurallari.md) | Adlandırma ve dil kuralları | Kabul edildi |
 | [0007](0007-para-ve-defterler.md) | Para ve defterler: kuruş, append-only defter, ters kayıt | Kabul edildi |
+| [0008](0008-erisim-belirteci-iptali-sid-listesi.md) | Erişim belirteci iptali: NATS KV `sid` listesi | Kabul edildi |
 
 Şema dokümanları: [../schema/README.md](../schema/README.md).
 

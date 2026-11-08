@@ -2,6 +2,7 @@ export * from './auth.js';
 export * from './db.js';
 export * from './env.js';
 export * from './errors.js';
+export * from './iptal.js';
 export * from './logger.js';
 export * from './outbox.js';
 export * from './service.js';
