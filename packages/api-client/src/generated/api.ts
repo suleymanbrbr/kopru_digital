@@ -1756,6 +1756,345 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-istekleri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grubun katilim isteklerini listele (durum suzgeci, sayfali). Yalniz gorunen ad doner; telefon ve e-posta donmez. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            istekler: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                                /** @description Yalniz ad; telefon ve e-posta donmez. */
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                karar_at: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Karar veren uyelik.
+                                 */
+                                karar_veren_id: string | null;
+                                /** Format: uuid */
+                                kullanici_id: string;
+                            }[];
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-istekleri/{istek_id}/onayla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Katilim istegini onayla: ogrenci uyeligi (yoksa) olusur ve ogrenci gruba sinif_kodu yoluyla eklenir. Kapasite dolu: 409 kapasite_dolu; kod kullanim siniri dolu: 409 kod_kullanim_doldu. Tekrar onay etkisizdir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    istek_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            grup_uyesi_id: string | null;
+                            istek: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                                /** @description Yalniz ad; telefon ve e-posta donmez. */
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                karar_at: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Karar veren uyelik.
+                                 */
+                                karar_veren_id: string | null;
+                                /** Format: uuid */
+                                kullanici_id: string;
+                            };
+                            /** Format: uuid */
+                            uyelik_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-istekleri/{istek_id}/reddet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Katilim istegini reddet: ogrenci eklenmez. Tekrar red etkisizdir; onaylanmis/iptal istek reddedilemez (409). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    istek_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            grup_uyesi_id: string | null;
+                            istek: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                                /** @description Yalniz ad; telefon ve e-posta donmez. */
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                karar_at: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Karar veren uyelik.
+                                 */
+                                karar_veren_id: string | null;
+                                /** Format: uuid */
+                                kullanici_id: string;
+                            };
+                            /** Format: uuid */
+                            uyelik_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/katilim-kodu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grubun etkin katilim kodu (yoksa 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aktif: boolean;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            expires_at: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            kod: string;
+                            kullanim_sayisi: number;
+                            max_kullanim: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Sinif katilim kodu olustur / yenile. Grup basina tek etkin kod vardir; yenileme eski kodu kapatir (eski kod artik gecersiz). Yalniz sinif turu gruplar. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Bos = suresiz. */
+                        gecerlilik_gun?: number;
+                        /** @description Onaylanabilecek en cok katilim. Bos = sinirsiz. */
+                        max_kullanim?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aktif: boolean;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            expires_at: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            kod: string;
+                            kullanim_sayisi: number;
+                            max_kullanim: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** Etkin katilim kodunu kapat. Bekleyen istekler etkilenmez; kod artik yeni istek kabul etmez. Etkin kod yoksa 404. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aktif: boolean;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            expires_at: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            kod: string;
+                            kullanim_sayisi: number;
+                            max_kullanim: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/uyeler": {
         parameters: {
             query?: never;
@@ -2433,6 +2772,195 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/sinif-kodu/istekler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kendi katilim isteklerim (varsayilan: bekleyenler), tum kurumlar. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            istekler: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                                grup_ad: string | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                karar_at: string | null;
+                                kurum_ad: string | null;
+                                /** Format: uuid */
+                                kurum_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/sinif-kodu/istekler/{istek_id}/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bekleyen katilim istegimi iptal et. Tekrar iptal etkisizdir; karara baglanmis istek iptal edilemez (409). Baskasinin istegi 404. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    istek_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                            grup_ad: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            karar_at: string | null;
+                            kurum_ad: string | null;
+                            /** Format: uuid */
+                            kurum_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/sinif-kodu/katil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sinif koduyla katilim istegi gonder (ogretmen onayi gerekir). Gecersiz/kapali/suresi dolmus/kullanimi dolu/bulunamayan kod ayni 410 kod_gecersiz. IP basina dakikada 10 istek; 5 basarisiz denemede 15 dk bekleme (429). Zaten uyeyse 409 zaten_uye; bekleyen istek varsa ayni istek doner. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        kod: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                            grup_ad: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            karar_at: string | null;
+                            kurum_ad: string | null;
+                            /** Format: uuid */
+                            kurum_id: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "onaylandi" | "reddedildi" | "iptal";
+                            grup_ad: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            karar_at: string | null;
+                            kurum_ad: string | null;
+                            /** Format: uuid */
+                            kurum_id: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

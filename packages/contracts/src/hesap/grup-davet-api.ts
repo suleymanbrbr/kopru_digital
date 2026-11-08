@@ -18,6 +18,10 @@ export const hesapHataKodlari = {
   kapasiteDolu: 'kapasite_dolu',
   grupArsivde: 'grup_arsivde',
   atamaCakisiyor: 'atama_cakisiyor',
+  kodGecersiz: 'kod_gecersiz',
+  kodKullanimDoldu: 'kod_kullanim_doldu',
+  grupSinifDegil: 'grup_sinif_degil',
+  istekBeklemiyor: 'istek_beklemiyor',
 } as const;
 
 const tarih = z.iso.date();

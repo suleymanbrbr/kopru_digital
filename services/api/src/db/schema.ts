@@ -385,6 +385,19 @@ export const sinifKatilimKodlari = hesap.table('sinif_katilim_kodlari', {
   iptal_at: tstz('iptal_at'),
 });
 
+export const sinifKatilimIstekleri = hesap.table('sinif_katilim_istekleri', {
+  ...kiraci(),
+  ...surumlu(),
+  grup_id: uuid('grup_id').notNull(),
+  kod_id: uuid('kod_id').notNull(),
+  kullanici_id: uuid('kullanici_id')
+    .notNull()
+    .references(() => kullanicilar.id),
+  durum: text('durum').notNull().default('bekliyor'),
+  karar_veren_id: uuid('karar_veren_id'),
+  karar_at: tstz('karar_at'),
+});
+
 export const modulAyarlari = hesap.table('modul_ayarlari', {
   ...kiraci(),
   ...surumlu(),

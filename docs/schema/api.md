@@ -94,6 +94,8 @@ erDiagram
   uyelikler ||--o{ veli_ogrenci : "veli/ogrenci"
   kurumlar ||--o{ davetler : "davet"
   gruplar ||--o{ sinif_katilim_kodlari : "kod"
+  sinif_katilim_kodlari ||--o{ sinif_katilim_istekleri : "istek"
+  kullanicilar ||--o{ sinif_katilim_istekleri : "isteyen"
   kurumlar ||--o{ modul_ayarlari : "ayar"
   kullanicilar ||--o{ rizalar : "riza"
   riza_metinleri ||--o{ rizalar : "surum"
@@ -376,7 +378,7 @@ Uygulama kuralları:
 
 Sınıf (`gruplar.tur='sinif'`) için öğrenci katılım kodu. Düşük entropili kısa koddur, bu yüzden hız sınırı, süre ve yenileme vardır.
 
-Profil: `KS`. RLS: evet. Kod çözme: `hesap.katilim_kodu_coz(kod text)` (`SECURITY DEFINER`, hız sınırı uygulamada) `kurum_id, grup_id` döner.
+Profil: `KS`. RLS: evet. Kod çözme: `hesap.katilim_kodu_coz(kod text)` (`SECURITY DEFINER`, hız sınırı uygulamada) yalnız `kurum_id, grup_id, kod_id` döner; pasif, süresi dolmuş, kullanımı dolu ve bulunamayan kod aynı biçimde boş döner (varlık sızmaz).
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
@@ -388,10 +390,28 @@ Profil: `KS`. RLS: evet. Kod çözme: `hesap.katilim_kodu_coz(kod text)` (`SECUR
 | `kullanim_sayisi` | int | hayır | 0 | |
 | `iptal_at` | timestamptz | evet | | |
 
-Kısıtlar: `UNIQUE (kod)`. Bir grup için tek etkin kod: `UNIQUE (grup_id) WHERE aktif`. Yenileme eski kodu `aktif=false` yapar. `grup_id` türü `sinif` olmalıdır (tetikleyici `sinif_katilim_kodlari_tur_trg`). Kod çözme hız sınırı: IP başına dakikada 10, başarısız çözüm 5'te 15 dakika bekleme.
+Kısıtlar: `UNIQUE (kod)`, `UNIQUE (kurum_id, id)` (isteklerin bileşik FK'si için). Bir grup için tek etkin kod: `UNIQUE (grup_id) WHERE aktif`. Yenileme eski kodu `aktif=false` yapar. `grup_id` türü `sinif` olmalıdır (tetikleyici `sinif_katilim_kodlari_tur_trg`). Kod çözme hız sınırı: IP başına dakikada 10, başarısız çözüm 5'te 15 dakika bekleme (IP ve kullanıcı anahtarlı, süreç belleğinde sayılır; ilk sürümde çok kopyalı çalışmada her kopya kendi sayacını tutar).
 Olaylar: yok. Öğretmen onayından sonra katılım `grup_uyeleri` yazımıyla (`katilim_yolu='sinif_kodu'`) olay üretir.
 
-**Karar (8 Kasım 2026):** Kodla katılım öğretmen onayı ister. Kod kullanıldığında öğrenci önce bekleyen istek olarak kaydedilir; onaylanınca gruba eklenir, reddedilirse eklenmez. Bekleyen istek tablosu uygulama sırasında bu bölüme eklenecek.
+**Karar (8 Kasım 2026).** Kod 8 karakterdir ve katılım **öğretmen onaylıdır**: öğrenci kodu girince `sinif_katilim_istekleri`ne bekleyen istek yazılır; sahip/yönetici ya da gruba atanmış öğretmen onaylar (öğrenci gruba `katilim_yolu='sinif_kodu'` ile eklenir) ya da reddeder (eklenmez). `kullanim_sayisi` onayda artar; `max_kullanim` hem katılımda (kod çözme) hem onayda denetlenir (onayda dolmuşsa `409 kod_kullanim_doldu`). Kod kapatılsa ya da yenilense de bekleyen istekler korunur ve onaylanabilir; yeni istek yalnız etkin koda yapılır.
+
+#### `hesap.sinif_katilim_istekleri`
+
+Sınıf koduyla gelen, onay bekleyen/karara bağlanmış katılım istekleri.
+
+Profil: `KS`. RLS: evet (`kiraci_izolasyonu`) + kullanıcı düzeyi iki politika: `kendi_istekleri_okuma` (SELECT, `kullanici_id = aktif_kullanici()`) ve `kendi_istekleri_iptal` (UPDATE; yalnız `bekliyor -> iptal`). Kullanıcı henüz hiçbir kurumun üyesi değilken kendi isteklerini bu politikalarla görür ve iptal eder.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `grup_id` | uuid | hayır | | Bileşik FK `gruplar` |
+| `kod_id` | uuid | hayır | | Bileşik FK `sinif_katilim_kodlari` (isteğin geldiği kod) |
+| `kullanici_id` | uuid | hayır | | FK `kullanicilar` (üyelik henüz olmayabilir) |
+| `durum` | text | hayır | `'bekliyor'` | CHECK `IN ('bekliyor','onaylandi','reddedildi','iptal')` |
+| `karar_veren_id` | uuid | evet | | Bileşik FK `uyelikler` (onaylayan/reddeden) |
+| `karar_at` | timestamptz | evet | | |
+
+Kısıtlar: `UNIQUE (grup_id, kullanici_id) WHERE durum = 'bekliyor'` (grup başına tek bekleyen istek). `CHECK`: `onaylandi/reddedildi` iken `karar_veren_id` ve `karar_at` dolu, `bekliyor/iptal` iken boş. İndeks: `(kurum_id, grup_id, durum, id)`, `(kullanici_id, durum)`.
+Olaylar: yok. Onay, aynı işlemde `ogrenci` üyeliği (yoksa; `hesap.uyelik.degisti`) ve `grup_uyeleri` satırı (`hesap.grup_uyesi.degisti`) üretir; olaylar kişisel veri taşımaz. Onay ve ret `hesap.denetim_kayitlari`na yazılır (`hesap.sinif_katilim_onayla|reddet`), kod yönetimi de (`hesap.sinif_kodu_olustur|kapat`).
 
 #### `hesap.modul_ayarlari`
 
@@ -1494,10 +1514,17 @@ Hepsi `/v1/hesap` altında; kurum yolu belirteçteki `kurum_id` ile eşleşmelid
 | POST | `.../davetler/:davet_id/yeniden-gonder` | `davet.yaz` | Yeniden gönder (≤3) |
 | POST | `.../davetler/toplu` | `davet.yaz` | Toplu davet (≤100 satır, `400` aşarsa). Aynı yetki/kapsam kuralları; sonuç satır bazlı (`basarili`/`hata` + alan hata kodu, ör. `gecersiz_telefon`, `izin_yok`, `bulunamadi`); hatalı satır diğerlerini geri almaz |
 | POST | `/davetler/kabul` | giriş + KVKK | Davet kabulü; geçersiz `410 davet_gecersiz` |
+| POST / GET / DELETE | `/kurumlar/:kurum_id/gruplar/:grup_id/katilim-kodu` | `davet.yaz` (`grup` kapsamı) | Sınıf katılım kodu oluştur (yenileme eskisini kapatır; gövde `gecerlilik_gun?`, `max_kullanim?`) / etkin kodu getir (yoksa `404`) / kapat. Yalnız `tur='sinif'` (`422 grup_sinif_degil`), arşivli grup `409` |
+| GET | `.../gruplar/:grup_id/katilim-istekleri` | `davet.yaz` | Katılım istekleri (`durum`, sayfalı); yalnız ad, telefon/e-posta dönmez |
+| POST | `.../katilim-istekleri/:istek_id/onayla` | `davet.yaz` | Onay: üyelik (yoksa) + gruba ekleme + olaylar + denetim aynı işlemde. `409 kapasite_dolu` / `kod_kullanim_doldu` / `uyelik_askida`; tekrar onay etkisiz |
+| POST | `.../katilim-istekleri/:istek_id/reddet` | `davet.yaz` | Ret; tekrar ret etkisiz, karara bağlanmış istek `409 istek_beklemiyor` |
+| POST | `/sinif-kodu/katil` | giriş + KVKK (kurum yok) | Gövde `{kod}`; yeni istek `201`, aynı bekleyen istek `200`. Kod yok/pasif/süresi dolmuş/kullanımı dolu `410 kod_gecersiz` (aynı yanıt); zaten üye `409 zaten_uye`. IP başına dakikada 10; 5 başarısız denemede 15 dk `429` |
+| GET | `/sinif-kodu/istekler` | giriş + KVKK | Kendi isteklerim (`durum`, varsayılan `bekliyor`), kurum ve grup adıyla |
+| POST | `/sinif-kodu/istekler/:istek_id/iptal` | giriş + KVKK | Bekleyen kendi isteğimi iptal et; tekrar iptal etkisiz, karara bağlanmış `409`, başkasının isteği `404` |
 
 Davet bağlantısı `${API_WEB_URL}/davet/<belirtec>` biçimindedir.
 
-Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `gonderim_siniri_asildi`, `zaten_uye`, `uyelik_askida`, `kapasite_dolu`, `grup_arsivde`, `atama_cakisiyor`. İzin sözlüğü sürümü 2: `ogretmen` rolüne `davet.yaz` (`grup` kapsamı) eklendi.
+Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `gonderim_siniri_asildi`, `zaten_uye`, `uyelik_askida`, `kapasite_dolu`, `grup_arsivde`, `atama_cakisiyor`, `kod_gecersiz`, `kod_kullanim_doldu`, `grup_sinif_degil`, `istek_beklemiyor`. İzin sözlüğü sürümü 2: `ogretmen` rolüne `davet.yaz` (`grup` kapsamı) eklendi.
 
 ## `hesap` oturum yönetimi ve toplu modül durumu
 
