@@ -1490,6 +1490,20 @@ Hepsi `/v1/hesap` altında; kurum yolu belirteçteki `kurum_id` ile eşleşmelid
 | POST / GET | `/kurumlar/:kurum_id/davetler` | `davet.yaz` | Davet oluştur (düz belirteç yalnız yanıtta) / listele (`durum`, `grup_id`, sayfalı) |
 | POST | `.../davetler/:davet_id/iptal` | `davet.yaz` | İptal |
 | POST | `.../davetler/:davet_id/yeniden-gonder` | `davet.yaz` | Yeniden gönder (≤3) |
+| POST | `.../davetler/toplu` | `davet.yaz` | Toplu davet (≤100 satır, `400` aşarsa). Aynı yetki/kapsam kuralları; sonuç satır bazlı (`basarili`/`hata` + alan hata kodu, ör. `gecersiz_telefon`, `izin_yok`, `bulunamadi`); hatalı satır diğerlerini geri almaz |
 | POST | `/davetler/kabul` | giriş + KVKK | Davet kabulü; geçersiz `410 davet_gecersiz` |
 
+Davet bağlantısı `${API_WEB_URL}/davet/<belirtec>` biçimindedir.
+
 Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `gonderim_siniri_asildi`, `zaten_uye`, `uyelik_askida`, `kapasite_dolu`, `grup_arsivde`, `atama_cakisiyor`. İzin sözlüğü sürümü 2: `ogretmen` rolüne `davet.yaz` (`grup` kapsamı) eklendi.
+
+## `hesap` oturum yönetimi ve toplu modül durumu
+
+`/v1/hesap` altında; kiracısız (kurum seçimi gerekmez), KVKK kapısından muaf değil. Sonlandırma: önce `sid` iptal listesine yazılır ([ADR 0008](../adr/0008-erisim-belirteci-iptali-sid-listesi.md)), sonra `hesap.oturumlar` satırı silinir ve `hesap.denetim_kayitlari`na kurumsuz kayıt (`hesap.oturum_sonlandir`, `hesap.oturumlar_tumunu_kapat`) aynı işlemde yazılır (`api_sistem`). Taklit oturumunda `403 taklit_salt_okunur`.
+
+| Yöntem | Yol | İzin | Açıklama |
+| --- | --- | --- | --- |
+| GET | `/oturumlar` | giriş + KVKK | Etkin oturumlarım: `id`, `created_at`, `son_kullanim_at`, `expires_at`, `cihaz` (≤80 karakter), `ip_maskeli` (`a.b.*.*`; tam IP dönmez), `bu_oturum` |
+| DELETE | `/oturumlar/:oturum_id` | giriş + KVKK | Tek oturumu sonlandır; başkasının/olmayan oturum `404` |
+| POST | `/oturumlar/tumunu-kapat` | giriş + KVKK | Gövde `{ mevcut_haric?: boolean }`; `{ kapatilan }` döner |
+| GET | `/modul-ayarlari/etkin-tumu` | `modul.ayar.oku` | `?grup_id&kademe_id` → `{ moduller: { [ModulKodu]: boolean } }`; `/modul-ayarlari/etkin` ile aynı çözümleme (`hesap.modul_acik_mi`), tek sorgu |

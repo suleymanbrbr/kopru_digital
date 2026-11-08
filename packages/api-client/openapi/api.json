@@ -2131,6 +2131,325 @@
         ]
       }
     },
+    "/v1/hesap/kurumlar/{kurum_id}/davetler/toplu": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "davetler": {
+                    "description": "En çok 100 satır; her satır tekil davetle aynı kurallara tabidir.",
+                    "items": {
+                      "properties": {
+                        "eposta": {
+                          "description": "`eposta` kanalında zorunlu.",
+                          "maxLength": 320,
+                          "type": "string"
+                        },
+                        "gecerlilik_gun": {
+                          "default": 7,
+                          "maximum": 30,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "grup_id": {
+                          "description": "Yalnız `ogrenci` daveti için: kabulde gruba eklenir.",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "hedef_ad": {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "kademe_id": {
+                          "description": "Yalnız `ogrenci` daveti için.",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kanal": {
+                          "enum": [
+                            "baglanti",
+                            "sms",
+                            "eposta"
+                          ],
+                          "type": "string"
+                        },
+                        "max_kullanim": {
+                          "default": 1,
+                          "description": "Çok kullanımlı olabilmesi için kanal `baglanti` olmalı.",
+                          "maximum": 100,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "rol": {
+                          "enum": [
+                            "yonetici",
+                            "ogretmen",
+                            "ogrenci"
+                          ],
+                          "type": "string"
+                        },
+                        "sube_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "telefon": {
+                          "description": "`sms` kanalında zorunlu.",
+                          "maxLength": 40,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "kanal",
+                        "rol"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "davetler"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "basarili_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "hata_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "sonuclar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "belirtec": {
+                            "description": "Yalnız başarılı satırda ve yalnız bu yanıtta döner.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "davet": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "created_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "davet_eden_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "durum": {
+                                "enum": [
+                                  "bekliyor",
+                                  "kullanildi",
+                                  "iptal",
+                                  "suresi_doldu"
+                                ],
+                                "type": "string"
+                              },
+                              "expires_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "gonderim_sayisi": {
+                                "description": "SMS / e-posta gonderim sayaci (en cok 3).",
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "grup_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "hedef_ad": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "hedef_eposta": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "hedef_telefon_e164": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "kademe_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "kanal": {
+                                "enum": [
+                                  "baglanti",
+                                  "sms",
+                                  "eposta"
+                                ],
+                                "type": "string"
+                              },
+                              "kullanim_sayisi": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "max_kullanim": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "rol": {
+                                "enum": [
+                                  "yonetici",
+                                  "ogretmen",
+                                  "ogrenci",
+                                  "veli"
+                                ],
+                                "type": "string"
+                              },
+                              "son_gonderim_at": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "sube_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "kanal",
+                              "rol",
+                              "durum",
+                              "hedef_telefon_e164",
+                              "hedef_eposta",
+                              "hedef_ad",
+                              "grup_id",
+                              "kademe_id",
+                              "sube_id",
+                              "davet_eden_id",
+                              "max_kullanim",
+                              "kullanim_sayisi",
+                              "gonderim_sayisi",
+                              "son_gonderim_at",
+                              "expires_at",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "durum": {
+                            "enum": [
+                              "basarili",
+                              "hata"
+                            ],
+                            "type": "string"
+                          },
+                          "gonderim": {
+                            "enum": [
+                              "gonderildi",
+                              "basarisiz",
+                              "yok"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "hata_kodu": {
+                            "description": "Alan hata kodu, örn. `gecersiz_telefon`, `izin_yok`.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "hata_mesaji": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "sira": {
+                            "description": "Girdideki satır sırası (0 tabanlı).",
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "sira",
+                          "durum",
+                          "davet",
+                          "belirtec",
+                          "gonderim",
+                          "hata_kodu",
+                          "hata_mesaji"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "sonuclar",
+                    "basarili_sayisi",
+                    "hata_sayisi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Toplu davet (en cok 100 satir). Her satir tekil davetle ayni yetki/kapsam kurallarina tabidir; sonuc satir bazlidir, hatali satir digerlerini geri almaz.",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
     "/v1/hesap/kurumlar/{kurum_id}/davetler/{davet_id}/iptal": {
       "post": {
         "parameters": [
@@ -4324,6 +4643,245 @@
           }
         },
         "summary": "Modul bu kademe/grup icin acik mi? (kurum > kademe > grup)",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/modul-ayarlari/etkin-tumu": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kademe_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "grup_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "moduller": {
+                      "additionalProperties": {
+                        "type": "boolean"
+                      },
+                      "description": "Her modül kodu için bu kademe/grupta etkin mi (kurum > kademe > grup).",
+                      "required": [
+                        "takvim",
+                        "yoklama",
+                        "geri_bildirim",
+                        "kayitlar",
+                        "finans",
+                        "odev",
+                        "haftalik_plan",
+                        "deneme",
+                        "soru_sor",
+                        "oyunlastirma",
+                        "duyuru"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "moduller"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Tum modullerin durumu tek cagrida (kurum > kademe > grup); /modul-ayarlari/etkin ile ayni cozumleme",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/oturumlar": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "oturumlar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bu_oturum": {
+                            "description": "İsteği yapan oturum mu.",
+                            "type": "boolean"
+                          },
+                          "cihaz": {
+                            "description": "Kısaltılmış cihaz/tarayıcı bilgisi (en çok 80 karakter).",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "expires_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "ip_maskeli": {
+                            "description": "IP adresinin ilk bölümleri, kalanı maskeli.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "son_kullanim_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "son_kullanim_at",
+                          "expires_at",
+                          "cihaz",
+                          "ip_maskeli",
+                          "bu_oturum"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "oturumlar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Acik oturumlarim (cihazlar). IP tam donmez, `bu_oturum` istegi yapan oturumu isaretler.",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/oturumlar/tumunu-kapat": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "nullable": true,
+                "properties": {
+                  "mevcut_haric": {
+                    "default": false,
+                    "description": "true: isteği yapan oturum açık kalır.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kapatilan": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "kapatilan"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Tum oturumlarimi sonlandir (mevcut_haric=true ile istegi yapan oturum haric). Sonlanan oturumlarin erisim belirteci aninda 401 olur.",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/oturumlar/{oturum_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "oturum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "sonlandirildi": {
+                      "enum": [
+                        true
+                      ],
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "sonlandirildi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Tek oturumu sonlandir. Baskasinin (veya olmayan) oturumu 404. Erisim belirteci aninda 401 olur.",
         "tags": [
           "hesap"
         ]
