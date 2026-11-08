@@ -23,8 +23,6 @@ export const dersHataKodlari = {
   tekrarKapsamiAsildi: 'tekrar_kapsami_asildi',
 } as const;
 
-/** Sabit: ders baslangicina bu kadar saatten az kala yapilan ogrenci iptali "gec iptal" sayilir. */
-export const GEC_IPTAL_SAATI = 24;
 /** Liste araliginin ust siniri (gun). */
 export const DERS_LISTE_MAKS_GUN = 100;
 
