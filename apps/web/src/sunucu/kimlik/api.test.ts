@@ -148,29 +148,26 @@ describe('gercek kimlik adaptoru', () => {
     expect(cagrilar[1]?.yetki).toBe('Bearer erisim-1');
   });
 
-  it('kurumBaglami: etkin ucunu her modul kodu icin sorar, yalniz aciklari dondurur', async () => {
-    yanitlar['GET /v1/hesap/modul-ayarlari/etkin'] = () =>
-      json({ modul_kodu: 'takvim', acik: true });
-    // Her istek icin yanit modul koduna gore uretilir.
-    vi.stubGlobal('fetch', (girdi: Request) => {
-      const kod = new URL(girdi.url).searchParams.get('modul_kodu');
-      cagrilar.push({
-        yontem: girdi.method,
-        yol: new URL(girdi.url).pathname,
-        arama: new URL(girdi.url).searchParams,
-        yetki: girdi.headers.get('authorization'),
-        govde: undefined,
+  it('kurumBaglami: etkin-tumu ucunu tek istekle sorar, yalniz aciklari dondurur', async () => {
+    yanitlar['GET /v1/hesap/modul-ayarlari/etkin-tumu'] = () =>
+      json({
+        moduller: Object.fromEntries(MODUL_KODLARI.map((kod) => [kod, kod !== 'finans'])),
       });
-      return Promise.resolve(json({ modul_kodu: kod, acik: kod !== 'finans' }));
-    });
 
     const baglam = await apiKimlik().kurumBaglami('oturum', 'erisim-1', UUID_B);
 
-    expect(cagrilar).toHaveLength(MODUL_KODLARI.length);
-    expect(cagrilar.every((c) => c.yetki === 'Bearer erisim-1')).toBe(true);
+    expect(cagrilar).toHaveLength(1);
+    expect(cagrilar[0]?.yetki).toBe('Bearer erisim-1');
     expect(baglam.moduller).not.toContain('finans');
     expect(baglam.moduller).toContain('takvim');
     expect(baglam.moduller).toHaveLength(MODUL_KODLARI.length - 1);
+  });
+
+  it('kurumBaglami: modul.ayar.oku izni yoksa (403 izin_yok) yalniz cekirdek, hata firlatmaz', async () => {
+    yanitlar['GET /v1/hesap/modul-ayarlari/etkin-tumu'] = () =>
+      json({ error: { code: 'izin_yok', message: 'Yetkin yok.' } }, 403);
+    const baglam = await apiKimlik().kurumBaglami('o', 'e', UUID_B);
+    expect(baglam.moduller).toEqual([]);
   });
 
   it('rizaMetni bekleyen metinleri doner, rizaKabul her metni ayri kaydeder', async () => {
@@ -217,13 +214,13 @@ describe('gercek kimlik adaptoru', () => {
   });
 
   it('403 riza_gerekli ve 402 abonelik_gerekli kodlari oldugu gibi gecer', async () => {
-    yanitlar['GET /v1/hesap/modul-ayarlari/etkin'] = () =>
+    yanitlar['GET /v1/hesap/modul-ayarlari/etkin-tumu'] = () =>
       json({ error: { code: 'riza_gerekli', message: 'Onay gerekli.' } }, 403);
     await expect(apiKimlik().kurumBaglami('o', 'e', UUID_B)).rejects.toMatchObject({
       durum: 403,
       kod: 'riza_gerekli',
     });
-    yanitlar['GET /v1/hesap/modul-ayarlari/etkin'] = () =>
+    yanitlar['GET /v1/hesap/modul-ayarlari/etkin-tumu'] = () =>
       json({ error: { code: 'abonelik_gerekli', message: 'Abonelik yok.' } }, 402);
     await expect(apiKimlik().kurumBaglami('o', 'e', UUID_B)).rejects.toMatchObject({
       durum: 402,

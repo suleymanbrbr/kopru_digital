@@ -2,11 +2,12 @@
 
 import { t } from '@kopru/i18n';
 import { ArrowRight, Building2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { BosDurum } from '@/components/bos-durum';
-import { Dugme } from '@/components/ui/button';
+import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Uyari } from '@/components/ui/uyari';
 import { hataMesaji } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -50,7 +51,11 @@ export function KurumListesi({ oturum }: { oturum: Oturum }) {
             ikon={Building2}
             baslik={t('kurumSec.bos')}
             aciklama={t('kurumSec.bosAciklama')}
-          />
+          >
+            <Link href="/sinif-kodu" className={dugmeStili()}>
+              {t('hesap.sinifKodu.katilLink')}
+            </Link>
+          </BosDurum>
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -94,6 +99,16 @@ export function KurumListesi({ oturum }: { oturum: Oturum }) {
           })}
         </ul>
       )}
+
+      <div className="mt-6">
+        <Link
+          href="/sinif-kodu"
+          className="inline-flex min-h-11 items-center rounded-orta text-sm font-medium text-birincil hover:underline"
+        >
+          {t('hesap.sinifKodu.katilLink')}
+        </Link>
+        <p className="text-sm text-metin-ikincil">{t('hesap.sinifKodu.katilAciklama')}</p>
+      </div>
 
       <div className="mt-8 flex items-center justify-between text-sm text-metin-ikincil">
         <span>{oturum.kullanici.ad || oturum.kullanici.telefon}</span>

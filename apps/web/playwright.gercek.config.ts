@@ -19,6 +19,7 @@ export default defineConfig({
     locale: 'tr-TR',
     timezoneId: 'Europe/Istanbul',
     trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
     ...kullan,
   },
   projects: [{ name: 'gercek-api', use: { ...devices['Desktop Chrome'], ...kullan } }],

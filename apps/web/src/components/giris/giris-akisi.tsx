@@ -14,6 +14,7 @@ import { Etiket, Girdi } from '@/components/ui/input';
 import { Uyari } from '@/components/ui/uyari';
 import { hataMesaji } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { devamOku } from '@/lib/devam';
 import { telefonBicimle } from '@/lib/telefon';
 import { useOturum } from '@/oturum/saglayici';
 import { telefonSema } from '@/oturum/tipler';
@@ -261,7 +262,7 @@ export function GirisAkisi({ denemeIpucu }: { denemeIpucu: boolean }) {
             setAdim({ tur: 'telefon' });
           }}
           onBitti={(rizaGerekli) => {
-            router.replace(rizaGerekli ? '/kvkk' : '/kurum-sec');
+            router.replace(rizaGerekli ? '/kvkk' : (devamOku() ?? '/kurum-sec'));
           }}
         />
       )}

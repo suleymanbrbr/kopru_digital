@@ -1,9 +1,20 @@
 import { ApiHatasi, createServisIstemcileri } from '@kopru/api-client';
 import { MODUL_KODLARI } from '@kopru/contracts';
+import { headers } from 'next/headers';
 
+import { istemciIpBasliklari } from '../istemci-ip';
 import { KimlikHatasi, type KimlikAdaptoru } from './arayuz';
 
 import type { Oturum, Uyelik } from '@/oturum/tipler';
+
+/** Istek kapsami disinda (birim testleri) `next/headers` hata verir; o zaman baslik eklenmez. */
+async function gelenIpBasliklari(): Promise<Record<string, string>> {
+  try {
+    return istemciIpBasliklari(await headers());
+  } catch {
+    return {};
+  }
+}
 
 /**
  * `api` servisine (`hesap` modulu) baglanan gercek adaptor (ADR 0004). Butun cagrilar
@@ -14,7 +25,7 @@ import type { Oturum, Uyelik } from '@/oturum/tipler';
  * uc noktalari icin gerektiginde `POST /auth/token` ile 15 dk'lik erisim belirteci alinir.
  */
 
-const apiAdresi = () => process.env.API_URL ?? 'http://localhost:4000';
+export const apiAdresi = () => process.env.API_URL ?? 'http://localhost:4000';
 
 /** `api` servisinin hata kodlarini web'in bildigi (i18n'li) kodlara cevirir. */
 const kodEsleme: Record<string, string> = {
@@ -27,7 +38,13 @@ function istemci(belirtec?: string) {
   return createServisIstemcileri({
     adresler: { api: apiAdresi() },
     tokenAl: () => belirtec,
-    fetch: (istek) => fetch(istek, { cache: 'no-store' }),
+    fetch: async (istek) => {
+      const giden = new Request(istek);
+      for (const [ad, deger] of Object.entries(await gelenIpBasliklari())) {
+        giden.headers.set(ad, deger);
+      }
+      return fetch(giden, { cache: 'no-store' });
+    },
   }).api;
 }
 
@@ -122,18 +139,20 @@ export function apiKimlik(): KimlikAdaptoru {
     },
 
     async kurumBaglami(_oturumBelirteci, erisimBelirteci, kurumId) {
-      // `etkin` ucu bir seferde tek modul sorar (kurum > kademe > grup); butun kodlar paralel sorulur.
-      const api = istemci(erisimBelirteci);
-      const yanitlar = await Promise.all(
-        MODUL_KODLARI.map((modulKodu) =>
-          cagir(() =>
-            api.GET('/v1/hesap/modul-ayarlari/etkin', {
-              params: { query: { modul_kodu: modulKodu } },
-            }),
-          ),
-        ),
-      );
-      return { kurumId, moduller: yanitlar.filter((y) => y.acik).map((y) => y.modul_kodu) };
+      // `etkin-tumu` kurum > kademe > grup onceligini tek sorguda cozer (`hesap.modul_acik_mi`).
+      const sonuc = await istemci(erisimBelirteci)
+        .GET('/v1/hesap/modul-ayarlari/etkin-tumu', {})
+        .catch(() => {
+          throw new KimlikHatasi(502, 'hizmet_kullanilamiyor', 'Sunucuya ulaşılamadı.');
+        });
+      if (sonuc.data === undefined) {
+        const hata = hataCevir(sonuc.response.status, sonuc.error);
+        // `modul.ayar.oku` izni olmayan rol: moduller bilinmiyor, yalniz cekirdek bolumler gorunur.
+        if (hata.durum === 403 && hata.kod === 'izin_yok') return { kurumId, moduller: [] };
+        throw hata;
+      }
+      const moduller = MODUL_KODLARI.filter((kod) => sonuc.data.moduller[kod] === true);
+      return { kurumId, moduller };
     },
 
     async rizaMetni(oturumBelirteci) {

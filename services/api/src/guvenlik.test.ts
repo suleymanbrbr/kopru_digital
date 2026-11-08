@@ -18,6 +18,7 @@ describe.skipIf(dbYok())('guvenlik: sid iptal listesi ve e-posta dogrulama', () 
       DATABASE_URL: urls.appUrl,
       DATABASE_SISTEM_URL: urls.sistemUrl,
       PUBLIC_URL: 'http://api.test',
+      WEB_URL: 'http://web.test',
     }),
     { sms, eposta },
   );
@@ -73,16 +74,18 @@ describe.skipIf(dbYok())('guvenlik: sid iptal listesi ve e-posta dogrulama', () 
 
     const mesaj = eposta.mesajlar.findLast((m) => m.alici === adres);
     expect(mesaj?.konu).toMatch(/doğrulayın/);
-    const baglanti = /http:\/\/api\.test\/auth\/eposta\/dogrula\?belirtec=[^\s]+/.exec(
+    // Baglanti web sayfasina gider; sayfa belirteci api ucuna iletir.
+    const baglanti = /http:\/\/web\.test\/eposta-dogrula\?belirtec=[^\s]+/.exec(
       mesaj?.metin ?? '',
     )?.[0];
     expect(baglanti).toBeDefined();
+    const belirtec = new URL(baglanti ?? '').searchParams.get('belirtec') ?? '';
 
     const kotu = await app.inject({ url: '/auth/eposta/dogrula?belirtec=gecersiz-belirtec-xyz' });
     expect(kotu.statusCode).toBe(400);
 
     const dogrula = await app.inject({
-      url: new URL(baglanti ?? '').pathname + new URL(baglanti ?? '').search,
+      url: `/auth/eposta/dogrula?belirtec=${encodeURIComponent(belirtec)}`,
     });
     expect(dogrula.statusCode).toBe(200);
     expect(dogrula.json<{ dogrulandi: boolean }>().dogrulandi).toBe(true);

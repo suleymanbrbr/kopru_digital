@@ -118,10 +118,11 @@ export function createBetterAuth({ env, db, sms, eposta, log }: BetterAuthGirdis
       sendOnSignUp: true,
       autoSignInAfterVerification: false,
       // Dogrulama ayri `GET /auth/eposta/dogrula?belirtec=` ucundadir; BA'nin `url`i kullanilmaz.
+      // E-postadaki baglanti web sayfasina gider (`${WEB_URL}/eposta-dogrula`); sayfa bu ucu cagirir.
       // Gonderim hatasi kaydi/istegi bozmaz; kisisel veri ve belirtec loga yazilmaz.
       sendVerificationEmail: async ({ user, token }) => {
         if (user.email.endsWith(`@${GECICI_EPOSTA_ALANI}`)) return;
-        const baglanti = `${env.PUBLIC_URL}/auth/eposta/dogrula?belirtec=${encodeURIComponent(token)}`;
+        const baglanti = `${env.WEB_URL.replace(/\/+$/, '')}/eposta-dogrula?belirtec=${encodeURIComponent(token)}`;
         try {
           await eposta.gonder({
             alici: user.email,
