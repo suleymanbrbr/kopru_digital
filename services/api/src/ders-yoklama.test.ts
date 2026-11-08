@@ -4,6 +4,10 @@ import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  dersKatilimcilariniEsitleSistem,
+  eskiYoklamaIstekleriniSil,
+} from './sistem/ders-seri-uret.js';
+import {
   dersYardimcilari,
   gunSonra,
   pazartesi,
@@ -12,10 +16,6 @@ import {
   type IslemYaniti,
   type Kurulum,
 } from './test/ders-yardimcilar.js';
-import {
-  dersKatilimcilariniEsitleSistem,
-  eskiYoklamaIstekleriniSil,
-} from './sistem/ders-seri-uret.js';
 import { bearer, dbYok, testDb, testServisi } from './test/yardimcilar.js';
 
 interface YoklamaJson {

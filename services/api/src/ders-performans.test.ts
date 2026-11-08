@@ -138,8 +138,8 @@ describe.skipIf(dbYok())('ders takvimi performansi (200 ders, hedef 300 ms)', ()
     const tekrar = await gonder('izinli', -2000); // ayni icerik, farkli anahtar: 'ayni'
     const replay = await gonder('geldi', -3000, anahtar); // ayni anahtar: kayitli yanit
     expect(replay.res.headers['idempotent-replayed']).toBe('true');
-    const sonuclar = (r: { res: { json: <T>() => T } }) =>
-      r.res.json<{ sonuclar: { sonuc: string }[] }>().sonuclar.map((x) => x.sonuc);
+    const sonuclar = (r: { res: { json: () => unknown } }) =>
+      (r.res.json() as { sonuclar: { sonuc: string }[] }).sonuclar.map((x) => x.sonuc);
     expect(new Set(sonuclar(ilk))).toEqual(new Set(['yeni']));
     expect(new Set(sonuclar(duzeltme))).toEqual(new Set(['guncellendi']));
     expect(new Set(sonuclar(tekrar))).toEqual(new Set(['ayni']));
