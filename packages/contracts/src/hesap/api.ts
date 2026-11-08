@@ -138,6 +138,8 @@ export const kurumAyarlariSema = z.object({
   sessiz_saat_varsayilan: z.string().optional(),
   ders_hatirlatma_dk: z.number().int().min(0).max(1440).optional(),
   yoklama_kilit_gun: z.number().int().min(0).max(365).optional(),
+  /** Öğrenci kalan ders sayısını görsün mü (varsayılan true; kapalıysa `kalan_kredi: null`). */
+  ogrenci_kalan_ders_gorur: z.boolean().optional(),
 });
 
 export const KurumSema = z.object({

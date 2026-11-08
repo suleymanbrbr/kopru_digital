@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 2;
+export const IZIN_SOZLUGU_SURUMU = 3;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -43,6 +43,10 @@ export const IZINLER = {
   'kayit.yaz': { modul: 'kayitlar', aciklama: 'Ders kayıt ve materyali ekleme' },
   'finans.oku': { modul: 'finans', aciklama: 'Kredi ve bakiye bilgisini görme' },
   'finans.tahsilat.yaz': { modul: 'finans', aciklama: 'Tahsilat ve paket satışı kaydetme' },
+  'finans.paket.yaz': {
+    modul: 'finans',
+    aciklama: 'Paket şablonu, ücret tarifesi, kredi politikası ve finans ayarı düzenleme',
+  },
   'odev.oku': { modul: 'odev', aciklama: 'Ödevleri görme' },
   'odev.ver': { modul: 'odev', aciklama: 'Ödev verme' },
   'odev.teslim': { modul: 'odev', aciklama: 'Ödev teslim etme' },
@@ -89,6 +93,9 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'yoklama.yaz': 'grup',
     'kayit.oku': 'grup',
     'kayit.yaz': 'grup',
+    // Ogretmen kendi ogrencilerinde paket satar ve tahsilat alir; sablon/tarife/politika yonetemez.
+    'finans.oku': 'grup',
+    'finans.tahsilat.yaz': 'grup',
     'odev.oku': 'grup',
     'odev.ver': 'grup',
     'odev.incele': 'grup',

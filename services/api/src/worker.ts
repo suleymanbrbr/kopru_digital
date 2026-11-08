@@ -1,6 +1,7 @@
 import { runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
+import { geceIsiZamanla } from './modules/finans/index.js';
 import { dersSerileriniUret } from './sistem/ders-seri-uret.js';
 
 const env = loadServiceEnv();
@@ -21,6 +22,7 @@ await runWorker({
   name: serviceName,
   env: { ...env, DATABASE_URL: env.DATABASE_SISTEM_URL ?? env.DATABASE_URL },
   outboxTable: 'ortak.outbox',
+  // Isler `api_sistem` baglantisiyla (withSistem) calisir; DB yoksa zamanlanmaz.
   setup: ({ db, log }) => {
     if (!db) {
       log.info('ders serisi işi devre dışı (veritabanı yok)');
@@ -41,9 +43,10 @@ await runWorker({
     };
     void calistir();
     const zamanlayici = setInterval(() => void calistir(), DERS_SERI_ARALIGI_MS);
-    return Promise.resolve(() => {
+    const finansIsleriniDurdur = geceIsiZamanla(db, log);
+    return Promise.resolve(async () => {
       clearInterval(zamanlayici);
-      return Promise.resolve();
+      await finansIsleriniDurdur();
     });
   },
   onClose: telemetry.shutdown,

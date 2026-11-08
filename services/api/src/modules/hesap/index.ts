@@ -52,5 +52,5 @@ export {
   type EpostaMesaji,
 } from './eposta.js';
 export { birebirGrupOlustur, grupEtkinOgrencileri } from './grup-deposu.js';
-export { grupKapsami, kapsamdakiGruplar } from './kapsam.js';
 export { gorunenAdlar } from './grup-deposu.js';
+export { atananGruplar, grupKapsami, kapsamdakiGruplar, uyeOlunanGruplar } from './kapsam.js';
