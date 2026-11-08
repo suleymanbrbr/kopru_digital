@@ -646,6 +646,11 @@ describe.skipIf(dbYok())('hesap: KVKK, kurum, uyelik, modul, izin, outbox', () =
       '/v1/hesap/kurumlar/{kurum_id}/uyelikler',
       '/v1/hesap/rizalar/guncel',
       '/v1/hesap/ben',
+      '/v1/hesap/oturumlar',
+      '/v1/hesap/oturumlar/{oturum_id}',
+      '/v1/hesap/oturumlar/tumunu-kapat',
+      '/v1/hesap/modul-ayarlari/etkin-tumu',
+      '/v1/hesap/kurumlar/{kurum_id}/davetler/toplu',
     ]) {
       expect(paths).toContain(yol);
     }

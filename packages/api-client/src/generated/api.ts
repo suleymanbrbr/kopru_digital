@@ -1222,6 +1222,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hesap/kurumlar/{kurum_id}/davetler/toplu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toplu davet (en cok 100 satir). Her satir tekil davetle ayni yetki/kapsam kurallarina tabidir; sonuc satir bazlidir, hatali satir digerlerini geri almaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description En çok 100 satır; her satır tekil davetle aynı kurallara tabidir. */
+                        davetler: {
+                            /** @description `eposta` kanalında zorunlu. */
+                            eposta?: string;
+                            /** @default 7 */
+                            gecerlilik_gun?: number;
+                            /**
+                             * Format: uuid
+                             * @description Yalnız `ogrenci` daveti için: kabulde gruba eklenir.
+                             */
+                            grup_id?: string;
+                            hedef_ad?: string;
+                            /**
+                             * Format: uuid
+                             * @description Yalnız `ogrenci` daveti için.
+                             */
+                            kademe_id?: string;
+                            /** @enum {string} */
+                            kanal: "baglanti" | "sms" | "eposta";
+                            /**
+                             * @description Çok kullanımlı olabilmesi için kanal `baglanti` olmalı.
+                             * @default 1
+                             */
+                            max_kullanim?: number;
+                            /** @enum {string} */
+                            rol: "yonetici" | "ogretmen" | "ogrenci";
+                            /** Format: uuid */
+                            sube_id?: string;
+                            /** @description `sms` kanalında zorunlu. */
+                            telefon?: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            basarili_sayisi: number;
+                            hata_sayisi: number;
+                            sonuclar: {
+                                /** @description Yalnız başarılı satırda ve yalnız bu yanıtta döner. */
+                                belirtec: string | null;
+                                davet: {
+                                    /** Format: date-time */
+                                    created_at: string;
+                                    /** Format: uuid */
+                                    davet_eden_id: string;
+                                    /** @enum {string} */
+                                    durum: "bekliyor" | "kullanildi" | "iptal" | "suresi_doldu";
+                                    /** Format: date-time */
+                                    expires_at: string;
+                                    /** @description SMS / e-posta gonderim sayaci (en cok 3). */
+                                    gonderim_sayisi: number;
+                                    /** Format: uuid */
+                                    grup_id: string | null;
+                                    hedef_ad: string | null;
+                                    hedef_eposta: string | null;
+                                    hedef_telefon_e164: string | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kademe_id: string | null;
+                                    /** @enum {string} */
+                                    kanal: "baglanti" | "sms" | "eposta";
+                                    kullanim_sayisi: number;
+                                    max_kullanim: number;
+                                    /** @enum {string} */
+                                    rol: "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                                    /** Format: date-time */
+                                    son_gonderim_at: string | null;
+                                    /** Format: uuid */
+                                    sube_id: string | null;
+                                } | null;
+                                /** @enum {string} */
+                                durum: "basarili" | "hata";
+                                /** @enum {string|null} */
+                                gonderim: "gonderildi" | "basarisiz" | "yok" | null;
+                                /** @description Alan hata kodu, örn. `gecersiz_telefon`, `izin_yok`. */
+                                hata_kodu: string | null;
+                                hata_mesaji: string | null;
+                                /** @description Girdideki satır sırası (0 tabanlı). */
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hesap/kurumlar/{kurum_id}/gruplar": {
         parameters: {
             query?: never;
@@ -2016,6 +2137,192 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/modul-ayarlari/etkin-tumu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tum modullerin durumu tek cagrida (kurum > kademe > grup); /modul-ayarlari/etkin ile ayni cozumleme */
+        get: {
+            parameters: {
+                query?: {
+                    grup_id?: string;
+                    kademe_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Her modül kodu için bu kademe/grupta etkin mi (kurum > kademe > grup). */
+                            moduller: {
+                                [key: string]: boolean;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/oturumlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Acik oturumlarim (cihazlar). IP tam donmez, `bu_oturum` istegi yapan oturumu isaretler. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            oturumlar: {
+                                /** @description İsteği yapan oturum mu. */
+                                bu_oturum: boolean;
+                                /** @description Kısaltılmış cihaz/tarayıcı bilgisi (en çok 80 karakter). */
+                                cihaz: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                expires_at: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** @description IP adresinin ilk bölümleri, kalanı maskeli. */
+                                ip_maskeli: string | null;
+                                /** Format: date-time */
+                                son_kullanim_at: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/oturumlar/{oturum_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Tek oturumu sonlandir. Baskasinin (veya olmayan) oturumu 404. Erisim belirteci aninda 401 olur. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    oturum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            sonlandirildi: true;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/oturumlar/tumunu-kapat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tum oturumlarimi sonlandir (mevcut_haric=true ile istegi yapan oturum haric). Sonlanan oturumlarin erisim belirteci aninda 401 olur. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description true: isteği yapan oturum açık kalır.
+                         * @default false
+                         */
+                        mevcut_haric?: boolean;
+                    } | null;
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kapatilan: number;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

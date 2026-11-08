@@ -205,6 +205,34 @@ export const ModulEtkinSorguSema = z.object({
   grup_id: z.uuid().optional(),
 });
 export const ModulEtkinYanitSema = z.object({ modul_kodu: ModulKoduSema, acik: z.boolean() });
+export const ModulEtkinTumuSorguSema = z.object({
+  kademe_id: z.uuid().optional(),
+  grup_id: z.uuid().optional(),
+});
+export const ModulEtkinTumuYanitSema = z.object({
+  moduller: z
+    .record(ModulKoduSema, z.boolean())
+    .describe('Her modül kodu için bu kademe/grupta etkin mi (kurum > kademe > grup).'),
+});
+
+// --- Oturum yonetimi -----------------------------------------------------------------------
+
+export const OturumSema = z.object({
+  id: z.uuid(),
+  created_at: z.iso.datetime({ offset: true }),
+  son_kullanim_at: z.iso.datetime({ offset: true }),
+  expires_at: z.iso.datetime({ offset: true }),
+  cihaz: z.string().nullable().describe('Kısaltılmış cihaz/tarayıcı bilgisi (en çok 80 karakter).'),
+  ip_maskeli: z.string().nullable().describe('IP adresinin ilk bölümleri, kalanı maskeli.'),
+  bu_oturum: z.boolean().describe('İsteği yapan oturum mu.'),
+});
+export const OturumListeYanitSema = z.object({ oturumlar: z.array(OturumSema) });
+export const OturumParamSema = z.object({ oturum_id: z.uuid() });
+export const OturumSonlandirYanitSema = z.object({ sonlandirildi: z.literal(true) });
+export const OturumlariKapatGirdiSema = z.object({
+  mevcut_haric: z.boolean().default(false).describe('true: isteği yapan oturum açık kalır.'),
+});
+export const OturumlariKapatYanitSema = z.object({ kapatilan: z.number().int().min(0) });
 
 // --- Uyelikler -----------------------------------------------------------------------------
 
