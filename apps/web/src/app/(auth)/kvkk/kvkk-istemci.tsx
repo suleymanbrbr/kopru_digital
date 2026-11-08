@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 
 import { RizaEkrani } from '@/components/giris/riza-ekrani';
+import { devamOku } from '@/lib/devam';
 import { Koruma } from '@/oturum/koruma';
 
 export function KvkkIstemci() {
@@ -12,7 +13,7 @@ export function KvkkIstemci() {
       {() => (
         <RizaEkrani
           sonra={() => {
-            router.replace('/kurum-sec');
+            router.replace(devamOku() ?? '/kurum-sec');
           }}
         />
       )}
