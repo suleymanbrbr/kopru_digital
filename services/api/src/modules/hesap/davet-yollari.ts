@@ -548,7 +548,6 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
               durum: 'aktif',
               sube_id: mevcut?.sube_id ?? d.sube_id,
               kademe_id: mevcut?.kademe_id ?? (rol === 'ogrenci' ? d.kademe_id : null),
-              gorunen_ad: mevcut?.gorunen_ad ?? gorunenAd,
             });
           }
 
