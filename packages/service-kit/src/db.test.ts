@@ -91,7 +91,7 @@ describe.skipIf(!url)('db + outbox (gercek PostgreSQL)', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       id: committed.id,
-      subject: 'evt.yoklama.alindi.v1',
+      subject: 'evt.ders.yoklama.kaydedildi.v1',
       sent_at: null,
     });
   });
@@ -128,7 +128,7 @@ describe.skipIf(!url)('db + outbox (gercek PostgreSQL)', () => {
     await relay.stop();
 
     expect(published.map((p) => p.msgID)).toEqual(pending.map((row) => row.id));
-    expect(published[0]?.subject).toBe('evt.yoklama.alindi.v1');
+    expect(published[0]?.subject).toBe('evt.ders.yoklama.kaydedildi.v1');
     expect(dersYoklamaKaydedildiV1.parse(published[0]?.body).kurumId).toBe(kurumId);
   });
 
