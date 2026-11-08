@@ -74,11 +74,14 @@ const grupBulunamadi = () => new AppError(404, errorCodes.notFound, 'Grup buluna
 
 /** Kapsamdaki tek grubu getirir (kapsam disi = yok). `kilit`: satiri `FOR UPDATE` ile kilitler. */
 async function grupBul(tx: Tx, y: YetkiBaglami, grupId: string, kilit = false) {
-  const sorgu = tx
-    .select({ g: gruplar, uye_sayisi: uyeSayisiIfadesi })
-    .from(gruplar)
-    .where(and(eq(gruplar.id, grupId), eq(gruplar.kurum_id, y.kurumId), grupKapsami(tx, y)));
-  const [satir] = kilit ? await sorgu.for('update', { of: gruplar }) : await sorgu;
+  const kosul = and(eq(gruplar.id, grupId), eq(gruplar.kurum_id, y.kurumId), grupKapsami(tx, y));
+  const [satir] = kilit
+    ? await tx
+        .select({ g: gruplar, uye_sayisi: uyeSayisiIfadesi })
+        .from(gruplar)
+        .where(kosul)
+        .for('update')
+    : await tx.select({ g: gruplar, uye_sayisi: uyeSayisiIfadesi }).from(gruplar).where(kosul);
   if (!satir) throw grupBulunamadi();
   return satir;
 }
@@ -600,11 +603,9 @@ export const grupYollari: ServicePlugin = (app) => {
       const y = yetkiAl(request);
       const baglam = baglamOlustur(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
-        const [mevcut] = await tx
-          .select(atamaSecimi)
+        const [kilitli] = await tx
+          .select({ id: atamalar.id })
           .from(atamalar)
-          .innerJoin(uyelikler, eq(uyelikler.id, atamalar.ogretmen_id))
-          .innerJoin(kullanicilar, eq(kullanicilar.id, uyelikler.kullanici_id))
           .where(
             and(
               eq(atamalar.id, request.params.atama_id),
@@ -614,7 +615,14 @@ export const grupYollari: ServicePlugin = (app) => {
                 : inArray(atamalar.grup_id, kapsamdakiGruplar(tx, y)),
             ),
           )
-          .for('update', { of: atamalar });
+          .for('update');
+        if (!kilitli) throw new AppError(404, errorCodes.notFound, 'Atama bulunamadı.');
+        const [mevcut] = await tx
+          .select(atamaSecimi)
+          .from(atamalar)
+          .innerJoin(uyelikler, eq(uyelikler.id, atamalar.ogretmen_id))
+          .innerJoin(kullanicilar, eq(kullanicilar.id, uyelikler.kullanici_id))
+          .where(eq(atamalar.id, kilitli.id));
         if (!mevcut) throw new AppError(404, errorCodes.notFound, 'Atama bulunamadı.');
         if (mevcut.a.bitis_tarihi !== null) return atamaYaniti(mevcut.a, mevcut.ogretmen_ad);
         const [guncel] = await tx

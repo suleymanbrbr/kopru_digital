@@ -19,7 +19,7 @@ export type AtamaSatiri = typeof atamalar.$inferSelect;
 export type GrupUyesiYaniti = z.infer<typeof GrupUyesiSema>;
 
 /** Gruptaki etkin ogrenci sayisi (sorgu alt ifadesi). */
-export const uyeSayisiIfadesi = sql<number>`(select count(*)::int from ${grupUyeleri} where ${grupUyeleri.grup_id} = ${gruplar.id} and ${grupUyeleri.bitis_tarihi} is null)`;
+export const uyeSayisiIfadesi = sql<number>`(select count(*)::int from hesap.grup_uyeleri gu where gu.grup_id = "hesap"."gruplar"."id" and gu.bitis_tarihi is null)`;
 
 export function grupYaniti(g: GrupSatiri, uyeSayisi: number): GrupTipi {
   return {
