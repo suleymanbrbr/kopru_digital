@@ -15,7 +15,6 @@ import { z } from 'zod';
 import { dersKatilimcilari, dersSerileri, dersler, gruplar, uyelikler } from '../../db/schema.js';
 import { requirePermission } from '../hesap/index.js';
 import {
-  dersBul,
   dersDenetimiYaz,
   dersDetayi,
   dersOlayiYaz,
@@ -36,6 +35,7 @@ import {
   planliOlmali,
   seriBul,
   surumKontrol,
+  yazilacakDersBul,
   yetkiAl,
   type CakismaNiyeti,
 } from './ders-ortak.js';
@@ -69,7 +69,7 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const g = request.body;
       const baglam = olayBaglami(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
-        const hedef = await dersBul(tx, y, request.params.id, true);
+        const hedef = await yazilacakDersBul(tx, y, request.params.id);
         planliOlmali(hedef);
         surumKontrol(hedef, g.surum);
         const kume = await etkilenenDersler(tx, hedef, g.kapsam);
@@ -90,16 +90,19 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
             ),
           )
           .returning();
-        if (g.kapsam === 'bu_ve_sonrakiler' && hedef.seri_id !== null) {
-          // Seri kurali da guncellenir: sonradan uretilecek dersler yeni bilgiyle olusur.
-          await tx
-            .update(dersSerileri)
-            .set({
-              baslik: g.baslik,
-              online_baglanti: g.online_baglanti,
-              yer: g.yer,
-            })
-            .where(eq(dersSerileri.id, hedef.seri_id));
+        // Seri kurali da guncellenir: sonradan uretilecek dersler yeni bilgiyle olusur. `konu_id` seride
+        // yoktur; yalniz konu degistiyse seriye yazilacak alan kalmaz.
+        const seriAlanlari = {
+          baslik: g.baslik,
+          online_baglanti: g.online_baglanti,
+          yer: g.yer,
+        };
+        if (
+          g.kapsam === 'bu_ve_sonrakiler' &&
+          hedef.seri_id !== null &&
+          Object.values(seriAlanlari).some((v) => v !== undefined)
+        ) {
+          await tx.update(dersSerileri).set(seriAlanlari).where(eq(dersSerileri.id, hedef.seri_id));
         }
         const katilimcilar = await katilimciHaritasi(
           tx,
@@ -156,7 +159,7 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const niyet: { current: CakismaNiyeti | null } = { current: null };
       return cakismaKorumali(db, y, niyet, () =>
         withTenant(db, kiraci(y), async (tx) => {
-          const hedef = await dersBul(tx, y, request.params.id, true);
+          const hedef = await yazilacakDersBul(tx, y, request.params.id);
           planliOlmali(hedef);
           surumKontrol(hedef, g.surum);
           const seri = await seriBul(tx, hedef.seri_id, true);
@@ -287,7 +290,7 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const g = request.body;
       const baglam = olayBaglami(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
-        const hedef = await dersBul(tx, y, request.params.id, true);
+        const hedef = await yazilacakDersBul(tx, y, request.params.id);
         planliOlmali(hedef);
         surumKontrol(hedef, g.surum);
         if (g.iptal_kaynagi === 'ogrenci') {
@@ -388,7 +391,7 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const g = request.body;
       const baglam = olayBaglami(y, request.correlationId);
       const sonuc = await withTenant(db, kiraci(y), async (tx) => {
-        const ders = await dersBul(tx, y, request.params.id, true);
+        const ders = await yazilacakDersBul(tx, y, request.params.id);
         planliOlmali(ders);
         const [ogrenci] = await tx
           .select({ id: uyelikler.id })
@@ -457,7 +460,7 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const y = yetkiAl(request);
       const baglam = olayBaglami(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
-        const ders = await dersBul(tx, y, request.params.id, true);
+        const ders = await yazilacakDersBul(tx, y, request.params.id);
         planliOlmali(ders);
         const silinen = await tx
           .delete(dersKatilimcilari)

@@ -15,6 +15,7 @@ import {
 import { grupKapsami, type YetkiBaglami } from '../hesap/index.js';
 import {
   cakisanYaniti,
+  dersBul,
   exclusionIhlaliMi,
   ogretmenCakismalari,
   type Aralik,
@@ -155,6 +156,22 @@ export async function bransCoz(
     );
   }
   return a.brans_kodu;
+}
+
+/**
+ * Degistirilecek ders (satir kilitli). Ayni grupta birden cok brans ogretmeni olabilir: ogretmen rolu
+ * gruptaki dersleri gorur ama yalniz kendi dersini degistirir; sahip ve yonetici kapsamindaki her dersi.
+ */
+export async function yazilacakDersBul(
+  tx: Tx,
+  y: YetkiBaglami,
+  dersId: string,
+): Promise<DersSatiri> {
+  const d = await dersBul(tx, y, dersId, true);
+  if (y.rol === 'ogretmen' && d.ogretmen_id !== y.uyelikId) {
+    throw new AppError(403, errorCodes.izinYok, 'Yalnızca kendi dersinizi değiştirebilirsiniz.');
+  }
+  return d;
 }
 
 export function planliOlmali(d: DersSatiri): void {

@@ -474,6 +474,44 @@ describe.skipIf(dbYok())('ders takvimi API', () => {
       expect(hataKodu(seriDisi)).toBe('ders_seride_degil');
     });
 
+    it('guncelle: bu_ve_sonrakiler yalniz konu degisince seride yazacak alan yoksa da calisir', async () => {
+      const s = await y.kur();
+      const { dersler } = await y.seriAc(s, { adet: 2 });
+      const [d0] = dersler as [DersJson, DersJson];
+      const res = await y.patch(s.k, s.k.token, `/dersler/${d0.id}`, {
+        surum: 1,
+        kapsam: 'bu_ve_sonrakiler',
+        konu_id: uuidv7(),
+      });
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json<IslemYaniti>().etkilenen_ders_idleri).toHaveLength(2);
+    });
+
+    it('ayni gruptaki baska ogretmen dersi goremez degil ama degistiremez; kendi dersini ve sahip her dersi degistirir', async () => {
+      const s = await y.kur();
+      const hoca2 = await y.davetliUye(s.k, 'ogretmen');
+      await y.ata(s.k, s.grup.id, hoca2.uyelikId, 'fizik');
+      const d = await y.dersAc(s);
+      expect((await y.get(s.k, hoca2.token, `/dersler/${d.id}`)).statusCode).toBe(200);
+      for (const [yol, govde] of [
+        [`/dersler/${d.id}/tasi`, { surum: 1, yeni_saat: '18:00' }],
+        [`/dersler/${d.id}/iptal`, { surum: 1, iptal_kaynagi: 'ogretmen' }],
+        [`/dersler/${d.id}/katilimcilar`, { ogrenci_id: uuidv7(), tur: 'misafir' }],
+      ] as const) {
+        const r = await y.post(s.k, hoca2.token, yol, govde);
+        expect(r.statusCode, r.body).toBe(403);
+      }
+      expect(
+        (await y.patch(s.k, hoca2.token, `/dersler/${d.id}`, { surum: 1, yer: 'x' })).statusCode,
+      ).toBe(403);
+      expect(
+        (await y.patch(s.k, s.hoca.token, `/dersler/${d.id}`, { surum: 1, yer: 'y' })).statusCode,
+      ).toBe(200);
+      expect(
+        (await y.patch(s.k, s.k.token, `/dersler/${d.id}`, { surum: 2, yer: 'z' })).statusCode,
+      ).toBe(200);
+    });
+
     it('tasima cakismasi: 409 + liste, cakisma_onayli ile 200', async () => {
       const s = await y.kur();
       const a = await y.dersAc(s, { baslangic_saati: '10:00' });
