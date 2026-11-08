@@ -33,7 +33,7 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 | `hesap.kullanici.silindi.v1` | - | KVKK silme/anonimleştirme tamamlanınca. | `kullanici_id`, `uyelik_idleri[]`, `anonimlestirildi_at` | `bildirim`, `motivasyon`, `medya` |
 | `hesap.kurum.degisti.v1` | K | Kurum oluşturma, ad/tür/saat dilimi/durum değişimi. Özne: `kurum`. | `kurum_id`, `ad`, `tur`, `saat_dilimi`, `durum` (`aktif`,`askida`,`kapali`) | `bildirim`, `motivasyon`, `medya` |
 | `hesap.kademe.degisti.v1` | K | Kademe oluşturma/güncelleme/arşiv. | `kademe_id`, `ad`, `seviye`, `arsivlendi` (bool) | `bildirim` |
-| `hesap.uyelik.degisti.v1` | K | Üyelik oluşunca; rol, durum, kademe, şube değişince; ayrılınca (`durum='ayrildi'`). | `uyelik_id`, `kullanici_id`, `rol`, `durum`, `sube_id`, `kademe_id`, `gorunen_ad` | `motivasyon`, `bildirim` |
+| `hesap.uyelik.degisti.v1` | K | Üyelik oluşunca; rol, durum, kademe, şube değişince; ayrılınca (`durum='ayrildi'`). | `uyelik_id`, `kullanici_id`, `rol`, `durum`, `sube_id`, `kademe_id` | `motivasyon`, `bildirim` |
 | `hesap.grup.degisti.v1` | K | Grup oluşturma/güncelleme/arşiv. | `grup_id`, `tur`, `ad`, `kademe_id`, `sube_id`, `durum` | `motivasyon`, `bildirim` |
 | `hesap.grup_uyesi.degisti.v1` | K | Öğrenci gruba eklenince/çıkarılınca. Özne: `grup_uyesi` (`id` = grup_uyeleri.id). | `grup_uyesi_id`, `grup_id`, `ogrenci_id`, `baslangic_tarihi`, `bitis_tarihi` | `motivasyon`, `bildirim` |
 | `hesap.atama.degisti.v1` | K | Öğretmen ataması oluşunca/bitince. | `atama_id`, `grup_id`, `ogretmen_id`, `brans_kodu`, `baslangic_tarihi`, `bitis_tarihi`, `ana_ogretmen` | `motivasyon`, `bildirim` |
@@ -41,6 +41,8 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 | `hesap.davet.kabul_edildi.v1` | K | Davet kabul edilince (üyelik oluştuktan sonra, aynı işlemde). | `davet_id`, `davet_eden_id`, `uyelik_id`, `rol` | `bildirim` |
 
 `hesap.riza.kaydedildi` olayı tanımlı değildir: Faz 1'de tüketicisi yoktur. Rıza kaydı `hesap.rizalar` defterindedir.
+
+> **Değişiklik notu (8 Kasım 2026).** `hesap.uyelik.degisti.v1` yükünden `gorunen_ad` çıkarıldı: ad kişisel veridir ve olaylara konmaz; `motivasyon` ve `bildirim` kopya tabloları bu alanı zaten saklamıyordu. Alan silmek normalde yeni sürüm ister ([ADR 0002](../adr/0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)); henüz üretim ortamı ve bu olayı tüketen kod olmadığı için v1 yerinde değiştirildi. Yasak alanlar `packages/contracts/src/hesap/olaylar.test.ts` ile denetlenir.
 
 ## `api` / ders
 

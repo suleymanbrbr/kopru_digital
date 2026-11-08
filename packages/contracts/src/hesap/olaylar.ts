@@ -49,7 +49,6 @@ export const hesapUyelikDegistiV1 = defineEvent(
     durum: uyelikDurumSema,
     sube_id: z.uuid().nullable(),
     kademe_id: z.uuid().nullable(),
-    gorunen_ad: z.string().nullable(),
   }),
 );
 

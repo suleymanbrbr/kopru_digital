@@ -247,7 +247,6 @@ export const hesapYollari: ServicePlugin = (app) => {
               durum: 'aktif',
               sube_id: null,
               kademe_id: null,
-              gorunen_ad: gorunenAd,
             });
           }
           return { kurum };
