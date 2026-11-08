@@ -189,10 +189,18 @@ export const DavetOlusturGirdiSema = z
   })
   .superRefine((v, ctx) => {
     if (v.kanal === 'sms' && !v.telefon) {
-      ctx.addIssue({ code: 'custom', path: ['telefon'], message: 'SMS daveti için telefon gerekli.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['telefon'],
+        message: 'SMS daveti için telefon gerekli.',
+      });
     }
     if (v.kanal === 'eposta' && !v.eposta) {
-      ctx.addIssue({ code: 'custom', path: ['eposta'], message: 'E-posta daveti için eposta gerekli.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['eposta'],
+        message: 'E-posta daveti için eposta gerekli.',
+      });
     }
     if (v.kanal !== 'baglanti' && v.max_kullanim !== 1) {
       ctx.addIssue({
