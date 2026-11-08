@@ -4,6 +4,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { girisYap } from './yardimcilar';
 
 async function ihlaller(page: Page) {
+  // Sayfa gecisinde <title> ayrica akar; tarama basliktan once calisirsa document-title yanlis alarm verir.
+  await expect(page).toHaveTitle(/.+/);
   const sonuc = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   return sonuc.violations.map(
     (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
