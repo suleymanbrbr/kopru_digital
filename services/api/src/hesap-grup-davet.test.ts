@@ -716,9 +716,7 @@ describe.skipIf(dbYok())('hesap: gruplar, atamalar, davetler', () => {
       const a = await kurumluKullanici(t);
       const davet = (await davetEt(a, { kanal: 'baglanti', rol: 'ogrenci' })).json<Davet>();
       const hash = createHash('sha256').update(davet.belirtec).digest();
-      const satir = await appDb.orm.execute<Record<string, unknown>>(
-        sql`select * from hesap.davet_coz(${hash})`,
-      );
+      const satir = await appDb.orm.execute(sql`select * from hesap.davet_coz(${hash})`);
       expect(Object.keys(satir[0] ?? {}).sort()).toEqual([
         'davet_id',
         'durum',
