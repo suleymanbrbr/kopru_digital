@@ -154,10 +154,18 @@ export const OdemeSema = z
       ctx.addIssue({ code: 'custom', path: ['yontem'], message: 'Ödeme yöntemi gerekli.' });
     }
     if (o.tur === 'kismi' && o.tutar_kurus === undefined) {
-      ctx.addIssue({ code: 'custom', path: ['tutar_kurus'], message: 'Kısmi ödemede tutar gerekli.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['tutar_kurus'],
+        message: 'Kısmi ödemede tutar gerekli.',
+      });
     }
     if (o.tur === 'tamami' && o.tutar_kurus !== undefined) {
-      ctx.addIssue({ code: 'custom', path: ['tutar_kurus'], message: 'Tamamı ödemede tutar paket fiyatıdır.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['tutar_kurus'],
+        message: 'Tamamı ödemede tutar paket fiyatıdır.',
+      });
     }
   });
 
@@ -233,7 +241,15 @@ export const TahsilatYanitSema = TahsilatSema.extend({
 
 export const KrediHareketiSema = z.object({
   id: z.uuid(),
-  tur: z.enum(['satin_alma', 'dusum', 'iptal_dusum', 'iade', 'duzeltme', 'son_kullanma', 'ters_kayit']),
+  tur: z.enum([
+    'satin_alma',
+    'dusum',
+    'iptal_dusum',
+    'iade',
+    'duzeltme',
+    'son_kullanma',
+    'ters_kayit',
+  ]),
   miktar: z.number().int(),
   paket_satisi_id: z.uuid().nullable(),
   ders_id: z.uuid().nullable(),
