@@ -435,6 +435,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hesap/davetler/kabul": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Daveti kabul et (giris yapmis kullanici): uyelik olusur, davette grup varsa gruba eklenir. Gecersiz/kullanilmis/suresi dolmus: 410 davet_gecersiz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        belirtec: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            davet_id: string;
+                            /** Format: uuid */
+                            grup_id: string | null;
+                            /** Format: uuid */
+                            grup_uyesi_id: string | null;
+                            /** Format: uuid */
+                            kurum_id: string;
+                            /** @enum {string} */
+                            rol: "sahip" | "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                            /** Format: uuid */
+                            uyelik_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hesap/kurumlar": {
         parameters: {
             query?: never;
@@ -631,6 +686,1035 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/atamalar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Atamalari listele (grup ya da ogretmen bazli); yalnizca kapsamdaki gruplarin atamalari gorunur */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "etkin" | "bitmis" | "hepsi";
+                    grup_id?: string;
+                    imlec?: string;
+                    limit?: number;
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            atamalar: {
+                                ana_ogretmen: boolean;
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                ogretmen_ad: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Ogretmen uyeligi (`uyelikler.id`).
+                                 */
+                                ogretmen_id: string;
+                            }[];
+                            /** @enum {string} */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/atamalar/{atama_id}/bitir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Atamayi bitir (bitis_tarihi bugun olur, ogretmenin grup kapsami hemen duser); tekrar cagri etkisizdir */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    atama_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ana_ogretmen: boolean;
+                            /** Format: date */
+                            baslangic_tarihi: string;
+                            /** Format: date */
+                            bitis_tarihi: string | null;
+                            brans_kodu: string;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            ogretmen_ad: string | null;
+                            /**
+                             * Format: uuid
+                             * @description Ogretmen uyeligi (`uyelikler.id`).
+                             */
+                            ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/davetler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Davetleri listele (durum suzgeci, sayfali). Suresi gecen bekleyen davet okuma aninda suresi_doldu gorunur. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "bekliyor" | "kullanildi" | "iptal" | "suresi_doldu";
+                    grup_id?: string;
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            davetler: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                davet_eden_id: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "kullanildi" | "iptal" | "suresi_doldu";
+                                /** Format: date-time */
+                                expires_at: string;
+                                /** @description SMS / e-posta gonderim sayaci (en cok 3). */
+                                gonderim_sayisi: number;
+                                /** Format: uuid */
+                                grup_id: string | null;
+                                hedef_ad: string | null;
+                                hedef_eposta: string | null;
+                                hedef_telefon_e164: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kademe_id: string | null;
+                                /** @enum {string} */
+                                kanal: "baglanti" | "sms" | "eposta";
+                                kullanim_sayisi: number;
+                                max_kullanim: number;
+                                /** @enum {string} */
+                                rol: "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                                /** Format: date-time */
+                                son_gonderim_at: string | null;
+                                /** Format: uuid */
+                                sube_id: string | null;
+                            }[];
+                            /** @enum {string} */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Davet olustur (sms | eposta | baglanti). Duz belirtec yalniz bu yanitta doner. Ogretmen yalniz atandigi gruba ogrenci davet eder. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: email
+                         * @description `eposta` kanalında zorunlu.
+                         */
+                        eposta?: string;
+                        /** @default 7 */
+                        gecerlilik_gun?: number;
+                        /**
+                         * Format: uuid
+                         * @description Yalnız `ogrenci` daveti için: kabulde gruba eklenir.
+                         */
+                        grup_id?: string;
+                        hedef_ad?: string;
+                        /**
+                         * Format: uuid
+                         * @description Yalnız `ogrenci` daveti için.
+                         */
+                        kademe_id?: string;
+                        /** @enum {string} */
+                        kanal: "baglanti" | "sms" | "eposta";
+                        /**
+                         * @description Çok kullanımlı olabilmesi için kanal `baglanti` olmalı.
+                         * @default 1
+                         */
+                        max_kullanim?: number;
+                        /** @enum {string} */
+                        rol: "yonetici" | "ogretmen" | "ogrenci";
+                        /** Format: uuid */
+                        sube_id?: string;
+                        /** @description `sms` kanalında zorunlu. */
+                        telefon?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Düz davet belirteci. YALNIZ bu yanıtta (ve yeniden göndermede) döner; saklanmaz. */
+                            belirtec: string;
+                            davet: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                davet_eden_id: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "kullanildi" | "iptal" | "suresi_doldu";
+                                /** Format: date-time */
+                                expires_at: string;
+                                /** @description SMS / e-posta gonderim sayaci (en cok 3). */
+                                gonderim_sayisi: number;
+                                /** Format: uuid */
+                                grup_id: string | null;
+                                hedef_ad: string | null;
+                                hedef_eposta: string | null;
+                                hedef_telefon_e164: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kademe_id: string | null;
+                                /** @enum {string} */
+                                kanal: "baglanti" | "sms" | "eposta";
+                                kullanim_sayisi: number;
+                                max_kullanim: number;
+                                /** @enum {string} */
+                                rol: "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                                /** Format: date-time */
+                                son_gonderim_at: string | null;
+                                /** Format: uuid */
+                                sube_id: string | null;
+                            };
+                            /** @enum {string} */
+                            gonderim: "gonderildi" | "basarisiz" | "yok";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/davetler/{davet_id}/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bekleyen daveti iptal et; tekrar cagri etkisizdir, kullanilmis davet iptal edilemez (409) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    davet_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            davet_eden_id: string;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "kullanildi" | "iptal" | "suresi_doldu";
+                            /** Format: date-time */
+                            expires_at: string;
+                            /** @description SMS / e-posta gonderim sayaci (en cok 3). */
+                            gonderim_sayisi: number;
+                            /** Format: uuid */
+                            grup_id: string | null;
+                            hedef_ad: string | null;
+                            hedef_eposta: string | null;
+                            hedef_telefon_e164: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            kademe_id: string | null;
+                            /** @enum {string} */
+                            kanal: "baglanti" | "sms" | "eposta";
+                            kullanim_sayisi: number;
+                            max_kullanim: number;
+                            /** @enum {string} */
+                            rol: "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                            /** Format: date-time */
+                            son_gonderim_at: string | null;
+                            /** Format: uuid */
+                            sube_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/davetler/{davet_id}/yeniden-gonder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** SMS / e-posta davetini yeniden gonder (en cok 3 gonderim). Duz belirtec saklanmadigi icin yeni belirtec uretilir, eski baglanti gecersizlesir ve sure 7 gun uzar. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    davet_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Düz davet belirteci. YALNIZ bu yanıtta (ve yeniden göndermede) döner; saklanmaz. */
+                            belirtec: string;
+                            davet: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                davet_eden_id: string;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "kullanildi" | "iptal" | "suresi_doldu";
+                                /** Format: date-time */
+                                expires_at: string;
+                                /** @description SMS / e-posta gonderim sayaci (en cok 3). */
+                                gonderim_sayisi: number;
+                                /** Format: uuid */
+                                grup_id: string | null;
+                                hedef_ad: string | null;
+                                hedef_eposta: string | null;
+                                hedef_telefon_e164: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kademe_id: string | null;
+                                /** @enum {string} */
+                                kanal: "baglanti" | "sms" | "eposta";
+                                kullanim_sayisi: number;
+                                max_kullanim: number;
+                                /** @enum {string} */
+                                rol: "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                                /** Format: date-time */
+                                son_gonderim_at: string | null;
+                                /** Format: uuid */
+                                sube_id: string | null;
+                            };
+                            /** @enum {string} */
+                            gonderim: "gonderildi" | "basarisiz" | "yok";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gruplari listele; kapsam rolun izin kapsamina gore daralir (ogretmen: atandigi gruplar) */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "aktif" | "arsiv" | "hepsi";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    kademe_id?: string;
+                    limit?: number;
+                    tur?: "birebir" | "grup" | "sinif" | "etut";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gruplar: {
+                                ad: string;
+                                /** Format: date-time */
+                                arsivlendi_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "aktif" | "arsiv";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kademe_id: string | null;
+                                kapasite: number | null;
+                                renk: string | null;
+                                /** Format: uuid */
+                                sube_id: string | null;
+                                surum: number;
+                                /** @enum {string} */
+                                tur: "birebir" | "grup" | "sinif" | "etut";
+                                /** @description Etkin (bitis_tarihi bos) ogrenci sayisi. */
+                                uye_sayisi: number;
+                            }[];
+                            /** @enum {string} */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Grup olustur (birebir, grup, sinif, etut) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        /** Format: uuid */
+                        kademe_id?: string;
+                        kapasite?: number;
+                        renk?: string;
+                        /** Format: uuid */
+                        sube_id?: string;
+                        /** @enum {string} */
+                        tur: "birebir" | "grup" | "sinif" | "etut";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "aktif" | "arsiv";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            kademe_id: string | null;
+                            kapasite: number | null;
+                            renk: string | null;
+                            /** Format: uuid */
+                            sube_id: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "birebir" | "grup" | "sinif" | "etut";
+                            /** @description Etkin (bitis_tarihi bos) ogrenci sayisi. */
+                            uye_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tekil grup (kapsam disi: 404) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "aktif" | "arsiv";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            kademe_id: string | null;
+                            kapasite: number | null;
+                            renk: string | null;
+                            /** Format: uuid */
+                            sube_id: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "birebir" | "grup" | "sinif" | "etut";
+                            /** @description Etkin (bitis_tarihi bos) ogrenci sayisi. */
+                            uye_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Grup bilgilerini guncelle (tur degistirilemez) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad?: string;
+                        /** Format: uuid */
+                        kademe_id?: string | null;
+                        kapasite?: number | null;
+                        renk?: string | null;
+                        /** Format: uuid */
+                        sube_id?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "aktif" | "arsiv";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            kademe_id: string | null;
+                            kapasite: number | null;
+                            renk: string | null;
+                            /** Format: uuid */
+                            sube_id: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "birebir" | "grup" | "sinif" | "etut";
+                            /** @description Etkin (bitis_tarihi bos) ogrenci sayisi. */
+                            uye_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/arsivle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grubu arsivle (uyelik ve atama gecmisi korunur); tekrar cagri etkisizdir */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "aktif" | "arsiv";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            kademe_id: string | null;
+                            kapasite: number | null;
+                            renk: string | null;
+                            /** Format: uuid */
+                            sube_id: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "birebir" | "grup" | "sinif" | "etut";
+                            /** @description Etkin (bitis_tarihi bos) ogrenci sayisi. */
+                            uye_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/atamalar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grubun etkin atamalari (ogretmen x brans) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            atamalar: {
+                                ana_ogretmen: boolean;
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                ogretmen_ad: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Ogretmen uyeligi (`uyelikler.id`).
+                                 */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ogretmeni gruba brans ile ata; ana ogretmen (grup x brans) tekildir */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default false */
+                        ana_ogretmen?: boolean;
+                        brans_kodu: string;
+                        /** Format: uuid */
+                        ogretmen_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ana_ogretmen: boolean;
+                            /** Format: date */
+                            baslangic_tarihi: string;
+                            /** Format: date */
+                            bitis_tarihi: string | null;
+                            brans_kodu: string;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            ogretmen_ad: string | null;
+                            /**
+                             * Format: uuid
+                             * @description Ogretmen uyeligi (`uyelikler.id`).
+                             */
+                            ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/uyeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grubun etkin ogrencileri (ogrenci kapsaminda yalniz kendisi gorunur) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            uyeler: {
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /**
+                                 * Format: uuid
+                                 * @description `grup_uyeleri.id`
+                                 */
+                                id: string;
+                                /** @enum {string} */
+                                katilim_yolu: "yonetici" | "davet" | "sinif_kodu";
+                                /**
+                                 * Format: uuid
+                                 * @description Ogrenci uyeligi (`uyelikler.id`).
+                                 */
+                                ogrenci_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Gruba ogrenci ekle (coklu); zaten uye olanlar atlanir, kapasite asilirsa 409 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Ogrenci uyelik kimlikleri; tek istekte coklu ekleme. */
+                        ogrenci_idleri: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            eklenenler: {
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /**
+                                 * Format: uuid
+                                 * @description `grup_uyeleri.id`
+                                 */
+                                id: string;
+                                /** @enum {string} */
+                                katilim_yolu: "yonetici" | "davet" | "sinif_kodu";
+                                /**
+                                 * Format: uuid
+                                 * @description Ogrenci uyeligi (`uyelikler.id`).
+                                 */
+                                ogrenci_id: string;
+                            }[];
+                            /** @description Zaten etkin uye olan ogrenci uyelikleri (atlanir). */
+                            zaten_uye: string[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/uyeler/{ogrenci_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Ogrenciyi gruptan cikar (bitis_tarihi dolar, gecmis korunur) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date */
+                            baslangic_tarihi: string;
+                            /** Format: date */
+                            bitis_tarihi: string | null;
+                            gorunen_ad: string | null;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /**
+                             * Format: uuid
+                             * @description `grup_uyeleri.id`
+                             */
+                            id: string;
+                            /** @enum {string} */
+                            katilim_yolu: "yonetici" | "davet" | "sinif_kodu";
+                            /**
+                             * Format: uuid
+                             * @description Ogrenci uyeligi (`uyelikler.id`).
+                             */
+                            ogrenci_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/hesap/kurumlar/{kurum_id}/modul-ayarlari": {
