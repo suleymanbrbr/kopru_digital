@@ -20,11 +20,26 @@ export interface Uyelik {
   rol: Rol;
 }
 
+/** Kullanicinin onayina sunulan hukuki metin (api `rizalar/guncel`). */
+export interface RizaMetni {
+  id: string;
+  /** `kvkk_aydinlatma`, `kullanim_kosullari` ... Bilinmeyen turler de gosterilir. */
+  tur: string;
+  baslik: string;
+  govdeMarkdown: string;
+  surum: string;
+}
+
 export interface KvkkDurumu {
   /** Guncel aydinlatma metni surumu. */
   guncelSurum: string;
   /** Kullanicinin kabul ettigi surum; yoksa null. */
   kabulEdilenSurum: string | null;
+  /**
+   * Henuz kabul edilmemis metinler (sirali). Bos ise ekran metinleri `kvkkMetinleriYukle` ile
+   * getirir; metin yuklenmeden onay verilemez.
+   */
+  metinler: RizaMetni[];
 }
 
 export interface OturumBilgisi {

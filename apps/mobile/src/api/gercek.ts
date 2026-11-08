@@ -7,6 +7,7 @@ import {
   ApiHata,
   type MobilRol,
   type OturumBilgisi,
+  type RizaMetni,
   type Rol,
   type Uyelik,
   type UyelikBaglami,
@@ -28,6 +29,24 @@ export interface GercekAdaptorSecenekleri {
 /** Erisim belirteci bitmeden bu kadar once (ms) yenilenir; saat sapmasina karsi pay. */
 const YENILEME_PAYI_MS = 30_000;
 const VARSAYILAN_ZAMAN_ASIMI_MS = 15_000;
+
+interface ApiRizaMetni {
+  id: string;
+  tur: string;
+  baslik: string;
+  govde_markdown: string;
+  surum: string;
+}
+
+function rizaMetniCevir(m: ApiRizaMetni): RizaMetni {
+  return {
+    id: m.id,
+    tur: m.tur,
+    baslik: m.baslik,
+    govdeMarkdown: m.govde_markdown,
+    surum: m.surum,
+  };
+}
 
 interface ApiUyelik {
   uyelik_id: string;
@@ -202,6 +221,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         const r = veriAl(riza);
         uyelikOnbellek = b.uyelikler.filter((u) => u.durum === 'aktif');
         const metin = r.metinler.find((m) => m.tur === 'kvkk_aydinlatma') ?? r.metinler[0];
+        const bekleyen = r.metinler.filter((m) => !m.kabul_edildi);
         const guncelSurum = metin?.surum ?? '';
         return {
           kullanici: {
@@ -210,8 +230,17 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
             telefon: b.kullanici.telefon_e164 ?? '',
           },
           uyelikler: uyelikOnbellek.map(uyelikCevir),
-          kvkk: { guncelSurum, kabulEdilenSurum: r.onay_gerekli ? null : guncelSurum },
+          kvkk: {
+            guncelSurum,
+            kabulEdilenSurum: r.onay_gerekli ? null : guncelSurum,
+            metinler: bekleyen.map(rizaMetniCevir),
+          },
         };
+      },
+
+      async kvkkMetinleri() {
+        const r = veriAl(await yetkili.GET('/v1/hesap/rizalar/guncel'));
+        return r.metinler.filter((m) => !m.kabul_edildi).map(rizaMetniCevir);
       },
 
       async kvkkKabulEt() {
