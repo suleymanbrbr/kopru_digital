@@ -29,6 +29,7 @@
     "fastify-plugin": "catalog:",
     "fastify-type-provider-zod": "catalog:",
     "jose": "catalog:",
+    "nodemailer": "catalog:",
     "postgres": "catalog:",
     "uuidv7": "catalog:",
     "zod": "catalog:"
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@kopru/config": "workspace:*",
     "@types/node": "catalog:",
+    "@types/nodemailer": "catalog:",
     "eslint": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

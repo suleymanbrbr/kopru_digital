@@ -3,10 +3,12 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins/bearer';
 import { phoneNumber } from 'better-auth/plugins/phone-number';
+import type { FastifyBaseLogger } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 
 import type { Env } from '../../config.js';
 import { dogrulamalar, hesaplar, kullanicilar, oturumlar } from '../../db/schema.js';
+import type { EpostaGonderici } from './eposta.js';
 import type { SmsGonderici } from './sms.js';
 import { telefonuNormallestir } from './telefon.js';
 
@@ -22,6 +24,8 @@ export interface BetterAuthGirdisi {
   env: Env;
   db: Database;
   sms: SmsGonderici;
+  eposta: EpostaGonderici;
+  log: Pick<FastifyBaseLogger, 'error'>;
 }
 
 /**
@@ -29,7 +33,7 @@ export interface BetterAuthGirdisi {
  * Tablolar `hesap` semasindaki Turkce adlara esler. Apple/Google yalnizca ortam degiskenleri
  * tanimliysa acilir. Hiz siniri uygulama katmanindadir (`otp-hiz-siniri.ts`), burada kapali.
  */
-export function createBetterAuth({ env, db, sms }: BetterAuthGirdisi) {
+export function createBetterAuth({ env, db, sms, eposta, log }: BetterAuthGirdisi) {
   const sosyal = {
     ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
@@ -109,6 +113,29 @@ export function createBetterAuth({ env, db, sms }: BetterAuthGirdisi) {
       maxPasswordLength: 128,
       autoSignIn: true,
       requireEmailVerification: false,
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: false,
+      // Dogrulama ayri `GET /auth/eposta/dogrula?belirtec=` ucundadir; BA'nin `url`i kullanilmaz.
+      // Gonderim hatasi kaydi/istegi bozmaz; kisisel veri ve belirtec loga yazilmaz.
+      sendVerificationEmail: async ({ user, token }) => {
+        if (user.email.endsWith(`@${GECICI_EPOSTA_ALANI}`)) return;
+        const baglanti = `${env.PUBLIC_URL}/auth/eposta/dogrula?belirtec=${encodeURIComponent(token)}`;
+        try {
+          await eposta.gonder({
+            alici: user.email,
+            konu: 'Köprü e-posta adresinizi doğrulayın',
+            metin: `Köprü hesabınızın e-posta adresini doğrulamak için bağlantıya tıklayın: ${baglanti}\n\nBağlantı 1 saat geçerlidir. Bu işlemi siz yapmadıysanız bu e-postayı yok sayabilirsiniz.`,
+            baglamId: user.id,
+          });
+        } catch (err) {
+          log.error(
+            { kullanici_id: user.id, hata: err instanceof Error ? err.name : 'bilinmiyor' },
+            'doğrulama e-postası gönderilemedi',
+          );
+        }
+      },
     },
     socialProviders: sosyal,
     rateLimit: { enabled: false },

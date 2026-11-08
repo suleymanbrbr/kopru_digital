@@ -30,7 +30,7 @@ import {
   subeler,
   uyelikler,
 } from '../../db/schema.js';
-import { LogEpostaGonderici, type EpostaGonderici } from './eposta.js';
+import { type EpostaGonderici } from './eposta.js';
 import { birebirGrupOlustur, grubaOgrenciEkle } from './grup-deposu.js';
 import { atananGruplar } from './kapsam.js';
 import type { YetkiBaglami } from './kimlik.js';
@@ -118,7 +118,7 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
   function davetYollariPlugin(app) {
     const { kimlik } = app;
     const { db } = kimlik;
-    const epostaGonderici = eposta ?? new LogEpostaGonderici(app.log);
+    const epostaGonderici = eposta ?? kimlik.eposta;
 
     /** Gonderim kurum disi bir cagridir; hata isi bozmaz, yalnizca davet_id loglanir (PII yok). */
     async function gonder(

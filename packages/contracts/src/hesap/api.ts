@@ -39,6 +39,13 @@ export const EpostaGirisGirdiSema = z.object({
   parola: z.string().min(1).max(128),
 });
 
+export const EpostaDogrulamaGonderGirdiSema = z.object({ eposta: z.email() });
+export const EpostaDogrulamaGonderYanitSema = z.object({ gonderildi: z.literal(true) });
+export const EpostaDogrulaSorguSema = z.object({
+  belirtec: z.string().min(10).max(512).describe('E-postadaki doğrulama bağlantısındaki belirteç.'),
+});
+export const EpostaDogrulaYanitSema = z.object({ dogrulandi: z.literal(true) });
+
 export const KullaniciOzetSema = z.object({
   id: z.uuid(),
   gorunen_ad: z.string().nullable(),
@@ -108,8 +115,14 @@ export const RizaKaydetYanitSema = z.object({
   onay_gerekli: z.boolean(),
 });
 
+export const BenKullaniciSema = KullaniciOzetSema.extend({
+  eposta_dogrulandi: z
+    .boolean()
+    .describe('E-posta adresi doğrulandı mı (eposta yoksa false). Davet eşleştirmesi için ipucu.'),
+});
+
 export const BenYanitSema = z.object({
-  kullanici: KullaniciOzetSema,
+  kullanici: BenKullaniciSema,
   onay_gerekli: z.boolean(),
   uyelikler: z.array(UyelikOzetSema),
 });

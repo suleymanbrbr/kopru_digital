@@ -1,4 +1,8 @@
 import {
+  EpostaDogrulaSorguSema,
+  EpostaDogrulaYanitSema,
+  EpostaDogrulamaGonderGirdiSema,
+  EpostaDogrulamaGonderYanitSema,
   EpostaGirisGirdiSema,
   EpostaKayitGirdiSema,
   OtpDogrulaGirdiSema,
@@ -222,6 +226,46 @@ export const kimlikYollari: ServicePlugin = (app) => {
   );
 
   app.post(
+    '/auth/eposta/dogrulama-gonder',
+    {
+      config: { ...genel, rateLimit: { max: 5, timeWindow: '1 minute' } },
+      schema: {
+        tags: ['kimlik'],
+        summary: 'E-posta dogrulama baglantisini yeniden gonder',
+        description:
+          'Kullanici/dogrulama durumu ifsa edilmez: kayitli ve dogrulanmamis adres icin gonderilir, yanit her zaman aynidir.',
+        body: EpostaDogrulamaGonderGirdiSema,
+        response: { 200: EpostaDogrulamaGonderYanitSema },
+      },
+    },
+    async (request) => {
+      await auth.api.sendVerificationEmail({ body: { email: request.body.eposta } });
+      return { gonderildi: true as const };
+    },
+  );
+
+  app.get(
+    '/auth/eposta/dogrula',
+    {
+      config: { ...genel, rateLimit: { max: 20, timeWindow: '1 minute' } },
+      schema: {
+        tags: ['kimlik'],
+        summary: 'E-postadaki baglantidaki belirtecle e-posta adresini dogrula',
+        querystring: EpostaDogrulaSorguSema,
+        response: { 200: EpostaDogrulaYanitSema },
+      },
+    },
+    async (request, reply) => {
+      const yanit = await auth.api.verifyEmail({
+        query: { token: request.query.belirtec },
+        asResponse: true,
+      });
+      await baYaniti(yanit, reply);
+      return { dogrulandi: true as const };
+    },
+  );
+
+  app.post(
     '/auth/cikis',
     {
       config: genel,
@@ -232,8 +276,18 @@ export const kimlikYollari: ServicePlugin = (app) => {
       },
     },
     async (request, reply) => {
+      // Oturum satiri signOut ile silinir; once `sid`i al, sonra erisim belirteclerini iptal listesine yaz.
+      const oturum = await auth.api.getSession({ headers: webBasliklari(request) });
       const yanit = await auth.api.signOut({ headers: webBasliklari(request), asResponse: true });
       await baYaniti(yanit, reply);
+      if (oturum) {
+        try {
+          await app.iptal.iptalEt(oturum.session.id);
+        } catch (err) {
+          // Cikis basarili sayilir (oturum silindi, yenileme yok); kalan pencere <= 15 dk (ADR 0008).
+          request.log.error({ err, sid: oturum.session.id }, 'erişim belirteci iptali yazılamadı');
+        }
+      }
       return { cikis: true as const };
     },
   );

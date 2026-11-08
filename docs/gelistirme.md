@@ -206,3 +206,10 @@ npx expo prebuild --no-install --clean                    # native yapılandırm
 ```
 
 Ekran görüntüleri: `apps/mobile/docs/ekranlar/`.
+
+## api: güvenlik (oturum iptali, `withSistem`, e-posta doğrulama)
+
+- **Oturum iptali.** `POST /auth/cikis` aynı `sid`'li erişim belirteçlerini NATS KV `iptal` kovasına yazar; `@kopru/service-kit` her serviste istek başına kontrol eder ([ADR 0008](adr/0008-erisim-belirteci-iptali-sid-listesi.md)). `NATS_URL` yoksa süreç içi depo kullanılır (yalnızca tek süreç). NATS erişilemezse okuma fail-open'dır.
+- **`withSistem()`** yalnızca `services/<servis>/src/sistem/**` altında çağrılır (ESLint `kopru/sistem-siniri`, test dosyaları muaf). Modül kodu, `src/sistem/` altındaki adlandırılmış bir fonksiyonu (örn. `kurumOlusturSistem`) iş gövdesiyle çağırır; eylem adı ve neden orada sabittir.
+- **E-posta.** `API_EPOSTA_SAGLAYICI=smtp` ile doğrulama ve davet e-postaları SMTP'ye (yerelde Mailpit `localhost:1025`, arayüz `http://localhost:8025`) gider; varsayılan `log` hiçbir şey göndermez. Doğrulama bağlantısı `GET /auth/eposta/dogrula?belirtec=...`; yeniden gönderme `POST /auth/eposta/dogrulama-gonder`. Doğrulama durumu `GET /v1/hesap/ben` yanıtında `kullanici.eposta_dogrulandi`. Giriş doğrulamaya bağlı değildir.
+- Uçtan uca deneme: `services/api/scripts/guvenlik-akisi.sh` (başındaki açıklamaya bak; ayrı `api_d` veritabanı, port 4200).

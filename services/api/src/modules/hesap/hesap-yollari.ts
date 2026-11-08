@@ -40,7 +40,7 @@ import {
   subeler,
   uyelikler,
 } from '../../db/schema.js';
-import { withSistem } from '../../sistem/with-sistem.js';
+import { kurumOlusturSistem } from '../../sistem/kurum-olustur.js';
 import { kurucuRolleri, kurumYaniti, VARSAYILAN_KADEMELER } from './kurum-deposu.js';
 import { modulAcikMi } from './modul-ayarlari.js';
 import { olayYaz, type OlayBaglami } from './olaylar.js';
@@ -84,6 +84,9 @@ export const hesapYollari: ServicePlugin = (app) => {
           gorunen_ad: k.gorunen_ad,
           telefon_e164: k.telefon_e164,
           eposta: k.eposta,
+          // NULL sutunlar surucuden donusturulmeden gelir (null); yalnizca true dogrulanmistir
+          eposta_dogrulandi:
+            k.eposta !== null && (k.eposta_dogrulandi_at as boolean | null) === true,
           dil: k.dil,
         },
         onay_gerekli: onayGerekliMi(durum),
@@ -173,15 +176,11 @@ export const hesapYollari: ServicePlugin = (app) => {
       const baglam: OlayBaglami = { kurumId, actor, correlationId: request.correlationId };
       const roller = kurucuRolleri(girdi.tur);
 
-      const { kurum } = await withSistem(
+      const { kurum } = await kurumOlusturSistem(
         kimlik.sistemDb,
         {
-          eylem: 'sistem.kurum_olustur',
-          neden: 'Kurum onboarding: kiracı henüz yok, kurum ve ilk üyelikler oluşturuluyor',
-          aktorKullaniciId: kullaniciId,
+          kullaniciId,
           kurumId,
-          hedefTuru: 'kurum',
-          hedefId: kurumId,
           istekId: request.correlationId.length === 36 ? request.correlationId : undefined,
         },
         async (tx) => {
