@@ -8,6 +8,10 @@ import {
   DavetOlusturGirdiSema,
   DavetOlusturYanitSema,
   DavetSema,
+  DavetTopluGirdiSema,
+  type DavetTopluSatirSema,
+  type DavetTopluSatirSonucuSema,
+  DavetTopluYanitSema,
   errorCodes,
   hesapDavetKabulEdildiV1,
   hesapHataKodlari,
@@ -44,6 +48,7 @@ const GUN_MS = 86_400_000;
 const AZAMI_GONDERIM = 3;
 
 type DavetSatiri = typeof davetler.$inferSelect;
+type DavetTopluSatirSonucu = z.infer<typeof DavetTopluSatirSonucuSema>;
 
 const hashle = (belirtec: string) => createHash('sha256').update(belirtec).digest();
 const yeniBelirtec = () => randomBytes(32).toString('base64url');
@@ -125,7 +130,7 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
       d: DavetSatiri,
       belirtec: string,
     ): Promise<'gonderildi' | 'basarisiz' | 'yok'> {
-      const baglanti = `${kimlik.env.PUBLIC_URL}/davet/${belirtec}`;
+      const baglanti = `${kimlik.env.WEB_URL.replace(/\/+$/, '')}/davet/${belirtec}`;
       const metin = `Köprü daveti: ${baglanti}`;
       try {
         if (d.kanal === 'sms' && d.hedef_telefon_e164) {
@@ -153,6 +158,105 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
 
     // --- Olusturma -----------------------------------------------------------------------
 
+    /** Tekil ve toplu davetin ortak cekirdegi: yetki/kapsam denetimi, kayit, gonderim. */
+    async function davetOlustur(
+      y: YetkiBaglami,
+      g: z.infer<typeof DavetOlusturGirdiSema>,
+    ): Promise<z.infer<typeof DavetOlusturYanitSema>> {
+      if (g.rol === 'yonetici' && !izinVarMi(y.rol, 'rol.yonet')) {
+        throw new AppError(403, errorCodes.izinYok, 'Yönetici davet etme yetkiniz yok.');
+      }
+      if (y.kapsam === 'grup' && (g.rol !== 'ogrenci' || !g.grup_id)) {
+        throw new AppError(
+          403,
+          errorCodes.izinYok,
+          'Yalnızca atandığınız gruba öğrenci davet edebilirsiniz.',
+        );
+      }
+      let telefon: string | null = null;
+      if (g.kanal === 'sms') {
+        telefon = telefonuNormallestir(g.telefon ?? '');
+        if (!telefon) {
+          throw new AppError(400, errorCodes.gecersizTelefon, 'Telefon numarası geçersiz.');
+        }
+      }
+      let subeId = g.sube_id ?? null;
+      if (y.kapsam === 'sube') {
+        if (subeId && subeId !== y.subeId) {
+          throw new AppError(403, errorCodes.izinYok, 'Bu şubede davet oluşturma yetkiniz yok.');
+        }
+        subeId = y.subeId;
+      }
+      const belirtec = yeniBelirtec();
+      const gonderimli = g.kanal !== 'baglanti';
+
+      const satir = await withTenant(db, kiraci(y), async (tx) => {
+        if (g.grup_id) {
+          const [grup] = await tx
+            .select({ id: gruplar.id, durum: gruplar.durum })
+            .from(gruplar)
+            .where(
+              and(
+                eq(gruplar.id, g.grup_id),
+                y.kapsam === 'grup'
+                  ? inArray(gruplar.id, atananGruplar(tx, y.uyelikId))
+                  : undefined,
+                y.kapsam === 'sube' ? eq(gruplar.sube_id, y.subeId ?? '') : undefined,
+              ),
+            );
+          if (!grup) throw new AppError(404, errorCodes.notFound, 'Grup bulunamadı.');
+          if (grup.durum !== 'aktif') {
+            throw new AppError(
+              409,
+              hesapHataKodlari.grupArsivde,
+              'Arşivlenmiş gruba davet edilemez.',
+            );
+          }
+        }
+        if (g.kademe_id) {
+          const [k] = await tx
+            .select({ id: kademeler.id })
+            .from(kademeler)
+            .where(eq(kademeler.id, g.kademe_id));
+          if (!k) throw new AppError(404, errorCodes.notFound, 'Kademe bulunamadı.');
+        }
+        if (subeId) {
+          const [s] = await tx
+            .select({ id: subeler.id })
+            .from(subeler)
+            .where(eq(subeler.id, subeId));
+          if (!s) throw new AppError(404, errorCodes.notFound, 'Şube bulunamadı.');
+        }
+        const [d] = await tx
+          .insert(davetler)
+          .values({
+            id: uuidv7(),
+            kurum_id: y.kurumId,
+            kanal: g.kanal,
+            rol: g.rol,
+            belirtec_hash: hashle(belirtec),
+            hedef_telefon_e164: telefon,
+            hedef_eposta: g.kanal === 'eposta' ? (g.eposta ?? null) : null,
+            hedef_ad: g.hedef_ad ?? null,
+            grup_id: g.grup_id ?? null,
+            kademe_id: g.kademe_id ?? null,
+            sube_id: subeId,
+            davet_eden_id: y.uyelikId,
+            max_kullanim: g.max_kullanim,
+            expires_at: new Date(Date.now() + g.gecerlilik_gun * GUN_MS),
+            sms_gonderim_sayisi: gonderimli ? 1 : 0,
+            son_sms_at: gonderimli ? new Date() : null,
+            created_by: y.kullaniciId,
+          })
+          .returning();
+        if (!d) throw new Error('davet oluşturulamadı');
+        return d;
+      });
+
+      const gonderim = await gonder(satir, belirtec);
+      return { davet: davetYaniti(satir, yeniKayitDurumu(satir)), belirtec, gonderim };
+    }
+
     app.post(
       '/kurumlar/:kurum_id/davetler',
       {
@@ -167,102 +271,83 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
         },
       },
       async (request, reply) => {
+        const sonuc = await davetOlustur(yetkiAl(request), request.body);
+        return reply.status(201).send(sonuc);
+      },
+    );
+
+    /** Toplu satir: hata satira ozgudur, onceki/sonraki satirlar etkilenmez (her satir kendi islemi). */
+    async function topluSatir(
+      y: YetkiBaglami,
+      sira: number,
+      girdi: z.infer<typeof DavetTopluSatirSema>,
+    ): Promise<DavetTopluSatirSonucu> {
+      const hata = (kod: string, mesaj: string): DavetTopluSatirSonucu => ({
+        sira,
+        durum: 'hata',
+        davet: null,
+        belirtec: null,
+        gonderim: null,
+        hata_kodu: kod,
+        hata_mesaji: mesaj,
+      });
+      if (
+        girdi.kanal === 'sms' &&
+        girdi.telefon !== undefined &&
+        !telefonuNormallestir(girdi.telefon)
+      ) {
+        return hata(errorCodes.gecersizTelefon, 'Telefon numarası geçersiz.');
+      }
+      const ayrisim = DavetOlusturGirdiSema.safeParse(girdi);
+      if (!ayrisim.success) {
+        return hata(errorCodes.validation, ayrisim.error.issues[0]?.message ?? 'Satır geçersiz.');
+      }
+      try {
+        const r = await davetOlustur(y, ayrisim.data);
+        return {
+          sira,
+          durum: 'basarili',
+          davet: r.davet,
+          belirtec: r.belirtec,
+          gonderim: r.gonderim,
+          hata_kodu: null,
+          hata_mesaji: null,
+        };
+      } catch (err) {
+        if (err instanceof AppError) return hata(err.code, err.message);
+        app.log.error(
+          { sira, hata: err instanceof Error ? err.name : 'bilinmiyor' },
+          'toplu davet satırı başarısız',
+        );
+        return hata(errorCodes.internal, 'Davet oluşturulamadı.');
+      }
+    }
+
+    app.post(
+      '/kurumlar/:kurum_id/davetler/toplu',
+      {
+        preHandler: requirePermission('davet.yaz', { scope: 'grup' }),
+        schema: {
+          tags: ['hesap'],
+          summary:
+            'Toplu davet (en cok 100 satir). Her satir tekil davetle ayni yetki/kapsam kurallarina tabidir; sonuc satir bazlidir, hatali satir digerlerini geri almaz.',
+          params: kurumParam,
+          body: DavetTopluGirdiSema,
+          response: { 200: DavetTopluYanitSema },
+        },
+      },
+      async (request) => {
         const y = yetkiAl(request);
-        const g = request.body;
-        if (g.rol === 'yonetici' && !izinVarMi(y.rol, 'rol.yonet')) {
-          throw new AppError(403, errorCodes.izinYok, 'Yönetici davet etme yetkiniz yok.');
+        const sonuclar: DavetTopluSatirSonucu[] = [];
+        for (const [sira, satir] of request.body.davetler.entries()) {
+          sonuclar.push(await topluSatir(y, sira, satir));
         }
-        if (y.kapsam === 'grup' && (g.rol !== 'ogrenci' || !g.grup_id)) {
-          throw new AppError(
-            403,
-            errorCodes.izinYok,
-            'Yalnızca atandığınız gruba öğrenci davet edebilirsiniz.',
-          );
-        }
-        let telefon: string | null = null;
-        if (g.kanal === 'sms') {
-          telefon = telefonuNormallestir(g.telefon ?? '');
-          if (!telefon) {
-            throw new AppError(400, errorCodes.gecersizTelefon, 'Telefon numarası geçersiz.');
-          }
-        }
-        let subeId = g.sube_id ?? null;
-        if (y.kapsam === 'sube') {
-          if (subeId && subeId !== y.subeId) {
-            throw new AppError(403, errorCodes.izinYok, 'Bu şubede davet oluşturma yetkiniz yok.');
-          }
-          subeId = y.subeId;
-        }
-        const belirtec = yeniBelirtec();
-        const gonderimli = g.kanal !== 'baglanti';
-
-        const satir = await withTenant(db, kiraci(y), async (tx) => {
-          if (g.grup_id) {
-            const [grup] = await tx
-              .select({ id: gruplar.id, durum: gruplar.durum })
-              .from(gruplar)
-              .where(
-                and(
-                  eq(gruplar.id, g.grup_id),
-                  y.kapsam === 'grup'
-                    ? inArray(gruplar.id, atananGruplar(tx, y.uyelikId))
-                    : undefined,
-                  y.kapsam === 'sube' ? eq(gruplar.sube_id, y.subeId ?? '') : undefined,
-                ),
-              );
-            if (!grup) throw new AppError(404, errorCodes.notFound, 'Grup bulunamadı.');
-            if (grup.durum !== 'aktif') {
-              throw new AppError(
-                409,
-                hesapHataKodlari.grupArsivde,
-                'Arşivlenmiş gruba davet edilemez.',
-              );
-            }
-          }
-          if (g.kademe_id) {
-            const [k] = await tx
-              .select({ id: kademeler.id })
-              .from(kademeler)
-              .where(eq(kademeler.id, g.kademe_id));
-            if (!k) throw new AppError(404, errorCodes.notFound, 'Kademe bulunamadı.');
-          }
-          if (subeId) {
-            const [s] = await tx
-              .select({ id: subeler.id })
-              .from(subeler)
-              .where(eq(subeler.id, subeId));
-            if (!s) throw new AppError(404, errorCodes.notFound, 'Şube bulunamadı.');
-          }
-          const [d] = await tx
-            .insert(davetler)
-            .values({
-              id: uuidv7(),
-              kurum_id: y.kurumId,
-              kanal: g.kanal,
-              rol: g.rol,
-              belirtec_hash: hashle(belirtec),
-              hedef_telefon_e164: telefon,
-              hedef_eposta: g.kanal === 'eposta' ? (g.eposta ?? null) : null,
-              hedef_ad: g.hedef_ad ?? null,
-              grup_id: g.grup_id ?? null,
-              kademe_id: g.kademe_id ?? null,
-              sube_id: subeId,
-              davet_eden_id: y.uyelikId,
-              max_kullanim: g.max_kullanim,
-              expires_at: new Date(Date.now() + g.gecerlilik_gun * GUN_MS),
-              sms_gonderim_sayisi: gonderimli ? 1 : 0,
-              son_sms_at: gonderimli ? new Date() : null,
-              created_by: y.kullaniciId,
-            })
-            .returning();
-          if (!d) throw new Error('davet oluşturulamadı');
-          return d;
-        });
-
-        const gonderim = await gonder(satir, belirtec);
-        return reply
-          .status(201)
-          .send({ davet: davetYaniti(satir, yeniKayitDurumu(satir)), belirtec, gonderim });
+        const basarili = sonuclar.filter((s) => s.durum === 'basarili').length;
+        return {
+          sonuclar,
+          basarili_sayisi: basarili,
+          hata_sayisi: sonuclar.length - basarili,
+        };
       },
     );
 
