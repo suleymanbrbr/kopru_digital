@@ -45,3 +45,27 @@ export const dersDersDegistiV1 = defineEvent(
     gec_iptal: z.boolean(),
   }),
 );
+
+export const yoklamaDurumSema = z.enum(['geldi', 'gelmedi', 'izinli', 'gec']);
+export type YoklamaDurumTipi = z.infer<typeof yoklamaDurumSema>;
+
+/**
+ * Yoklama eklenince ya da durumu gercekten degisince (kredi/ucret islemiyle ayni islemde). Yuk yalniz
+ * kimlik ve durum tasir: ders notu, ad, telefon, e-posta ASLA girmez.
+ */
+export const dersYoklamaKaydedildiV1 = defineEvent(
+  'ders.yoklama.kaydedildi',
+  1,
+  z.object({
+    yoklama_id: z.uuid(),
+    ders_id: z.uuid(),
+    grup_id: z.uuid(),
+    ogrenci_id: z.uuid(),
+    brans_kodu: z.string(),
+    durum: yoklamaDurumSema,
+    onceki_durum: yoklamaDurumSema.nullable(),
+    gec_dakika: z.number().int().min(1).max(240).nullable(),
+    isaretlenme_at: z.iso.datetime({ offset: true }),
+    yoklama_surumu: z.number().int().min(1),
+  }),
+);

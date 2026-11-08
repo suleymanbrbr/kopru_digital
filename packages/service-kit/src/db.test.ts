@@ -1,4 +1,4 @@
-import { yoklamaAlindiV1 } from '@kopru/contracts';
+import { dersYoklamaKaydedildiV1 } from '@kopru/contracts';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -34,15 +34,21 @@ describe.skipIf(!url)('db + outbox (gercek PostgreSQL)', () => {
   });
 
   const event = () =>
-    yoklamaAlindiV1.create({
+    dersYoklamaKaydedildiV1.create({
       kurumId,
       actor: { tur: 'sistem', id: 'test' },
       correlationId: 'corr-1',
       data: {
-        yoklamaId: kurumId,
-        dersId: kurumId,
-        tarih: '2026-11-07',
-        kayitlar: [{ ogrenciId: kurumId, durum: 'geldi' }],
+        yoklama_id: kurumId,
+        ders_id: kurumId,
+        grup_id: kurumId,
+        ogrenci_id: kurumId,
+        brans_kodu: 'matematik',
+        durum: 'geldi',
+        onceki_durum: null,
+        gec_dakika: null,
+        isaretlenme_at: '2026-11-07T10:00:00.000Z',
+        yoklama_surumu: 1,
       },
     });
 
@@ -123,7 +129,7 @@ describe.skipIf(!url)('db + outbox (gercek PostgreSQL)', () => {
 
     expect(published.map((p) => p.msgID)).toEqual(pending.map((row) => row.id));
     expect(published[0]?.subject).toBe('evt.yoklama.alindi.v1');
-    expect(yoklamaAlindiV1.parse(published[0]?.body).kurumId).toBe(kurumId);
+    expect(dersYoklamaKaydedildiV1.parse(published[0]?.body).kurumId).toBe(kurumId);
   });
 
   it('yayin hatasinda satir gonderilmemis kalir ve hata kaydedilir', async () => {
