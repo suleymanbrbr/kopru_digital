@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 interface Props {
@@ -42,10 +42,8 @@ export function Ekran({
   return (
     <View className="flex-1 bg-arkaPlan" style={stil}>
       {klavye ? (
-        <KeyboardAvoidingView
-          className="flex-1"
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+        // Android'de kenardan kenara duzende pencere klavyeyle kuculmez; iki platformda da bosluk birakilir.
+        <KeyboardAvoidingView className="flex-1" behavior="padding">
           {icerik}
         </KeyboardAvoidingView>
       ) : (
