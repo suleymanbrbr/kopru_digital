@@ -22,7 +22,7 @@ Tekrar çalıştırılabilir uçtan uca betikler: `services/api/scripts/davet-ak
 
 ## Hemen yapılacaklar (sırayla)
 
-1. **Android doğrulaması.** Emülatörde hiç denenmedi; `10.0.2.2` çevirisi yalnız birim testinde. iOS'ta en büyük yazı boyutu, VoiceOver ve uygulama kapalıyken derin bağlantı da denenmedi.
+1. **Kalan cihaz denemeleri.** Android'de gerçek api ile giriş, kurum seçimi, sekmeler ve derin bağlantı (`Pixel_2_API_33`) doğrulandı; sınıf kodu, onay ve oturumlar ekranları Android'de elle denenmedi. iOS ve Android'de en büyük yazı boyutu, ekran okuyucu ve uygulama kapalıyken derin bağlantı denenmedi. Bu Mac'te `expo run:android` emülatörde `adb shell` bellek hatasıyla düşüyor; `cd apps/mobile/android && ./gradlew :app:assembleDebug -PreactNativeArchitectures=arm64-v8a` ve `adb install` kullanın.
 2. **Mobil davet bağlantısı.** Yalnız `kopru://davet/<belirtec>` çalışıyor. Web bağlantısının telefonda uygulamayı açması için evrensel bağlantı gerekiyor (associated domains, app links, alan adı, yeni geliştirme derlemesi).
 3. **Küçük düzeltmeler.** Oturumlarım'da cihaz adı ham user agent; web oturumları `node` görünüyor (BFF, kullanıcının user agent'ını iletmiyor). Mobilde OTP gönderim sınırı (429) "yanlış deneme" mesajına düşüyor. `gorunen_ad` boş kullanıcıda ad alanı boş. Branş listesi web'de statik (`ortak.bransler` için uç yok). Markdown ayrıştırıcı web ve mobilde kopya; ortak pakete taşınabilir. Service-kit boş JSON gövdeyi 400 ile reddediyor (istemciler `{}` yolluyor).
 4. **Platform yönetimi ve taklit.** Plan hafta 35–37 bloğunda.
