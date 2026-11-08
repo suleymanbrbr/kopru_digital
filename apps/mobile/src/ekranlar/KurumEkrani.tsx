@@ -1,6 +1,6 @@
+import { MODUL_KODLARI } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 
-import { MODUL_KODLARI } from '../api/tipler';
 import { Ekran } from '../ui/Ekran';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';

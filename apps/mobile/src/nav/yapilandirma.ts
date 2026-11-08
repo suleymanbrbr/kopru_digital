@@ -1,6 +1,7 @@
+import type { ModulDurumu, ModulKodu } from '@kopru/contracts';
 import type { MessageKey } from '@kopru/i18n';
 
-import type { MobilRol, ModulDurumu, ModulKodu } from '../api/tipler';
+import type { MobilRol } from '../api/tipler';
 
 export type SekmeAdi =
   | 'bugun'

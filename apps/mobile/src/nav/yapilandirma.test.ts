@@ -1,4 +1,6 @@
-import { MODUL_KODLARI, type MobilRol } from '../api/tipler';
+import { MODUL_KODLARI } from '@kopru/contracts';
+
+import type { MobilRol } from '../api/tipler';
 import {
   ROL_SEKMELERI,
   TUM_SEKME_ADLARI,

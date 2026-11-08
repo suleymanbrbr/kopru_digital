@@ -1,23 +1,11 @@
+import type { ModulDurumu } from '@kopru/contracts';
+
 export type Rol = 'sahip' | 'yonetici' | 'ogretmen' | 'ogrenci' | 'veli';
 /** Mobil arayuzu olan roller (faz 1: veli arayuzu yok). */
 export type MobilRol = Exclude<Rol, 'veli'>;
 
-/** hesap.modul_ayarlari modul kodlari (docs/schema/api.md). */
-export const MODUL_KODLARI = [
-  'takvim',
-  'yoklama',
-  'geri_bildirim',
-  'kayitlar',
-  'finans',
-  'odev',
-  'haftalik_plan',
-  'deneme',
-  'soru_sor',
-  'oyunlastirma',
-  'duyuru',
-] as const;
-export type ModulKodu = (typeof MODUL_KODLARI)[number];
-export type ModulDurumu = Partial<Record<ModulKodu, boolean>>;
+/** Modul kodlari tek kaynaktan gelir: `@kopru/contracts` (api migration'i, web, mobil, i18n ayni listeyi kullanir). */
+export type { ModulDurumu, ModulKodu } from '@kopru/contracts';
 
 export interface Kullanici {
   id: string;
