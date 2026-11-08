@@ -2,9 +2,11 @@ import { sql } from 'drizzle-orm';
 import {
   bigint,
   boolean,
+  customType,
   date,
   index,
   integer,
+  jsonb,
   pgSchema,
   smallint,
   text,
@@ -32,6 +34,8 @@ const kiraci = () => ({
   created_by: uuid('created_by'),
 });
 const surumlu = () => ({ surum: bigint('surum', { mode: 'number' }).notNull().default(1) });
+
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 
 export const ders = pgSchema('ders');
 
@@ -125,5 +129,72 @@ export const dersKatilimcilari = ders.table(
       t.ogrenci_id,
       t.ders_id,
     ),
+  ],
+);
+
+export const yoklamalar = ders.table(
+  'yoklamalar',
+  {
+    ...kiraci(),
+    ...surumlu(),
+    ders_id: uuid('ders_id').notNull(),
+    ogrenci_id: uuid('ogrenci_id').notNull(),
+    durum: text('durum').notNull(),
+    gec_dakika: smallint('gec_dakika'),
+    not: text('not'),
+    not_gorunurluk: text('not_gorunurluk').notNull().default('ogretmene_ozel'),
+    isaretleyen_id: uuid('isaretleyen_id').notNull(),
+    isaretlenme_at: tstz('isaretlenme_at').notNull(),
+    sunucu_at: tstz('sunucu_at').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('yoklamalar_ders_id_ogrenci_id_uniq').on(t.ders_id, t.ogrenci_id),
+    index('yoklamalar_kurum_id_ogrenci_id_ders_id_idx').on(t.kurum_id, t.ogrenci_id, t.ders_id),
+    index('yoklamalar_kurum_id_ders_id_idx').on(t.kurum_id, t.ders_id),
+  ],
+);
+
+/** Degistirilemez defter: `updated_at`/`surum` yok. */
+export const yoklamaGecmisi = ders.table(
+  'yoklama_gecmisi',
+  {
+    id: uuid('id').primaryKey(),
+    kurum_id: uuid('kurum_id').notNull(),
+    created_at: olusturma(),
+    created_by: uuid('created_by'),
+    yoklama_id: uuid('yoklama_id').notNull(),
+    ders_id: uuid('ders_id').notNull(),
+    ogrenci_id: uuid('ogrenci_id').notNull(),
+    yoklama_surumu: bigint('yoklama_surumu', { mode: 'number' }).notNull(),
+    onceki_durum: text('onceki_durum'),
+    yeni_durum: text('yeni_durum').notNull(),
+    degistiren_id: uuid('degistiren_id').notNull(),
+    istek_id: uuid('istek_id'),
+    istemci_zamani: tstz('istemci_zamani').notNull(),
+  },
+  (t) => [
+    unique('yoklama_gecmisi_yoklama_id_yoklama_surumu_uniq').on(t.yoklama_id, t.yoklama_surumu),
+    index('yoklama_gecmisi_kurum_id_yoklama_id_yoklama_surumu_idx').on(
+      t.kurum_id,
+      t.yoklama_id,
+      t.yoklama_surumu,
+    ),
+  ],
+);
+
+export const yoklamaIstekleri = ders.table(
+  'yoklama_istekleri',
+  {
+    ...kiraci(),
+    istek_id: uuid('istek_id').notNull(),
+    ders_id: uuid('ders_id').notNull(),
+    kullanici_id: uuid('kullanici_id').notNull(),
+    govde_sha256: bytea('govde_sha256').notNull(),
+    durum_kodu: smallint('durum_kodu').notNull(),
+    yanit: jsonb('yanit').notNull(),
+  },
+  (t) => [
+    unique('yoklama_istekleri_kurum_id_istek_id_uniq').on(t.kurum_id, t.istek_id),
+    index('yoklama_istekleri_created_at_idx').on(t.created_at),
   ],
 );
