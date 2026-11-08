@@ -4,12 +4,54 @@ import {
   ApiHata,
   type MobilRol,
   type OturumBilgisi,
+  type RizaMetni,
   type Rol,
   type Uyelik,
   type UyelikBaglami,
 } from './tipler';
 
 const KVKK_SURUMU = '2026-01';
+const KVKK_METINLERI: RizaMetni[] = [
+  {
+    id: 'mock-kvkk-aydinlatma',
+    tur: 'kvkk_aydinlatma',
+    baslik: 'Kişisel Verilerin Korunması Aydınlatma Metni',
+    surum: KVKK_SURUMU,
+    govdeMarkdown: [
+      '## Veri sorumlusu',
+      '',
+      'Köprü ve bağlı olduğun **kurum**, kişisel verilerini 6698 sayılı KVKK kapsamında işler.',
+      '',
+      '## İşlenen veriler',
+      '',
+      '- Ad, soyad ve telefon numaran',
+      '- Ders, yoklama ve ödev kayıtların',
+      '',
+      '> Verilerin yalnızca eğitim hizmetini sunmak için ve Türkiye içinde işlenir.',
+      '',
+      '## Haklarının kullanımı',
+      '',
+      '1. Verilerinin işlenip işlenmediğini öğrenebilirsin.',
+      '2. Düzeltilmesini veya silinmesini isteyebilirsin.',
+      '',
+      'Ayrıntılar için [KVKK sayfası](https://www.kvkk.gov.tr) adresine bakabilirsin.',
+    ].join('\n'),
+  },
+  {
+    id: 'mock-kullanim-kosullari',
+    tur: 'kullanim_kosullari',
+    baslik: 'Kullanım Koşulları',
+    surum: KVKK_SURUMU,
+    govdeMarkdown: [
+      '## Hizmetin kullanımı',
+      '',
+      'Uygulamayı yalnızca *eğitim amacıyla* ve kurumunun kurallarına uygun kullanırsın.',
+      '',
+      '- Hesabını başkasıyla paylaşmazsın.',
+      '- Diğer kullanıcılara saygılı davranırsın.',
+    ].join('\n'),
+  },
+];
 export const MOCK_OTP = '123456';
 
 const kurumlar = {
@@ -88,8 +130,17 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
         return {
           kullanici: { id: `kullanici-${tel}`, adSoyad: 'Deniz Yılmaz', telefon: tel },
           uyelikler: uyelikleriUret(tel),
-          kvkk: { guncelSurum: KVKK_SURUMU, kabulEdilenSurum: kvkkSurum },
+          kvkk: {
+            guncelSurum: KVKK_SURUMU,
+            kabulEdilenSurum: kvkkSurum,
+            metinler: kvkkSurum ? [] : KVKK_METINLERI,
+          },
         };
+      },
+      async kvkkMetinleri() {
+        await bekle(gecikmeMs);
+        await oturumGerekli();
+        return kvkkSurum ? [] : KVKK_METINLERI;
       },
       async kvkkKabulEt(surum) {
         await bekle(gecikmeMs);

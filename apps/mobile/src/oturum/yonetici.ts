@@ -75,6 +75,15 @@ export function oturumYoneticisiOlustur({ adaptorler, temizle }: OturumYoneticis
     async girisTamamlandi() {
       await yukle();
     },
+    /** Onay bekleyen metinleri sunucudan okuyup durumdaki `kvkk.metinler`e yazar. */
+    async kvkkMetinleriYukle() {
+      const d0 = depo.al();
+      if (d0.asama !== 'giris') return;
+      const metinler = await auth.kvkkMetinleri();
+      const d = depo.al();
+      if (d.asama !== 'giris') return;
+      depo.ayarla({ kvkk: { ...d.kvkk, metinler } });
+    },
     async kvkkKabulEt() {
       const d = depo.al();
       if (d.asama !== 'giris') return;
@@ -85,7 +94,8 @@ export function oturumYoneticisiOlustur({ adaptorler, temizle }: OturumYoneticis
     rizaGerekli() {
       const d = depo.al();
       if (d.asama !== 'giris') return;
-      depo.ayarla({ kvkk: { ...d.kvkk, kabulEdilenSurum: null }, aktif: null });
+      // Metinler bayat olabilir (yeni surum): ekran taze okusun.
+      depo.ayarla({ kvkk: { ...d.kvkk, kabulEdilenSurum: null, metinler: [] }, aktif: null });
     },
     async uyelikSec(uyelikId: string) {
       const d = depo.al();

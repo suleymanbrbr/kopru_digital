@@ -40,6 +40,22 @@ describe('oturum yoneticisi', () => {
     expect(d.aktif?.moduller.soru_sor).toBe(false);
   });
 
+  it('kvkk metinleri durumda gelir; rizaGerekli bayat metinleri temizler, yukle yeniden doldurur', async () => {
+    const { y, adaptorler } = kur();
+    await adaptorler.auth.otpDogrula('+905551110001', '123456');
+    await y.girisTamamlandi();
+    let d = y.depo.al();
+    if (d.asama !== 'giris') throw new Error();
+    expect(d.kvkk.metinler.map((m) => m.tur)).toEqual(['kvkk_aydinlatma', 'kullanim_kosullari']);
+    expect(d.kvkk.metinler[0]?.govdeMarkdown).toContain('## ');
+
+    await y.kvkkKabulEt();
+    y.hataIsle(new ApiHata('riza_gerekli', undefined, { durum: 403 }));
+    d = y.depo.al();
+    if (d.asama !== 'giris') throw new Error();
+    expect(d.kvkk.metinler).toEqual([]);
+  });
+
   it('riza_gerekli hatasi KVKK onayini sifirlar, yetkisiz oturumu kapatir', async () => {
     const { y, adaptorler } = kur();
     await adaptorler.auth.otpDogrula('+905551110001', '123456');

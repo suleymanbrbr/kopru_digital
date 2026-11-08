@@ -15,6 +15,7 @@ function baglanmamisAdaptorler(): Adaptorler {
       otpIste: hata,
       otpDogrula: hata,
       oturumBilgisi: hata,
+      kvkkMetinleri: hata,
       kvkkKabulEt: hata,
       uyelikSec: hata,
       cikis: () => Promise.resolve(),

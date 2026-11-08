@@ -13,7 +13,9 @@ vi.mock('@/oturum/saglayici', () => ({
 const metin = {
   surum: '2026-11',
   baslik: 'Aydınlatma metni',
-  bolumler: [{ baslik: 'Veri sorumlusu', metin: 'Kurum.' }],
+  bolumler: [
+    { baslik: 'Veri sorumlusu', metin: '## Kapsam\n\nVeriler **kurum** tarafindan islenir.' },
+  ],
   metinIdleri: ['metin-1'],
 };
 
@@ -37,6 +39,11 @@ describe('RizaEkrani', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(metin)));
     const sonra = goster();
     expect(await screen.findByRole('heading', { name: 'Veri sorumlusu' })).toBeInTheDocument();
+
+    // Markdown isaretleri ekranda gorunmez; kalin metin ogeye donusur.
+    expect(screen.getByRole('heading', { name: 'Kapsam' })).toBeInTheDocument();
+    expect(screen.getByText('kurum').tagName).toBe('STRONG');
+    expect(screen.queryByText(/##|\*\*/)).toBeNull();
 
     const kabul = screen.getByRole('button', { name: 'Kabul et ve devam et' });
     expect(kabul).toBeDisabled();

@@ -47,7 +47,7 @@ const rizaYaniti = (kabul: boolean) => ({
       surum: '2026-02',
       dil: 'tr',
       baslik: 'Aydınlatma',
-      govde_markdown: '...',
+      govde_markdown: '## Baslik\n\n**Metin**',
       govde_sha256: 'abc',
       kabul_edildi: kabul,
     },
@@ -153,7 +153,8 @@ describe('gercek adaptor: giris ve belirtec yonetimi', () => {
       telefon: '+905321112233',
     });
     expect(bilgi.uyelikler.map((u) => u.rol)).toEqual(['sahip', 'ogretmen']);
-    expect(bilgi.kvkk).toEqual({ guncelSurum: '2026-02', kabulEdilenSurum: null });
+    expect(bilgi.kvkk).toMatchObject({ guncelSurum: '2026-02', kabulEdilenSurum: null });
+    expect(bilgi.kvkk.metinler.map((m) => m.id)).toEqual([METIN]);
   });
 
   it('esZamanli istekler tek /auth/token ucusu paylasir', async () => {
@@ -277,6 +278,38 @@ describe('gercek adaptor: KVKK ve uyelik secimi', () => {
     await depo.yaz({ erisim: 'erisim-1', yenileme: 'oturum-1', erisimBitis: k.zaman.t + 600_000 });
     return k;
   }
+
+  it('kvkkMetinleri yalniz kabul edilmemis metinleri govdesiyle dondurur', async () => {
+    const { adaptorler } = await girisli((c) => {
+      if (c.yol === '/v1/hesap/rizalar/guncel') return json(rizaYaniti(false));
+      return json({});
+    });
+    expect(await adaptorler.auth.kvkkMetinleri()).toEqual([
+      {
+        id: METIN,
+        tur: 'kvkk_aydinlatma',
+        baslik: 'Aydınlatma',
+        govdeMarkdown: '## Baslik\n\n**Metin**',
+        surum: '2026-02',
+      },
+    ]);
+  });
+
+  it('kvkkMetinleri kabul edilmis metinleri dondurmez', async () => {
+    const { adaptorler } = await girisli((c) => {
+      if (c.yol === '/v1/hesap/rizalar/guncel') return json(rizaYaniti(true));
+      return json({});
+    });
+    expect(await adaptorler.auth.kvkkMetinleri()).toEqual([]);
+  });
+
+  it('kvkkMetinleri hata durumunda adaptor hatasi firlatir', async () => {
+    const { adaptorler } = await girisli((c) => {
+      if (c.yol === '/v1/hesap/rizalar/guncel') return hata(500, 'sunucu_hatasi', 'x');
+      return json({});
+    });
+    await expect(adaptorler.auth.kvkkMetinleri()).rejects.toMatchObject({ kod: 'sunucu' });
+  });
 
   it('kvkkKabulEt yalniz kabul edilmemis metinleri kaynakla birlikte gonderir', async () => {
     const { adaptorler, cagrilar } = await girisli((c) => {

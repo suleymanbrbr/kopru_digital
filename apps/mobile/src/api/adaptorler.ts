@@ -1,4 +1,10 @@
-import type { OgrenciBugun, OgretmenBugun, OturumBilgisi, UyelikBaglami } from './tipler';
+import type {
+  OgrenciBugun,
+  OgretmenBugun,
+  OturumBilgisi,
+  RizaMetni,
+  UyelikBaglami,
+} from './tipler';
 
 /**
  * Kimlik dogrulama ve oturum adaptoru (ADR 0004). Belirtec saklama/yenileme adaptorun isidir;
@@ -11,6 +17,8 @@ export interface AuthAdapter {
   otpDogrula: (telefon: string, kod: string) => Promise<void>;
   /** Mevcut oturumun kullanici, uyelikler ve KVKK durumu. Oturum yoksa `yetkisiz` firlatir. */
   oturumBilgisi: () => Promise<OturumBilgisi>;
+  /** Onay bekleyen (kabul edilmemis) guncel metinleri taze okur. */
+  kvkkMetinleri: () => Promise<RizaMetni[]>;
   kvkkKabulEt: (surum: string) => Promise<void>;
   /** Etkin uyelik/kurum secimi (yeni erisim belirteci alir). */
   uyelikSec: (uyelikId: string) => Promise<UyelikBaglami>;
