@@ -97,6 +97,14 @@ export class NatsIptalDeposu implements IptalDeposu {
     return acilan;
   }
 
+  /** Suresi dolan girdileri ekleme sirasinda temizler; harita uzun omurlu surecte sinirsiz buyumez. */
+  private bilineneEkle(sid: string, simdi: number): void {
+    for (const [anahtar, bitis] of this.bilinen) {
+      if (bitis <= simdi) this.bilinen.delete(anahtar);
+    }
+    this.bilinen.set(sid, simdi + this.omur);
+  }
+
   async iptalEdildiMi(sid: string): Promise<boolean> {
     const simdi = Date.now();
     const bitis = this.bilinen.get(sid);
@@ -116,7 +124,7 @@ export class NatsIptalDeposu implements IptalDeposu {
         }),
       ]);
       const iptal = sonuc !== null && sonuc.operation === 'PUT';
-      if (iptal) this.bilinen.set(sid, simdi + this.omur);
+      if (iptal) this.bilineneEkle(sid, simdi);
       return iptal;
     } catch (err) {
       this.atlaBitis = simdi + this.atla;
@@ -133,6 +141,6 @@ export class NatsIptalDeposu implements IptalDeposu {
   async iptalEt(sid: string): Promise<void> {
     const kv = await this.kovaAc();
     await kv.put(sid, '1');
-    this.bilinen.set(sid, Date.now() + this.omur);
+    this.bilineneEkle(sid, Date.now());
   }
 }
