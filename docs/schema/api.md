@@ -298,7 +298,7 @@ Profil: `KS`. RLS: evet.
 
 Kısıtlar: `UNIQUE (kurum_id, id)`. `CHECK (tur <> 'birebir' OR kapasite = 1)`. `CHECK (kapasite IS NULL OR kapasite > 0)`. `CHECK ((durum = 'arsiv') = (arsivlendi_at IS NOT NULL))`. Kapasite aşımı `grup_uyeleri` yazımında uygulama + `SELECT ... FOR UPDATE` ile doğrulanır (bkz. `grup_uyeleri`).
 İndeks: `(kurum_id, tur, durum)`, `(kurum_id, kademe_id)`, `(kurum_id, sube_id)`.
-Olaylar: `hesap.grup.degisti.v1`.
+Olaylar: `hesap.grup.degisti.v1`. Kapsam süzgeci: `kurum` hepsi, `sube` aynı `sube_id`, `grup` (öğretmen) etkin ataması olan gruplar, `kendi` (öğrenci) etkin üyesi olduğu gruplar.
 
 #### `hesap.grup_uyeleri`
 
@@ -343,10 +343,11 @@ Profil: `KS`. RLS: evet. Belirteçten kiracı bulma: `hesap.davet_coz(token_hash
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
-| `kanal` | text | hayır | | CHECK `IN ('baglanti','sms')` |
+| `kanal` | text | hayır | | CHECK `IN ('baglanti','sms','eposta')` (`eposta` migration 0004 ile eklendi) |
 | `rol` | text | hayır | | CHECK `IN ('yonetici','ogretmen','ogrenci','veli')` (sahip davet edilmez) |
 | `belirtec_hash` | bytea | hayır | | SHA-256(32 bayt rastgele belirteç). UNIQUE. Belirteç yalnızca oluşturma yanıtında ve SMS'te görünür. |
 | `hedef_telefon_e164` | text | evet | | `kanal='sms'` ise zorunlu |
+| `hedef_eposta` | citext | evet | | `kanal='eposta'` ise zorunlu (migration 0004) |
 | `hedef_ad` | text | evet | | |
 | `grup_id`, `kademe_id`, `sube_id` | uuid | evet | | Katılımda atanacak bağlam (bileşik FK) |
 | `davet_eden_id` | uuid | hayır | | `uyelikler` |
@@ -354,12 +355,20 @@ Profil: `KS`. RLS: evet. Belirteçten kiracı bulma: `hesap.davet_coz(token_hash
 | `kullanim_sayisi` | int | hayır | 0 | |
 | `durum` | text | hayır | `'bekliyor'` | CHECK `IN ('bekliyor','kullanildi','iptal','suresi_doldu')` |
 | `expires_at` | timestamptz | hayır | | Varsayılan 7 gün |
-| `sms_gonderim_sayisi` | smallint | hayır | 0 | CHECK `<= 3` |
+| `sms_gonderim_sayisi` | smallint | hayır | 0 | CHECK `<= 3`. SMS ve e-posta kanallarında ortak gönderim sayacıdır (ilk gönderim dahil). |
 | `son_sms_at` | timestamptz | evet | | |
 | `kabul_eden_kullanici_id` | uuid | evet | | Son kabul eden |
 
-Kısıtlar: `UNIQUE (belirtec_hash)`. `CHECK (kullanim_sayisi <= max_kullanim)`. `CHECK (kanal <> 'sms' OR hedef_telefon_e164 IS NOT NULL)`. `CHECK (max_kullanim BETWEEN 1 AND 100)`. Kabul işlemi `UPDATE ... SET kullanim_sayisi = kullanim_sayisi + 1 WHERE durum='bekliyor' AND expires_at > now() AND kullanim_sayisi < max_kullanim` ile atomik yapılır. Etkilenen satır 0 ise `410 davet_gecersiz`. İndeks: `(kurum_id, durum, expires_at)`.
-Olaylar: `hesap.davet.kabul_edildi.v1`. Davet SMS'i olay değil, `bildirim` iç çağrısıdır.
+Kısıtlar: `UNIQUE (belirtec_hash)`. `CHECK (kullanim_sayisi <= max_kullanim)`. `CHECK (kanal <> 'sms' OR hedef_telefon_e164 IS NOT NULL)`. `CHECK (kanal <> 'eposta' OR hedef_eposta IS NOT NULL)`. `CHECK (max_kullanim BETWEEN 1 AND 100)`. Kabul işlemi `UPDATE ... SET kullanim_sayisi = kullanim_sayisi + 1 WHERE durum='bekliyor' AND expires_at > now() AND kullanim_sayisi < max_kullanim` ile atomik yapılır. Etkilenen satır 0 ise `410 davet_gecersiz`. İndeks: `(kurum_id, durum, expires_at)`.
+Olaylar: `hesap.davet.kabul_edildi.v1`. Davet SMS'i/e-postası olay değil, `bildirim` iç çağrısıdır; `bildirim` gelene kadar `SmsGonderici` ve `EpostaGonderici` arayüzleri log uygulamasıyla çalışır (e-posta logunda yalnızca `davet_id`).
+
+Uygulama kuralları:
+
+- Durum `suresi_doldu` okumada türetilir: `durum='bekliyor' AND expires_at <= now()` olan kayıt yanıtlarda ve `durum` süzgecinde `suresi_doldu` sayılır. Periyodik durum güncellemesi yoktur (worker'da iş tanımlı değil); kabul zaten `expires_at > now()` ile korunur.
+- Yeniden gönderme düz belirteç saklanmadığı için **yeni belirteç üretir** (`belirtec_hash` değişir, eski bağlantı geçersizleşir), `expires_at` 7 gün uzar, sayaç artar; 4. gönderim `429 gonderim_siniri_asildi`. `baglanti` kanalı yeniden gönderilemez (`422`).
+- Tek kullanımlık (`max_kullanim=1`) kanallar `sms` ve `eposta`; çok kullanımlı yalnız `baglanti`. `grup_id`/`kademe_id` yalnız `rol='ogrenci'` davetinde verilebilir; kabulde öğrenci gruba `katilim_yolu='davet'` ile eklenir. Faz 1'de `veli` davet edilmez.
+- Bireysel kurumda `grup_id`'siz öğrenci daveti kabul edilince öğrenciye otomatik `birebir` grup açılır (ad sabit: "Birebir ders"; olay yükünde kişisel ad olmasın diye).
+- Yetki: `davet.yaz`. `yonetici` davet etmek ayrıca `rol.yonet` (yalnız sahip) ister. Öğretmen (`grup` kapsamı) yalnız atandığı gruba öğrenci davet eder; davet listesi/iptal/yeniden gönderme yalnız atandığı gruplara bağlı davetleri görür (kapsam dışı: 404).
 
 #### `hesap.sinif_katilim_kodlari`
 
@@ -1460,3 +1469,25 @@ Olaylar: `abonelik.fatura.kesildi.v1`.
 | Modül önceliği | `modul_ayarlari` + `hesap.modul_acik_mi` (kurum > kademe > grup, alt düzey daraltır) |
 | Tek etkin abonelik | `abonelikler_tek_etkin_uniq` |
 | Defterler değişmez | `ortak.defter_degistirilemez` tetikleyicisi + `REVOKE UPDATE, DELETE` |
+
+## `hesap` grup, atama ve davet uç noktaları
+
+Hepsi `/v1/hesap` altında; kurum yolu belirteçteki `kurum_id` ile eşleşmelidir. Kapsam dışı kayıt `404`.
+
+| Yöntem | Yol | İzin (kapsam) | Açıklama |
+| --- | --- | --- | --- |
+| POST | `/kurumlar/:kurum_id/gruplar` | `grup.yaz` (sube) | Grup oluştur |
+| GET | `/kurumlar/:kurum_id/gruplar` | `grup.oku` | Listele (`durum`, `tur`, `kademe_id`, `limit`, `imlec`) |
+| GET / PATCH | `/kurumlar/:kurum_id/gruplar/:grup_id` | `grup.oku` / `grup.yaz` | Tekil / güncelle (`tur` değişmez) |
+| POST | `.../gruplar/:grup_id/arsivle` | `grup.yaz` | Arşivle |
+| GET / POST | `.../gruplar/:grup_id/uyeler` | `grup.oku` / `grup.yaz` | Etkin öğrenciler / çoklu ekleme (kapasite `FOR UPDATE`, `409 kapasite_dolu`) |
+| DELETE | `.../gruplar/:grup_id/uyeler/:ogrenci_id` | `grup.yaz` | Çıkar (`bitis_tarihi` dolar) |
+| GET / POST | `.../gruplar/:grup_id/atamalar` | `grup.oku` / `grup.yaz` | Grubun atamaları / öğretmen x branş ata |
+| GET | `/kurumlar/:kurum_id/atamalar` | `grup.oku` | Grup ya da öğretmen bazlı liste |
+| POST | `/kurumlar/:kurum_id/atamalar/:atama_id/bitir` | `grup.yaz` | Atamayı bitir |
+| POST / GET | `/kurumlar/:kurum_id/davetler` | `davet.yaz` | Davet oluştur (düz belirteç yalnız yanıtta) / listele (`durum`, `grup_id`, sayfalı) |
+| POST | `.../davetler/:davet_id/iptal` | `davet.yaz` | İptal |
+| POST | `.../davetler/:davet_id/yeniden-gonder` | `davet.yaz` | Yeniden gönder (≤3) |
+| POST | `/davetler/kabul` | giriş + KVKK | Davet kabulü; geçersiz `410 davet_gecersiz` |
+
+Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `gonderim_siniri_asildi`, `zaten_uye`, `uyelik_askida`, `kapasite_dolu`, `grup_arsivde`, `atama_cakisiyor`. İzin sözlüğü sürümü 2: `ogretmen` rolüne `davet.yaz` (`grup` kapsamı) eklendi.
