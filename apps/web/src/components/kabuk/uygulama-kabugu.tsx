@@ -1,7 +1,7 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { ArrowLeftRight, LogOut, Menu } from 'lucide-react';
+import { ArrowLeftRight, LogOut, Menu, MonitorSmartphone } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
@@ -79,8 +79,8 @@ function Menu_({ tiklandi }: { tiklandi?: () => void }) {
   );
 }
 
-function KullaniciAlani() {
-  const { kullaniciAd } = useKurum();
+function KullaniciAlani({ tiklandi }: { tiklandi?: () => void }) {
+  const { kullaniciAd, uyelik } = useKurum();
   const { cikis } = useOturum();
   const router = useRouter();
   return (
@@ -91,6 +91,14 @@ function KullaniciAlani() {
         </span>
         <TemaAnahtari />
       </div>
+      <Link
+        href={`/${uyelik.kurumId}/oturumlar`}
+        onClick={tiklandi}
+        className="flex h-11 items-center gap-3 rounded-orta px-3 text-sm font-medium text-metin-ikincil transition-colors hover:bg-yuzey-ikincil hover:text-metin lg:h-10"
+      >
+        <MonitorSmartphone className="size-[1.125rem]" aria-hidden />
+        {t('hesap.oturumlar.menu')}
+      </Link>
       <button
         type="button"
         onClick={() => {
@@ -181,7 +189,11 @@ export function UygulamaKabugu({ children }: { children: ReactNode }) {
               setCekmeceAcik(false);
             }}
           />
-          <KullaniciAlani />
+          <KullaniciAlani
+            tiklandi={() => {
+              setCekmeceAcik(false);
+            }}
+          />
         </div>
       </Cekmece>
     </div>
