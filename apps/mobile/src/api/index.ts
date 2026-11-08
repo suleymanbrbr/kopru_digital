@@ -21,6 +21,20 @@ function baglanmamisAdaptorler(): Adaptorler {
       cikis: () => Promise.resolve(),
     },
     veri: { ogretmenBugun: hata, ogrenciBugun: hata },
+    hesap: {
+      sinifKoduKatil: hata,
+      sinifKoduIsteklerim: hata,
+      sinifKoduIstegiIptal: hata,
+      sinifBekleyenleri: hata,
+      katilimIstegiOnayla: hata,
+      katilimIstegiReddet: hata,
+      katilimKodu: hata,
+      katilimKoduYenile: hata,
+      davetKabul: hata,
+      oturumlar: hata,
+      oturumSonlandir: hata,
+      oturumlariKapat: hata,
+    },
   };
 }
 

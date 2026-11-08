@@ -40,13 +40,19 @@ export interface OturumYoneticisiBagimliliklari {
   adaptorler: Adaptorler;
   /** Cikista kisisel verili onbellekleri temizler. */
   temizle?: () => void;
+  /** Kullanici bilerek cikis yaptiginda (401 ile oturum dusmesi degil) cagrilir. */
+  kullaniciCikisi?: () => void;
 }
 
 /**
  * Oturum durum makinesi. Ekran yonlendirmesi bu durumdan turetilir (Stack.Protected):
  * cikis -> giris | kvkk onayi -> kurum secimi -> uygulama.
  */
-export function oturumYoneticisiOlustur({ adaptorler, temizle }: OturumYoneticisiBagimliliklari) {
+export function oturumYoneticisiOlustur({
+  adaptorler,
+  temizle,
+  kullaniciCikisi,
+}: OturumYoneticisiBagimliliklari) {
   const depo = depoOlustur<OturumDurumu>({ asama: 'baslatiliyor' });
   const { auth } = adaptorler;
 
@@ -110,7 +116,23 @@ export function oturumYoneticisiOlustur({ adaptorler, temizle }: OturumYoneticis
       depo.ayarla({ aktif: null });
       temizle?.();
     },
+    /** Davet/sinif kodu sonrasi yeni uyelikleri okur; etkin kurum ve KVKK durumu korunur. */
+    async uyelikleriYenile() {
+      const bilgi = await auth.oturumBilgisi();
+      const d = depo.al();
+      if (d.asama !== 'giris') return;
+      depo.ayarla({ kullanici: bilgi.kullanici, uyelikler: bilgi.uyelikler.filter(mobilUyelikMi) });
+    },
+    /**
+     * Sunucu bu cihazin oturumunu zaten kapatti (Oturumlarim'dan sonlandirma); adaptor yerel
+     * belirteci sildi. Yalnizca yerel durumu ve onbellegi sifirlar, sunucuya cikis istegi atmaz.
+     */
+    kendiOturumuKapandi() {
+      temizle?.();
+      depo.ayarla(() => ({ asama: 'cikis' }));
+    },
     async cikis() {
+      kullaniciCikisi?.();
       try {
         await auth.cikis();
       } finally {

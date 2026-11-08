@@ -1,8 +1,13 @@
 import type {
+  DavetSonucu,
+  KatilimIstegi,
+  KatilimKodu,
   OgrenciBugun,
   OgretmenBugun,
   OturumBilgisi,
+  OturumKaydi,
   RizaMetni,
+  SinifBekleyenleri,
   UyelikBaglami,
 } from './tipler';
 
@@ -31,7 +36,43 @@ export interface VeriAdapter {
   ogrenciBugun: () => Promise<OgrenciBugun>;
 }
 
+/**
+ * Hesap modulunun sinif kodu, davet ve oturum uclari. Bu islemler cevrimdisi kuyruga GIRMEZ:
+ * baglanti yoksa `cevrimdisi` hatasi alinir (bkz. `hesap/cevrimici.ts`).
+ */
+export interface HesapAdapter {
+  /** Sinif koduyla katilim istegi gonderir (kod buyuk harfe cevrilmis olmali). */
+  sinifKoduKatil: (kod: string) => Promise<KatilimIstegi>;
+  /** Kendi bekleyen katilim isteklerim (tum kurumlar). */
+  sinifKoduIsteklerim: () => Promise<KatilimIstegi[]>;
+  sinifKoduIstegiIptal: (istekId: string) => Promise<void>;
+
+  /** Ogretmen/yonetici: etkin kurumdaki sinif gruplari ve bekleyen katilim istekleri. */
+  sinifBekleyenleri: () => Promise<SinifBekleyenleri[]>;
+  katilimIstegiOnayla: (grupId: string, istekId: string) => Promise<void>;
+  katilimIstegiReddet: (grupId: string, istekId: string) => Promise<void>;
+  /** Etkin katilim kodu; yoksa null. */
+  katilimKodu: (grupId: string) => Promise<KatilimKodu | null>;
+  /** Olusturur ya da yeniler (eski kod gecersizlesir). */
+  katilimKoduYenile: (grupId: string) => Promise<KatilimKodu>;
+
+  /** Daveti kabul eder (giris + KVKK sonrasi). */
+  davetKabul: (belirtec: string) => Promise<DavetSonucu>;
+
+  oturumlar: () => Promise<OturumKaydi[]>;
+  /** `buOturum`: sonlandirilan oturum bu cihazinki ise yerel belirtecler de silinir. */
+  oturumSonlandir: (
+    oturumId: string,
+    buOturum: boolean,
+  ) => Promise<{ kendiOturumuKapandi: boolean }>;
+  /** `mevcutHaric`: true ise bu cihazin oturumu acik kalir. */
+  oturumlariKapat: (
+    mevcutHaric: boolean,
+  ) => Promise<{ kapatilan: number; kendiOturumuKapandi: boolean }>;
+}
+
 export interface Adaptorler {
   auth: AuthAdapter;
   veri: VeriAdapter;
+  hesap: HesapAdapter;
 }
