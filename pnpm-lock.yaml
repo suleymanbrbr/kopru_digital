@@ -524,6 +524,9 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 31.0.0(@noble/hashes@2.4.0)
+      postgres:
+        specifier: 'catalog:'
+        version: 4.1.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15

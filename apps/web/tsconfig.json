@@ -21,6 +21,7 @@
     "next-env.d.ts",
     "src",
     "e2e",
+    "e2e-gercek",
     "ekran",
     "scripts",
     "*.ts",

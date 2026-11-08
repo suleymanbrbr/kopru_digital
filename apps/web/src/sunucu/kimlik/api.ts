@@ -146,7 +146,8 @@ export function apiKimlik(): KimlikAdaptoru {
       const gosterilecek = bekleyen.length > 0 ? bekleyen : veri.metinler;
       return {
         surum: [...new Set(gosterilecek.map((m) => m.surum))].join(', '),
-        baslik: gosterilecek.length === 1 ? (gosterilecek[0]?.baslik ?? '') : '',
+        // Her metnin basligi kendi bolumunde gosterilir; ust baslik yok.
+        baslik: '',
         bolumler: gosterilecek.map((m) => ({ baslik: m.baslik, metin: m.govde_markdown })),
         metinIdleri: bekleyen.map((m) => m.id),
       };
