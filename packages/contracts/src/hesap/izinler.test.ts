@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   IZINLER,
   IZIN_KODLARI,
+  IZIN_SOZLUGU_SURUMU,
   ROLLER,
   ROL_IZINLERI,
   izinKapsami,
@@ -36,5 +37,19 @@ describe('izin sozlugu', () => {
     expect(izinModulu('kurum.oku')).toBeNull();
     expect(izinModulu('finans.tahsilat.yaz')).toBe('finans');
     expect(Object.keys(IZINLER)).toHaveLength(IZIN_KODLARI.length);
+  });
+
+  it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
+    expect(IZIN_SOZLUGU_SURUMU).toBe(3);
+    expect(izinKapsami('ogretmen', 'finans.oku')).toBe('grup');
+    expect(izinKapsami('ogretmen', 'finans.tahsilat.yaz')).toBe('grup');
+    expect(izinKapsami('ogretmen', 'finans.paket.yaz')).toBeNull();
+    expect(izinKapsami('yonetici', 'finans.paket.yaz')).toBe('kurum');
+    expect(izinKapsami('sahip', 'finans.paket.yaz')).toBe('kurum');
+    expect(izinKapsami('ogrenci', 'finans.oku')).toBe('kendi');
+    expect(izinKapsami('ogrenci', 'finans.tahsilat.yaz')).toBeNull();
+    expect(izinKapsami('ogrenci', 'finans.paket.yaz')).toBeNull();
+    expect(izinKapsami('veli', 'finans.oku')).toBeNull();
+    expect(izinModulu('finans.paket.yaz')).toBe('finans');
   });
 });
