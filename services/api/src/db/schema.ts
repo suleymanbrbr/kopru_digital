@@ -439,3 +439,5 @@ export const denetimKayitlari = hesap.table('denetim_kayitlari', {
   istek_id: uuid('istek_id'),
   ip: inet('ip'),
 });
+
+export * from './schema-ders.js';

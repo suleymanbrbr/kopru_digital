@@ -5,3 +5,4 @@ export * from './hesap/api.js';
 export * from './hesap/izinler.js';
 export * from './hesap/moduller.js';
 export * from './hesap/olaylar.js';
+export * from './ders/index.js';
