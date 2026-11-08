@@ -194,7 +194,7 @@ export function SinifKoduKatil() {
       {onaylanan.data && onaylanan.data.istekler.length > 0 ? (
         <div
           role="status"
-          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-orta bg-basari-yumusak px-4 py-3 text-sm text-basari"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-orta bg-basari-yumusak px-4 py-3 text-sm text-metin"
         >
           <span>
             {onaylanan.data.istekler

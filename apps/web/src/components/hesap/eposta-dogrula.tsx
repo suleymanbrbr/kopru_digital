@@ -108,7 +108,7 @@ function YenidenGonder() {
 
   if (gonder.isSuccess) {
     return (
-      <p role="status" className="rounded-orta bg-basari-yumusak px-3 py-2.5 text-sm text-basari">
+      <p role="status" className="rounded-orta bg-basari-yumusak px-3 py-2.5 text-sm text-metin">
         {t('hesap.epostaDogrula.gonderildi')}
       </p>
     );

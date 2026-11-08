@@ -6,10 +6,10 @@ type Ton = 'notr' | 'basari' | 'uyari' | 'hata' | 'bilgi';
 
 const tonlar: Record<Ton, string> = {
   notr: 'bg-yuzey-ikincil text-metin-ikincil',
-  basari: 'bg-basari-yumusak text-basari',
-  uyari: 'bg-uyari-yumusak text-uyari',
+  basari: 'bg-basari-yumusak text-metin',
+  uyari: 'bg-uyari-yumusak text-metin',
   hata: 'bg-hata-yumusak text-hata',
-  bilgi: 'bg-birincil-yumusak text-birincil',
+  bilgi: 'bg-birincil-yumusak text-metin',
 };
 
 /** Kisa durum etiketi. Renk tek basina anlam tasimaz; metin her zaman vardir. */

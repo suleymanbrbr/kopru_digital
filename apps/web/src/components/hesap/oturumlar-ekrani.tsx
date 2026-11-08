@@ -108,7 +108,8 @@ export function OturumlarEkrani() {
             {t('hesap.oturumlar.digerleriniKapat')}
           </Dugme>
           <Dugme
-            gorunum="tehlike"
+            gorunum="ikincil"
+            className="border-hata text-hata"
             onClick={() => {
               setOnay({ tur: 'hepsi' });
             }}

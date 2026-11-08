@@ -19,7 +19,7 @@ export function BildirimKutusu({ bildirim }: { bildirim: Bildirim }) {
   return (
     <div
       role="status"
-      className="flex items-start gap-2 rounded-orta bg-basari-yumusak px-3 py-2.5 text-sm text-basari"
+      className="flex items-start gap-2 rounded-orta bg-basari-yumusak px-3 py-2.5 text-sm text-metin"
     >
       <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
       <span>{bildirim.metin}</span>

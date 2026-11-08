@@ -85,3 +85,54 @@ export async function kurumOlustur(telefon: string, ad: string): Promise<string>
   await apiIstek('/v1/hesap/kurumlar', { ad, tur: 'kurum' }, erisim);
   return ad;
 }
+
+/** OTP gonderim sinirina (IP basina saatte 20) takilmamak icin yerel sayaci temizler. */
+export async function otpSiniriniTemizle(): Promise<void> {
+  const sql = postgres(API_ADMIN_DB_URL, { max: 1 });
+  try {
+    await sql`delete from hesap.otp_istekleri`;
+  } finally {
+    await sql.end({ timeout: 1 });
+  }
+}
+
+const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://localhost:8025';
+
+/** E-posta kaydi acar (api `eposta/kayit`) ve dogrulama e-postasindaki baglantiyi Mailpit'ten okur. */
+export async function epostaKaydiVeBaglanti(eposta: string): Promise<string> {
+  await apiIstek('/auth/eposta/kayit', { eposta, parola: 'cok-gizli-parola' });
+  for (let i = 0; i < 20; i += 1) {
+    const arama = await fetch(
+      `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${eposta}`)}`,
+    );
+    const { messages } = (await arama.json()) as { messages?: { ID: string }[] };
+    const id = messages?.[0]?.ID;
+    if (id) {
+      const ileti = (await (await fetch(`${MAILPIT_URL}/api/v1/message/${id}`)).json()) as {
+        Text: string;
+      };
+      const baglanti = /https?:\/\/\S*eposta-dogrula\?belirtec=\S+/.exec(ileti.Text)?.[0];
+      if (baglanti) return baglanti;
+    }
+    await new Promise((coz) => setTimeout(coz, 250));
+  }
+  throw new Error(`dogrulama e-postasi bulunamadi (${eposta})`);
+}
+
+/** E-posta ile giris yapip `GET /v1/hesap/ben` uzerinden dogrulama durumunu okur. */
+export async function epostaDogrulandiMi(eposta: string): Promise<boolean> {
+  const giris = await apiIstek<{ oturum_belirteci: string }>('/auth/eposta/giris', {
+    eposta,
+    parola: 'cok-gizli-parola',
+  });
+  const { access_token: erisim } = await apiIstek<{ access_token: string }>(
+    '/auth/token',
+    {},
+    giris.oturum_belirteci,
+  );
+  const yanit = await fetch(`${API_URL}/v1/hesap/ben`, {
+    headers: { authorization: `Bearer ${erisim}` },
+  });
+  const ben = (await yanit.json()) as { kullanici: { eposta_dogrulandi: boolean } };
+  return ben.kullanici.eposta_dogrulandi;
+}

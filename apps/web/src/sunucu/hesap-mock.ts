@@ -775,8 +775,11 @@ function kiracisiz(parcalar: string[], istek: Istek): Yanit {
   const g = govdeNesnesi(istek.govde);
 
   if (parcalar[0] === 'oturumlar') {
-    if (yontem === 'GET' && parcalar.length === 1)
+    if (yontem === 'GET' && parcalar.length === 1) {
+      // Tum oturumlar kapatildiktan sonra yeni giris yeni oturum demektir.
+      if (d.oturumlar.length === 0) d.oturumlar = oturumlariKur();
       return { durum: 200, govde: { oturumlar: d.oturumlar } };
+    }
     if (yontem === 'POST' && parcalar[1] === 'tumunu-kapat') {
       const haric = g.mevcut_haric === true;
       const once = d.oturumlar.length;
@@ -816,7 +819,7 @@ function kiracisiz(parcalar: string[], istek: Istek): Yanit {
   if (parcalar[0] === 'sinif-kodu') {
     if (parcalar[1] === 'katil' && yontem === 'POST') {
       const kod = kodNormalle(typeof g.kod === 'string' ? g.kod : '');
-      if (kod === 'LIMIT000') {
+      if (kod === 'MMMM2222') {
         return hata(
           429,
           'cok_fazla_istek',

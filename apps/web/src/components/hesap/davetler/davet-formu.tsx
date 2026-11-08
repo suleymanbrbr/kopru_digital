@@ -385,8 +385,8 @@ function DavetSonucuGorunumu({
           role="status"
           className={
             sonuc.gonderim === 'gonderildi'
-              ? 'rounded-orta bg-basari-yumusak px-3 py-2.5 text-sm text-basari'
-              : 'rounded-orta bg-uyari-yumusak px-3 py-2.5 text-sm text-uyari'
+              ? 'rounded-orta bg-basari-yumusak px-3 py-2.5 text-sm text-metin'
+              : 'rounded-orta bg-uyari-yumusak px-3 py-2.5 text-sm text-metin'
           }
         >
           {sonuc.gonderim === 'gonderildi'
