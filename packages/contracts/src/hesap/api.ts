@@ -262,3 +262,4 @@ export type KurumSemaTipi = z.infer<typeof KurumSema>;
 export type TokenYanit = z.infer<typeof TokenYanitSema>;
 
 export * from './grup-davet-api.js';
+export * from './sinif-katilim-api.js';
