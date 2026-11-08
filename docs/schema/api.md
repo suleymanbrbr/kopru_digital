@@ -580,8 +580,15 @@ Profil: `KS`. RLS: evet.
 | `uretildi_son_tarih` | date | hayır | | Dersleri üretilmiş son yerel gün |
 | `durum` | text | hayır | `'aktif'` | CHECK `IN ('aktif','bitti','iptal')` |
 
-Kısıtlar: `CHECK (bitis_tarihi IS NULL OR adet IS NULL)`. `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, durum, uretildi_son_tarih)`.
+Kısıtlar: `CHECK (bitis_tarihi IS NULL OR adet IS NULL)`, `CHECK (adet IS NULL OR adet > 0)`, `CHECK (bitis_tarihi IS NULL OR bitis_tarihi >= baslangic_tarihi)`. `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, durum, uretildi_son_tarih)`, `(kurum_id, grup_id)`.
 Olaylar: yok (üretilen dersler `ders.ders.degisti.v1` yayımlar).
+
+Uygulama notları (migration `0006`, `services/api/src/modules/ders`):
+
+- `tekrar_kurali` kanonik biçimde saklanır: `FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,WE` (`BYDAY` boşsa yazılmaz). `INTERVAL` 1-52. `DAILY` + `BYDAY` günleri süzer. Ayrıştırıcı `packages/contracts/src/ders/tekrar.ts`.
+- `saat_dilimi` seri oluşturulurken kurumun `saat_dilimi`nden kopyalanır. Her dersin UTC anı, yerel tarih + `baslangic_saati` ile `saat_dilimi`ne göre hesaplanır (yaz saatine doğru; `Intl.DateTimeFormat`).
+- `uretildi_son_tarih`: dersleri üretilmiş son yerel gün, `min(ufuk, bitis_tarihi)`. Oluştururken ufuk `max(bugün, baslangic_tarihi) + 84 gün`; gece işi ufku `bugün + 84 gün`a taşır. Adet dolunca ya da bitiş tarihi geçilince `durum='bitti'` olur. "Bu ve sonrakileri iptal" seriyi bu dersten bir gün öncesine keser (`bitis_tarihi` yazılır, `adet` NULL olur; hiç ders kalmazsa `durum='iptal'`).
+- `bu_ve_sonrakiler` ile saat değişince `baslangic_saati`, bilgi değişince `baslangic`/`online_baglanti`/`yer` seri satırında da güncellenir. Bu kapsamda gün değiştirilemez (`422 tarih_degisikligi_yalniz_bu`): `seri_sirasi` ile kural arasındaki eşleşme bozulmasın.
 
 ### `ders.dersler`
 
@@ -618,14 +625,23 @@ Profil: `KS`. RLS: evet.
 Kısıtlar:
 - `CHECK (bitis_at > baslangic_at)` (`dersler_zaman_chk`).
 - `CHECK (durum <> 'iptal' OR (iptal_at IS NOT NULL AND iptal_kaynagi IS NOT NULL))`.
-- `CHECK (NOT gec_iptal OR iptal_kaynagi = 'ogrenci')`.
+- `CHECK (NOT gec_iptal OR COALESCE(iptal_kaynagi = 'ogrenci', false))` (`iptal_kaynagi` NULL iken de `gec_iptal` reddedilir; yalın `iptal_kaynagi = 'ogrenci'` NULL'da CHECK'ten geçerdi).
 - `CHECK (telafi OR telafi_kaynak_ders_id IS NULL)`.
 - `UNIQUE (kurum_id, id)`.
 - `UNIQUE (seri_id, seri_sirasi) WHERE seri_id IS NOT NULL` (seri üretiminin idempotent olması).
+- `CHECK ((seri_id IS NULL) = (seri_sirasi IS NULL))` (`dersler_seri_sirasi_chk`), `CHECK (ertelendi_sayisi >= 0)`. Bileşik FK: `iptal_eden_id` ve `telafi_kaynak_ders_id` (`(kurum_id, ...)`).
 - Öğretmen çakışması: `EXCLUDE USING gist (ogretmen_id WITH =, tstzrange(baslangic_at, bitis_at) WITH &&) WHERE (durum = 'planli' AND NOT cakisma_onayli)`. Uygulama önce çakışmayı sorgular ve `409 ders_cakismasi` (çakışan ders listesiyle) döner. Kullanıcı onaylarsa `cakisma_onayli=true` ile yazılır. Gerekli: `btree_gist`.
 - Öğrenci çakışması veritabanı kısıtı değildir. Uygulama uyarı döner.
 
 Zaman davranışı: `baslangic_at` UTC saklanır. Seri dersleri `saat_dilimi` yerel saatine göre üretilir (yaz saati uygulanmıyor olsa da kural tanımlıdır, Türkiye 2016'dan beri UTC+3). Erteleme `baslangic_at`/`bitis_at`'i günceller, `ertelendi_sayisi` artar, `seri_istisna=true` olur.
+Uygulama notları:
+
+- `ilk_baslangic_at` ilk planlanan zamandır; `NOT NULL`, oluşturulurken `baslangic_at`e eşitlenir.
+- `seri_istisna=true` olan dersler (bir dersi tek başına taşıma, bilgi güncelleme ya da iptal) `bu_ve_sonrakiler` işlemlerinden etkilenmez.
+- Çakışma: önce sorgu, `409 ders_cakismasi` (`details.cakisanlar`); yarış durumunda EXCLUDE ihlali (`23P01`) de aynı `409`a çevrilir. Seri üretiminde `INSERT ... ON CONFLICT DO NOTHING` çakışan/yinelenen satırı atlar, `atlanan` olarak döner.
+- `gec_iptal` sunucuda `gecIptalSaati()` ile hesaplanır: bu pakette sabit 24 saat; sonraki paket bunu `finans` iptal/ücret politikasına bağlar. Bu pakette kredi ve ücret etkisi yoktur.
+- `iptal_kaynagi='ogrenci'` yalnızca `birebir` türündeki grupta kabul edilir (`422 iptal_kaynagi_gecersiz`).
+
 Yoklama kilidi: tamamlanmış ders için yoklama düzenleme `kurumlar.ayarlar.yoklama_kilit_gun` (varsayılan 14) sonra kilitlenir, yalnızca `yonetici` düzeltir.
 İndeks: `(kurum_id, baslangic_at)`, `(kurum_id, grup_id, baslangic_at)`, `(kurum_id, ogretmen_id, baslangic_at)`, `(seri_id)`.
 Olaylar: `ders.ders.degisti.v1` (`degisim_turu`: `planlandi`, `ertelendi`, `iptal_edildi`, `tamamlandi`, `guncellendi`).
@@ -643,6 +659,7 @@ Profil: `K`. RLS: evet.
 | `tur` | text | hayır | `'uye'` | CHECK `IN ('uye','misafir','telafi')` |
 
 Kısıtlar: `UNIQUE (ders_id, ogrenci_id)`. İndeks: `(kurum_id, ogrenci_id, ders_id)`. Olaylar: yok (`ders.ders.degisti` yükü `ogrenci_idleri` taşır).
+Katılımcılar ders oluşturulurken `grupEtkinOgrencileri` ile dondurulur (seri derslerinde her dersin üretildiği andaki etkin üyeler). Misafir/telafi öğrenci `POST .../katilimcilar` ile eklenir. `ders_katilimcilari` `surum` taşımaz (`kiraci_tablosu_koru(..., false)`).
 
 ### `ders.yoklamalar`
 
@@ -1536,3 +1553,23 @@ Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `go
 | DELETE | `/oturumlar/:oturum_id` | giriş + KVKK | Tek oturumu sonlandır; başkasının/olmayan oturum `404` |
 | POST | `/oturumlar/tumunu-kapat` | giriş + KVKK | Gövde `{ mevcut_haric?: boolean }`; `{ kapatilan }` döner |
 | GET | `/modul-ayarlari/etkin-tumu` | `modul.ayar.oku` | `?grup_id&kademe_id` → `{ moduller: { [ModulKodu]: boolean } }`; `/modul-ayarlari/etkin` ile aynı çözümleme (`hesap.modul_acik_mi`), tek sorgu |
+
+## `ders` takvim uç noktaları
+
+`/v1/ders/kurumlar/:kurum_id/...` altında; `takvim` modülü kapalıysa tüm uçlar `403 modul_kapali`. Okuma `takvim.oku`, yazma `takvim.yaz` (en az `grup` kapsamı). Liste ve tekil uçlar kapsam süzgecinden geçer, kapsam dışı kayıt `404`: sahip/yönetici kurum (şube bağlıysa şube), öğretmen atandığı grupların ya da kendi dersleri, öğrenci yalnızca katılımcısı olduğu dersler. Tüm yazmalar aynı işlemde outbox'a `ders.ders.degisti.v1` ve `hesap.denetim_kayitlari`na (`ders.olustur`, `ders.seri_olustur`, `ders.guncelle`, `ders.tasi`, `ders.iptal`, `ders.katilimci_ekle`, `ders.katilimci_cikar`) yazar.
+
+| Yöntem | Yol | İzin | Açıklama |
+| --- | --- | --- | --- |
+| POST | `/dersler` | `takvim.yaz` | Tekil ders. `ogretmen_id` isteğe bağlı: boşsa öğretmen rolünde kendisi, sahip/yönetici için aynı kullanıcının aynı kurumdaki etkin `ogretmen` üyeliği (bireysel kurumda hoca iki üyelik taşır), yoksa `422 ogretmen_gerekli`; verilen kimlik etkin `ogretmen` üyeliği değilse `422 ogretmen_gecersiz`; öğretmen rolü yalnız kendi adına ve atandığı gruba ders açar. `brans_kodu` boşsa atamadan. Öğretmen çakışması `409 ders_cakismasi` (`cakisma_onayli: true` ile yazılır); öğrenci çakışması yanıtta `uyari` |
+| POST | `/seriler` | `takvim.yaz` | Tekrarlayan ders (`tekrar_kurali`, `baslangic_tarihi`, `bitis_tarihi` ya da `adet`). 12 hafta ileriye üretilir; yanıt `{ seri, dersler, atlanan, cakisanlar, uyari }`. Çakışmada `409` (seri yazılmaz) ya da `cakisma_onayli` |
+| GET | `/dersler` | `takvim.oku` | `?baslangic&bitis&ogretmen_id&grup_id&ogrenci_id&durum&limit&imlec`; aralık zorunlu ve en çok 100 gün, anahtar tabanlı sayfalama (`sonraki_imlec`), yanıtta `katilimci_sayisi` (N+1 yok) |
+| GET | `/dersler/:id` | `takvim.oku` | Katılımcılarla tekil ders (öğrenci rolünde yalnız kendisi); `online_baglanti` katılımcıya görünür |
+| PATCH | `/dersler/:id` | `takvim.yaz` | `surum` zorunlu (eskiyse `409 surum_cakismasi`), `kapsam: yalniz_bu \| bu_ve_sonrakiler`; `baslik`, `konu_id`, `online_baglanti`, `yer` |
+| POST | `/dersler/:id/tasi` | `takvim.yaz` | Erteleme: `surum`, `kapsam`, `yeni_tarih`, `yeni_saat`, `cakisma_onayli`. `yalniz_bu` dersi seriden ayırır, `bu_ve_sonrakiler` yalnız saati değiştirir ve seri kuralını günceller |
+| POST | `/dersler/:id/iptal` | `takvim.yaz` | `iptal_kaynagi` (`ogrenci` yalnız birebir grupta, aksi `422`), `iptal_nedeni`, `kapsam`, isteğe bağlı `surum`; `gec_iptal` sunucuda hesaplanır |
+| POST | `/dersler/:id/katilimcilar` | `takvim.yaz` | `{ ogrenci_id, tur: misafir \| telafi }`; tekrar `409 zaten_katilimci` |
+| DELETE | `/dersler/:id/katilimcilar/:ogrenci_id` | `takvim.yaz` | Katılımcıyı çıkarır (planlı ders) |
+
+Hata kodları: `ders_cakismasi`, `surum_cakismasi`, `ogretmen_gerekli`, `ogretmen_gecersiz`, `brans_gerekli`, `iptal_kaynagi_gecersiz`, `ders_planli_degil`, `ders_seride_degil`, `tarih_degisikligi_yalniz_bu`, `zaten_katilimci`, `degisiklik_yok`, `tekrar_kapsami_asildi`.
+
+Gece işi: `services/api/src/worker.ts` açılışta ve saatte bir `dersSerileriniUret` (`src/sistem/ders-seri-uret.ts`, `api_sistem`/`withSistem`) çağırır; yalnızca ufku ilerlemesi gereken seriler işlenir, iş idempotenttir ve yapılacak iş yoksa hiçbir satır yazmaz. Çakışan seri dersi atlanır (kullanıcıya sorulamaz). pg-boss henüz depoda olmadığı için zamanlayıcı süreç içi `setInterval`dir; pg-boss gelince aynı fonksiyon günlük işe taşınır.

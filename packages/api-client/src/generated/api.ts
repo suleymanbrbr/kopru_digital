@@ -465,6 +465,1062 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ders/kurumlar/{kurum_id}/dersler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ders listesi (takvim araligi, en cok 100 gun; anahtar tabanli sayfalama). Kapsam rolun izin kapsamina gore daralir: ogrenci yalniz katilimcisi oldugu dersleri gorur. */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Aralık başı (UTC önerilir: `...Z`). */
+                    baslangic: string;
+                    /** @description Aralık sonu; en çok 100 gün. */
+                    bitis: string;
+                    durum?: "planli" | "tamamlandi" | "iptal";
+                    grup_id?: string;
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                    ogrenci_id?: string;
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dersler: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Tekil ders olustur. Ogretmen cakismasinda 409 ders_cakismasi; cakisma_onayli:true ile yazilir. Ogrenci cakismasi yanitta uyaridir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Yerel saat, SS:DD (24 saat). */
+                        baslangic_saati: string;
+                        baslik?: string;
+                        /** @description Boşsa öğretmenin gruptaki atamasının branşı. */
+                        brans_kodu?: string;
+                        /**
+                         * @description Öğretmen çakışması bilerek onaylandı (`409 ders_cakismasi` sonrası).
+                         * @default false
+                         */
+                        cakisma_onayli?: boolean;
+                        /** Format: uuid */
+                        grup_id: string;
+                        /** Format: uuid */
+                        konu_id?: string;
+                        /**
+                         * Format: uuid
+                         * @description Boşsa: öğretmen çağıranın kendisi; sahip/yönetici için aynı kullanıcının öğretmen üyeliği (yoksa 422).
+                         */
+                        ogretmen_id?: string;
+                        online_baglanti?: string;
+                        sure_dk: number;
+                        /** Format: date */
+                        tarih: string;
+                        /** @default false */
+                        telafi?: boolean;
+                        /** Format: uuid */
+                        telafi_kaynak_ders_id?: string;
+                        yer?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                                katilimcilar: {
+                                    gorunen_ad: string | null;
+                                    /**
+                                     * Format: uuid
+                                     * @description Öğrenci üyeliği (`uyelikler.id`).
+                                     */
+                                    ogrenci_id: string;
+                                    /** @enum {string} */
+                                    tur: "uye" | "misafir" | "telafi";
+                                }[];
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            };
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tekil ders ve katilimcilari (kapsam disi: 404). Ogrenci rolunde yalniz kendisi gorunur. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            baslangic_at: string;
+                            baslik: string | null;
+                            /** Format: date-time */
+                            bitis_at: string;
+                            brans_kodu: string;
+                            cakisma_onayli: boolean;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "planli" | "tamamlandi" | "iptal";
+                            ertelendi_sayisi: number;
+                            gec_iptal: boolean;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_baslangic_at: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            /** Format: uuid */
+                            iptal_eden_id: string | null;
+                            /** @enum {string|null} */
+                            iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                            iptal_nedeni: string | null;
+                            katilimci_sayisi: number;
+                            /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                            katilimcilar: {
+                                gorunen_ad: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Öğrenci üyeliği (`uyelikler.id`).
+                                 */
+                                ogrenci_id: string;
+                                /** @enum {string} */
+                                tur: "uye" | "misafir" | "telafi";
+                            }[];
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                            online_baglanti: string | null;
+                            /** Format: uuid */
+                            seri_id: string | null;
+                            seri_istisna: boolean;
+                            seri_sirasi: number | null;
+                            surum: number;
+                            telafi: boolean;
+                            /** Format: uuid */
+                            telafi_kaynak_ders_id: string | null;
+                            yer: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Ders bilgisi guncelle (baslik, konu, online baglanti, yer). `surum` zorunlu (eskiyse 409). `yalniz_bu` seri dersini seriden ayirir (seri_istisna); `bu_ve_sonrakiler` yalniz seri_istisna=false gelecek dersleri ve seri kuralini gunceller. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik?: string | null;
+                        /**
+                         * @description `bu_ve_sonrakiler` yalnız seri dersinde geçerlidir ve yalnız `seri_istisna=false` gelecek dersleri etkiler.
+                         * @default yalniz_bu
+                         * @enum {string}
+                         */
+                        kapsam?: "yalniz_bu" | "bu_ve_sonrakiler";
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        online_baglanti?: string | null;
+                        /** @description Okunan `surum`; eskiyse 409. */
+                        surum: number;
+                        yer?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                                katilimcilar: {
+                                    gorunen_ad: string | null;
+                                    /**
+                                     * Format: uuid
+                                     * @description Öğrenci üyeliği (`uyelikler.id`).
+                                     */
+                                    ogrenci_id: string;
+                                    /** @enum {string} */
+                                    tur: "uye" | "misafir" | "telafi";
+                                }[];
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            };
+                            /** @description Seçilen ders dahil değişen tüm dersler. */
+                            etkilenen_ders_idleri: string[];
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dersi iptal et. `iptal_kaynagi=ogrenci` yalniz birebir grupta (degilse 422); `gec_iptal` sunucuda hesaplanir. `bu_ve_sonrakiler` seriyi bu dersten itibaren sonlandirir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description `ogrenci` yalnız birebir grupta kabul edilir.
+                         * @enum {string}
+                         */
+                        iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici";
+                        iptal_nedeni?: string;
+                        /**
+                         * @description `bu_ve_sonrakiler` yalnız seri dersinde geçerlidir ve yalnız `seri_istisna=false` gelecek dersleri etkiler.
+                         * @default yalniz_bu
+                         * @enum {string}
+                         */
+                        kapsam?: "yalniz_bu" | "bu_ve_sonrakiler";
+                        surum?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                                katilimcilar: {
+                                    gorunen_ad: string | null;
+                                    /**
+                                     * Format: uuid
+                                     * @description Öğrenci üyeliği (`uyelikler.id`).
+                                     */
+                                    ogrenci_id: string;
+                                    /** @enum {string} */
+                                    tur: "uye" | "misafir" | "telafi";
+                                }[];
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            };
+                            /** @description Seçilen ders dahil değişen tüm dersler. */
+                            etkilenen_ders_idleri: string[];
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/katilimcilar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Derse misafir veya telafi ogrencisi ekle */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        ogrenci_id: string;
+                        /**
+                         * @default misafir
+                         * @enum {string}
+                         */
+                        tur?: "misafir" | "telafi";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                                katilimcilar: {
+                                    gorunen_ad: string | null;
+                                    /**
+                                     * Format: uuid
+                                     * @description Öğrenci üyeliği (`uyelikler.id`).
+                                     */
+                                    ogrenci_id: string;
+                                    /** @enum {string} */
+                                    tur: "uye" | "misafir" | "telafi";
+                                }[];
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            };
+                            /** @description Seçilen ders dahil değişen tüm dersler. */
+                            etkilenen_ders_idleri: string[];
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/katilimcilar/{ogrenci_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Ogrenciyi dersin katilimcilarindan cikar (planli ders) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                                katilimcilar: {
+                                    gorunen_ad: string | null;
+                                    /**
+                                     * Format: uuid
+                                     * @description Öğrenci üyeliği (`uyelikler.id`).
+                                     */
+                                    ogrenci_id: string;
+                                    /** @enum {string} */
+                                    tur: "uye" | "misafir" | "telafi";
+                                }[];
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            };
+                            /** @description Seçilen ders dahil değişen tüm dersler. */
+                            etkilenen_ders_idleri: string[];
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/tasi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dersi yeni gun/saate tasi (erteleme). `yalniz_bu` dersi seriden ayirir; `bu_ve_sonrakiler` yalniz saati degistirir (gun degisikligi 422), seri kurali da guncellenir ve istisna dersler korunur. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default false */
+                        cakisma_onayli?: boolean;
+                        /**
+                         * @description `bu_ve_sonrakiler` yalnız seri dersinde geçerlidir ve yalnız `seri_istisna=false` gelecek dersleri etkiler.
+                         * @default yalniz_bu
+                         * @enum {string}
+                         */
+                        kapsam?: "yalniz_bu" | "bu_ve_sonrakiler";
+                        surum: number;
+                        /** @description Yerel saat, SS:DD (24 saat). */
+                        yeni_saat?: string;
+                        /**
+                         * Format: date
+                         * @description Yeni yerel gün. `bu_ve_sonrakiler` kapsamında değiştirilemez.
+                         */
+                        yeni_tarih?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** @description Öğrenci rolünde yalnız kendisi görünür. */
+                                katilimcilar: {
+                                    gorunen_ad: string | null;
+                                    /**
+                                     * Format: uuid
+                                     * @description Öğrenci üyeliği (`uyelikler.id`).
+                                     */
+                                    ogrenci_id: string;
+                                    /** @enum {string} */
+                                    tur: "uye" | "misafir" | "telafi";
+                                }[];
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            };
+                            /** @description Seçilen ders dahil değişen tüm dersler. */
+                            etkilenen_ders_idleri: string[];
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/seriler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tekrarlayan ders serisi olustur (FREQ=WEEKLY|DAILY, INTERVAL, BYDAY; bitis tarihi veya adet). Dersler 12 hafta ileriye uretilir, kalani gece isi uretir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        adet?: number;
+                        /** @description Yerel saat, SS:DD (24 saat). */
+                        baslangic_saati: string;
+                        /** Format: date */
+                        baslangic_tarihi: string;
+                        baslik?: string;
+                        /** Format: date */
+                        bitis_tarihi?: string;
+                        /** @description Boşsa öğretmenin gruptaki atamasının branşı. */
+                        brans_kodu?: string;
+                        /**
+                         * @description Öğretmen çakışması bilerek onaylandı (`409 ders_cakismasi` sonrası).
+                         * @default false
+                         */
+                        cakisma_onayli?: boolean;
+                        /** Format: uuid */
+                        grup_id: string;
+                        /** Format: uuid */
+                        konu_id?: string;
+                        /**
+                         * Format: uuid
+                         * @description Boşsa: öğretmen çağıranın kendisi; sahip/yönetici için aynı kullanıcının öğretmen üyeliği (yoksa 422).
+                         */
+                        ogretmen_id?: string;
+                        online_baglanti?: string;
+                        sure_dk: number;
+                        /** @description RFC 5545 alt kümesi: FREQ=WEEKLY|DAILY, INTERVAL, BYDAY. Örnek: FREQ=WEEKLY;BYDAY=MO,WE */
+                        tekrar_kurali: string;
+                        yer?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            atlanan: {
+                                /** @enum {string} */
+                                neden: "cakisma" | "zaten_var";
+                                seri_sirasi: number;
+                                /** Format: date */
+                                tarih: string;
+                            }[];
+                            /** @description `cakisma_onayli: true` ile yazılan derslerin çakıştığı mevcut dersler. */
+                            cakisanlar: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                            }[];
+                            dersler: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                            }[];
+                            seri: {
+                                adet: number | null;
+                                /** @description Yerel saat, SS:DD (24 saat). */
+                                baslangic_saati: string;
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                baslik: string | null;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                brans_kodu: string;
+                                /** @enum {string} */
+                                durum: "aktif" | "bitti" | "iptal";
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                saat_dilimi: string;
+                                sure_dk: number;
+                                surum: number;
+                                tekrar_kurali: string;
+                                /** Format: date */
+                                uretildi_son_tarih: string;
+                                yer: string | null;
+                            };
+                            uyari: {
+                                /** Format: uuid */
+                                cakisan_ders_id: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** @enum {string} */
+                                kod: "ogrenci_cakismasi";
+                                ogrenci_idleri: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hesap/ben": {
         parameters: {
             query?: never;
