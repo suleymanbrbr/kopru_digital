@@ -1,4 +1,5 @@
 import { t } from '@kopru/i18n';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -12,6 +13,7 @@ import { useOturum, useServisler } from '../../uygulama/baglam';
 import { hataMesaji } from '../../uygulama/hatalar';
 
 export default function KurumSec() {
+  const router = useRouter();
   const { oturum } = useServisler();
   const durum = useOturum();
   const [secilen, setSecilen] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export default function KurumSec() {
         </Metin>
         <Metin varyant="ikincil">{t('mobil.kurumSec.aciklama')}</Metin>
       </View>
-      {uyelikler.length === 0 ? <BosDurum mesaj={t('mobil.kurumSec.bos')} /> : null}
+      {uyelikler.length === 0 ? <BosDurum mesaj={t('mobil.kurumSec.bosAciklama')} /> : null}
       {uyelikler.map((u) => (
         <Pressable
           key={u.uyelikId}
@@ -69,6 +71,16 @@ export default function KurumSec() {
           {hata}
         </Metin>
       ) : null}
+      <Kart className="gap-3">
+        <Metin varyant="ikincil">{t('mobil.kurumSec.sinifKoduAciklama')}</Metin>
+        <Dugme
+          varyant="ikincil"
+          etiket={t('mobil.kurumSec.sinifKoduIleKatil')}
+          onPress={() => {
+            router.push('/sinif-kodu');
+          }}
+        />
+      </Kart>
       <Dugme
         varyant="hayalet"
         etiket={t('mobil.profil.cikis')}

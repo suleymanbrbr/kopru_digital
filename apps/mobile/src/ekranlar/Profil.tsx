@@ -30,7 +30,7 @@ function Satir({
 }: {
   etiket: string;
   onPress: () => void;
-  ikon: 'business' | 'swap-horizontal' | 'apps';
+  ikon: 'business' | 'swap-horizontal' | 'apps' | 'phone-portrait-outline' | 'key-outline';
 }) {
   return (
     <Pressable
@@ -98,6 +98,22 @@ export function Profil() {
               }}
             />
           ) : null}
+          {rol === 'ogrenci' ? (
+            <Satir
+              ikon="key-outline"
+              etiket={t('mobil.profil.sinifKoduKatil')}
+              onPress={() => {
+                router.push('/katilim');
+              }}
+            />
+          ) : null}
+          <Satir
+            ikon="phone-portrait-outline"
+            etiket={t('mobil.profil.oturumlarim')}
+            onPress={() => {
+              router.push('/oturumlar');
+            }}
+          />
           {ortam.gelistirici ? (
             <Satir
               ikon="apps"
