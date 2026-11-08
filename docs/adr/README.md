@@ -12,11 +12,12 @@ Biçim: Michael Nygard. Her kayıt `Başlık`, `Durum`, `Bağlam`, `Karar`, `Son
 | [0006](0006-adlandirma-ve-dil-kurallari.md) | Adlandırma ve dil kuralları | Kabul edildi |
 | [0007](0007-para-ve-defterler.md) | Para ve defterler: kuruş, append-only defter, ters kayıt | Kabul edildi |
 | [0008](0008-erisim-belirteci-iptali-sid-listesi.md) | Erişim belirteci iptali: NATS KV `sid` listesi | Kabul edildi |
+| [0009](0009-guvenilir-proxy-istemci-ip.md) | Güvenilir proxy ve gerçek istemci IP'si | Kabul edildi |
 
 Şema dokümanları: [../schema/README.md](../schema/README.md).
 
 ## Yeni ADR açmak
 
-1. Sonraki numarayı kullan (`0008-...md`). Dosya adı ASCII, `kebab-case` ([0006](0006-adlandirma-ve-dil-kurallari.md)).
+1. Sonraki numarayı kullan (`0010-...md`). Dosya adı ASCII, `kebab-case` ([0006](0006-adlandirma-ve-dil-kurallari.md)).
 2. Yukarıdaki altı bölümü doldur. Alternatifleri gerekçesiyle yaz.
 3. Bu tabloya satır ekle.

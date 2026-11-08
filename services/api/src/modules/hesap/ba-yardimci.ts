@@ -2,13 +2,21 @@ import { errorCodes } from '@kopru/contracts';
 import { AppError } from '@kopru/service-kit';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-/** Fastify basliklarini Web `Headers` nesnesine cevirir (Better Auth girdisi). */
+/**
+ * Fastify basliklarini Web `Headers` nesnesine cevirir (Better Auth girdisi).
+ *
+ * Better Auth oturum IP'sini yalniz `X-Forwarded-For`'dan okur ve guven kuralini bilmez; istemcinin
+ * yazdigi deger oturuma gecebilirdi. Bu yuzden baslik, Fastify'in `trustProxy` kuralindan (ADR 0009)
+ * gecmis `request.ip` ile yerine konur (tek deger).
+ */
 export function webBasliklari(request: FastifyRequest): Headers {
   const basliklar = new Headers();
   for (const [ad, deger] of Object.entries(request.headers)) {
+    if (ad === 'x-forwarded-for') continue;
     if (Array.isArray(deger)) for (const d of deger) basliklar.append(ad, d);
     else if (deger !== undefined) basliklar.set(ad, deger);
   }
+  basliklar.set('x-forwarded-for', request.ip);
   return basliklar;
 }
 

@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 import { z } from 'zod';
 
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
@@ -7,6 +9,21 @@ const csv = (value: string) =>
     .split(',')
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
+
+/**
+ * `TRUST_PROXY` girdisi (ADR 0009): tek IP ya da `IP/onek` CIDR. `*`, `true`, `loopback` gibi
+ * etiketler ve onek 0 (her adres) reddedilir.
+ */
+export function gecerliProxyAdresi(giris: string): boolean {
+  const [adres, onek, fazla] = giris.split('/');
+  if (fazla !== undefined || adres === undefined) return false;
+  const surum = isIP(adres);
+  if (surum === 0) return false;
+  if (onek === undefined) return true;
+  if (!/^\d{1,3}$/.test(onek)) return false;
+  const sayi = Number(onek);
+  return sayi >= 1 && sayi <= (surum === 4 ? 32 : 128);
+}
 
 /** Tum servislerin ortak ortam degiskenleri. Servise ozel alanlar `extend` ile eklenir. */
 export function createEnvSchema(options: { defaultPort: number }) {
@@ -24,11 +41,22 @@ export function createEnvSchema(options: { defaultPort: number }) {
       JWT_ISSUER: z.string().min(1).optional(),
       JWT_AUDIENCE: z.string().min(1).optional(),
       CORS_ORIGINS: z.string().default('').transform(csv),
+      /** Istemci IP'sini `X-Forwarded-For`'dan okumaya guvenilen proxy adresleri (IP/CIDR). Bos = hicbiri. */
+      TRUST_PROXY: z.string().default('').transform(csv),
       RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
       OPENAPI_ENABLED: z.stringbool().optional(),
       OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
     })
     .check((ctx) => {
+      const gecersiz = ctx.value.TRUST_PROXY.filter((adres) => !gecerliProxyAdresi(adres));
+      if (gecersiz.length > 0) {
+        ctx.issues.push({
+          code: 'custom',
+          message: `TRUST_PROXY yalnız IP veya CIDR listesi olabilir ("*" ve "true" kabul edilmez); geçersiz: ${gecersiz.join(', ')}`,
+          path: ['TRUST_PROXY'],
+          input: ctx.value.TRUST_PROXY,
+        });
+      }
       if (ctx.value.AUTH_ENABLED && !ctx.value.JWKS_URL) {
         ctx.issues.push({
           code: 'custom',
