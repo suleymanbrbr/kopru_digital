@@ -1,76 +1,65 @@
 # Devir notu
 
-Tarih: 7 Kasım 2026. Bu not, Cowork oturumunda yapılan ilk iki dalganın sonunda Claude Code'a devir için yazıldı. Yeni bir oturum önce `CLAUDE.md`'yi, sonra bu notu okur.
+Tarih: 8 Kasım 2026. Bu not Dalga 3'ün (PR #1–#7) sonunda güncellendi. Yeni bir oturum önce `CLAUDE.md`'yi, sonra bu notu okur.
 
 ## Şu an ne var
 
-`main` (`e3eb3f3` ve sonrası) şunları içerir. Hepsi `pnpm format:check`, `lint`, `typecheck`, `test`, `build` ve `pnpm --filter @kopru/api-client generate:check` kontrollerinden geçti.
+`main` şunları içerir. Her PR birleşmeden önce `pnpm format:check`, `lint`, `typecheck`, `test`, `build` ve `pnpm --filter @kopru/api-client generate:check` kontrollerinden ve CI'dan (`verify`, `web-e2e`, `mobil`) geçti.
 
-| Parça                    | Durum                                                                                                                                                                             |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Monorepo temeli          | pnpm 10 + Turborepo, katalog sürümleri, Docker Compose (postgres, nats, minio, mailpit, otel-lgtm), `pnpm run doctor`, CI (`verify`, `web-e2e`, `mobil` işleri)                   |
-| `packages/service-kit`   | Fastify 5 + Zod, OpenAPI, pino, Drizzle/postgres.js, düz SQL göç koşucusu, `withTenant`/`withSistem`, outbox + NATS JetStream, idempotent tüketici, pg-boss                       |
-| `services/api` → `hesap` | Telefon OTP, e-posta/parola, EdDSA erişim JWT'si + JWKS, KVKK onayı (hesap düzeyinde), kurum oluşturma (sahip + 9 kademe), üyelikler, modül ayarları, RLS. 16 uç, 58 test         |
-| Diğer servisler          | `motivasyon`, `bildirim`, `medya` yalnız iskelet (sağlık ucu + worker). İş mantığı yok                                                                                            |
-| `apps/web`               | Next.js 16: giriş → KVKK → kurum seçimi → rol bazlı kabuk ve "Bugün" ekranı. Mock API ile Playwright e2e. Ekran görüntüleri `apps/web/docs/ekranlar/`                             |
-| `apps/mobile`            | Expo SDK 58: aynı akış, rol sekmeleri, odak sayacı, çevrimdışı mutasyon kuyruğu, karakter bileşeni (SVG yer tutucu, Rive'a hazır). 42 test. Ekranlar `apps/mobile/docs/ekranlar/` |
-| Paylaşılan paketler      | `ui-tokens` (WCAG kontrast testi), `i18n` (tek `tr.ts`), `api-client` (OpenAPI anlıkları + üretilmiş tipler)                                                                      |
-| Dokümanlar               | `docs/adr/0001–0007`, `docs/schema/*`, `docs/karakter/*`, `docs/urun/*`, `docs/gelistirme.md`                                                                                     |
+| Parça                    | Durum                                                                                                                                                                                                                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Monorepo temeli          | pnpm 10 + Turborepo, katalog sürümleri, Docker Compose (postgres, nats, S3 için RustFS, mailpit, otel-lgtm), `pnpm run doctor`, CI                                                                                                                                      |
+| `packages/service-kit`   | Fastify 5 + Zod, OpenAPI, pino, Drizzle/postgres.js, düz SQL göç koşucusu, `withTenant`/`withSistem`, outbox + NATS JetStream, idempotent tüketici, pg-boss, `sid` iptal listesi (NATS KV)                                                                              |
+| `packages/contracts`     | Olay ve API şemaları, izin sözlüğü (sürüm 2), `MODUL_KODLARI` tek kaynak (`hesap/moduller.ts`)                                                                                                                                                                          |
+| `services/api` → `hesap` | Telefon OTP, e-posta/parola, e-posta doğrulama, EdDSA erişim JWT'si + JWKS, çıkışta anında token iptali, KVKK onayı (hesap düzeyinde), kurum, üyelik, modül ayarları, gruplar, öğretmen atamaları, davetler (sms, e-posta, bağlantı), kapsam süzgeci, RLS. 79 test      |
+| Diğer servisler          | `motivasyon`, `bildirim`, `medya` yalnız iskelet (sağlık ucu + worker + `sid` iptal kontrolü). İş mantığı yok                                                                                                                                                           |
+| `apps/web`               | Next.js 16: gerçek api'ye bağlı (`@kopru/api-client`) giriş → KVKK → kurum seçimi → rol bazlı kabuk ve "Bugün". 41 birim testi, mock e2e 28, gerçek api e2e (`pnpm --filter @kopru/web e2e:gercek`, CI'a girmez). Ekranlar `apps/web/docs/ekranlar/gercek-api/`         |
+| `apps/mobile`            | Expo SDK 58: gerçek api adaptörü (token yenileme, hata eşleme), rol sekmeleri, odak sayacı, çevrimdışı kuyruk, karakter bileşeni (SVG yer tutucu, Rive'a hazır). 71 test. iPhone 17 simülatöründe gerçek api'ye karşı doğrulandı. Ekranlar `apps/mobile/docs/ekranlar/` |
+| Paylaşılan paketler      | `ui-tokens` (WCAG kontrast testi), `i18n` (tek `tr.ts`, modül adları `modul.<kod>`), `api-client` (OpenAPI anlıkları + üretilmiş tipler)                                                                                                                                |
+| Dokümanlar               | `docs/adr/0001–0008`, `docs/schema/*`, `docs/karakter/*`, `docs/urun/*`, `docs/gelistirme.md`                                                                                                                                                                           |
 
-Uçtan uca yerelde doğrulanan akış: OTP gönder → doğrula → token → `riza_gerekli` (403) → onay → kurum oluştur → kurum token'ı → üyelik listesi. Tarif `docs/gelistirme.md` içinde.
+Tekrar çalıştırılabilir uçtan uca betikler: `services/api/scripts/davet-akisi.sh` (davet → kabul → grup → atama), `services/api/scripts/guvenlik-akisi.sh` (çıkışta iptal, Mailpit ile e-posta doğrulama). curl tarifi `docs/gelistirme.md` içinde.
 
 ## Hemen yapılacaklar (sırayla)
 
-1. **Web gerçek adaptörünü gerçek uçlara bağla.** `apps/web/src/sunucu/kimlik/api.ts` tahmini yollar kullanıyor. Elle `fetch` yerine `@kopru/api-client` kullanılmalı:
-
-   | Web'de şu an                      | Gerçek uç                            |
-   | --------------------------------- | ------------------------------------ |
-   | `/api/auth/phone-number/send-otp` | `POST /auth/otp/gonder`              |
-   | `/api/auth/phone-number/verify`   | `POST /auth/otp/dogrula`             |
-   | `/v1/hesap/moduller`              | `GET /v1/hesap/modul-ayarlari/etkin` |
-   | `/v1/hesap/riza/guncel`           | `GET /v1/hesap/rizalar/guncel`       |
-   | `/v1/hesap/riza`                  | `POST /v1/hesap/rizalar`             |
-   | `/api/auth/sign-out`              | `POST /auth/cikis`                   |
-
-   `/auth/token` ve `/v1/hesap/uyeliklerim` için gövde ve yanıt şeklini OpenAPI anlığından (`packages/api-client/openapi/api.json`) kontrol et.
-
-2. **Mobil gerçek adaptörü yaz.** `apps/mobile/src/api/index.ts` → `adaptorleriOlustur` içindeki `TODO(orkestrator)`. Sözleşme `Adaptorler` arayüzüdür. `ortam.apiUrl` doluyken `@kopru/api-client` ile oluşturulmuş adaptörleri döndür. Belirteçler `expo-secure-store` üzerinden zaten saklanıyor.
-
-3. **Modül anahtarlarını tek yerde topla.** Şu an üç farklı liste var:
-   - web: `ders, odev, plan, deneme, soru, kayit, finans, motivasyon`
-   - mobil: `takvim, yoklama, geri_bildirim, kayitlar, finans, odev, haftalik_plan, deneme, soru_sor, oyunlastirma, duyuru`
-   - hesap modülü: `services/api/src/modules/hesap` içindeki modül kataloğu
-
-   Doğru kaynak hesap modülünün kataloğudur. Onu `packages/contracts` içine bir sabit + tip olarak taşı. Web ve mobil buradan okusun, i18n anahtarları da aynı adları kullansın.
-
-4. **Alt sekme etiketleri kesik görünüyor (mobil).** Ekran görüntülerinde sekme yazılarının altı kırpılmış. Büyük olasılıkla `useSafeAreaInsets` alt boşluğu sekme çubuğu yüksekliğine eklenmiyor. Gerçek cihazda/simülatörde kontrol et.
-
-5. **Staging.** Barındırma sağlayıcısı henüz seçilmedi (Türkiye'de VM; Kamal ile dağıtım). Plan hafta 4–9 bloğunda staging var.
+1. **KVKK metnini gerçekten göster.** Mobil sabit bir özet gösteriyor (`apps/mobile/src/app/(onboarding)/kvkk.tsx`), web `govde_markdown`'ı ham gösteriyor (`##`, `**` ekranda). Kullanıcı onayladığı metnin tamamını okunur görmeli. Markdown renderer yeni bağımlılık kararıdır.
+2. **`hesap.uyelik.degisti` olayındaki `gorunen_ad`'ı kaldır.** "Olaylarda kişisel veri yok" kuralına aykırı. Sözleşme değişikliği: `docs/schema/olaylar.md` ve ADR 0002 sürümleme kurallarına göre yapılmalı.
+3. **Hesap modülünün kalan uçları:** oturum listesi ve "tüm cihazlardan çıkış" (altyapı hazır: `app.iptal.iptalEt(sid)`), sınıf katılım kodu (`hesap.sinif_katilim_kodlari`; tablo var, uç yok), toplu davet, platform yönetimi ve taklit.
+4. **E-posta doğrulama sayfası.** `GET /auth/eposta/dogrula` JSON döndürüyor; bağlantı web'de kullanıcıya görünen bir sayfaya gitmeli. Bağlantılar `PUBLIC_URL`'den kuruluyor (api adresi); davet ve doğrulama bağlantıları için ayrı bir web adresi ortam değişkeni gerekiyor.
+5. **Toplu modül ucu.** `GET /v1/hesap/modul-ayarlari/etkin` tek modül döndürüyor; web ve mobil kurum başına 11 istek atıyor.
+6. **Android doğrulaması.** Emülatörde hiç denenmedi; `10.0.2.2` çevirisi yalnız birim testinde.
+7. **Küçük düzeltmeler.** Mobilde OTP gönderim sınırı (429) "yanlış deneme" mesajına düşüyor. `gorunen_ad` boş kullanıcıda selamlama adsız. `apps/web/AGENTS.md` `next dev` tarafından üretiliyor ve izlenmiyor (`.gitignore`'a eklenebilir).
+8. **Staging.** Barındırma sağlayıcısı henüz seçilmedi (Türkiye'de VM; Kamal ile dağıtım). Staging kurulurken iptal listesi uyarısına ("kontrol atlandı", fail-open) Grafana alarmı bağlanmalı.
 
 Bunlardan sonra plana göre sıradaki blok **hafta 10–14: takvim, yoklama, finans**. Yoklama ve kredi düşümü aynı işlemde (`api` içinde `ders` + `finans`).
 
+## Karar bekleyenler (proje sahibi)
+
+- **Davet hedefi eşleşmesi.** SMS veya e-postayla giden daveti, bağlantıya sahip ve giriş yapmış herkes kabul edebiliyor (şartnamedeki WhatsApp ile paylaşım modeli). Hedef telefon/e-postayla eşleştirme istenirse Paket D'deki doğrulama altyapısı kullanılabilir.
+- **Solo hoca atama akışı.** Bireysel kurumda öğrenci daveti kabul edilince birebir grup otomatik açılıyor, ama branş bilinmediği için öğretmen ataması yapılmıyor. Solo hoca öğretmen rolüyle kendi birebir grubunu görmez; öğrenci ekleme arayüzü branşı sorup `POST .../atamalar` çağırmalı.
+- **Rive sözleşmesi.** `@rive-app/react-native` 0.5.x'te girdiler (inputs) kullanımdan kalkıyor, View Model veri bağlama öneriliyor. `docs/karakter/rive-yapisi.md`'yi `Companion_VM` View Model'ine göre güncelle (özellikler: `asama`, `ruh_hali`, tetikleyiciler) ya da eski runtime'da kal. İllüstratöre brief gitmeden önce netleşmeli.
+
 ## Bilinen açıklar ve kararlar
 
-- **KVKK onayı hesap düzeyinde, kurumdan önce.** ADR 0004'e değişiklik notu olarak işlendi (7 Kasım 2026).
-- **Rive sözleşmesi.** `@rive-app/react-native` 0.5.x'te girdiler (inputs) kullanımdan kalkıyor, View Model veri bağlama öneriliyor. `docs/karakter/rive-yapisi.md`'yi `Companion_VM` View Model'ine göre güncelle (özellikler: `asama`, `ruh_hali`, tetikleyiciler). Ya da eski runtime'da kal. Karar verilmeli; illüstratöre brief gitmeden önce netleşmeli.
-- **Kıvılcım yer tutucusu** bilinen bir ejderha karakterine fazla benziyor. Bu yalnızca yer tutucu. Nihai çizimde özgün bir siluet şart (`docs/karakter/brief-illustrator.md`).
-- **Hesap modülünde eksik uçlar:** davetler, gruplar, öğretmen–öğrenci atamaları, platform yönetimi/impersonation, e-posta doğrulama.
-- **Güvenlik:** JWT `sid` iptal listesi yok (çıkışta erişim token'ı 15 dk geçerli kalıyor). `withSistem()` kullanımını `src/sistem/**` ile sınırlayan lint kuralı yok.
+- **KVKK onayı hesap düzeyinde, kurumdan önce** (ADR 0004 değişiklik notu).
+- **Token iptali fail-open** (ADR 0008, proje sahibi onayladı). NATS 300 ms içinde yanıt vermezse istek iptal kontrolü yapılmadan geçer; bu pencerede çıkış yapılmış token en çok 15 dk çalışabilir. Anında kesilmesi gereken uçlara (hesap askıya alma gibi) ileride fail-closed eklenebilir.
 - **Abonelik:** 402 yanıtı ve plan hakkı (`modul_acik_mi` içinde plan kontrolü) henüz yok; şu an yalnız kurum modül ayarına bakılıyor.
+- **E-posta gönderimi** şimdilik `api` içinde SMTP ile (`API_EPOSTA_SAGLAYICI=smtp`, varsayılan `log`). Gerçek gönderim `bildirim` servisine taşınacak. Giriş e-posta doğrulamaya zorlanmıyor.
+- **Kıvılcım yer tutucusu** bilinen bir ejderha karakterine fazla benziyor. Bu yalnızca yer tutucu. Nihai çizimde özgün bir siluet şart (`docs/karakter/brief-illustrator.md`).
 - **Marka:** "Köprü" adı ve logo geçici.
 - `pnpm doctor` değil, **`pnpm run doctor`** (pnpm'in kendi `doctor` komutuyla çakışıyor).
-- gh CLI token'ı Cowork ortamında geçersizdi, PR açılamadı. Dallar doğrudan `main`'e birleştirildi. Claude Code'da PR akışına geçilebilir.
+- İşler artık PR ile birleşiyor. Depoda GitHub otomatik birleştirme kapalı.
 
-## Mac kurulumu (devralmadan önce)
+## Mac geliştirme ortamı
 
-`pnpm run doctor` eksikleri listeler. Son kontrolde eksik olanlar:
+`pnpm run doctor` eksikleri listeler. Son kontrolde tek eksik **Node 24 LTS** (`.nvmrc`), makinede 22.22.2 var: `nvm install 24 && nvm use`. Kontrollerin hepsi Node 22 ile geçti.
 
-- Node 24 LTS (`.nvmrc`), şu an 22.22.2. `nvm install && nvm use`
-- pnpm 10 (`corepack enable && corepack prepare pnpm@10 --activate`), şu an 9.15.4
-- watchman (`brew install watchman`)
-- JDK 17 (`brew install --cask zulu@17`). Java 22 React Native Android derlemesinde sorun çıkarır
-- `ANDROID_HOME` ayarı (`export ANDROID_HOME=$HOME/Library/Android/sdk`, PATH'e `platform-tools` ve `emulator`)
-- conda `(base)` otomatik etkinleşmesini kapat (`conda config --set auto_activate_base false`). Yoksa Ruby/CocoaPods ve Python yolları karışabilir
+Bu makineye özgü durumlar:
+
+- Port 5432 başka bir projenin Postgres'inde. kopru Postgres'i `KOPRU_PG_PORT=5433 pnpm infra:up` ile 5433'te çalışıyor; yerel `.env` buna göre ayarlı. Testler: `DATABASE_URL=postgres://postgres:postgres@localhost:5433/kopru_test`. `NATS_URL=nats://localhost:4222` verilirse service-kit'in NATS testleri de çalışır.
+- Playwright'ın tarayıcısı kurulu değil. e2e'ler `PLAYWRIGHT_CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` ile çalışıyor.
+- `pnpm ios` Swift paket çözümlemesinde donarsa çözüm `docs/gelistirme.md` Mobil bölümünde (Keychain izni / `-packageAuthorizationProvider netrc`).
+- OTP'de IP başına saatte 20 istek sınırı var. Yerelde tekrar tekrar deneme yaparken sınıra takılırsanız yerel veritabanında `delete from hesap.otp_istekleri` çalıştırın.
 
 ## Senin (iş tarafı) açık işlerin
 
