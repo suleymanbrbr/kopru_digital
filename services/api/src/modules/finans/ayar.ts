@@ -25,7 +25,16 @@ import {
 } from '../../db/schema.js';
 import { requirePermission } from '../hesap/index.js';
 import { kurumPolitikasiGetir } from './kredi-uygula.js';
-import { denetimYaz, kalanDersGorunsunMu, kiraci, kilitAl, yetkiAl } from './ortak.js';
+import {
+  denetimYaz,
+  kalanDersGorunsunMu,
+  kilitAl,
+  kiraci,
+  tanimli,
+  tekSatir,
+  veritabani,
+  yetkiAl,
+} from './ortak.js';
 
 type TarifeSatiri = typeof ucretTarifeleri.$inferSelect;
 
@@ -113,10 +122,7 @@ async function cakismaDenetle(tx: Tx, kurumId: string, t: TarifeAlanlari, haricI
 
 /** Tarifeler, kredi politikasi ve kurum finans ayari: `/v1/finans/kurumlar/:kurum_id/...`. */
 export const ayarYollari: ServicePlugin = (app) => {
-  const db = () => {
-    if (!app.db) throw new AppError(503, errorCodes.unavailable, 'Veritabanı kullanılamıyor.');
-    return app.db;
-  };
+  const db = () => veritabani(app);
   const oku = { preHandler: requirePermission('finans.oku', { scope: 'grup' }) };
   const yaz = { preHandler: requirePermission('finans.paket.yaz', { scope: 'kurum' }) };
 
@@ -172,17 +178,18 @@ export const ayarYollari: ServicePlugin = (app) => {
       const satir = await withTenant(db(), kiraci(y), async (tx) => {
         await basvurulariDogrula(tx, y.kurumId, t);
         await cakismaDenetle(tx, y.kurumId, t, null);
-        const [s] = await tx
-          .insert(ucretTarifeleri)
-          .values({
-            id: uuidv7(),
-            kurum_id: y.kurumId,
-            created_by: y.kullaniciId,
-            ...t,
-            ucret_kurus: b.ucret_kurus,
-          })
-          .returning();
-        if (!s) throw new Error('tarife oluşturulamadı');
+        const s = tekSatir(
+          await tx
+            .insert(ucretTarifeleri)
+            .values({
+              id: uuidv7(),
+              kurum_id: y.kurumId,
+              created_by: y.kullaniciId,
+              ...t,
+              ucret_kurus: b.ucret_kurus,
+            })
+            .returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.tarife.olusturuldu',
           hedefTuru: 'ucret_tarifesi',
@@ -222,22 +229,24 @@ export const ayarYollari: ServicePlugin = (app) => {
           )
           .for('update');
         if (!onceki) throw new AppError(404, errorCodes.notFound, 'Tarife bulunamadı.');
-        const t: TarifeAlanlari = {
-          ogrenci_id: b.ogrenci_id !== undefined ? b.ogrenci_id : onceki.ogrenci_id,
-          grup_id: b.grup_id !== undefined ? b.grup_id : onceki.grup_id,
-          brans_kodu: b.brans_kodu !== undefined ? b.brans_kodu : onceki.brans_kodu,
-          gecerlilik_baslangic: b.gecerlilik_baslangic ?? onceki.gecerlilik_baslangic,
-          gecerlilik_bitis:
-            b.gecerlilik_bitis !== undefined ? b.gecerlilik_bitis : onceki.gecerlilik_bitis,
+        const t = {
+          ogrenci_id: onceki.ogrenci_id,
+          grup_id: onceki.grup_id,
+          brans_kodu: onceki.brans_kodu,
+          gecerlilik_baslangic: onceki.gecerlilik_baslangic,
+          gecerlilik_bitis: onceki.gecerlilik_bitis,
+          ucret_kurus: onceki.ucret_kurus,
+          ...tanimli(b),
         };
         await basvurulariDogrula(tx, y.kurumId, t);
         await cakismaDenetle(tx, y.kurumId, t, onceki.id);
-        const [s] = await tx
-          .update(ucretTarifeleri)
-          .set({ ...t, ucret_kurus: b.ucret_kurus ?? onceki.ucret_kurus })
-          .where(eq(ucretTarifeleri.id, onceki.id))
-          .returning();
-        if (!s) throw new Error('tarife güncellenemedi');
+        const s = tekSatir(
+          await tx
+            .update(ucretTarifeleri)
+            .set(t)
+            .where(eq(ucretTarifeleri.id, onceki.id))
+            .returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.tarife.guncellendi',
           hedefTuru: 'ucret_tarifesi',

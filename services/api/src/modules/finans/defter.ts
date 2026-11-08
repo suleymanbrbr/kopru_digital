@@ -9,6 +9,7 @@ import {
   ogrenciBakiyeleri,
   paketSatislari,
 } from '../../db/schema.js';
+import { tekSatir } from './ortak.js';
 
 /**
  * Defter ilkelleri (ADR 0007). Satir eklenir, hicbir zaman degistirilmez; ozet tablolari ayni
@@ -31,15 +32,17 @@ export async function krediBakiyeArtir(
   ogrenciId: string,
   delta: number,
 ): Promise<{ onceki: number; yeni: number }> {
-  const [satir] = await tx
-    .insert(krediBakiyeleri)
-    .values({ id: uuidv7(), kurum_id: kurumId, ogrenci_id: ogrenciId, bakiye: delta })
-    .onConflictDoUpdate({
-      target: [krediBakiyeleri.kurum_id, krediBakiyeleri.ogrenci_id],
-      set: { bakiye: sql`${krediBakiyeleri.bakiye} + excluded.bakiye` },
-    })
-    .returning({ bakiye: krediBakiyeleri.bakiye });
-  const yeni = satir?.bakiye ?? delta;
+  const satir = tekSatir(
+    await tx
+      .insert(krediBakiyeleri)
+      .values({ id: uuidv7(), kurum_id: kurumId, ogrenci_id: ogrenciId, bakiye: delta })
+      .onConflictDoUpdate({
+        target: [krediBakiyeleri.kurum_id, krediBakiyeleri.ogrenci_id],
+        set: { bakiye: sql`${krediBakiyeleri.bakiye} + excluded.bakiye` },
+      })
+      .returning({ bakiye: krediBakiyeleri.bakiye }),
+  );
+  const yeni = satir.bakiye;
   return { onceki: yeni - delta, yeni };
 }
 
@@ -49,15 +52,17 @@ export async function ogrenciBakiyeArtir(
   ogrenciId: string,
   deltaKurus: number,
 ): Promise<number> {
-  const [satir] = await tx
-    .insert(ogrenciBakiyeleri)
-    .values({ id: uuidv7(), kurum_id: kurumId, ogrenci_id: ogrenciId, bakiye_kurus: deltaKurus })
-    .onConflictDoUpdate({
-      target: [ogrenciBakiyeleri.kurum_id, ogrenciBakiyeleri.ogrenci_id],
-      set: { bakiye_kurus: sql`${ogrenciBakiyeleri.bakiye_kurus} + excluded.bakiye_kurus` },
-    })
-    .returning({ bakiye_kurus: ogrenciBakiyeleri.bakiye_kurus });
-  return satir?.bakiye_kurus ?? deltaKurus;
+  const satir = tekSatir(
+    await tx
+      .insert(ogrenciBakiyeleri)
+      .values({ id: uuidv7(), kurum_id: kurumId, ogrenci_id: ogrenciId, bakiye_kurus: deltaKurus })
+      .onConflictDoUpdate({
+        target: [ogrenciBakiyeleri.kurum_id, ogrenciBakiyeleri.ogrenci_id],
+        set: { bakiye_kurus: sql`${ogrenciBakiyeleri.bakiye_kurus} + excluded.bakiye_kurus` },
+      })
+      .returning({ bakiye_kurus: ogrenciBakiyeleri.bakiye_kurus }),
+  );
+  return satir.bakiye_kurus;
 }
 
 export interface KrediSatiriGirdi {
@@ -160,16 +165,34 @@ export async function bakiyeSatiriYaz(
 
 /** Bir havuzun (paket satisi) kalan kredisi: defter toplami. */
 export async function havuzKalan(tx: Tx, kurumId: string, paketSatisiId: string): Promise<number> {
-  const [satir] = await tx
-    .select({ toplam: sql<number>`coalesce(sum(${krediHareketleri.miktar}), 0)`.mapWith(Number) })
-    .from(krediHareketleri)
-    .where(
-      and(
-        eq(krediHareketleri.kurum_id, kurumId),
-        eq(krediHareketleri.paket_satisi_id, paketSatisiId),
+  const satir = tekSatir(
+    await tx
+      .select({ toplam: sql<number>`coalesce(sum(${krediHareketleri.miktar}), 0)`.mapWith(Number) })
+      .from(krediHareketleri)
+      .where(
+        and(
+          eq(krediHareketleri.kurum_id, kurumId),
+          eq(krediHareketleri.paket_satisi_id, paketSatisiId),
+        ),
       ),
-    );
-  return satir?.toplam ?? 0;
+  );
+  return satir.toplam;
+}
+
+/** Ogrencinin ozet bakiyeleri (satir yoksa 0): kalan kredi ve parasal bakiye (kurus). */
+export async function bakiyeOzeti(
+  tx: Tx,
+  kurumId: string,
+  ogrenciId: string,
+): Promise<{ kredi: number; kurus: number }> {
+  const satir = tekSatir(
+    await tx.execute<{ kredi: number; kurus: string }>(sql`
+      select coalesce((select bakiye from finans.kredi_bakiyeleri
+                       where kurum_id = ${kurumId} and ogrenci_id = ${ogrenciId}), 0) as kredi,
+             coalesce((select bakiye_kurus from finans.ogrenci_bakiyeleri
+                       where kurum_id = ${kurumId} and ogrenci_id = ${ogrenciId}), 0)::text as kurus`),
+  );
+  return { kredi: satir.kredi, kurus: Number(satir.kurus) };
 }
 
 /** Havuz tukendiyse `tukendi`, tekrar kredi dondugunde `aktif` (suresi dolmus/iptal olanlara dokunmaz). */

@@ -28,6 +28,9 @@ import {
   ogrenciBul,
   ogrenciKapsami,
   olayYaz,
+  sonrakiImlec,
+  tekSatir,
+  veritabani,
   yetkiAl,
 } from './ortak.js';
 
@@ -156,10 +159,7 @@ const tahsilatParam = KurumParamSema.extend({ tahsilat_id: z.uuid() });
 
 /** `/v1/finans/kurumlar/:kurum_id/tahsilatlar`: tahsilat olusturma, iptal ve liste. */
 export const tahsilatYollari: ServicePlugin = (app) => {
-  const db = () => {
-    if (!app.db) throw new AppError(503, errorCodes.unavailable, 'Veritabanı kullanılamıyor.');
-    return app.db;
-  };
+  const db = () => veritabani(app);
 
   app.post(
     '/kurumlar/:kurum_id/tahsilatlar',
@@ -235,18 +235,19 @@ export const tahsilatYollari: ServicePlugin = (app) => {
         if (mevcut.durum === 'iptal') {
           throw new AppError(409, finansHataKodlari.tahsilatIptal, 'Tahsilat zaten iptal edilmiş.');
         }
-        const [orijinal] = await tx
-          .select()
-          .from(bakiyeHareketleri)
-          .where(
-            and(
-              eq(bakiyeHareketleri.kurum_id, y.kurumId),
-              eq(bakiyeHareketleri.tur, 'tahsilat'),
-              eq(bakiyeHareketleri.kaynak_id, mevcut.id),
-              bakiyeTersiYok,
+        const orijinal = tekSatir(
+          await tx
+            .select()
+            .from(bakiyeHareketleri)
+            .where(
+              and(
+                eq(bakiyeHareketleri.kurum_id, y.kurumId),
+                eq(bakiyeHareketleri.tur, 'tahsilat'),
+                eq(bakiyeHareketleri.kaynak_id, mevcut.id),
+                bakiyeTersiYok,
+              ),
             ),
-          );
-        if (!orijinal) throw new Error('tahsilat defter satırı bulunamadı');
+        );
         await bakiyeSatiriYaz(tx, {
           kurumId: y.kurumId,
           ogrenciId: mevcut.ogrenci_id,
@@ -258,12 +259,13 @@ export const tahsilatYollari: ServicePlugin = (app) => {
           neden,
           aktorKullaniciId: y.kullaniciId,
         });
-        const [guncel] = await tx
-          .update(tahsilatlar)
-          .set({ durum: 'iptal', iptal_at: sql`now()`, iptal_nedeni: neden })
-          .where(eq(tahsilatlar.id, mevcut.id))
-          .returning();
-        if (!guncel) throw new Error('tahsilat güncellenemedi');
+        const guncel = tekSatir(
+          await tx
+            .update(tahsilatlar)
+            .set({ durum: 'iptal', iptal_at: sql`now()`, iptal_nedeni: neden })
+            .where(eq(tahsilatlar.id, mevcut.id))
+            .returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.tahsilat.iptal',
           hedefTuru: 'tahsilat',
@@ -323,7 +325,7 @@ export const tahsilatYollari: ServicePlugin = (app) => {
         return {
           kapsam: y.kapsam,
           tahsilatlar: sayfa.map(tahsilatYaniti),
-          sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.id ?? null) : null,
+          sonraki_imlec: sonrakiImlec(satirlar, limit, (s) => s.id),
         };
       });
     },

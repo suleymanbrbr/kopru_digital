@@ -12,17 +12,21 @@ import {
   uyelikler,
 } from '../../db/schema.js';
 import { requirePermission, type YetkiBaglami } from '../hesap/index.js';
-import { ayAraligi, denetimYaz, kiraci, ogrenciKapsami, yetkiAl } from './ortak.js';
+import { ayAraligi, denetimYaz, kiraci, ogrenciKapsami, veritabani, yetkiAl } from './ortak.js';
 
 const XLSX_TURU = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-const YONTEM_ADLARI: Record<string, string> = {
+const YONTEM_ADLARI: Record<'nakit' | 'havale' | 'kart' | 'diger', string> = {
   nakit: 'Nakit',
   havale: 'Havale/EFT',
   kart: 'Kart',
   diger: 'Diğer',
 };
-const MODEL_ADLARI: Record<string, string> = { paket: 'Paket', ders_basi: 'Ders başı', yok: 'Yok' };
+const MODEL_ADLARI: Record<'paket' | 'ders_basi' | 'yok', string> = {
+  paket: 'Paket',
+  ders_basi: 'Ders başı',
+  yok: 'Yok',
+};
 
 /** Kuruş -> TL yalnızca dışa aktarımda yapılır: tam sayı bölme, kayan nokta toplamı yok. */
 export const kurusTl = (kurus: number): number => Number((kurus / 100).toFixed(2));
@@ -157,7 +161,7 @@ export async function excelUret(tx: Tx, y: YetkiBaglami, ay: string): Promise<Bu
       tarih: s.tarih,
       ogrenci: hucreMetni(s.ogrenci),
       tutar: kurusTl(s.tutar),
-      yontem: YONTEM_ADLARI[s.yontem] ?? s.yontem,
+      yontem: YONTEM_ADLARI[s.yontem as keyof typeof YONTEM_ADLARI],
       makbuz: hucreMetni(s.makbuz),
       durum: s.durum === 'iptal' ? 'İptal' : 'Geçerli',
       aciklama: hucreMetni(s.aciklama),
@@ -177,7 +181,7 @@ export async function excelUret(tx: Tx, y: YetkiBaglami, ay: string): Promise<Bu
   for (const s of ogrenciSatirlari) {
     b.addRow({
       ad: hucreMetni(s.ad),
-      model: MODEL_ADLARI[s.model] ?? s.model,
+      model: MODEL_ADLARI[s.model as keyof typeof MODEL_ADLARI],
       kalan: s.kalan,
       bakiye: kurusTl(s.bakiye),
       odeyenAd: hucreMetni(s.odeyenAd),
@@ -191,10 +195,7 @@ export async function excelUret(tx: Tx, y: YetkiBaglami, ay: string): Promise<Bu
 
 /** `/v1/finans/kurumlar/:kurum_id/ozet/aylik` ve `/disa-aktar`. */
 export const raporYollari: ServicePlugin = (app) => {
-  const db = () => {
-    if (!app.db) throw new AppError(503, errorCodes.unavailable, 'Veritabanı kullanılamıyor.');
-    return app.db;
-  };
+  const db = () => veritabani(app);
   const oku = { preHandler: requirePermission('finans.oku', { scope: 'grup' }) };
 
   app.get(

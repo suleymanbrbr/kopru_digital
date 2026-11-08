@@ -1,5 +1,5 @@
 import { errorCodes, type Actor, type AnyEventEnvelope } from '@kopru/contracts';
-import { AppError, publishInTx, type Tx } from '@kopru/service-kit';
+import { AppError, publishInTx, type Database, type Tx } from '@kopru/service-kit';
 import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -114,7 +114,7 @@ export async function ogrenciBul(tx: Tx, y: YetkiBaglami, ogrenciId: string) {
 export async function denetimYaz(
   tx: Tx,
   y: YetkiBaglami,
-  ip: string | undefined,
+  ip: string,
   girdi: {
     eylem: string;
     hedefTuru: string;
@@ -138,7 +138,7 @@ export async function denetimYaz(
     sonra: girdi.sonra ?? null,
     neden: girdi.neden ?? null,
     istek_id: girdi.istekId ?? null,
-    ...(ip ? { ip } : {}),
+    ip,
   });
 }
 
@@ -149,3 +149,30 @@ export async function kilitAl(tx: Tx, anahtar: string): Promise<void> {
 
 /** `ILIKE` ozel karakterlerini kacirir. */
 export const likeKacir = (s: string): string => s.replace(/[\\%_]/g, (c) => `\\${c}`);
+
+/** Veritabani yoksa 503; rotalar tek yerden alir. */
+export function veritabani(app: { db: Database | null }): Database {
+  if (!app.db) throw new AppError(503, errorCodes.unavailable, 'Veritabanı kullanılamıyor.');
+  return app.db;
+}
+
+/** `returning()` sonucunun tek satiri; yoksa beklenmeyen hata (kod hatasi, kullanici hatasi degil). */
+export function tekSatir<T>(satirlar: T[]): T {
+  const satir = satirlar[0];
+  if (satir === undefined) throw new Error('beklenen satır yazılamadı');
+  return satir;
+}
+
+/** Anahtar tabanli sayfalama: `limit + 1` satir okunduysa son sayfa satirinin anahtari. */
+export function sonrakiImlec<T>(
+  satirlar: T[],
+  limit: number,
+  anahtar: (s: T) => string,
+): string | null {
+  return satirlar.length > limit ? anahtar(satirlar[limit - 1] as T) : null;
+}
+
+/** `undefined` alanlari atar (kismi guncelleme govdesi -> `set` nesnesi). */
+export function tanimli<T extends object>(nesne: T): { [K in keyof T]?: Exclude<T[K], undefined> } {
+  return Object.fromEntries(Object.entries(nesne).filter(([, v]) => v !== undefined)) as never;
+}

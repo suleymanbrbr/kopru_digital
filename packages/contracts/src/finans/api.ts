@@ -136,38 +136,23 @@ export const PaketSatisiSema = z.object({
   created_at: zaman,
 });
 
-export const OdemeSema = z
-  .object({
-    tur: z.enum(['tamami', 'kismi', 'sonra']),
-    tutar_kurus: pozitifKurus.optional().describe('Yalnız `kismi`: alınan tutar (< fiyat).'),
-    yontem: TahsilatYontemiSema.optional().describe('`tamami` ve `kismi` için zorunlu.'),
-    makbuz_no: z.string().trim().min(1).max(64).optional(),
-  })
-  .superRefine((o, ctx) => {
-    if (o.tur === 'sonra') {
-      if (o.tutar_kurus !== undefined || o.yontem !== undefined) {
-        ctx.addIssue({ code: 'custom', message: '`sonra` için tutar ve yöntem verilmez.' });
-      }
-      return;
-    }
-    if (o.yontem === undefined) {
-      ctx.addIssue({ code: 'custom', path: ['yontem'], message: 'Ödeme yöntemi gerekli.' });
-    }
-    if (o.tur === 'kismi' && o.tutar_kurus === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['tutar_kurus'],
-        message: 'Kısmi ödemede tutar gerekli.',
-      });
-    }
-    if (o.tur === 'tamami' && o.tutar_kurus !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['tutar_kurus'],
-        message: 'Tamamı ödemede tutar paket fiyatıdır.',
-      });
-    }
-  });
+const makbuzNo = z.string().trim().min(1).max(64);
+
+/** `tamami`: tutar paket fiyatıdır; `kismi`: alınan tutar (< fiyat); `sonra`: ödeme yok. */
+export const OdemeSema = z.discriminatedUnion('tur', [
+  z.strictObject({ tur: z.literal('sonra') }),
+  z.strictObject({
+    tur: z.literal('tamami'),
+    yontem: TahsilatYontemiSema,
+    makbuz_no: makbuzNo.optional(),
+  }),
+  z.strictObject({
+    tur: z.literal('kismi'),
+    tutar_kurus: pozitifKurus,
+    yontem: TahsilatYontemiSema,
+    makbuz_no: makbuzNo.optional(),
+  }),
+]);
 
 export const PaketSatisGirdiSema = z.object({
   ogrenci_id: z.uuid(),

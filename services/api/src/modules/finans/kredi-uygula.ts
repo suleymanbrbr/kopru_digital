@@ -275,7 +275,7 @@ async function esikKontrolu(
     finansKrediAzaldiV1.create({
       kurumId: g.kurumId,
       actor: aktorOlarak(g.aktorKullaniciId),
-      correlationId: g.correlationId ?? yoklamaId ?? g.dersId,
+      correlationId: g.correlationId ?? g.dersId,
       data: { ogrenci_id: g.ogrenciId, kalan_kredi: yeni, esik, yoklama_id: yoklamaId },
     }),
   );
@@ -296,14 +296,16 @@ async function etkinKredi(
   return satir;
 }
 
+/** Etkin dusumu `iade` ile ters cevirir (ozet ayni islemde artar); sonuca guncel kalan krediyi yazar. */
 async function krediIade(
   tx: Tx,
   g: OrtakGirdi,
   etkin: KrediHareketSatiri,
   yoklamaSurumu: number | null,
   neden: string,
-) {
-  return krediSatiriYaz(tx, {
+  sonuc: FinansUygulaSonucu,
+): Promise<void> {
+  const iade = await krediSatiriYaz(tx, {
     kurumId: g.kurumId,
     ogrenciId: g.ogrenciId,
     paketSatisiId: etkin.paket_satisi_id,
@@ -316,23 +318,95 @@ async function krediIade(
     neden,
     aktorKullaniciId: g.aktorKullaniciId,
   });
+  if (iade) sonuc.kalan_kredi = iade.yeni;
+}
+
+/**
+ * Havuzdan (yoksa havuzsuz) bir kredi dusurur; esigi geciyorsa olayi yazar. Tekillik indeksi ayni
+ * dusumun tekrarini engeller (`null`: zaten dusulmus, hicbir sey degismez).
+ */
+async function krediDus(
+  tx: Tx,
+  g: OrtakGirdi,
+  a: {
+    havuz: Havuz | null;
+    politika: KrediPolitikasi;
+    tur: 'dusum' | 'iptal_dusum';
+    yoklamaId: string | null;
+    yoklamaSurumu: number | null;
+  },
+  sonuc: FinansUygulaSonucu,
+): Promise<void> {
+  const dusum = await krediSatiriYaz(tx, {
+    kurumId: g.kurumId,
+    ogrenciId: g.ogrenciId,
+    paketSatisiId: a.havuz?.id ?? null,
+    tur: a.tur,
+    miktar: -1,
+    dersId: g.dersId,
+    yoklamaId: a.yoklamaId,
+    yoklamaSurumu: a.yoklamaSurumu,
+    aktorKullaniciId: g.aktorKullaniciId,
+  });
+  if (!dusum) return;
+  sonuc.kalan_kredi = dusum.yeni;
+  const bilgi = await esikKontrolu(
+    tx,
+    g,
+    a.politika.dusuk_kredi_esigi,
+    a.yoklamaId,
+    dusum.onceki,
+    dusum.yeni,
+  );
+  if (bilgi) sonuc.kredi_azaldi = bilgi;
 }
 
 async function ucretTersCevir(
   tx: Tx,
   g: OrtakGirdi,
-  etkinId: string,
-  tutarKurus: number,
+  etkin: { id: string; tutar_kurus: number },
   neden: string,
 ) {
-  return bakiyeSatiriYaz(tx, {
+  await bakiyeSatiriYaz(tx, {
     kurumId: g.kurumId,
     ogrenciId: g.ogrenciId,
     tur: 'ters_kayit',
-    tutarKurus: -tutarKurus,
+    tutarKurus: -etkin.tutar_kurus,
     kaynakTuru: 'yoklama',
-    tersCevrilenId: etkinId,
+    tersCevrilenId: etkin.id,
     neden,
+    aktorKullaniciId: g.aktorKullaniciId,
+  });
+}
+
+/** Tarifeden ders ucretini yazar (tarife yoksa uyari, ucret 0 ise satir yazilmaz). */
+async function ucretYaz(
+  tx: Tx,
+  g: OrtakGirdi,
+  a: {
+    kaynakTuru: 'yoklama' | 'ders_iptal';
+    kaynakId: string;
+    yoklamaId: string | null;
+    yoklamaSurumu: number | null;
+  },
+  sonuc: FinansUygulaSonucu,
+): Promise<void> {
+  const ucret = await tarifeSec(tx, g.kurumId, g);
+  if (ucret === null) {
+    sonuc.uyari = 'ucret_tarifesi_yok';
+    return;
+  }
+  if (ucret === 0) return;
+  await bakiyeSatiriYaz(tx, {
+    kurumId: g.kurumId,
+    ogrenciId: g.ogrenciId,
+    tur: 'ders_ucreti',
+    tutarKurus: -ucret,
+    kaynakTuru: a.kaynakTuru,
+    kaynakId: a.kaynakId,
+    dersId: g.dersId,
+    yoklamaId: a.yoklamaId,
+    yoklamaSurumu: a.yoklamaSurumu,
     aktorKullaniciId: g.aktorKullaniciId,
   });
 }
@@ -361,36 +435,13 @@ export async function krediVeUcretiUygula(
       await havuzPolitikasi(tx, kurumId, etkinDusum.paket_satisi_id),
     );
     if (!durumDusurur(durum, pol)) {
-      const iade = await krediIade(tx, girdi, etkinDusum, yoklamaSurumu, 'yoklama_duzeltildi');
-      if (iade) sonuc.kalan_kredi = iade.yeni;
+      await krediIade(tx, girdi, etkinDusum, yoklamaSurumu, 'yoklama_duzeltildi', sonuc);
     }
   } else if (model === 'paket' && durum !== null) {
     const havuz = await havuzSec(tx, kurumId, ogrenciId, girdi);
-    const pol = politikaCoz(kurumPol, havuz?.kredi_politikasi ?? null);
-    if (durumDusurur(durum, pol)) {
-      const dusum = await krediSatiriYaz(tx, {
-        kurumId,
-        ogrenciId,
-        paketSatisiId: havuz?.id ?? null,
-        tur: 'dusum',
-        miktar: -1,
-        dersId: girdi.dersId,
-        yoklamaId,
-        yoklamaSurumu,
-        aktorKullaniciId: girdi.aktorKullaniciId,
-      });
-      if (dusum) {
-        sonuc.kalan_kredi = dusum.yeni;
-        const bilgi = await esikKontrolu(
-          tx,
-          girdi,
-          pol.dusuk_kredi_esigi,
-          yoklamaId,
-          dusum.onceki,
-          dusum.yeni,
-        );
-        if (bilgi) sonuc.kredi_azaldi = bilgi;
-      }
+    const politika = politikaCoz(kurumPol, havuz?.kredi_politikasi ?? null);
+    if (durumDusurur(durum, politika)) {
+      await krediDus(tx, girdi, { havuz, politika, tur: 'dusum', yoklamaId, yoklamaSurumu }, sonuc);
     }
   }
 
@@ -409,26 +460,15 @@ export async function krediVeUcretiUygula(
     .limit(1);
   if (etkinUcret) {
     if (!durumDusurur(durum, kurumPol)) {
-      await ucretTersCevir(tx, girdi, etkinUcret.id, etkinUcret.tutar_kurus, 'yoklama_duzeltildi');
+      await ucretTersCevir(tx, girdi, etkinUcret, 'yoklama_duzeltildi');
     }
-  } else if (model === 'ders_basi' && durum !== null && durumDusurur(durum, kurumPol)) {
-    const ucret = await tarifeSec(tx, kurumId, girdi);
-    if (ucret === null) {
-      sonuc.uyari = 'ucret_tarifesi_yok';
-    } else if (ucret > 0) {
-      await bakiyeSatiriYaz(tx, {
-        kurumId,
-        ogrenciId,
-        tur: 'ders_ucreti',
-        tutarKurus: -ucret,
-        kaynakTuru: 'yoklama',
-        kaynakId: yoklamaId,
-        dersId: girdi.dersId,
-        yoklamaId,
-        yoklamaSurumu,
-        aktorKullaniciId: girdi.aktorKullaniciId,
-      });
-    }
+  } else if (model === 'ders_basi' && durumDusurur(durum, kurumPol)) {
+    await ucretYaz(
+      tx,
+      girdi,
+      { kaynakTuru: 'yoklama', kaynakId: yoklamaId, yoklamaId, yoklamaSurumu },
+      sonuc,
+    );
   }
   return sonuc;
 }
@@ -467,40 +507,23 @@ export async function dersIptalUygula(
   let iptalDusumuVar = false;
   for (const e of etkinler) {
     const pol = politikaCoz(kurumPol, await havuzPolitikasi(tx, kurumId, e.paket_satisi_id));
-    const koru = e.tur === 'iptal_dusum' && ogrenciGec && pol.ogrenci_gec_iptal_dusurur;
-    if (koru) {
+    if (e.tur === 'iptal_dusum' && ogrenciGec && pol.ogrenci_gec_iptal_dusurur) {
       iptalDusumuVar = true;
-      continue;
+    } else {
+      await krediIade(tx, girdi, e, null, 'ders_iptal_edildi', sonuc);
     }
-    const iade = await krediIade(tx, girdi, e, null, 'ders_iptal_edildi');
-    if (iade) sonuc.kalan_kredi = iade.yeni;
   }
 
   if (ogrenciGec && model === 'paket' && !iptalDusumuVar) {
     const havuz = await havuzSec(tx, kurumId, ogrenciId, girdi);
-    const pol = politikaCoz(kurumPol, havuz?.kredi_politikasi ?? null);
-    if (pol.ogrenci_gec_iptal_dusurur) {
-      const dusum = await krediSatiriYaz(tx, {
-        kurumId,
-        ogrenciId,
-        paketSatisiId: havuz?.id ?? null,
-        tur: 'iptal_dusum',
-        miktar: -1,
-        dersId,
-        aktorKullaniciId: girdi.aktorKullaniciId,
-      });
-      if (dusum) {
-        sonuc.kalan_kredi = dusum.yeni;
-        const bilgi = await esikKontrolu(
-          tx,
-          girdi,
-          pol.dusuk_kredi_esigi,
-          null,
-          dusum.onceki,
-          dusum.yeni,
-        );
-        if (bilgi) sonuc.kredi_azaldi = bilgi;
-      }
+    const politika = politikaCoz(kurumPol, havuz?.kredi_politikasi ?? null);
+    if (politika.ogrenci_gec_iptal_dusurur) {
+      await krediDus(
+        tx,
+        girdi,
+        { havuz, politika, tur: 'iptal_dusum', yoklamaId: null, yoklamaSurumu: null },
+        sonuc,
+      );
     }
   }
 
@@ -521,9 +544,9 @@ export async function dersIptalUygula(
   for (const u of ucretler) {
     if (u.kaynak_turu === 'ders_iptal' && ogrenciGec && kurumPol.ogrenci_gec_iptal_dusurur) {
       iptalUcretiVar = true;
-      continue;
+    } else {
+      await ucretTersCevir(tx, girdi, u, 'ders_iptal_edildi');
     }
-    await ucretTersCevir(tx, girdi, u.id, u.tutar_kurus, 'ders_iptal_edildi');
   }
   if (
     ogrenciGec &&
@@ -531,21 +554,12 @@ export async function dersIptalUygula(
     !iptalUcretiVar &&
     kurumPol.ogrenci_gec_iptal_dusurur
   ) {
-    const ucret = await tarifeSec(tx, kurumId, girdi);
-    if (ucret === null) {
-      sonuc.uyari = 'ucret_tarifesi_yok';
-    } else if (ucret > 0) {
-      await bakiyeSatiriYaz(tx, {
-        kurumId,
-        ogrenciId,
-        tur: 'ders_ucreti',
-        tutarKurus: -ucret,
-        kaynakTuru: 'ders_iptal',
-        kaynakId: dersId,
-        dersId,
-        aktorKullaniciId: girdi.aktorKullaniciId,
-      });
-    }
+    await ucretYaz(
+      tx,
+      girdi,
+      { kaynakTuru: 'ders_iptal', kaynakId: dersId, yoklamaId: null, yoklamaSurumu: null },
+      sonuc,
+    );
   }
   return sonuc;
 }

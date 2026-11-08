@@ -32,6 +32,7 @@ import {
 import { requirePermission } from '../hesap/index.js';
 import {
   bakiyeSatiriYaz,
+  bakiyeOzeti,
   bakiyeTersiYok,
   havuzKalan,
   krediSatiriYaz,
@@ -41,10 +42,14 @@ import {
   bugunIstanbul,
   denetimYaz,
   gunEkle,
-  kiraci,
   kilitAl,
+  kiraci,
   ogrenciBul,
   olayYaz,
+  sonrakiImlec,
+  tanimli,
+  tekSatir,
+  veritabani,
   yetkiAl,
 } from './ortak.js';
 import { tahsilatKaydet, tahsilatYaniti } from './tahsilat.js';
@@ -102,10 +107,7 @@ const satisParam = KurumParamSema.extend({ satis_id: z.uuid() });
 
 /** `/v1/finans/kurumlar/:kurum_id/paketler|paket-satislari`. */
 export const paketYollari: ServicePlugin = (app) => {
-  const db = () => {
-    if (!app.db) throw new AppError(503, errorCodes.unavailable, 'Veritabanı kullanılamıyor.');
-    return app.db;
-  };
+  const db = () => veritabani(app);
   const yaz = { preHandler: requirePermission('finans.paket.yaz', { scope: 'kurum' }) };
 
   // --- Paket sablonlari ----------------------------------------------------------------------
@@ -138,7 +140,7 @@ export const paketYollari: ServicePlugin = (app) => {
         const sayfa = satirlar.slice(0, limit);
         return {
           paketler: sayfa.map(paketYaniti),
-          sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.id ?? null) : null,
+          sonraki_imlec: sonrakiImlec(satirlar, limit, (s) => s.id),
         };
       });
     },
@@ -161,22 +163,23 @@ export const paketYollari: ServicePlugin = (app) => {
       const b = request.body;
       const satir = await withTenant(db(), kiraci(y), async (tx) => {
         await bransVarOlmali(tx, b.brans_kodu);
-        const [p] = await tx
-          .insert(paketler)
-          .values({
-            id: uuidv7(),
-            kurum_id: y.kurumId,
-            created_by: y.kullaniciId,
-            ad: b.ad,
-            kredi_adedi: b.kredi_adedi,
-            fiyat_kurus: b.fiyat_kurus,
-            kredi_politikasi: b.kredi_politikasi ?? null,
-            gecerlilik_gun: b.gecerlilik_gun ?? null,
-            grup_turu: b.grup_turu ?? null,
-            brans_kodu: b.brans_kodu ?? null,
-          })
-          .returning();
-        if (!p) throw new Error('paket oluşturulamadı');
+        const p = tekSatir(
+          await tx
+            .insert(paketler)
+            .values({
+              id: uuidv7(),
+              kurum_id: y.kurumId,
+              created_by: y.kullaniciId,
+              ad: b.ad,
+              kredi_adedi: b.kredi_adedi,
+              fiyat_kurus: b.fiyat_kurus,
+              kredi_politikasi: b.kredi_politikasi ?? null,
+              gecerlilik_gun: b.gecerlilik_gun ?? null,
+              grup_turu: b.grup_turu ?? null,
+              brans_kodu: b.brans_kodu ?? null,
+            })
+            .returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.paket.olusturuldu',
           hedefTuru: 'paket',
@@ -220,20 +223,9 @@ export const paketYollari: ServicePlugin = (app) => {
             'Arşivlenmiş paket düzenlenemez.',
           );
         }
-        const [p] = await tx
-          .update(paketler)
-          .set({
-            ...(b.ad !== undefined ? { ad: b.ad } : {}),
-            ...(b.kredi_adedi !== undefined ? { kredi_adedi: b.kredi_adedi } : {}),
-            ...(b.fiyat_kurus !== undefined ? { fiyat_kurus: b.fiyat_kurus } : {}),
-            ...(b.kredi_politikasi !== undefined ? { kredi_politikasi: b.kredi_politikasi } : {}),
-            ...(b.gecerlilik_gun !== undefined ? { gecerlilik_gun: b.gecerlilik_gun } : {}),
-            ...(b.grup_turu !== undefined ? { grup_turu: b.grup_turu } : {}),
-            ...(b.brans_kodu !== undefined ? { brans_kodu: b.brans_kodu } : {}),
-          })
-          .where(eq(paketler.id, onceki.id))
-          .returning();
-        if (!p) throw new Error('paket güncellenemedi');
+        const p = tekSatir(
+          await tx.update(paketler).set(tanimli(b)).where(eq(paketler.id, onceki.id)).returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.paket.guncellendi',
           hedefTuru: 'paket',
@@ -322,7 +314,7 @@ export const paketYollari: ServicePlugin = (app) => {
           throw new AppError(409, finansHataKodlari.paketArsivde, 'Arşivlenmiş paket satılamaz.');
         }
         const { odeme } = b;
-        if (odeme.tur === 'kismi' && (odeme.tutar_kurus ?? 0) >= paket.fiyat_kurus) {
+        if (odeme.tur === 'kismi' && odeme.tutar_kurus >= paket.fiyat_kurus) {
           throw new AppError(
             422,
             finansHataKodlari.odemeGecersiz,
@@ -331,23 +323,24 @@ export const paketYollari: ServicePlugin = (app) => {
         }
         const baslangic = b.baslangic_tarihi ?? bugunIstanbul();
         const bitis = paket.gecerlilik_gun ? gunEkle(baslangic, paket.gecerlilik_gun) : null;
-        const [satis] = await tx
-          .insert(paketSatislari)
-          .values({
-            id: uuidv7(),
-            kurum_id: y.kurumId,
-            created_by: y.kullaniciId,
-            ogrenci_id: b.ogrenci_id,
-            paket_id: paket.id,
-            ad: paket.ad,
-            toplam_kredi: paket.kredi_adedi,
-            fiyat_kurus: paket.fiyat_kurus,
-            baslangic_tarihi: baslangic,
-            bitis_tarihi: bitis,
-            satan_id: y.uyelikId,
-          })
-          .returning();
-        if (!satis) throw new Error('satış oluşturulamadı');
+        const satis = tekSatir(
+          await tx
+            .insert(paketSatislari)
+            .values({
+              id: uuidv7(),
+              kurum_id: y.kurumId,
+              created_by: y.kullaniciId,
+              ogrenci_id: b.ogrenci_id,
+              paket_id: paket.id,
+              ad: paket.ad,
+              toplam_kredi: paket.kredi_adedi,
+              fiyat_kurus: paket.fiyat_kurus,
+              baslangic_tarihi: baslangic,
+              bitis_tarihi: bitis,
+              satan_id: y.uyelikId,
+            })
+            .returning(),
+        );
 
         // Profil yoksa model `paket` olur (satis yapilan ogrenci krediyi kullanabilsin); varsa dokunulmaz.
         await tx
@@ -384,14 +377,25 @@ export const paketYollari: ServicePlugin = (app) => {
         if (odeme.tur !== 'sonra' && satis.fiyat_kurus > 0) {
           const kayit = await tahsilatKaydet(tx, y, request.correlationId, {
             ogrenci_id: b.ogrenci_id,
-            tutar_kurus: odeme.tur === 'tamami' ? satis.fiyat_kurus : (odeme.tutar_kurus ?? 0),
-            yontem: odeme.yontem ?? 'nakit',
+            tutar_kurus: odeme.tur === 'tamami' ? satis.fiyat_kurus : odeme.tutar_kurus,
+            yontem: odeme.yontem,
             tahsilat_tarihi: bugunIstanbul(),
             ...(odeme.makbuz_no ? { makbuz_no: odeme.makbuz_no } : {}),
             paket_satisi_id: satis.id,
             istek_id: null,
           });
           tahsilat = tahsilatYaniti(kayit.satir);
+          await denetimYaz(tx, y, request.ip, {
+            eylem: 'finans.tahsilat.alindi',
+            hedefTuru: 'tahsilat',
+            hedefId: kayit.satir.id,
+            sonra: {
+              ogrenci_id: kayit.satir.ogrenci_id,
+              tutar_kurus: kayit.satir.tutar_kurus,
+              yontem: kayit.satir.yontem,
+              paket_satisi_id: satis.id,
+            },
+          });
         }
         await olayYaz(
           tx,
@@ -419,29 +423,12 @@ export const paketYollari: ServicePlugin = (app) => {
             odeme: odeme.tur,
           },
         });
-        const [kb] = await tx
-          .select({ bakiye: krediBakiyeleri.bakiye })
-          .from(krediBakiyeleri)
-          .where(
-            and(
-              eq(krediBakiyeleri.kurum_id, y.kurumId),
-              eq(krediBakiyeleri.ogrenci_id, b.ogrenci_id),
-            ),
-          );
-        const [ob] = await tx
-          .select({ bakiye: ogrenciBakiyeleri.bakiye_kurus })
-          .from(ogrenciBakiyeleri)
-          .where(
-            and(
-              eq(ogrenciBakiyeleri.kurum_id, y.kurumId),
-              eq(ogrenciBakiyeleri.ogrenci_id, b.ogrenci_id),
-            ),
-          );
+        const ozet = await bakiyeOzeti(tx, y.kurumId, b.ogrenci_id);
         return {
           satis: satisYaniti(satis, await havuzKalan(tx, y.kurumId, satis.id)),
           tahsilat,
-          kalan_kredi: kb?.bakiye ?? 0,
-          bakiye_kurus: ob?.bakiye ?? 0,
+          kalan_kredi: ozet.kredi,
+          bakiye_kurus: ozet.kurus,
         };
       });
       return reply.status(201).send(sonuc);
@@ -492,18 +479,19 @@ export const paketYollari: ServicePlugin = (app) => {
             'Kullanılmış ya da süresi dolmuş paket iptal edilemez.',
           );
         }
-        const [alis] = await tx
-          .select()
-          .from(krediHareketleri)
-          .where(
-            and(
-              eq(krediHareketleri.kurum_id, y.kurumId),
-              eq(krediHareketleri.paket_satisi_id, s.id),
-              eq(krediHareketleri.tur, 'satin_alma'),
-              krediTersiYok,
+        const alis = tekSatir(
+          await tx
+            .select()
+            .from(krediHareketleri)
+            .where(
+              and(
+                eq(krediHareketleri.kurum_id, y.kurumId),
+                eq(krediHareketleri.paket_satisi_id, s.id),
+                eq(krediHareketleri.tur, 'satin_alma'),
+                krediTersiYok,
+              ),
             ),
-          );
-        if (!alis) throw new Error('satın alma satırı bulunamadı');
+        );
         await krediSatiriYaz(tx, {
           kurumId: y.kurumId,
           ogrenciId: s.ogrenci_id,
@@ -538,12 +526,13 @@ export const paketYollari: ServicePlugin = (app) => {
             aktorKullaniciId: y.kullaniciId,
           });
         }
-        const [guncel] = await tx
-          .update(paketSatislari)
-          .set({ durum: 'iptal', iptal_at: sql`now()` })
-          .where(eq(paketSatislari.id, s.id))
-          .returning();
-        if (!guncel) throw new Error('satış güncellenemedi');
+        const guncel = tekSatir(
+          await tx
+            .update(paketSatislari)
+            .set({ durum: 'iptal', iptal_at: sql`now()` })
+            .where(eq(paketSatislari.id, s.id))
+            .returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.paket_satisi.iptal',
           hedefTuru: 'paket_satisi',

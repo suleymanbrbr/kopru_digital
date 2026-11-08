@@ -27,7 +27,7 @@ import {
   uyelikler,
 } from '../../db/schema.js';
 import { requirePermission, type YetkiBaglami } from '../hesap/index.js';
-import { havuzKalan } from './defter.js';
+import { bakiyeOzeti, havuzKalan } from './defter.js';
 import { kurumPolitikasiGetir } from './kredi-uygula.js';
 import {
   denetimYaz,
@@ -36,6 +36,10 @@ import {
   likeKacir,
   ogrenciBul,
   ogrenciKapsami,
+  sonrakiImlec,
+  tanimli,
+  tekSatir,
+  veritabani,
   yetkiAl,
 } from './ortak.js';
 import { satisYaniti } from './paket.js';
@@ -71,20 +75,6 @@ const bakiyeHareketiYaniti = (h: typeof bakiyeHareketleri.$inferSelect): BakiyeH
   created_at: h.created_at.toISOString(),
 });
 
-async function bakiyeler(tx: Tx, kurumId: string, ogrenciId: string) {
-  const [kb] = await tx
-    .select({ bakiye: krediBakiyeleri.bakiye })
-    .from(krediBakiyeleri)
-    .where(and(eq(krediBakiyeleri.kurum_id, kurumId), eq(krediBakiyeleri.ogrenci_id, ogrenciId)));
-  const [ob] = await tx
-    .select({ bakiye: ogrenciBakiyeleri.bakiye_kurus })
-    .from(ogrenciBakiyeleri)
-    .where(
-      and(eq(ogrenciBakiyeleri.kurum_id, kurumId), eq(ogrenciBakiyeleri.ogrenci_id, ogrenciId)),
-    );
-  return { kredi: kb?.bakiye ?? 0, kurus: ob?.bakiye ?? 0 };
-}
-
 async function profilGetir(tx: Tx, kurumId: string, ogrenciId: string) {
   const [p] = await tx
     .select()
@@ -103,10 +93,7 @@ const modelOlarak = (m: string | undefined): Model =>
 
 /** `/v1/finans/kurumlar/:kurum_id/ogrenciler...`: ogrenci karti, profil, hareketler ve liste. */
 export const ogrenciYollari: ServicePlugin = (app) => {
-  const db = () => {
-    if (!app.db) throw new AppError(503, errorCodes.unavailable, 'Veritabanı kullanılamıyor.');
-    return app.db;
-  };
+  const db = () => veritabani(app);
   const personel = requirePermission('finans.oku', { scope: 'grup' });
 
   app.get(
@@ -126,7 +113,7 @@ export const ogrenciYollari: ServicePlugin = (app) => {
       const { ogrenci_id } = request.params;
       return withTenant(db(), kiraci(y), async (tx) => {
         await ogrenciBul(tx, y, ogrenci_id);
-        const b = await bakiyeler(tx, y.kurumId, ogrenci_id);
+        const b = await bakiyeOzeti(tx, y.kurumId, ogrenci_id);
         if (y.rol === 'ogrenci') {
           const [kurum] = await tx
             .select({ ayarlar: kurumlar.ayarlar })
@@ -150,7 +137,7 @@ export const ogrenciYollari: ServicePlugin = (app) => {
               eq(paketSatislari.durum, 'aktif'),
             ),
           )
-          .orderBy(asc(sql`${paketSatislari.bitis_tarihi} nulls last`), asc(paketSatislari.id));
+          .orderBy(sql`${paketSatislari.bitis_tarihi} asc nulls last`, asc(paketSatislari.id));
         const krediSon = await tx
           .select()
           .from(krediHareketleri)
@@ -240,30 +227,9 @@ export const ogrenciYollari: ServicePlugin = (app) => {
       const b = request.body;
       return withTenant(db(), kiraci(y), async (tx) => {
         await ogrenciBul(tx, y, ogrenci_id);
-        const [onceki] = await tx
-          .select({ id: ogrenciFinansProfilleri.id })
-          .from(ogrenciFinansProfilleri)
-          .where(
-            and(
-              eq(ogrenciFinansProfilleri.kurum_id, y.kurumId),
-              eq(ogrenciFinansProfilleri.ogrenci_id, ogrenci_id),
-            ),
-          )
-          .for('update');
-        const degisen = {
-          ...(b.model !== undefined ? { model: b.model } : {}),
-          ...(b.odeyen_ad !== undefined ? { odeyen_ad: b.odeyen_ad } : {}),
-          ...(b.odeyen_telefon !== undefined ? { odeyen_telefon: b.odeyen_telefon } : {}),
-        };
-        let satir;
-        if (onceki) {
-          [satir] = await tx
-            .update(ogrenciFinansProfilleri)
-            .set(degisen)
-            .where(eq(ogrenciFinansProfilleri.id, onceki.id))
-            .returning();
-        } else {
-          [satir] = await tx
+        const degisen = tanimli(b);
+        const satir = tekSatir(
+          await tx
             .insert(ogrenciFinansProfilleri)
             .values({
               id: uuidv7(),
@@ -272,9 +238,12 @@ export const ogrenciYollari: ServicePlugin = (app) => {
               ogrenci_id,
               ...degisen,
             })
-            .returning();
-        }
-        if (!satir) throw new Error('profil yazılamadı');
+            .onConflictDoUpdate({
+              target: [ogrenciFinansProfilleri.kurum_id, ogrenciFinansProfilleri.ogrenci_id],
+              set: degisen,
+            })
+            .returning(),
+        );
         await denetimYaz(tx, y, request.ip, {
           eylem: 'finans.profil.guncellendi',
           hedefTuru: 'ogrenci_finans_profili',
@@ -325,8 +294,8 @@ export const ogrenciYollari: ServicePlugin = (app) => {
         const sayfa = satirlar.slice(0, limit);
         return {
           hareketler: sayfa.map(krediHareketiYaniti),
-          kalan_kredi: (await bakiyeler(tx, y.kurumId, ogrenci_id)).kredi,
-          sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.id ?? null) : null,
+          kalan_kredi: (await bakiyeOzeti(tx, y.kurumId, ogrenci_id)).kredi,
+          sonraki_imlec: sonrakiImlec(satirlar, limit, (s) => s.id),
         };
       });
     },
@@ -365,8 +334,8 @@ export const ogrenciYollari: ServicePlugin = (app) => {
         const sayfa = satirlar.slice(0, limit);
         return {
           hareketler: sayfa.map(bakiyeHareketiYaniti),
-          bakiye_kurus: (await bakiyeler(tx, y.kurumId, ogrenci_id)).kurus,
-          sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.id ?? null) : null,
+          bakiye_kurus: (await bakiyeOzeti(tx, y.kurumId, ogrenci_id)).kurus,
+          sonraki_imlec: sonrakiImlec(satirlar, limit, (s) => s.id),
         };
       });
     },
@@ -455,7 +424,7 @@ export const ogrenciYollari: ServicePlugin = (app) => {
             bakiye_kurus: s.bakiye,
             borclu: s.bakiye < 0,
           })),
-          sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.ogrenci_id ?? null) : null,
+          sonraki_imlec: sonrakiImlec(satirlar, limit, (s) => s.ogrenci_id),
         };
       });
     },
