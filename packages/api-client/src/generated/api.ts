@@ -1521,6 +1521,1571 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/finans/kurumlar/{kurum_id}/ayarlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum finans ayari: ogrenci kalan ders sayisini gorur mu (varsayilan evet). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ogrenci_kalan_ders_gorur: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        /** Kurum finans ayarini yaz. `ogrenci_kalan_ders_gorur=false` ise ogrenci kalan ders sayisini gormez (`kalan_kredi: null`). */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ogrenci_kalan_ders_gorur: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ogrenci_kalan_ders_gorur: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/disa-aktar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aylik tahsilatlari ve ogrenci bakiyelerini gercek .xlsx olarak indir. Kurus TL'ye yalniz burada cevrilir. Yalniz `finans.oku` ve kurum/grup kapsami; indirme denetim kaydina duser. */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Europe/Istanbul takvim ayı, ör. 2026-11. */
+                    ay: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/kredi-politikasi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum kredi dusum politikasi (satir yoksa varsayilanlar, `varsayilan: true`). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dusuk_kredi_esigi: number;
+                            gec_dusurur: boolean;
+                            gec_iptal_saat: number;
+                            geldi_dusurur: boolean;
+                            gelmedi_dusurur: boolean;
+                            izinli_dusurur: boolean;
+                            ogrenci_gec_iptal_dusurur: boolean;
+                            varsayilan: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        /** Kurum kredi dusum politikasini yaz (verilmeyen alanlar mevcut degeri korur). Paket bazli gecersiz kilma paket sablonundadir. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        dusuk_kredi_esigi?: number;
+                        gec_dusurur?: boolean;
+                        gec_iptal_saat?: number;
+                        geldi_dusurur?: boolean;
+                        gelmedi_dusurur?: boolean;
+                        izinli_dusurur?: boolean;
+                        ogrenci_gec_iptal_dusurur?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dusuk_kredi_esigi: number;
+                            gec_dusurur: boolean;
+                            gec_iptal_saat: number;
+                            geldi_dusurur: boolean;
+                            gelmedi_dusurur: boolean;
+                            izinli_dusurur: boolean;
+                            ogrenci_gec_iptal_dusurur: boolean;
+                            varsayilan: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ogrenciler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrenci finans listesi (kalan ders rozeti icin `kalan_kredi` ve esik). `?borclu` ve `?dusuk_kredi` suzgecleri; kapsam rolun izin kapsamina gore daralir. */
+        get: {
+            parameters: {
+                query?: {
+                    borclu?: "" | ("0" | "1" | "true" | "false");
+                    dusuk_kredi?: "" | ("0" | "1" | "true" | "false");
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                    /** @description Ada göre arama. */
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dusuk_kredi_esigi: number;
+                            /** @enum {string} */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            ogrenciler: {
+                                bakiye_kurus: number;
+                                borclu: boolean;
+                                dusuk_kredi: boolean;
+                                gorunen_ad: string | null;
+                                kalan_kredi: number;
+                                /** @enum {string} */
+                                model: "paket" | "ders_basi" | "yok";
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                            }[];
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/bakiye-hareketleri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bakiye defteri satirlari (yeniden eskiye, sayfali). Negatif bakiye = ogrenci borclu. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bakiye_kurus: number;
+                            hareketler: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kaynak_id: string | null;
+                                /** @enum {string} */
+                                kaynak_turu: "yoklama" | "paket_satisi" | "tahsilat" | "elle" | "ders_iptal";
+                                neden: string | null;
+                                /** Format: uuid */
+                                ters_cevrilen_id: string | null;
+                                /** @enum {string} */
+                                tur: "ders_ucreti" | "paket_satisi" | "tahsilat" | "duzeltme" | "ters_kayit";
+                                tutar_kurus: number;
+                                /** Format: uuid */
+                                yoklama_id: string | null;
+                            }[];
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/finans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrenci finans karti. Personel (`gorunum: tam`): kalan kredi, bakiye, etkin paketler, son hareketler, odeyen. Ogrenci rolu (`gorunum: ogrenci`): yalniz kendi kalan dersi; kurum ayari kapaliysa `kalan_kredi: null`. Fiyat/borc/tahsilat ogrenciye donmez. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bakiye_kurus: number;
+                            borclu: boolean;
+                            dusuk_kredi_esigi: number;
+                            etkin_paketler: {
+                                ad: string;
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "aktif" | "tukendi" | "suresi_doldu" | "iptal";
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                kalan_kredi: number;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                paket_id: string | null;
+                                /** Format: uuid */
+                                satan_id: string;
+                                toplam_kredi: number;
+                            }[];
+                            /** @enum {string} */
+                            gorunum: "tam";
+                            kalan_kredi: number;
+                            /** @enum {string} */
+                            model: "paket" | "ders_basi" | "yok";
+                            odeyen_ad: string | null;
+                            odeyen_telefon: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            son_bakiye_hareketleri: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kaynak_id: string | null;
+                                /** @enum {string} */
+                                kaynak_turu: "yoklama" | "paket_satisi" | "tahsilat" | "elle" | "ders_iptal";
+                                neden: string | null;
+                                /** Format: uuid */
+                                ters_cevrilen_id: string | null;
+                                /** @enum {string} */
+                                tur: "ders_ucreti" | "paket_satisi" | "tahsilat" | "duzeltme" | "ters_kayit";
+                                tutar_kurus: number;
+                                /** Format: uuid */
+                                yoklama_id: string | null;
+                            }[];
+                            son_kredi_hareketleri: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                miktar: number;
+                                neden: string | null;
+                                /** Format: uuid */
+                                paket_satisi_id: string | null;
+                                /** Format: uuid */
+                                ters_cevrilen_id: string | null;
+                                /** @enum {string} */
+                                tur: "satin_alma" | "dusum" | "iptal_dusum" | "iade" | "duzeltme" | "son_kullanma" | "ters_kayit";
+                                /** Format: uuid */
+                                yoklama_id: string | null;
+                                yoklama_surumu: number | null;
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            gorunum: "ogrenci";
+                            kalan_kredi: number | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/finans-profili": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin faturalama modeli ve odeyen kisi (duz bilgi). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            model: "paket" | "ders_basi" | "yok";
+                            odeyen_ad: string | null;
+                            odeyen_telefon: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            surum: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** Faturalama modelini (paket, ders_basi, yok) ve odeyen kisiyi yaz. Verilmeyen alanlar degismez; odeyen bilgisi denetim kaydina, olaya ve loga girmez. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        model?: "paket" | "ders_basi" | "yok";
+                        odeyen_ad?: string | null;
+                        odeyen_telefon?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            model: "paket" | "ders_basi" | "yok";
+                            odeyen_ad: string | null;
+                            odeyen_telefon: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            surum: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/kredi-hareketleri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kredi defteri satirlari (yeniden eskiye, sayfali). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            hareketler: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                miktar: number;
+                                neden: string | null;
+                                /** Format: uuid */
+                                paket_satisi_id: string | null;
+                                /** Format: uuid */
+                                ters_cevrilen_id: string | null;
+                                /** @enum {string} */
+                                tur: "satin_alma" | "dusum" | "iptal_dusum" | "iade" | "duzeltme" | "son_kullanma" | "ters_kayit";
+                                /** Format: uuid */
+                                yoklama_id: string | null;
+                                yoklama_surumu: number | null;
+                            }[];
+                            kalan_kredi: number;
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ozet/aylik": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aylik gelir ozeti: gecerli tahsilat toplami ve yonteme gore kirilim (iptaller haric). Ay Europe/Istanbul takvim ayidir; kapsam rolun izin kapsamina gore daralir. */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Europe/Istanbul takvim ayı, ör. 2026-11. */
+                    ay: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ay: string;
+                            /** @enum {string} */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            tahsilat_sayisi: number;
+                            toplam_kurus: number;
+                            yonteme_gore: {
+                                adet: number;
+                                toplam_kurus: number;
+                                /** @enum {string} */
+                                yontem: "nakit" | "havale" | "kart" | "diger";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/paket-satislari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Paket sat. Satis, kredi satin alma, ucret borcu (bakiye) ve varsa tahsilat tek islemde yazilir. `odeme.tur`: tamami | kismi | sonra. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date
+                         * @description Varsayılan: bugün (Europe/Istanbul).
+                         */
+                        baslangic_tarihi?: string;
+                        /**
+                         * @default {
+                         *       "tur": "sonra"
+                         *     }
+                         */
+                        odeme?: {
+                            /** @enum {string} */
+                            tur: "sonra";
+                        } | {
+                            makbuz_no?: string;
+                            /** @enum {string} */
+                            tur: "tamami";
+                            /** @enum {string} */
+                            yontem: "nakit" | "havale" | "kart" | "diger";
+                        } | {
+                            makbuz_no?: string;
+                            /** @enum {string} */
+                            tur: "kismi";
+                            tutar_kurus: number;
+                            /** @enum {string} */
+                            yontem: "nakit" | "havale" | "kart" | "diger";
+                        };
+                        /** Format: uuid */
+                        ogrenci_id: string;
+                        /** Format: uuid */
+                        paket_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bakiye_kurus: number;
+                            kalan_kredi: number;
+                            satis: {
+                                ad: string;
+                                /** Format: date */
+                                baslangic_tarihi: string;
+                                /** Format: date */
+                                bitis_tarihi: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "aktif" | "tukendi" | "suresi_doldu" | "iptal";
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                kalan_kredi: number;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                paket_id: string | null;
+                                /** Format: uuid */
+                                satan_id: string;
+                                toplam_kredi: number;
+                            };
+                            tahsilat: {
+                                aciklama: string | null;
+                                /** Format: uuid */
+                                alan_id: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "gecerli" | "iptal";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                iptal_nedeni: string | null;
+                                makbuz_no: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                paket_satisi_id: string | null;
+                                /** Format: date */
+                                tahsilat_tarihi: string;
+                                tutar_kurus: number;
+                                /** @enum {string} */
+                                yontem: "nakit" | "havale" | "kart" | "diger";
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/paket-satislari/{satis_id}/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Paket satisini iptal et (kredi ve ucret borcu ters kayitla geri alinir). Kullanilmis kredi varsa 409 `paket_kullanilmis`. Alinmis tahsilatlar ayri iptal edilir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    satis_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date */
+                            baslangic_tarihi: string;
+                            /** Format: date */
+                            bitis_tarihi: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "aktif" | "tukendi" | "suresi_doldu" | "iptal";
+                            fiyat_kurus: number;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            kalan_kredi: number;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            paket_id: string | null;
+                            /** Format: uuid */
+                            satan_id: string;
+                            toplam_kredi: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/paketler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paket sablonlarini listele (varsayilan: yalniz aktif). */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "aktif" | "arsiv" | "hepsi";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            paketler: {
+                                ad: string;
+                                aktif: boolean;
+                                /** Format: date-time */
+                                arsivlendi_at: string | null;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                fiyat_kurus: number;
+                                gecerlilik_gun: number | null;
+                                /** @enum {string|null} */
+                                grup_turu: "birebir" | "grup" | "sinif" | "etut" | null;
+                                /** Format: uuid */
+                                id: string;
+                                kredi_adedi: number;
+                                kredi_politikasi: {
+                                    gec_dusurur?: boolean;
+                                    geldi_dusurur?: boolean;
+                                    gelmedi_dusurur?: boolean;
+                                    izinli_dusurur?: boolean;
+                                    ogrenci_gec_iptal_dusurur?: boolean;
+                                } | null;
+                                surum: number;
+                            }[];
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Paket sablonu olustur (ad, kredi adedi, fiyat kurus, gecerlilik, politika). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        brans_kodu?: string | null;
+                        fiyat_kurus: number;
+                        gecerlilik_gun?: number | null;
+                        /** @enum {string|null} */
+                        grup_turu?: "birebir" | "grup" | "sinif" | "etut" | null;
+                        kredi_adedi: number;
+                        kredi_politikasi?: {
+                            gec_dusurur?: boolean;
+                            geldi_dusurur?: boolean;
+                            gelmedi_dusurur?: boolean;
+                            izinli_dusurur?: boolean;
+                            ogrenci_gec_iptal_dusurur?: boolean;
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            fiyat_kurus: number;
+                            gecerlilik_gun: number | null;
+                            /** @enum {string|null} */
+                            grup_turu: "birebir" | "grup" | "sinif" | "etut" | null;
+                            /** Format: uuid */
+                            id: string;
+                            kredi_adedi: number;
+                            kredi_politikasi: {
+                                gec_dusurur?: boolean;
+                                geldi_dusurur?: boolean;
+                                gelmedi_dusurur?: boolean;
+                                izinli_dusurur?: boolean;
+                                ogrenci_gec_iptal_dusurur?: boolean;
+                            } | null;
+                            surum: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/paketler/{paket_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Paket sablonunu guncelle. Satilmis paketler satis aninin kopyasini (ad, kredi, fiyat) korur. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    paket_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad?: string;
+                        brans_kodu?: string | null;
+                        fiyat_kurus?: number;
+                        gecerlilik_gun?: number | null;
+                        /** @enum {string|null} */
+                        grup_turu?: "birebir" | "grup" | "sinif" | "etut" | null;
+                        kredi_adedi?: number;
+                        kredi_politikasi?: {
+                            gec_dusurur?: boolean;
+                            geldi_dusurur?: boolean;
+                            gelmedi_dusurur?: boolean;
+                            izinli_dusurur?: boolean;
+                            ogrenci_gec_iptal_dusurur?: boolean;
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            fiyat_kurus: number;
+                            gecerlilik_gun: number | null;
+                            /** @enum {string|null} */
+                            grup_turu: "birebir" | "grup" | "sinif" | "etut" | null;
+                            /** Format: uuid */
+                            id: string;
+                            kredi_adedi: number;
+                            kredi_politikasi: {
+                                gec_dusurur?: boolean;
+                                geldi_dusurur?: boolean;
+                                gelmedi_dusurur?: boolean;
+                                izinli_dusurur?: boolean;
+                                ogrenci_gec_iptal_dusurur?: boolean;
+                            } | null;
+                            surum: number;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/paketler/{paket_id}/arsivle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Paket sablonunu arsivle (silinmez; yeni satista gorunmez, eski satislar etkilenmez). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    paket_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            fiyat_kurus: number;
+                            gecerlilik_gun: number | null;
+                            /** @enum {string|null} */
+                            grup_turu: "birebir" | "grup" | "sinif" | "etut" | null;
+                            /** Format: uuid */
+                            id: string;
+                            kredi_adedi: number;
+                            kredi_politikasi: {
+                                gec_dusurur?: boolean;
+                                geldi_dusurur?: boolean;
+                                gelmedi_dusurur?: boolean;
+                                izinli_dusurur?: boolean;
+                                ogrenci_gec_iptal_dusurur?: boolean;
+                            } | null;
+                            surum: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/tahsilatlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tahsilatlari listele (yeniden eskiye); kapsam rolun izin kapsamina gore daralir. */
+        get: {
+            parameters: {
+                query?: {
+                    ay?: string;
+                    durum?: "gecerli" | "iptal" | "hepsi";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                    ogrenci_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            /** Format: uuid */
+                            sonraki_imlec: string | null;
+                            tahsilatlar: {
+                                aciklama: string | null;
+                                /** Format: uuid */
+                                alan_id: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "gecerli" | "iptal";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                iptal_nedeni: string | null;
+                                makbuz_no: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                paket_satisi_id: string | null;
+                                /** Format: date */
+                                tahsilat_tarihi: string;
+                                tutar_kurus: number;
+                                /** @enum {string} */
+                                yontem: "nakit" | "havale" | "kart" | "diger";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Tahsilat al. `Idempotency-Key` (UUID) basligi ayni istegin ikinci kez cift kayit olusturmasini onler (tekrar: true). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Çift gönderim koruması (UUID). */
+                    "idempotency-key"?: string;
+                };
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string;
+                        makbuz_no?: string;
+                        /** Format: uuid */
+                        ogrenci_id: string;
+                        /** Format: uuid */
+                        paket_satisi_id?: string;
+                        /**
+                         * Format: date
+                         * @description Varsayılan: bugün (Europe/Istanbul).
+                         */
+                        tahsilat_tarihi?: string;
+                        tutar_kurus: number;
+                        /** @enum {string} */
+                        yontem: "nakit" | "havale" | "kart" | "diger";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            /** Format: uuid */
+                            alan_id: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "gecerli" | "iptal";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            iptal_nedeni: string | null;
+                            makbuz_no: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            paket_satisi_id: string | null;
+                            /** Format: date */
+                            tahsilat_tarihi: string;
+                            tekrar: boolean;
+                            tutar_kurus: number;
+                            /** @enum {string} */
+                            yontem: "nakit" | "havale" | "kart" | "diger";
+                        };
+                    };
+                };
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            /** Format: uuid */
+                            alan_id: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "gecerli" | "iptal";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            iptal_nedeni: string | null;
+                            makbuz_no: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            paket_satisi_id: string | null;
+                            /** Format: date */
+                            tahsilat_tarihi: string;
+                            tekrar: boolean;
+                            tutar_kurus: number;
+                            /** @enum {string} */
+                            yontem: "nakit" | "havale" | "kart" | "diger";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/tahsilatlar/{tahsilat_id}/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tahsilati iptal et (ters kayit). Neden zorunludur; iptal tek yonludur ve iptalin iptali yoktur. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    tahsilat_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            /** Format: uuid */
+                            alan_id: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "gecerli" | "iptal";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            iptal_nedeni: string | null;
+                            makbuz_no: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            paket_satisi_id: string | null;
+                            /** Format: date */
+                            tahsilat_tarihi: string;
+                            tutar_kurus: number;
+                            /** @enum {string} */
+                            yontem: "nakit" | "havale" | "kart" | "diger";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ucret-tarifeleri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ucret tarifelerini listele (ders basi modeli). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tarifeler: {
+                                brans_kodu: string | null;
+                                /** Format: date */
+                                gecerlilik_baslangic: string;
+                                /** Format: date */
+                                gecerlilik_bitis: string | null;
+                                /** Format: uuid */
+                                grup_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                ogrenci_id: string | null;
+                                surum: number;
+                                ucret_kurus: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ucret tarifesi ekle. Secim onceligi: ogrenci > grup > yalniz brans > kurum varsayilani. Ayni kapsamda cakisan aralik 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        brans_kodu?: string | null;
+                        /** Format: date */
+                        gecerlilik_baslangic: string;
+                        /** Format: date */
+                        gecerlilik_bitis?: string | null;
+                        /** Format: uuid */
+                        grup_id?: string | null;
+                        /** Format: uuid */
+                        ogrenci_id?: string | null;
+                        ucret_kurus: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            brans_kodu: string | null;
+                            /** Format: date */
+                            gecerlilik_baslangic: string;
+                            /** Format: date */
+                            gecerlilik_bitis: string | null;
+                            /** Format: uuid */
+                            grup_id: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            ogrenci_id: string | null;
+                            surum: number;
+                            ucret_kurus: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/finans/kurumlar/{kurum_id}/ucret-tarifeleri/{tarife_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Ucret tarifesini sil (defter satirlari tutari kopya sakladigi icin etkilenmez). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    tarife_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Ucret tarifesini guncelle (gecmis derslere kopyalanmis tutarlar degismez). */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    tarife_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        brans_kodu?: string | null;
+                        /** Format: date */
+                        gecerlilik_baslangic?: string;
+                        /** Format: date */
+                        gecerlilik_bitis?: string | null;
+                        /** Format: uuid */
+                        grup_id?: string | null;
+                        /** Format: uuid */
+                        ogrenci_id?: string | null;
+                        ucret_kurus?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            brans_kodu: string | null;
+                            /** Format: date */
+                            gecerlilik_baslangic: string;
+                            /** Format: date */
+                            gecerlilik_bitis: string | null;
+                            /** Format: uuid */
+                            grup_id: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            ogrenci_id: string | null;
+                            surum: number;
+                            ucret_kurus: number;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/v1/hesap/ben": {
         parameters: {
             query?: never;
@@ -1683,6 +3248,7 @@ export interface paths {
                                     ders_hatirlatma_dk?: number;
                                     /** Format: uri */
                                     logo_url?: string;
+                                    ogrenci_kalan_ders_gorur?: boolean;
                                     sessiz_saat_varsayilan?: string;
                                     vurgu_rengi?: string;
                                     yoklama_kilit_gun?: number;
@@ -1756,6 +3322,7 @@ export interface paths {
                                 ders_hatirlatma_dk?: number;
                                 /** Format: uri */
                                 logo_url?: string;
+                                ogrenci_kalan_ders_gorur?: boolean;
                                 sessiz_saat_varsayilan?: string;
                                 vurgu_rengi?: string;
                                 yoklama_kilit_gun?: number;
@@ -1815,6 +3382,7 @@ export interface paths {
                                 ders_hatirlatma_dk?: number;
                                 /** Format: uri */
                                 logo_url?: string;
+                                ogrenci_kalan_ders_gorur?: boolean;
                                 sessiz_saat_varsayilan?: string;
                                 vurgu_rengi?: string;
                                 yoklama_kilit_gun?: number;
