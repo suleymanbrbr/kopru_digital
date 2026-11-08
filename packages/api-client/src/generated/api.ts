@@ -1128,7 +1128,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Ogrenciyi dersin katilimcilarindan cikar (planli ders) */
+        /** Ogrenciyi dersin katilimcilarindan cikar (planli veya tamamlanmis ders). Yoklamasi olan katilimci 409 katilimci_yoklamali. */
         delete: {
             parameters: {
                 query?: never;
@@ -1350,6 +1350,189 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/yoklamalar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dersin katilimcilari ve (varsa) yoklamalari; yoklamasi olmayan katilimci da listelenir. Personel tum katilimcilari gorur; ogrenci yalniz kendisini ve `ogretmene_ozel` notu hic gormez. Liste grup uyeligiyle esitlenir (planli ders). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ders: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                            };
+                            katilimcilar: {
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** @enum {string} */
+                                tur: "uye" | "misafir" | "telafi";
+                                /** @description Yoklaması henüz alınmamışsa `null`. */
+                                yoklama: {
+                                    /** Format: uuid */
+                                    ders_id: string;
+                                    /** @enum {string} */
+                                    durum: "geldi" | "gelmedi" | "izinli" | "gec";
+                                    gec_dakika: number | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: date-time */
+                                    isaretlenme_at: string;
+                                    /** Format: uuid */
+                                    isaretleyen_id: string;
+                                    /** @description Öğrenci rolünde `ogretmene_ozel` not hep `null`. */
+                                    not: string | null;
+                                    /**
+                                     * @description `ogretmene_ozel` (varsayılan): not öğrenciye ve hiçbir olaya dönmez. `ogrenciye`: öğrenci kendi yoklamasında görür.
+                                     * @enum {string}
+                                     */
+                                    not_gorunurluk: "ogretmene_ozel" | "ogrenciye";
+                                    /** Format: uuid */
+                                    ogrenci_id: string;
+                                    /** Format: date-time */
+                                    sunucu_at: string;
+                                    surum: number;
+                                } | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /** Yoklama al/duzelt (toplu, tek islem). `Idempotency-Key` (UUID) zorunlu: ayni anahtar+govde kayitli yaniti `Idempotent-Replayed: true` ile aynen doner, ayni anahtar farkli govde 422. Satir basina `sonuc`: yeni | guncellendi | ayni (icerik ayni, hicbir sey yazilmaz) | eski (istemci saati mevcuttan eski, yazilmaz). Tek satir hata verirse hicbiri yazilmaz. Ilk basarili yazim dersi `tamamlandi` yapar. Gelecek ders 422, iptal ders 409, kilitli ders 403 (yalniz ogretmen). */
+        put: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description İstemcinin ürettiği UUID (çevrimdışı kuyruk her denemede aynısını gönderir). */
+                    "idempotency-key": string;
+                };
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        yoklamalar: {
+                            /** @enum {string} */
+                            durum: "geldi" | "gelmedi" | "izinli" | "gec";
+                            /** @description `durum=gec` ise zorunlu (1-240), aksi hâlde verilemez. */
+                            gec_dakika?: number;
+                            /**
+                             * Format: date-time
+                             * @description İstemci saati (çevrimdışı kuyrukta işaretlenme anı). Mevcut kayıttan eskiyse `sonuc: eski`.
+                             */
+                            isaretlenme_at: string;
+                            /** @description Kısa ders notu. Satır tam yazılır: verilmezse mevcut not silinir. */
+                            not?: string | null;
+                            /**
+                             * @description `ogretmene_ozel` (varsayılan): not öğrenciye ve hiçbir olaya dönmez. `ogrenciye`: öğrenci kendi yoklamasında görür.
+                             * @enum {string}
+                             */
+                            not_gorunurluk?: "ogretmene_ozel" | "ogrenciye";
+                            /**
+                             * Format: uuid
+                             * @description Dersin katılımcısı olan öğrenci üyeliği.
+                             */
+                            ogrenci_id: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            ders_durumu: "planli" | "tamamlandi" | "iptal";
+                            /** Format: uuid */
+                            ders_id: string;
+                            sonuclar: {
+                                /** @description Bu işlem kredi bakiyesini değiştirdiyse güncel kalan kredi, yoksa `null`. */
+                                kalan_kredi: number | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /**
+                                 * @description `yeni`/`guncellendi`: yazıldı. `ayni`: içerik birebir aynı, hiçbir şey değişmedi. `eski`: istemci saati mevcut kayıttan eski, yazılmadı.
+                                 * @enum {string}
+                                 */
+                                sonuc: "yeni" | "guncellendi" | "ayni" | "eski";
+                                /** @enum {string|null} */
+                                uyari: "ucret_tarifesi_yok" | null;
+                                /** @description İşlem sonrası güncel satır (`eski` ise mevcut satır). */
+                                yoklama: {
+                                    /** Format: uuid */
+                                    ders_id: string;
+                                    /** @enum {string} */
+                                    durum: "geldi" | "gelmedi" | "izinli" | "gec";
+                                    gec_dakika: number | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: date-time */
+                                    isaretlenme_at: string;
+                                    /** Format: uuid */
+                                    isaretleyen_id: string;
+                                    /** @description Öğrenci rolünde `ogretmene_ozel` not hep `null`. */
+                                    not: string | null;
+                                    /**
+                                     * @description `ogretmene_ozel` (varsayılan): not öğrenciye ve hiçbir olaya dönmez. `ogrenciye`: öğrenci kendi yoklamasında görür.
+                                     * @enum {string}
+                                     */
+                                    not_gorunurluk: "ogretmene_ozel" | "ogrenciye";
+                                    /** Format: uuid */
+                                    ogrenci_id: string;
+                                    /** Format: date-time */
+                                    sunucu_at: string;
+                                    surum: number;
+                                };
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ders/kurumlar/{kurum_id}/seriler": {
         parameters: {
             query?: never;
@@ -1515,6 +1698,95 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/yoklama-bekleyen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogretmenin "Yoklama al" listesi: baslamis, `planli`, en az bir katilimcisinin yoklamasi eksik dersler (son 14 gun; kapsam suzgecli; `baslangic_at` azalan; imlecle sayfali). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dersler: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                cakisma_onayli: boolean;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "planli" | "tamamlandi" | "iptal";
+                                ertelendi_sayisi: number;
+                                gec_iptal: boolean;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_baslangic_at: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                /** Format: uuid */
+                                iptal_eden_id: string | null;
+                                /** @enum {string|null} */
+                                iptal_kaynagi: "ogretmen" | "ogrenci" | "yonetici" | null;
+                                iptal_nedeni: string | null;
+                                katilimci_sayisi: number;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                online_baglanti: string | null;
+                                /** Format: uuid */
+                                seri_id: string | null;
+                                seri_istisna: boolean;
+                                seri_sirasi: number | null;
+                                surum: number;
+                                telafi: boolean;
+                                /** Format: uuid */
+                                telafi_kaynak_ders_id: string | null;
+                                yer: string | null;
+                                /** @description Yoklaması girilmemiş katılımcı sayısı. */
+                                yoklamasi_eksik_sayisi: number;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

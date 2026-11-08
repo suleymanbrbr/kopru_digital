@@ -2,13 +2,13 @@ import { runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
 import { geceIsiZamanla } from './modules/finans/index.js';
-import { dersSerileriniUret } from './sistem/ders-seri-uret.js';
+import { dersSaatlikIs } from './sistem/ders-seri-uret.js';
 
 const env = loadServiceEnv();
 const telemetry = startTelemetry(`${serviceName}-worker`, env.OTEL_EXPORTER_OTLP_ENDPOINT);
 
 /**
- * Ders serisi uretimi: acilista ve sonra saatte bir denenir. Is idempotenttir ve yapilacak is yoksa hicbir
+ * Ders saatlik isi (seri uzatma, katilimci esitleme, eski yoklama istegi temizligi): acilista ve sonra saatte bir denenir. Is idempotenttir ve yapilacak is yoksa hicbir
  * sey yazmaz (bkz. `dersSerileriniUret`); boylece her seri gunde bir kez uzar, worker yeniden basladiysa ya da
  * bir calisma basarisiz olduysa bir saat icinde toparlanir. Zamanlayici (pg-boss) geldiginde bu cagri onun
  * gunluk isine tasinir.
@@ -33,10 +33,16 @@ await runWorker({
       if (calisiyor) return;
       calisiyor = true;
       try {
-        const ozet = await dersSerileriniUret(db, { log });
-        if (ozet.seri > 0 || ozet.hata > 0) log.info(ozet, 'ders serileri uzatıldı');
+        const ozet = await dersSaatlikIs(db, { log });
+        if (ozet.seri.seri > 0 || ozet.seri.hata > 0) log.info(ozet.seri, 'ders serileri uzatıldı');
+        if (ozet.katilimci.ders > 0 || ozet.katilimci.hata > 0) {
+          log.info(ozet.katilimci, 'ders katılımcıları eşitlendi');
+        }
+        if (ozet.silinenYoklamaIstegi > 0) {
+          log.info({ silinen: ozet.silinenYoklamaIstegi }, 'eski yoklama istekleri silindi');
+        }
       } catch (err) {
-        log.error({ err }, 'ders serisi işi başarısız');
+        log.error({ err }, 'ders saatlik işi başarısız');
       } finally {
         calisiyor = false;
       }

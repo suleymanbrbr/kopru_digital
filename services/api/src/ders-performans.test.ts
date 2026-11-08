@@ -111,4 +111,43 @@ describe.skipIf(dbYok())('ders takvimi performansi (200 ders, hedef 300 ms)', ()
     expect(planMetni).toMatch(/Index Scan|Bitmap/);
     expect(medyan).toBeLessThan(300);
   });
+
+  it('20 ogrencili toplu yoklama PUT: ilk yazim, duzeltme ve idempotent tekrar sureleri (kredi dususu dahil)', async () => {
+    const y = dersYardimcilari({ t, sistem });
+    const s = await y.kur({ ogrenciSayisi: 20 });
+    for (const o of s.ogrenciler) await y.paketSat(s, o, 8);
+    const ders = await y.gecmisDers(s);
+    const anahtar = crypto.randomUUID();
+    const an = Date.now();
+    const gonder = async (durum: 'geldi' | 'izinli', ms: number, key = crypto.randomUUID()) => {
+      const isaret = new Date(an + ms).toISOString();
+      const bas = performance.now();
+      const res = await y.yoklamaPut(
+        s.k,
+        s.hoca.token,
+        ders.id,
+        s.ogrenciler.map((o) => y.yoklamaSatiri(o, durum, { isaretlenme_at: isaret })),
+        key,
+      );
+      const sure = performance.now() - bas;
+      expect(res.statusCode, res.body).toBe(200);
+      return { sure, res };
+    };
+    const ilk = await gonder('geldi', -3000, anahtar);
+    const duzeltme = await gonder('izinli', -2000);
+    const tekrar = await gonder('izinli', -2000); // ayni icerik, farkli anahtar: 'ayni'
+    const replay = await gonder('geldi', -3000, anahtar); // ayni anahtar: kayitli yanit
+    expect(replay.res.headers['idempotent-replayed']).toBe('true');
+    const sonuclar = (r: { res: { json: () => unknown } }) =>
+      (r.res.json() as { sonuclar: { sonuc: string }[] }).sonuclar.map((x) => x.sonuc);
+    expect(new Set(sonuclar(ilk))).toEqual(new Set(['yeni']));
+    expect(new Set(sonuclar(duzeltme))).toEqual(new Set(['guncellendi']));
+    expect(new Set(sonuclar(tekrar))).toEqual(new Set(['ayni']));
+    console.log(
+      `[ders-performans] 20 ogrenci PUT yoklama: ilk yazim (yeni+kredi dususu) ${ilk.sure.toFixed(0)} ms; duzeltme (guncelle+kredi iadesi) ${duzeltme.sure.toFixed(0)} ms; ayni icerik ${tekrar.sure.toFixed(0)} ms; ayni anahtar tekrar ${replay.sure.toFixed(0)} ms`,
+    );
+    // Sartname: 20 kisilik grupta 10 saniyenin altinda (kullanici akisi); sunucu tarafi cok daha kisa olmali.
+    expect(ilk.sure).toBeLessThan(2000);
+    expect(duzeltme.sure).toBeLessThan(2000);
+  });
 });

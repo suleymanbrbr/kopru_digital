@@ -639,7 +639,8 @@ Uygulama notları:
 - `ilk_baslangic_at` ilk planlanan zamandır; `NOT NULL`, oluşturulurken `baslangic_at`e eşitlenir.
 - `seri_istisna=true` olan dersler (bir dersi tek başına taşıma, bilgi güncelleme ya da iptal) `bu_ve_sonrakiler` işlemlerinden etkilenmez.
 - Çakışma: önce sorgu, `409 ders_cakismasi` (`details.cakisanlar`); yarış durumunda EXCLUDE ihlali (`23P01`) de aynı `409`a çevrilir. Seri üretiminde `INSERT ... ON CONFLICT DO NOTHING` çakışan/yinelenen satırı atlar, `atlanan` olarak döner.
-- `gec_iptal` sunucuda `gecIptalSaati()` ile hesaplanır: bu pakette sabit 24 saat; sonraki paket bunu `finans` iptal/ücret politikasına bağlar. Bu pakette kredi ve ücret etkisi yoktur.
+- `gec_iptal` sunucuda hesaplanır: eşik `finans.gecIptalSaatiBul(tx, kurum_id)` (`kredi_politikalari.gec_iptal_saat`, varsayılan 24 saat); `gecIptalSaati()` sabiti kaldırıldı. İptal rotası aynı işlemde katılımcı başına `finans.dersIptalUygula` çağırır (yoklaması alınmamış `planli` derste yalnızca öğrencinin geç iptali bir şey yazar, diğer çağrılar kesin etkisiz olduğu için atlanır).
+- **`tamamlandi` (yoklaması alınmış) ders iptal edilebilir**: yoklama kaynaklı kredi düşümü/ücret ters çevrilir (`iade`/`ters_kayit`). Kapsam yalnız `yalniz_bu` (`422 tamamlanmis_ders_yalniz_bu`); yoklama kilidi burada da geçerlidir (öğretmen `403 yoklama_kilitli`, sahip/yönetici serbest). Taşıma ve bilgi güncelleme `planli` ile sınırlı kalır.
 - `iptal_kaynagi='ogrenci'` yalnızca `birebir` türündeki grupta kabul edilir (`422 iptal_kaynagi_gecersiz`).
 
 Yoklama kilidi: tamamlanmış ders için yoklama düzenleme `kurumlar.ayarlar.yoklama_kilit_gun` (varsayılan 14) sonra kilitlenir, yalnızca `yonetici` düzeltir.
@@ -659,7 +660,8 @@ Profil: `K`. RLS: evet.
 | `tur` | text | hayır | `'uye'` | CHECK `IN ('uye','misafir','telafi')` |
 
 Kısıtlar: `UNIQUE (ders_id, ogrenci_id)`. İndeks: `(kurum_id, ogrenci_id, ders_id)`. Olaylar: yok (`ders.ders.degisti` yükü `ogrenci_idleri` taşır).
-Katılımcılar ders oluşturulurken `grupEtkinOgrencileri` ile dondurulur (seri derslerinde her dersin üretildiği andaki etkin üyeler). Misafir/telafi öğrenci `POST .../katilimcilar` ile eklenir. `ders_katilimcilari` `surum` taşımaz (`kiraci_tablosu_koru(..., false)`).
+Katılımcılar ders oluşturulurken `grupEtkinOgrencileri` ile dondurulur (seri derslerinde her dersin üretildiği andaki etkin üyeler). Misafir/telafi öğrenci `POST .../katilimcilar` ile eklenir (planlı ya da tamamlanmış derse). `DELETE .../katilimcilar/:ogrenci_id` yoklaması olan katılımcıyı `409 katilimci_yoklamali` ile reddeder.
+**Katılımcı eşitleme** (`dersKatilimcilariniEsitle(tx, kurum_id, {dersId} | {grupId, baslangictan} | {dersIdleri})`): yalnız `planli` derslerde, ders satırı kilitlenerek: ders yerel gününde (kurum saat dilimi) etkin üye olup listede olmayan öğrenci `tur='uye'` eklenir (`grup_uyeleri.baslangic_tarihi` ders gününden sonraysa eklenmez); ders gününden önce bitmiş (ya da etkin olmayan üyelikli), yoklaması olmayan `tur='uye'` satırı çıkarılır; `misafir`/`telafi` ve yoklamalı satırlara dokunulmaz. Değişen derste `ders.ders.degisti.v1` (`guncellendi`). İdempotent. Çağrı yerleri: `GET` ve `PUT .../dersler/:id/yoklamalar` başında o ders için; worker'ın saatlik işi (`dersSaatlikIs`, `sistem.ders_katilimci_esitle` denetimiyle, iş yoksa hiçbir şey yazmaz) gelecek ve son 14 günün yoklama bekleyen planlı dersleri için. Sınır: planlı derste grubun etkin bir üyesini elle çıkarmak sonraki eşitlemede geri alınır (gelmeyecek öğrenci `izinli`/`gelmedi` ile işaretlenir). `ders_katilimcilari` `surum` taşımaz (`kiraci_tablosu_koru(..., false)`).
 
 ### `ders.yoklamalar`
 
@@ -673,7 +675,8 @@ Profil: `KS`. RLS: evet.
 | `ogrenci_id` | uuid | hayır | | |
 | `durum` | text | hayır | | CHECK `IN ('geldi','gelmedi','izinli','gec')` |
 | `gec_dakika` | smallint | evet | | Yalnızca `gec` ise zorunlu, 1-240 |
-| `not` | text | evet | | CHECK `char_length <= 500` |
+| `not` | text | evet | | CHECK `char_length <= 500`. Kısa ders notu; **hiçbir olaya, denetim kaydına ve loga girmez.** |
+| `not_gorunurluk` | text | hayır | `'ogretmene_ozel'` | CHECK `IN ('ogretmene_ozel','ogrenciye')`. `ogretmene_ozel` not öğrenciye asla dönmez (yanıtta `not: null`); `ogrenciye` olunca öğrenci kendi yoklamasında görür. Not yoksa değer `ogretmene_ozel`e iner. (Şartnamedeki "öğrenciye görünür veya öğretmene özel" işaretinin karşılığı; şartname açığı kapatıldı.) |
 | `isaretleyen_id` | uuid | hayır | | `uyelikler` (öğretmen/yönetici) |
 | `isaretlenme_at` | timestamptz | hayır | | **İstemci** saati (çevrimdışı). Sunucu doğrulaması: `<= now() + 5 dk`. |
 | `sunucu_at` | timestamptz | hayır | now() | Sunucuda işlendiği an |
@@ -682,23 +685,28 @@ Profil: `KS`. RLS: evet.
 Kısıtlar:
 - `UNIQUE (ders_id, ogrenci_id)` (`yoklamalar_ders_id_ogrenci_id_uniq`): idempotency'nin ana dayanağı. İstemci yeniden denese bile ikinci satır oluşmaz.
 - Bileşik FK `(ders_id, ogrenci_id)` -> `ders_katilimcilari(ders_id, ogrenci_id)`.
-- `CHECK ((durum = 'gec') = (gec_dakika IS NOT NULL))`.
+- `CHECK ((durum = 'gec') = (gec_dakika IS NOT NULL))`, `CHECK (gec_dakika IS NULL OR gec_dakika BETWEEN 1 AND 240)`.
 - `UNIQUE (kurum_id, id)`.
+- `not` ayrılmış sözcüktür: SQL'de her yerde çift tırnakla yazılır (`"not"`).
 
-Güncelleme kuralı (son-yazan-kazanır, istemci zamanıyla): gelen `isaretlenme_at`, mevcut satırdan eskiyse güncelleme **yapılmaz**, yanıt `{sonuc:'eski', mevcut:{...}}` olur (çevrimdışı kuyruk eski bir işaretlemeyi yeni işaretlemenin üzerine yazmasın diye). Eşit ya da yeniyse güncellenir, `surum` artar, `yoklama_gecmisi` satırı eklenir.
+Güncelleme kuralı (son-yazan-kazanır, istemci zamanıyla). Satır başına `sonuc`:
+- `eski`: gelen `isaretlenme_at`, mevcut satırdan eskiyse güncelleme **yapılmaz**, yanıtta mevcut satır döner (çevrimdışı kuyruk eski bir işaretlemeyi yeni işaretlemenin üzerine yazmasın diye). Kredi etkisi yok.
+- `ayni`: eşit ya da yeni ama içerik (`durum`, `gec_dakika`, `not`, `not_gorunurluk`) **birebir aynıysa** hiçbir şey yazılmaz: `surum` artmaz, geçmiş ve olay yazılmaz. Böylece farklı `Idempotency-Key` ile yeniden kuyruklanan aynı işaretleme kredi hareketi yaratmaz.
+- `yeni` / `guncellendi`: yazılır, `surum` artar, `yoklama_gecmisi` satırı eklenir, `ders.yoklama.kaydedildi.v1` yazılır, `finans.krediVeUcretiUygula` çağrılır.
+PUT satırı tam yazar: `not` verilmezse mevcut not silinir. `isaretlenme_at <= sunucu saati + 5 dk` (aksi `422`).
 Aynı işlemde (tek `tx`):
 1. `yoklamalar` insert/update + `yoklama_gecmisi` insert,
 2. `finans.krediVeUcretiUygula` (kredi `dusum`/`iade` veya bakiye `ders_ucreti`/`ters_kayit`),
 3. outbox: `ders.yoklama.kaydedildi.v1` (+ finans olayları),
 4. `yoklama_istekleri` satırının yanıtının doldurulması.
 Hiçbir adım ayrı işlemde yapılmaz.
-Aynı ders için toplu istek (`PUT /v1/dersler/{id}/yoklamalar`) tek işlemde tüm satırları yazar; tek hata hepsini geri alır.
+Aynı ders için toplu istek (`PUT /v1/ders/kurumlar/{kurum_id}/dersler/{id}/yoklamalar`) tek işlemde tüm satırları yazar; tek hata hepsini geri alır. İlk başarılı yazımda ders `durum='tamamlandi'` olur ve aynı işlemde `ders.ders.degisti.v1` (`tamamlandi`) yazılır; düzeltmeler tamamlanmış derste serbesttir (kilit kuralı hariç). Gelecek derse (`baslangic_at > now() + 5 dk`, sunucu saati) yoklama `422 ders_henuz_baslamadi`; iptal edilmiş derse `409 ders_iptal_edildi`; katılımcı olmayan öğrenci `422 ogrenci_katilimci_degil`; kilit (`yoklama_kilit_gun`) sonrası öğretmen `403 yoklama_kilitli`. Öğretmen atandığı gruptaki derste (vekil ders dahil) yoklama alabilir. `yoklama` modülü kapalıysa uçlar kapalı; `finans` kapalıysa yoklama kaydedilir, kredi etkisi olmaz.
 İndeks: `(kurum_id, ogrenci_id, ders_id)`, `(kurum_id, ders_id)`.
 Olaylar: `ders.yoklama.kaydedildi.v1`.
 
 ### `ders.yoklama_gecmisi`
 
-Yoklama değişikliklerinin değişmez günlüğü.
+Yoklama değişikliklerinin değişmez günlüğü. Defter: `api_app` ve `api_sistem` için `UPDATE/DELETE` yetkisi alınır ve `ortak.defter_degistirilemez` tetikleyicisi (tablo sahibi dahil) reddeder; yalnız ekleme.
 
 Profil: `D`. RLS: evet. Sütunlar: `yoklama_id uuid NOT NULL`, `ders_id uuid NOT NULL`, `ogrenci_id uuid NOT NULL`, `yoklama_surumu bigint NOT NULL`, `onceki_durum text NULL`, `yeni_durum text NOT NULL`, `degistiren_id uuid NOT NULL`, `istek_id uuid NULL`, `istemci_zamani timestamptz NOT NULL`. Kısıtlar: `UNIQUE (yoklama_id, yoklama_surumu)`. İndeks: `(kurum_id, yoklama_id, yoklama_surumu)`. Olaylar: yok.
 
@@ -717,7 +725,7 @@ Profil: `K` (tekil). RLS: evet.
 | `durum_kodu` | smallint | hayır | | İlk yanıtın HTTP durumu |
 | `yanit` | jsonb | hayır | | İlk yanıt gövdesi |
 
-Kısıtlar: `UNIQUE (kurum_id, istek_id)`. Akış: istek işlenmeden önce `INSERT ... ON CONFLICT (kurum_id, istek_id) DO NOTHING RETURNING`. Çakışma varsa: aynı `govde_sha256` ise kayıtlı `yanit` aynen döner (`200`, başlık `Idempotent-Replayed: true`), farklıysa `422 idempotency_anahtar_cakismasi`. Satır, yoklama işlemiyle aynı `tx` içinde yazılır (işlem geri alınırsa istek kaydı da gider). Temizlik: 14 gün sonra silinir. İndeks: `(created_at)`. Olaylar: yok.
+Kısıtlar: `UNIQUE (kurum_id, istek_id)`. Akış: istek işlenmeden önce `INSERT ... ON CONFLICT (kurum_id, istek_id) DO NOTHING RETURNING`. Çakışma varsa: aynı `govde_sha256` ise kayıtlı `yanit` aynen döner (`200`, başlık `Idempotent-Replayed: true`), farklıysa `422 idempotency_anahtar_cakismasi`. Satır, yoklama işlemiyle aynı `tx` içinde yazılır (işlem geri alınırsa istek kaydı da gider; aynı anahtarla hata sonrası yeniden denenebilir). Yarışan aynı anahtarlı istekler ikinci `INSERT`te ilkinin commit'ini bekler, sonra kayıtlı yanıtı döner. Ekleme anında `durum_kodu=0`, `yanit='{}'` yer tutucudur (işlem commit olunca gerçek değer yazılmış olur). `govde_sha256`: ders kimliği + çağıran kullanıcı + öğrenciye göre sıralı, normalleştirilmiş satırların (`isaretlenme_at` dahil) SHA-256'sı; farklı kullanıcı ya da ders aynı anahtarda `422 idempotency_anahtar_cakismasi`. Temizlik: saatlik işte (`eskiYoklamaIstekleriniSil`) 14 günden eski satırlar silinir. İndeks: `(created_at)`. Olaylar: yok.
 
 ### `ders.geri_bildirimler`
 
@@ -1559,7 +1567,7 @@ Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `go
 
 ## `ders` takvim uç noktaları
 
-`/v1/ders/kurumlar/:kurum_id/...` altında; `takvim` modülü kapalıysa tüm uçlar `403 modul_kapali`. Okuma `takvim.oku`, yazma `takvim.yaz` (en az `grup` kapsamı). Liste ve tekil uçlar kapsam süzgecinden geçer, kapsam dışı kayıt `404`: sahip/yönetici kurum (şube bağlıysa şube), öğretmen atandığı grupların ya da kendi dersleri, öğrenci yalnızca katılımcısı olduğu dersler. Tüm yazmalar aynı işlemde outbox'a `ders.ders.degisti.v1` ve `hesap.denetim_kayitlari`na (`ders.olustur`, `ders.seri_olustur`, `ders.guncelle`, `ders.tasi`, `ders.iptal`, `ders.katilimci_ekle`, `ders.katilimci_cikar`) yazar.
+`/v1/ders/kurumlar/:kurum_id/...` altında; `takvim` modülü kapalıysa tüm uçlar `403 modul_kapali`. Okuma `takvim.oku`, yazma `takvim.yaz` (en az `grup` kapsamı). Liste ve tekil uçlar kapsam süzgecinden geçer, kapsam dışı kayıt `404`: sahip/yönetici kurum (şube bağlıysa şube), öğretmen atandığı grupların ya da kendi dersleri, öğrenci yalnızca katılımcısı olduğu dersler. Tüm yazmalar aynı işlemde outbox'a `ders.ders.degisti.v1` ve `hesap.denetim_kayitlari`na (`ders.olustur`, `ders.seri_olustur`, `ders.guncelle`, `ders.tasi`, `ders.iptal`, `ders.katilimci_ekle`, `ders.katilimci_cikar`) yazar. Yoklama uçları `yoklama` modülü kapalıysa `403 modul_kapali` döner; `PUT` `ders.yoklama_kaydet` denetimi yazar (not metni hiçbir yerde yok).
 
 | Yöntem | Yol | İzin | Açıklama |
 | --- | --- | --- | --- |
@@ -1571,7 +1579,10 @@ Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `go
 | POST | `/dersler/:id/tasi` | `takvim.yaz` | Erteleme: `surum`, `kapsam`, `yeni_tarih`, `yeni_saat`, `cakisma_onayli`. `yalniz_bu` dersi seriden ayırır, `bu_ve_sonrakiler` yalnız saati değiştirir ve seri kuralını günceller |
 | POST | `/dersler/:id/iptal` | `takvim.yaz` | `iptal_kaynagi` (`ogrenci` yalnız birebir grupta, aksi `422`), `iptal_nedeni`, `kapsam`, isteğe bağlı `surum`; `gec_iptal` sunucuda hesaplanır |
 | POST | `/dersler/:id/katilimcilar` | `takvim.yaz` | `{ ogrenci_id, tur: misafir \| telafi }`; tekrar `409 zaten_katilimci` |
-| DELETE | `/dersler/:id/katilimcilar/:ogrenci_id` | `takvim.yaz` | Katılımcıyı çıkarır (planlı ders) |
+| DELETE | `/dersler/:id/katilimcilar/:ogrenci_id` | `takvim.yaz` | Katılımcıyı çıkarır (planlı ya da tamamlanmış ders); yoklaması olan `409 katilimci_yoklamali` |
+| PUT | `/dersler/:id/yoklamalar` | `yoklama.yaz` (`grup`) | **`Idempotency-Key` başlığı zorunlu** (UUID; yoksa `400`). Gövde `{ yoklamalar: [{ ogrenci_id, durum, gec_dakika?, not?, not_gorunurluk?, isaretlenme_at }] }` (1-500 satır). Toplu ve tek işlem. Yanıt `{ ders_id, ders_durumu, sonuclar: [{ ogrenci_id, sonuc: yeni\|guncellendi\|ayni\|eski, yoklama, kalan_kredi, uyari }] }`; `kalan_kredi` yalnız bu işlem bakiyeyi değiştirdiyse dolu (aksi `null`), `uyari: ucret_tarifesi_yok` ders başı modelde tarife yoksa. Aynı anahtar+gövde: `200` + `Idempotent-Replayed: true` + kayıtlı yanıt; aynı anahtar farklı gövde `422 idempotency_anahtar_cakismasi`. Tek denetim kaydı `ders.yoklama_kaydet` (satır ve etkilenen sayısı; not metni yok) |
+| GET | `/dersler/:id/yoklamalar` | `yoklama.oku` | Personel: tüm katılımcılar + varsa yoklama + görünen ad (yoklaması olmayan da listelenir). Öğrenci: yalnız kendisi; `ogretmene_ozel` not `null` döner. Listeden önce katılımcı eşitleme çalışır |
+| GET | `/yoklama-bekleyen` | `yoklama.yaz` (`grup`) | "Yoklama al" listesi: başlamış (`baslangic_at <= now()`), `durum='planli'`, son 14 gün, en az bir katılımcısının yoklaması eksik, kapsam süzgeçli dersler; `baslangic_at` azalan, `?limit&imlec` sayfalı; her derste `yoklamasi_eksik_sayisi` |
 
 Hata kodları: `ders_cakismasi`, `surum_cakismasi`, `ogretmen_gerekli`, `ogretmen_gecersiz`, `brans_gerekli`, `iptal_kaynagi_gecersiz`, `ders_planli_degil`, `ders_seride_degil`, `tarih_degisikligi_yalniz_bu`, `zaten_katilimci`, `degisiklik_yok`, `tekrar_kapsami_asildi`.
 

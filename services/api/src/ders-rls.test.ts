@@ -6,7 +6,14 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { dbYok, hataMetni, rastgeleTelefon, testDb } from './test/yardimcilar.js';
 
-const TABLOLAR = ['ders_serileri', 'dersler', 'ders_katilimcilari'] as const;
+const TABLOLAR = [
+  'ders_serileri',
+  'dersler',
+  'ders_katilimcilari',
+  'yoklamalar',
+  'yoklama_gecmisi',
+  'yoklama_istekleri',
+] as const;
 
 /** `ders` tablolari icin kiraci izolasyonu (`api_app`, NOBYPASSRLS) ve veritabani kisitlari. */
 describe.skipIf(dbYok())('ders tablolari: RLS izolasyonu ve kisitlar', () => {
@@ -25,6 +32,7 @@ describe.skipIf(dbYok())('ders tablolari: RLS izolasyonu ve kisitlar', () => {
   const seriB = uuidv7();
   const dersA = uuidv7();
   const dersB = uuidv7();
+  const yoklamaIdleri = new Map<string, string>();
   let sistem: postgres.Sql;
   let app: Database;
 
@@ -69,6 +77,14 @@ describe.skipIf(dbYok())('ders tablolari: RLS izolasyonu ve kisitlar', () => {
         values (${seri}, ${kurum}, ${grup}, ${ogretmen}, 'matematik', 'FREQ=WEEKLY', '2030-01-07', '10:00', 60, '2030-04-01')`;
       await dersEkle(kurum, grup, ogretmen, { id: ders });
       await sistem`insert into ders.ders_katilimcilari (id, kurum_id, ders_id, ogrenci_id) values (${uuidv7()}, ${kurum}, ${ders}, ${ogrenci})`;
+      const yoklama = uuidv7();
+      yoklamaIdleri.set(kurum, yoklama);
+      await sistem`insert into ders.yoklamalar (id, kurum_id, ders_id, ogrenci_id, durum, isaretleyen_id, isaretlenme_at)
+        values (${yoklama}, ${kurum}, ${ders}, ${ogrenci}, 'geldi', ${ogretmen}, now())`;
+      await sistem`insert into ders.yoklama_gecmisi (id, kurum_id, yoklama_id, ders_id, ogrenci_id, yoklama_surumu, yeni_durum, degistiren_id, istemci_zamani)
+        values (${uuidv7()}, ${kurum}, ${yoklama}, ${ders}, ${ogrenci}, 1, 'geldi', ${ogretmen}, now())`;
+      await sistem`insert into ders.yoklama_istekleri (id, kurum_id, istek_id, ders_id, kullanici_id, govde_sha256, durum_kodu, yanit)
+        values (${uuidv7()}, ${kurum}, ${uuidv7()}, ${ders}, ${sahip}, decode('00', 'hex'), 200, '{}'::jsonb)`;
     }
   });
 
@@ -199,5 +215,127 @@ describe.skipIf(dbYok())('ders tablolari: RLS izolasyonu ve kisitlar', () => {
       { surum: number }[]
     >`select surum::int from ders.dersler where id = ${dersA}`;
     expect(sonra?.surum).toBe((once?.surum ?? 0) + 1);
+  });
+
+  it('yoklama kisitlari: gec_dakika/durum CHECK, katilimci olmayana yoklama (bilesik FK), benzersiz (ders, ogrenci)', async () => {
+    const yoklamaEkle = (kurum: string, ders: string, ogrenci: string, ek: string) =>
+      hataMetni(
+        sistem.unsafe(
+          `insert into ders.yoklamalar (id, kurum_id, ders_id, ogrenci_id, durum, gec_dakika, isaretleyen_id, isaretlenme_at)
+         values ('${uuidv7()}', '${kurum}', '${ders}', '${ogrenci}', ${ek}, '${ogretmenA}', now())`,
+        ),
+      );
+    // Ikinci ogrenci katilimci degil: FK reddeder
+    const baskaKullanici = uuidv7();
+    const baskaOgrenci = uuidv7();
+    await sistem`insert into hesap.kullanicilar (id, telefon_e164) values (${baskaKullanici}, ${rastgeleTelefon()})`;
+    await sistem`insert into hesap.uyelikler (id, kurum_id, kullanici_id, rol) values (${baskaOgrenci}, ${kurumA}, ${baskaKullanici}, 'ogrenci')`;
+    expect(await yoklamaEkle(kurumA, dersA, baskaOgrenci, `'geldi', null`)).toMatch(
+      /yoklamalar_katilimci_fk/,
+    );
+    // benzersiz
+    expect(await yoklamaEkle(kurumA, dersA, ogrenciA, `'geldi', null`)).toMatch(
+      /yoklamalar_ders_id_ogrenci_id_uniq/,
+    );
+    // CHECK'ler (once benzersizlik degil CHECK tetiklenir: yeni ders + katilimci)
+    const ders2 = await dersEkle(kurumA, grupA, ogretmenA, {
+      bas: '2035-01-01T10:00:00Z',
+      bit: '2035-01-01T11:00:00Z',
+    });
+    await sistem`insert into ders.ders_katilimcilari (id, kurum_id, ders_id, ogrenci_id) values (${uuidv7()}, ${kurumA}, ${ders2}, ${ogrenciA})`;
+    expect(await yoklamaEkle(kurumA, ders2, ogrenciA, `'gec', null`)).toMatch(
+      /yoklamalar_gec_dakika_chk/,
+    );
+    expect(await yoklamaEkle(kurumA, ders2, ogrenciA, `'geldi', 5`)).toMatch(
+      /yoklamalar_gec_dakika_chk/,
+    );
+    expect(await yoklamaEkle(kurumA, ders2, ogrenciA, `'gec', 241`)).toMatch(
+      /yoklamalar_gec_dakika_aralik_chk/,
+    );
+    expect(await yoklamaEkle(kurumA, ders2, ogrenciA, `'gec_geldi', null`)).toMatch(
+      /yoklamalar_durum_chk/,
+    );
+    const notGorunurluk = await hataMetni(
+      sistem`update ders.yoklamalar set not_gorunurluk = 'herkese' where id = ${yoklamaIdleri.get(kurumA) ?? ''}`,
+    );
+    expect(notGorunurluk).toMatch(/yoklamalar_not_gorunurluk_chk/);
+    const uzunNot = await hataMetni(
+      sistem`update ders.yoklamalar set "not" = ${'x'.repeat(501)} where id = ${yoklamaIdleri.get(kurumA) ?? ''}`,
+    );
+    expect(uzunNot).toMatch(/yoklamalar_not_chk/);
+  });
+
+  it('A baglamindan B kurumunun yoklamasi gorulmez/degistirilmez; B adina yoklama eklenemez', async () => {
+    const guncel = await withTenant(app, ctxA(), (tx) =>
+      tx.execute(
+        sql`update ders.yoklamalar set durum = 'gelmedi' where id = ${yoklamaIdleri.get(kurumB) ?? ''} returning id`,
+      ),
+    );
+    expect(guncel).toHaveLength(0);
+    const ekle = await hataMetni(
+      withTenant(app, ctxA(), (tx) =>
+        tx.execute(sql`
+          insert into ders.yoklama_istekleri (id, kurum_id, istek_id, ders_id, kullanici_id, govde_sha256, durum_kodu, yanit)
+          values (${uuidv7()}, ${kurumB}, ${uuidv7()}, ${dersB}, ${kullaniciA}, decode('00', 'hex'), 200, '{}'::jsonb)`),
+      ),
+    );
+    expect(ekle).toMatch(/row-level security/);
+  });
+
+  describe('yoklama_gecmisi degistirilemez defter', () => {
+    it('api_app UPDATE/DELETE yetkisi yok; api_sistem da degistiremez; yetki olsa da tetikleyici reddeder', async () => {
+      const guncelle = await hataMetni(
+        withTenant(app, ctxA(), (tx) =>
+          tx.execute(
+            sql`update ders.yoklama_gecmisi set yeni_durum = 'gelmedi' where kurum_id = ${kurumA}`,
+          ),
+        ),
+      );
+      expect(guncelle).toMatch(/permission denied/);
+      const sil = await hataMetni(
+        withTenant(app, ctxA(), (tx) =>
+          tx.execute(sql`delete from ders.yoklama_gecmisi where kurum_id = ${kurumA}`),
+        ),
+      );
+      expect(sil).toMatch(/permission denied/);
+      expect(
+        await hataMetni(
+          sistem`update ders.yoklama_gecmisi set yeni_durum = 'gelmedi' where kurum_id = ${kurumA}`,
+        ),
+      ).toMatch(/permission denied/);
+      expect(
+        await hataMetni(sistem`delete from ders.yoklama_gecmisi where kurum_id = ${kurumA}`),
+      ).toMatch(/permission denied/);
+      // Tablo sahibi (yetki kisitina takilmaz) bile tetikleyiciyle durdurulur.
+      const sahip = postgres(urls?.ownerUrl ?? 'postgres://x', {
+        max: 1,
+        onnotice: () => undefined,
+      });
+      try {
+        expect(
+          await hataMetni(
+            sahip`update ders.yoklama_gecmisi set yeni_durum = 'gelmedi' where kurum_id = ${kurumA}`,
+          ),
+        ).toMatch(/defter_degistirilemez/);
+        expect(
+          await hataMetni(sahip`delete from ders.yoklama_gecmisi where kurum_id = ${kurumA}`),
+        ).toMatch(/defter_degistirilemez/);
+      } finally {
+        await sahip.end();
+      }
+      const [n] = await sistem<
+        { n: number }[]
+      >`select count(*)::int n from ders.yoklama_gecmisi where kurum_id = ${kurumA}`;
+      expect(n?.n).toBe(1);
+    });
+
+    it('(yoklama_id, yoklama_surumu) benzersiz', async () => {
+      const yoklama = yoklamaIdleri.get(kurumA) ?? '';
+      const metin = await hataMetni(
+        sistem`insert into ders.yoklama_gecmisi (id, kurum_id, yoklama_id, ders_id, ogrenci_id, yoklama_surumu, yeni_durum, degistiren_id, istemci_zamani)
+               values (${uuidv7()}, ${kurumA}, ${yoklama}, ${dersA}, ${ogrenciA}, 1, 'geldi', ${ogretmenA}, now())`,
+      );
+      expect(metin).toMatch(/yoklama_gecmisi_yoklama_id_yoklama_surumu_uniq/);
+    });
   });
 });

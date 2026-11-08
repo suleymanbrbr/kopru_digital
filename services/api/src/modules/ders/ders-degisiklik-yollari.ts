@@ -6,13 +6,22 @@ import {
   DersTasiGirdiSema,
   dersHataKodlari,
   errorCodes,
+  yoklamaHataKodlari,
 } from '@kopru/contracts';
 import { AppError, withTenant, type ServicePlugin } from '@kopru/service-kit';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { z } from 'zod';
 
-import { dersKatilimcilari, dersSerileri, dersler, gruplar, uyelikler } from '../../db/schema.js';
+import {
+  dersKatilimcilari,
+  dersSerileri,
+  dersler,
+  gruplar,
+  uyelikler,
+  yoklamalar,
+} from '../../db/schema.js';
+import { dersIptalUygula, gecIptalSaatiBul } from '../finans/index.js';
 import { requirePermission } from '../hesap/index.js';
 import {
   dersDenetimiYaz,
@@ -40,6 +49,7 @@ import {
   type CakismaNiyeti,
 } from './ders-ortak.js';
 import { gecIptalMi } from './kurallar.js';
+import { yoklamaKilidiniKontrolEt } from './yoklama-deposu.js';
 import { tarihEkle, utcdenYerel, yerelDenUtc } from './zaman.js';
 
 const katilimciParam = dersParam.extend({ ogrenci_id: z.uuid() });
@@ -291,7 +301,19 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const baglam = olayBaglami(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
         const hedef = await yazilacakDersBul(tx, y, request.params.id);
-        planliOlmali(hedef);
+        // Planli ders ya da yoklamasi alinmis (`tamamlandi`) ders iptal edilebilir; ikincisi yoklama
+        // kaynakli kredi dusumunu/ucreti ters cevirir. Tamamlanmis derste kilit kurali da gecerlidir.
+        if (hedef.durum === 'iptal') planliOlmali(hedef);
+        if (hedef.durum === 'tamamlandi') {
+          if (g.kapsam !== 'yalniz_bu') {
+            throw new AppError(
+              422,
+              yoklamaHataKodlari.tamamlanmisDersYalnizBu,
+              'Tamamlanmış ders yalnızca tek başına iptal edilebilir (kapsam: yalniz_bu).',
+            );
+          }
+          await yoklamaKilidiniKontrolEt(tx, y, hedef, new Date());
+        }
         surumKontrol(hedef, g.surum);
         if (g.iptal_kaynagi === 'ogrenci') {
           const [grup] = await tx
@@ -309,6 +331,7 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
         const seri = await seriBul(tx, hedef.seri_id, true);
         const kume = await etkilenenDersler(tx, hedef, g.kapsam);
         const simdi = new Date();
+        const gecSaat = await gecIptalSaatiBul(tx, y.kurumId);
         const seridenAyir = g.kapsam === 'yalniz_bu' && hedef.seri_id !== null;
         const guncel: DersSatiri[] = [];
         for (const d of kume) {
@@ -320,7 +343,8 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
               iptal_eden_id: y.uyelikId,
               iptal_at: simdi,
               iptal_kaynagi: g.iptal_kaynagi,
-              gec_iptal: g.iptal_kaynagi === 'ogrenci' && gecIptalMi(d.baslangic_at, simdi),
+              gec_iptal:
+                g.iptal_kaynagi === 'ogrenci' && gecIptalMi(d.baslangic_at, simdi, gecSaat),
               ...(seridenAyir ? { seri_istisna: true } : {}),
             })
             .where(eq(dersler.id, d.id))
@@ -346,6 +370,32 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
         );
         for (const d of guncel) {
           await dersOlayiYaz(tx, baglam, 'iptal_edildi', d, katilimcilar.get(d.id) ?? []);
+        }
+        // Kredi/ucret etkisi (finans iç API'si, ayni islem). Yoklamasi alinmamis (`planli`) derste
+        // yalniz ogrencinin gec iptali bir sey yazar; digerleri kesin etkisizdir, cagri atlanir.
+        const saatDilimi = seri?.saat_dilimi ?? (await kurumSaatDilimi(tx, y.kurumId));
+        const [grupSatiri] = await tx
+          .select({ tur: gruplar.tur })
+          .from(gruplar)
+          .where(and(eq(gruplar.id, hedef.grup_id), eq(gruplar.kurum_id, y.kurumId)));
+        for (const [i, d] of guncel.entries()) {
+          const oncekiDurum = kume[i]?.durum;
+          if (oncekiDurum === 'planli' && !d.gec_iptal) continue;
+          for (const ogrenciId of katilimcilar.get(d.id) ?? []) {
+            await dersIptalUygula(tx, {
+              kurumId: y.kurumId,
+              dersId: d.id,
+              ogrenciId,
+              dersYerelTarih: utcdenYerel(d.baslangic_at, saatDilimi).tarih,
+              grupId: d.grup_id,
+              bransKodu: d.brans_kodu,
+              grupTuru: grupSatiri?.tur ?? null,
+              aktorKullaniciId: y.kullaniciId,
+              correlationId: request.correlationId,
+              iptalKaynagi: g.iptal_kaynagi,
+              gecIptal: d.gec_iptal,
+            });
+          }
         }
         await dersDenetimiYaz(
           tx,
@@ -392,7 +442,8 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const baglam = olayBaglami(y, request.correlationId);
       const sonuc = await withTenant(db, kiraci(y), async (tx) => {
         const ders = await yazilacakDersBul(tx, y, request.params.id);
-        planliOlmali(ders);
+        // Yoklamasi alinmis derse de misafir/telafi eklenebilir (gelen ama listede olmayan ogrenci).
+        if (ders.durum === 'iptal') planliOlmali(ders);
         const [ogrenci] = await tx
           .select({ id: uyelikler.id })
           .from(uyelikler)
@@ -451,7 +502,8 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       ...yaz,
       schema: {
         tags: ['ders'],
-        summary: 'Ogrenciyi dersin katilimcilarindan cikar (planli ders)',
+        summary:
+          'Ogrenciyi dersin katilimcilarindan cikar (planli veya tamamlanmis ders). Yoklamasi olan katilimci 409 katilimci_yoklamali.',
         params: katilimciParam,
         response: { 200: DersIslemYanitSema },
       },
@@ -461,7 +513,23 @@ export const dersDegisiklikYollari: ServicePlugin = (app) => {
       const baglam = olayBaglami(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
         const ders = await yazilacakDersBul(tx, y, request.params.id);
-        planliOlmali(ders);
+        if (ders.durum === 'iptal') planliOlmali(ders);
+        const [yoklamali] = await tx
+          .select({ id: yoklamalar.id })
+          .from(yoklamalar)
+          .where(
+            and(
+              eq(yoklamalar.ders_id, ders.id),
+              eq(yoklamalar.ogrenci_id, request.params.ogrenci_id),
+            ),
+          );
+        if (yoklamali) {
+          throw new AppError(
+            409,
+            yoklamaHataKodlari.katilimciYoklamali,
+            'Yoklaması alınmış öğrenci katılımcılardan çıkarılamaz.',
+          );
+        }
         const silinen = await tx
           .delete(dersKatilimcilari)
           .where(

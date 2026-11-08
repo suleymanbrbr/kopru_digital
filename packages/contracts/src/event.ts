@@ -47,7 +47,7 @@ export function eventSubject(event: Pick<AnyEventEnvelope, 'type' | 'version'>):
 
 /**
  * Tipli olay tanimi. `name` = `<alan>.<olay>`, `version` pozitif tam sayi.
- * Ornek: `defineEvent('yoklama.alindi', 1, schema)` -> subject `evt.yoklama.alindi.v1`.
+ * Ornek: `defineEvent('ders.yoklama.kaydedildi', 1, schema)` -> subject `evt.ders.yoklama.kaydedildi.v1`.
  */
 export function defineEvent<
   const TName extends string,

@@ -1,5 +1,6 @@
+import { YOKLAMA_BEKLEYEN_GUN, YOKLAMA_ISTEK_SAKLAMA_GUN } from '@kopru/contracts';
 import type { Database } from '@kopru/service-kit';
-import { and, eq, lt } from 'drizzle-orm';
+import { and, eq, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
 import { dersSerileri } from '../db/schema.js';
@@ -7,6 +8,8 @@ import {
   SERI_UFUK_GUN,
   bitisleSinirla,
   bugunYerel,
+  dersKatilimcilariniEsitle,
+  esitlenecekDersler,
   seriDerslerUret,
   tarihEkle,
 } from '../modules/ders/index.js';
@@ -106,4 +109,115 @@ export async function dersSerileriniUret(
     );
   }
   return ozet;
+}
+
+export interface DersKatilimciEsitlemeSecenegi extends DersSeriUretimSecenegi {
+  /** Yalniz bu kurum (testler ve elle calistirma icin); bos: tum kurumlar. */
+  kurumId?: string;
+}
+
+export interface DersKatilimciEsitlemeOzeti {
+  kurum: number;
+  ders: number;
+  eklenen: number;
+  cikarilan: number;
+  hata: number;
+}
+
+/**
+ * Saatlik is: planli derslerin (gelecek ve yoklama bekleyen son 14 gun) katilimci listesini grup
+ * uyeligiyle esitler. Once tum kurumlarda yalniz OKUYAN bir sorguyla is olup olmadigina bakar; is
+ * yoksa hicbir islem/denetim satiri yazilmaz. Her kurum kendi isleminde calisir; biri patlarsa
+ * digerleri etkilenmez. Idempotenttir.
+ */
+export async function dersKatilimcilariniEsitleSistem(
+  db: Database | null,
+  secenek: DersKatilimciEsitlemeSecenegi = {},
+): Promise<DersKatilimciEsitlemeOzeti> {
+  if (!db) throw new Error('DATABASE_SISTEM_URL tanımlı değil: katılımcılar eşitlenemez.');
+  const simdi = secenek.simdi ?? new Date();
+  const ozet: DersKatilimciEsitlemeOzeti = { kurum: 0, ders: 0, eklenen: 0, cikarilan: 0, hata: 0 };
+  const baslangictan = new Date(simdi.getTime() - YOKLAMA_BEKLEYEN_GUN * 86_400_000);
+  const adaylar = await esitlenecekDersler(db.orm, secenek.kurumId ?? null, baslangictan);
+  const kurumlar = new Map<string, string[]>();
+  for (const a of adaylar)
+    kurumlar.set(a.kurum_id, [...(kurumlar.get(a.kurum_id) ?? []), a.ders_id]);
+
+  for (const [kurumId, dersIdleri] of kurumlar) {
+    try {
+      await withSistem(
+        db,
+        {
+          eylem: 'sistem.ders_katilimci_esitle',
+          neden: 'Saatlik iş: ders katılımcı listelerini grup üyeliğiyle eşitle',
+          kurumId,
+          hedefTuru: 'kurum',
+          hedefId: kurumId,
+          ayrinti: { aday_ders_sayisi: dersIdleri.length },
+        },
+        async (tx) => {
+          const sonuc = await dersKatilimcilariniEsitle(
+            tx,
+            kurumId,
+            { dersIdleri },
+            {
+              kurumId,
+              actor: { tur: 'sistem', id: 'ders-katilimci-isi' },
+              correlationId: `ders-katilimci-isi-${uuidv7()}`,
+            },
+          );
+          ozet.kurum++;
+          ozet.ders += sonuc.degisenDersler;
+          ozet.eklenen += sonuc.eklenen;
+          ozet.cikarilan += sonuc.cikarilan;
+        },
+      );
+    } catch (err) {
+      ozet.hata++;
+      secenek.log?.error({ err, kurum_id: kurumId }, 'ders katılımcıları eşitlenemedi');
+    }
+  }
+  return ozet;
+}
+
+/** 14 gunden eski `yoklama_istekleri` satirlarini siler (yeniden deneme penceresi gecti). Silinen sayiyi doner. */
+export async function eskiYoklamaIstekleriniSil(
+  db: Database | null,
+  secenek: DersSeriUretimSecenegi = {},
+): Promise<number> {
+  if (!db) throw new Error('DATABASE_SISTEM_URL tanımlı değil: yoklama istekleri temizlenemez.');
+  const simdi = secenek.simdi ?? new Date();
+  const sinir = new Date(simdi.getTime() - YOKLAMA_ISTEK_SAKLAMA_GUN * 86_400_000);
+  const silinen = await db.orm.execute<{ id: string }>(
+    sql`delete from ders.yoklama_istekleri where created_at < ${sinir.toISOString()}::timestamptz returning id`,
+  );
+  return silinen.length;
+}
+
+export interface DersSaatlikOzeti {
+  seri: DersSeriUretimOzeti;
+  katilimci: DersKatilimciEsitlemeOzeti;
+  silinenYoklamaIstegi: number;
+}
+
+/** Worker'in saatlik cagrisi: seri uzatma, katilimci esitleme, eski istek temizligi. Her adim bagimsizdir. */
+export async function dersSaatlikIs(
+  db: Database | null,
+  secenek: DersKatilimciEsitlemeSecenegi = {},
+): Promise<DersSaatlikOzeti> {
+  const seri = await dersSerileriniUret(db, secenek).catch((err: unknown) => {
+    secenek.log?.error({ err }, 'ders serisi işi başarısız');
+    return { kurum: 0, seri: 0, uretilen: 0, atlanan: 0, hata: 1 };
+  });
+  const katilimci = await dersKatilimcilariniEsitleSistem(db, secenek).catch((err: unknown) => {
+    secenek.log?.error({ err }, 'ders katılımcı eşitleme işi başarısız');
+    return { kurum: 0, ders: 0, eklenen: 0, cikarilan: 0, hata: 1 };
+  });
+  const silinenYoklamaIstegi = await eskiYoklamaIstekleriniSil(db, secenek).catch(
+    (err: unknown) => {
+      secenek.log?.error({ err }, 'yoklama istekleri temizlenemedi');
+      return 0;
+    },
+  );
+  return { seri, katilimci, silinenYoklamaIstegi };
 }

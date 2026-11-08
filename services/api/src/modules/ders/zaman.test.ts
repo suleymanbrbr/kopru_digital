@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { gecIptalMi, gecIptalSaati } from './kurallar.js';
+import { gecIptalMi } from './kurallar.js';
 import {
   bugunYerel,
   haftaninGunu,
@@ -91,14 +91,17 @@ describe('takvim yardimcilari', () => {
 });
 
 describe('gec iptal', () => {
-  it('esik tek fonksiyonda ve 24 saat', () => {
-    expect(gecIptalSaati()).toBe(24);
+  it('baslangica esik saatten az kala (veya sonra) gec, once degil', () => {
+    const baslangic = new Date('2026-01-10T10:00:00Z');
+    expect(gecIptalMi(baslangic, new Date('2026-01-08T09:59:00Z'), 24)).toBe(false);
+    expect(gecIptalMi(baslangic, new Date('2026-01-09T10:01:00Z'), 24)).toBe(true);
+    expect(gecIptalMi(baslangic, new Date('2026-01-10T11:00:00Z'), 24)).toBe(true);
   });
 
-  it('baslangica 24 saatten az kala (veya sonra) gec, once degil', () => {
+  it('esik kurum politikasindan gelir: 48 saatte 30 saat kala gec sayilir', () => {
     const baslangic = new Date('2026-01-10T10:00:00Z');
-    expect(gecIptalMi(baslangic, new Date('2026-01-08T09:59:00Z'))).toBe(false);
-    expect(gecIptalMi(baslangic, new Date('2026-01-09T10:01:00Z'))).toBe(true);
-    expect(gecIptalMi(baslangic, new Date('2026-01-10T11:00:00Z'))).toBe(true);
+    const simdi = new Date('2026-01-09T04:00:00Z');
+    expect(gecIptalMi(baslangic, simdi, 24)).toBe(false);
+    expect(gecIptalMi(baslangic, simdi, 48)).toBe(true);
   });
 });

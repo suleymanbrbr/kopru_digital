@@ -302,6 +302,66 @@ export function dersYardimcilari({ t, sistem }: Yardimcilar) {
     return res.json<SeriYaniti>();
   }
 
+  // --- Yoklama ve finans yardimcilari ----------------------------------------------------
+
+  /** Gecmiste baslamis ders (`gunOnce` gun once, 10:00 yerel). */
+  const gecmisDers = (s: Kurulum, ek: Record<string, unknown> = {}, gunOnce = 1) =>
+    dersAc(s, { tarih: gunSonra(-gunOnce), baslangic_saati: '10:00', ...ek });
+
+  const yoklamaSatiri = (
+    ogrenciId: string,
+    durum: 'geldi' | 'gelmedi' | 'izinli' | 'gec' = 'geldi',
+    ek: Record<string, unknown> = {},
+  ) => ({
+    ogrenci_id: ogrenciId,
+    durum,
+    isaretlenme_at: new Date().toISOString(),
+    ...(durum === 'gec' ? { gec_dakika: 10 } : {}),
+    ...ek,
+  });
+
+  const yoklamaPut = (
+    k: { kurumId: string },
+    token: string,
+    dersId: string,
+    satirlar: unknown[],
+    anahtar: string | null = uuidv7(),
+  ) =>
+    app.inject({
+      method: 'PUT',
+      url: api(k, `/dersler/${dersId}/yoklamalar`),
+      headers: { ...bearer(token), ...(anahtar === null ? {} : { 'idempotency-key': anahtar }) },
+      payload: { yoklamalar: satirlar },
+    });
+
+  async function paketSat(s: Kurulum, ogrenciId: string, kredi = 8) {
+    const paket = await app.inject({
+      method: 'POST',
+      url: `/v1/finans/kurumlar/${s.k.kurumId}/paketler`,
+      headers: bearer(s.k.token),
+      payload: { ad: `${String(kredi)} Ders`, kredi_adedi: kredi, fiyat_kurus: 600_000 },
+    });
+    expect(paket.statusCode, paket.body).toBe(201);
+    const sat = await app.inject({
+      method: 'POST',
+      url: `/v1/finans/kurumlar/${s.k.kurumId}/paket-satislari`,
+      headers: bearer(s.k.token),
+      payload: { ogrenci_id: ogrenciId, paket_id: paket.json<{ id: string }>().id },
+    });
+    expect(sat.statusCode, sat.body).toBe(201);
+  }
+
+  const krediHareketleri = (ogrenciId: string) =>
+    sistem<{ tur: string; miktar: number }[]>`
+      select tur, miktar::int from finans.kredi_hareketleri
+      where ogrenci_id = ${ogrenciId} order by created_at, id`;
+
+  async function kalanKredi(ogrenciId: string): Promise<number> {
+    const [r] = await sistem<{ n: number }[]>`
+      select coalesce((select bakiye from finans.kredi_bakiyeleri where ogrenci_id = ${ogrenciId}), 0)::int as n`;
+    return r?.n ?? 0;
+  }
+
   const dersOku = async (s: Kurulum, id: string): Promise<DersJson> => {
     const res = await get(s.k, s.k.token, `/dersler/${id}`);
     expect(res.statusCode).toBe(200);
@@ -327,5 +387,11 @@ export function dersYardimcilari({ t, sistem }: Yardimcilar) {
     dersAc,
     seriAc,
     dersOku,
+    gecmisDers,
+    yoklamaSatiri,
+    yoklamaPut,
+    paketSat,
+    krediHareketleri,
+    kalanKredi,
   };
 }

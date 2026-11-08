@@ -18,6 +18,8 @@ const YASAK_ALANLAR = [
   'online_baglanti',
   'yer',
   'baslik',
+  'not',
+  'ders_notu',
   'belirtec',
   'parola',
 ];
@@ -35,7 +37,10 @@ describe('ders olaylari', () => {
   const tanimlar = (Object.values(olaylar) as unknown[]).filter(olayTanimiMi);
 
   it('olay tanimlari bulunuyor', () => {
-    expect(tanimlar.map((t) => t.subject)).toEqual(['evt.ders.ders.degisti.v1']);
+    expect(tanimlar.map((t) => t.subject)).toEqual([
+      'evt.ders.ders.degisti.v1',
+      'evt.ders.yoklama.kaydedildi.v1',
+    ]);
   });
 
   it.each(tanimlar.map((t) => [t.subject, t] as const))(

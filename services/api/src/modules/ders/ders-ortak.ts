@@ -1,4 +1,10 @@
-import { dersHataKodlari, errorCodes, hesapHataKodlari, type DersKapsami } from '@kopru/contracts';
+import {
+  dersHataKodlari,
+  errorCodes,
+  hesapHataKodlari,
+  type DersKapsami,
+  type ModulKodu,
+} from '@kopru/contracts';
 import { AppError, withTenant, type Database, type Tx } from '@kopru/service-kit';
 import { and, asc, desc, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -12,7 +18,7 @@ import {
   kurumlar,
   uyelikler,
 } from '../../db/schema.js';
-import { grupKapsami, type YetkiBaglami } from '../hesap/index.js';
+import { grupKapsami, modulAcikMi, type YetkiBaglami } from '../hesap/index.js';
 import {
   cakisanYaniti,
   dersBul,
@@ -43,6 +49,21 @@ export const olayBaglami = (y: YetkiBaglami, correlationId: string): DersOlayBag
   correlationId,
 });
 
+/**
+ * Modul kurum duzeyinde `requirePermission` ile denetlenir; grup/kademe duzeyinde kapatma ancak ders
+ * ya da grup bilindiginde denetlenebilir, yazma yollari bunu burada cagirir.
+ */
+export async function grupModuluAcikOlmali(
+  tx: Tx,
+  y: YetkiBaglami,
+  modul: ModulKodu,
+  grupId: string,
+): Promise<void> {
+  if (!(await modulAcikMi(tx, y.kurumId, modul, { grupId }))) {
+    throw new AppError(403, errorCodes.modulKapali, 'Bu özellik bu grupta kapalı.');
+  }
+}
+
 /** Kapsamdaki aktif grup (kapsam disi = 404, arsivli = 409). */
 export async function aktifGrupBul(tx: Tx, y: YetkiBaglami, grupId: string) {
   const [g] = await tx
@@ -53,6 +74,7 @@ export async function aktifGrupBul(tx: Tx, y: YetkiBaglami, grupId: string) {
   if (g.durum !== 'aktif') {
     throw new AppError(409, hesapHataKodlari.grupArsivde, 'Arşivlenmiş gruba ders eklenemez.');
   }
+  await grupModuluAcikOlmali(tx, y, 'takvim', g.id);
   return g;
 }
 
@@ -171,6 +193,7 @@ export async function yazilacakDersBul(
   if (y.rol === 'ogretmen' && d.ogretmen_id !== y.uyelikId) {
     throw new AppError(403, errorCodes.izinYok, 'Yalnızca kendi dersinizi değiştirebilirsiniz.');
   }
+  await grupModuluAcikOlmali(tx, y, 'takvim', d.grup_id);
   return d;
 }
 
