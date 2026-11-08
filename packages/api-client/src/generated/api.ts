@@ -83,6 +83,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/eposta/dogrula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E-postadaki baglantidaki belirtecle e-posta adresini dogrula */
+        get: {
+            parameters: {
+                query: {
+                    /** @description E-postadaki doğrulama bağlantısındaki belirteç. */
+                    belirtec: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            dogrulandi: true;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/eposta/dogrulama-gonder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E-posta dogrulama baglantisini yeniden gonder
+         * @description Kullanici/dogrulama durumu ifsa edilmez: kayitli ve dogrulanmamis adres icin gonderilir, yanit her zaman aynidir.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        eposta: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            gonderildi: true;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/eposta/giris": {
         parameters: {
             query?: never;
@@ -401,6 +492,8 @@ export interface paths {
                             kullanici: {
                                 dil: string;
                                 eposta: string | null;
+                                /** @description E-posta adresi doğrulandı mı (eposta yoksa false). Davet eşleştirmesi için ipucu. */
+                                eposta_dogrulandi: boolean;
                                 gorunen_ad: string | null;
                                 /** Format: uuid */
                                 id: string;
