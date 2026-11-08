@@ -19,6 +19,16 @@ export const envSchema = base.safeExtend({
   BETTER_AUTH_SECRET: z.string().min(32).default(devSecret),
   /** `log`: OTP kodu loga yazilir (yalnizca gelistirme). Gercek saglayici bildirim ile gelir. */
   SMS_SAGLAYICI: z.enum(['log']).default('log'),
+  /** `log`: e-posta gonderilmez, yalnizca iliski kimligi loglanir. `smtp`: SMTP_HOST ile gonderir. */
+  EPOSTA_SAGLAYICI: z.enum(['log', 'smtp']).default('log'),
+  SMTP_HOST: z.string().min(1).optional(),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(1025),
+  SMTP_USER: z.string().min(1).optional(),
+  SMTP_PASS: z.string().min(1).optional(),
+  /** true: dogrudan TLS (465). false: STARTTLS varsa kullanilir. */
+  SMTP_SECURE: z.stringbool().default(false),
+  /** Gonderen adresi (From). */
+  EPOSTA_GONDEREN: z.string().min(3).default('Köprü <no-reply@kopru.local>'),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   APPLE_CLIENT_ID: z.string().min(1).optional(),
@@ -36,6 +46,9 @@ export function loadServiceEnv(source?: Record<string, string | undefined>): Env
   });
   if (env.NODE_ENV === 'production' && env.BETTER_AUTH_SECRET === devSecret) {
     throw new Error('Üretimde BETTER_AUTH_SECRET tanımlanmalı.');
+  }
+  if (env.EPOSTA_SAGLAYICI === 'smtp' && !env.SMTP_HOST) {
+    throw new Error('EPOSTA_SAGLAYICI=smtp iken SMTP_HOST tanımlanmalı.');
   }
   return env;
 }

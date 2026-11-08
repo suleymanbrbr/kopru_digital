@@ -73,6 +73,104 @@
         ]
       }
     },
+    "/auth/eposta/dogrula": {
+      "get": {
+        "parameters": [
+          {
+            "description": "E-postadaki doğrulama bağlantısındaki belirteç.",
+            "in": "query",
+            "name": "belirtec",
+            "required": true,
+            "schema": {
+              "maxLength": 512,
+              "minLength": 10,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "dogrulandi": {
+                      "enum": [
+                        true
+                      ],
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "dogrulandi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "E-postadaki baglantidaki belirtecle e-posta adresini dogrula",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
+    "/auth/eposta/dogrulama-gonder": {
+      "post": {
+        "description": "Kullanici/dogrulama durumu ifsa edilmez: kayitli ve dogrulanmamis adres icin gonderilir, yanit her zaman aynidir.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "eposta": {
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "eposta"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "gonderildi": {
+                      "enum": [
+                        true
+                      ],
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "gonderildi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "E-posta dogrulama baglantisini yeniden gonder",
+        "tags": [
+          "kimlik"
+        ]
+      }
+    },
     "/auth/eposta/giris": {
       "post": {
         "requestBody": {
@@ -611,6 +709,10 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "eposta_dogrulandi": {
+                          "description": "E-posta adresi doğrulandı mı (eposta yoksa false). Davet eşleştirmesi için ipucu.",
+                          "type": "boolean"
+                        },
                         "gorunen_ad": {
                           "nullable": true,
                           "type": "string"
@@ -630,7 +732,8 @@
                         "gorunen_ad",
                         "telefon_e164",
                         "eposta",
-                        "dil"
+                        "dil",
+                        "eposta_dogrulandi"
                       ],
                       "type": "object"
                     },

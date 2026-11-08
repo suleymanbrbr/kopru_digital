@@ -23,6 +23,7 @@ import { createJwtVerifier, installAuth, type VerifyJwt } from './auth.js';
 import { checkDb, createDb, type Database } from './db.js';
 import type { BaseEnv } from './env.js';
 import { errorHandler, notFoundHandler } from './errors.js';
+import { BellekIptalDeposu, NatsIptalDeposu, type IptalDeposu } from './iptal.js';
 import { createLogger } from './logger.js';
 import { installShutdownHandlers } from './shutdown.js';
 
@@ -46,6 +47,8 @@ declare module 'fastify' {
     db: Database | null;
     /** `NATS_URL` tanimliysa ve start() sonrasi baglanti; aksi halde null. */
     nats: NatsConnection | null;
+    /** Iptal edilmis oturumlar (`sid`, ADR 0008): NATS varsa KV, yoksa surec ici. */
+    iptal: IptalDeposu;
   }
 }
 
@@ -61,6 +64,8 @@ export interface CreateServiceOptions {
   readinessChecks?: Record<string, ReadinessCheck>;
   /** Auth dogrulayici; verilmezse `JWKS_URL` kullanilir. */
   verifyJwt?: VerifyJwt;
+  /** Iptal listesi; verilmezse `NATS_URL` varsa NATS KV, yoksa surec ici depo. */
+  iptalDeposu?: IptalDeposu;
   /** Kapanista (db/nats kapandiktan sonra) calisir; ornek: telemetry.shutdown */
   onClose?: () => Promise<void>;
 }
@@ -122,6 +127,12 @@ export function createService(options: CreateServiceOptions): Service {
 
   app.decorate('db', db);
   app.decorate('nats', { getter: () => natsConnection });
+  const iptal: IptalDeposu =
+    options.iptalDeposu ??
+    (env.NATS_URL
+      ? new NatsIptalDeposu(() => natsConnection, { log: logger })
+      : new BellekIptalDeposu());
+  app.decorate('iptal', iptal);
   app.decorateRequest('correlationId', '');
 
   const checks: Record<string, ReadinessCheck> = { ...options.readinessChecks };
@@ -152,6 +163,7 @@ export function createService(options: CreateServiceOptions): Service {
 
   installAuth(app, {
     enabled: env.AUTH_ENABLED,
+    iptal,
     verify:
       options.verifyJwt ??
       (env.AUTH_ENABLED

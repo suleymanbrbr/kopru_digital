@@ -38,7 +38,7 @@ Belirteç; izin listesi, grup listesi ya da modül ayarı taşımaz. Bunlar beli
 
 Diğer servisler `GET /.well-known/jwks.json` adresindeki anahtarları önbelleğe alır (10 dakika, bilinmeyen `kid` görülürse anında yenile). İmza, `iss`, `aud`, `exp` doğrulanır. Anahtar döndürme: 90 günde bir yeni anahtar yayımlanır, eskisi 30 gün daha JWKS'te kalır.
 
-Belirteç iptali: 15 dakikalık ömür kabul edilen penceredir. `api`, oturum iptalini kendi kontrol eder (yenilemede). Diğer servisler anında iptal görmez. Acil durumda (hesap askıya alma) `sid` kara listesi NATS KV'ye (`kv.iptal`) yazılır ve servisler istek başına bu anahtarı kontrol eder.
+Belirteç iptali: 15 dakikalık ömür kabul edilen penceredir. `api`, oturum iptalini kendi kontrol eder (yenilemede). Diğer servisler anında iptal görmez. Acil durumda (hesap askıya alma) `sid` kara listesi NATS KV'ye (`kv.iptal`) yazılır ve servisler istek başına bu anahtarı kontrol eder. _(2026-11-08: bu mekanizma çıkış dahil tüm oturum iptallerine genişletildi ve ayrıntılandırıldı; bkz. [ADR 0008](0008-erisim-belirteci-iptali-sid-listesi.md).)_
 
 ### Servisler arası çağrı kimliği
 
@@ -155,3 +155,7 @@ Olumsuz:
 **Özel roller ve ABAC (Faz 1).** Esnek, ama kapsam ve UI maliyeti yüksek. Tablo yapısı özel role izin verecek biçimde tasarlandı, Faz 1'de açılmaz.
 
 **Modül önceliğinde "en özel kural kazanır" (grup > kademe > kurum).** Kurum yöneticisinin bir modülü tüm kurumda kesin kapatamamasına yol açar. Reddedildi.
+
+## Değişiklik notu (2026-11-08): `sid` iptal listesi
+
+"Belirteç iptali" paragrafındaki `kv.iptal` kara listesi artık acil durumlarla sınırlı değil: `POST /auth/cikis` ve her oturum iptali `sid`'i KV'ye yazar, `@kopru/service-kit` kimlik doğrulaması (kontrol sırası 1) her istekte bu listeyi sorar. Kova adı `iptal`, TTL belirteç ömrü + 1 dk, NATS erişilemezse okuma fail-open. Ayrıntı ve alternatifler: [ADR 0008](0008-erisim-belirteci-iptali-sid-listesi.md).

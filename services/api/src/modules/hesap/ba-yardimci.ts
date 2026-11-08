@@ -38,6 +38,16 @@ const HATA_ESLEME: Record<string, { status: number; code: string; message: strin
     code: errorCodes.unauthorized,
     message: 'E-posta veya parola hatalı.',
   },
+  INVALID_TOKEN: {
+    status: 400,
+    code: errorCodes.kodGecersiz,
+    message: 'Bağlantı geçersiz veya süresi dolmuş.',
+  },
+  TOKEN_EXPIRED: {
+    status: 400,
+    code: errorCodes.kodGecersiz,
+    message: 'Bağlantı geçersiz veya süresi dolmuş.',
+  },
   USER_ALREADY_EXISTS: {
     status: 409,
     code: errorCodes.conflict,

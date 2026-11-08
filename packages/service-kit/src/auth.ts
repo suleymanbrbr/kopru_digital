@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload, type JWTVerifyGetKey } from 'jose';
 
 import { AppError } from './errors.js';
+import type { IptalDeposu } from './iptal.js';
 
 /** Dogrulanmis istek kimligi. Token claim'leri: `sub`, `kurum_id`, `roller` (dizi veya bosluklu string). */
 export interface AuthContext {
@@ -84,11 +85,11 @@ export function createJwtVerifier(options: JwtVerifierOptions): VerifyJwt {
  */
 export function installAuth(
   app: FastifyInstance,
-  options: { enabled: boolean; verify?: VerifyJwt },
+  options: { enabled: boolean; verify?: VerifyJwt; iptal?: IptalDeposu },
 ): void {
   app.decorateRequest('auth', null);
   if (!options.enabled) return;
-  const { verify } = options;
+  const { verify, iptal } = options;
   if (!verify) throw new Error('AUTH_ENABLED iken verifyJwt sağlanmalı');
 
   app.addHook('onRequest', async (request) => {
@@ -96,7 +97,12 @@ export function installAuth(
     const header = request.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : undefined;
     if (!token) throw unauthorized();
-    request.auth = await verify(token);
+    const auth = await verify(token);
+    // Kontrol sirasi 1 (ADR 0004/0008): imza/exp/aud'dan sonra `sid` iptal listesinde mi.
+    if (iptal && auth.sessionId && (await iptal.iptalEdildiMi(auth.sessionId))) {
+      throw unauthorized();
+    }
+    request.auth = auth;
     request.log = request.log.child({ kurumId: request.auth.kurumId ?? undefined });
   });
 }

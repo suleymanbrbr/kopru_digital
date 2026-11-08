@@ -40,6 +40,7 @@ export {
 export { requirePermission, type IzinSecenekleri } from './yetki.js';
 export {
   LogEpostaGonderici,
+  SmtpEpostaGonderici,
   YakalayanEpostaGonderici,
   type EpostaGonderici,
   type EpostaMesaji,

@@ -12,6 +12,7 @@ import fp from 'fastify-plugin';
 import type { Env } from '../../config.js';
 import { AnahtarDeposu } from './anahtarlar.js';
 import { createBetterAuth, type KimlikDogrulama } from './better-auth.js';
+import { epostaGondericiOlustur, type EpostaGonderici } from './eposta.js';
 import { JWT_AUDIENCE } from './erisim-belirteci.js';
 import { onayGerekliMi, rizaDurumu } from './riza.js';
 import { LogSmsGonderici, type SmsGonderici } from './sms.js';
@@ -37,6 +38,7 @@ export interface KimlikHizmeti {
   auth: KimlikDogrulama;
   anahtarlar: AnahtarDeposu;
   sms: SmsGonderici;
+  eposta: EpostaGonderici;
 }
 
 declare module 'fastify' {
@@ -55,6 +57,8 @@ declare module 'fastify' {
 export interface KimlikSecenekleri {
   /** Testler / bildirim servisi geldiginde gercek gonderici. */
   sms?: SmsGonderici;
+  /** Testler / bildirim servisi geldiginde e-posta gondericisi (varsayilan: ortama gore log/SMTP). */
+  eposta?: EpostaGonderici;
 }
 
 /**
@@ -91,6 +95,7 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
         ? createDb({ url: env.DATABASE_SISTEM_URL, max: 5 })
         : null;
       const sms = options.sms ?? new LogSmsGonderici(app.log);
+      const eposta = options.eposta ?? epostaGondericiOlustur(env, app.log);
       const hizmet: KimlikHizmeti = {
         env,
         issuer,
@@ -98,12 +103,14 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
         db,
         sistemDb,
         sms,
+        eposta,
         anahtarlar,
-        auth: createBetterAuth({ env, db, sms }),
+        auth: createBetterAuth({ env, db, sms, eposta, log: app.log }),
       };
       app.decorate('kimlik', hizmet);
       app.addHook('onClose', async () => {
         await sistemDb?.close();
+        eposta.close?.();
       });
 
       // ADR 0004 kontrol sirasi 2: KVKK riza. Kimlik dogrulamasindan (service-kit onRequest) sonra calisir.
