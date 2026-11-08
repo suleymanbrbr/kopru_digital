@@ -1,4 +1,6 @@
 import { defineModule } from '../define-module.js';
+import { davetYollari } from './davet-yollari.js';
+import { grupYollari } from './grup-yollari.js';
 import { hesapYollari } from './hesap-yollari.js';
 import { kimlikYollari } from './kimlik-yollari.js';
 
@@ -9,7 +11,11 @@ import { kimlikYollari } from './kimlik-yollari.js';
 export const hesapModule = defineModule(
   'hesap',
   async (app) => {
-    if (app.hasDecorator('kimlik')) await app.register(hesapYollari);
+    if (app.hasDecorator('kimlik')) {
+      await app.register(hesapYollari);
+      await app.register(grupYollari);
+      await app.register(davetYollari());
+    }
   },
   {
     rootPlugin: async (app) => {
@@ -32,3 +38,10 @@ export {
   type SmsMesaji,
 } from './sms.js';
 export { requirePermission, type IzinSecenekleri } from './yetki.js';
+export {
+  LogEpostaGonderici,
+  YakalayanEpostaGonderici,
+  type EpostaGonderici,
+  type EpostaMesaji,
+} from './eposta.js';
+export { birebirGrupOlustur, grupEtkinOgrencileri } from './grup-deposu.js';
