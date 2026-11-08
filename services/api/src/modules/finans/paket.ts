@@ -351,6 +351,24 @@ export const paketYollari: ServicePlugin = (app) => {
             model: 'paket',
           })
           .onConflictDoNothing();
+        // `ders_basi` ogrenciye satis ayni dersi iki kez borclandirir (ders ucreti + paket borcu), kredi de
+        // hic dusmez; `yok` modelinde kredi yine dusmez. Once model degistirilmeli.
+        const [profil] = await tx
+          .select({ model: ogrenciFinansProfilleri.model })
+          .from(ogrenciFinansProfilleri)
+          .where(
+            and(
+              eq(ogrenciFinansProfilleri.kurum_id, y.kurumId),
+              eq(ogrenciFinansProfilleri.ogrenci_id, b.ogrenci_id),
+            ),
+          );
+        if (profil?.model !== 'paket') {
+          throw new AppError(
+            409,
+            finansHataKodlari.ogrenciModeliPaketDegil,
+            'Bu öğrencinin ödeme modeli paket değil. Paket satmak için önce modeli "paket" yapın.',
+          );
+        }
 
         await krediSatiriYaz(tx, {
           kurumId: y.kurumId,

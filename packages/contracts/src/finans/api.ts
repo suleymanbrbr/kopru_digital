@@ -18,6 +18,7 @@ export const finansHataKodlari = {
   odemeGecersiz: 'odeme_gecersiz',
   ogrenciDegil: 'ogrenci_degil',
   paketArsivde: 'paket_arsivde',
+  ogrenciModeliPaketDegil: 'ogrenci_modeli_paket_degil',
 } as const;
 
 const tarih = z.iso.date();

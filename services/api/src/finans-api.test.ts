@@ -435,14 +435,20 @@ describe.skipIf(dbYok())('finans: HTTP uclari', () => {
         (await yolla(d, 'PUT', `/ogrenciler/${o.uyelikId}/finans-profili`, { model: 'bilinmeyen' }))
           .statusCode,
       ).toBe(400);
-      // Satis, mevcut modeli degistirmez
+      // Ders basi ogrenciye paket satilamaz: ayni ders hem ucret hem paket borcu olarak yazilirdi.
       const p = await d.paketOlustur();
-      await d.paketSat(o.uyelikId, p.id);
+      const sat = await d.paketSat(o.uyelikId, p.id);
+      expect(sat.statusCode).toBe(409);
       expect(
         (await al(d, `/ogrenciler/${o.uyelikId}/finans-profili`)).json<{ model: string }>().model,
       ).toBe('ders_basi');
       const k = await kart(d, o.uyelikId);
-      expect(k).toMatchObject({ odeyen_ad: 'Fatma Hanım', odeyen_telefon: null });
+      expect(k).toMatchObject({
+        odeyen_ad: 'Fatma Hanım',
+        odeyen_telefon: null,
+        kalan_kredi: 0,
+        bakiye_kurus: 0,
+      });
       expect(
         (await yolla(d, 'PUT', `/ogrenciler/${uuidv7()}/finans-profili`, { model: 'yok' }))
           .statusCode,
