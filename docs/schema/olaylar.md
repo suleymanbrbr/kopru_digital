@@ -57,11 +57,13 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 
 ## `api` / finans
 
+Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur; tek serbest alan `makbuz_no`dur (paket adı da taşınmaz: bildirim servisi `paket_id` ile yetinir).
+
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
-| `finans.kredi.azaldi.v1` | K | Düşüm/iade sonrası kredi bakiyesi `dusuk_kredi_esigi` değerinin altına **inince** (eşik geçişinde bir kez; iade ile eşik üstüne çıkıp tekrar inerse tekrar). | `ogrenci_id`, `kalan_kredi`, `esik`, `yoklama_id` | `bildirim` |
+| `finans.kredi.azaldi.v1` | K | Düşüm/iade sonrası kredi bakiyesi `dusuk_kredi_esigi` değerine ya da altına **inince** (eşik geçişinde bir kez; iade ile eşik üstüne çıkıp tekrar inerse tekrar). | `ogrenci_id`, `kalan_kredi`, `esik`, `yoklama_id` | `bildirim` |
 | `finans.tahsilat.alindi.v1` | K | Tahsilat kaydedilince. | `tahsilat_id`, `ogrenci_id`, `tutar_kurus`, `yontem`, `tahsilat_tarihi`, `makbuz_no` | `bildirim` |
-| `finans.paket.satildi.v1` | K | Paket satışı yapılınca. | `paket_satisi_id`, `ogrenci_id`, `ad`, `toplam_kredi`, `bitis_tarihi` | `bildirim` |
+| `finans.paket.satildi.v1` | K | Paket satışı yapılınca. | `paket_satisi_id`, `ogrenci_id`, `paket_id`, `toplam_kredi`, `bitis_tarihi` | `bildirim` |
 
 ## `api` / ogrenme
 

@@ -844,7 +844,7 @@ Olaylar: yok.
 
 Öğrencinin faturalama modeli.
 
-Profil: `KS`. RLS: evet. Sütunlar: `ogrenci_id uuid NOT NULL` (bileşik FK), `model text NOT NULL DEFAULT 'paket'` (CHECK `IN ('paket','ders_basi','yok')`). `UNIQUE (kurum_id, ogrenci_id)`. `paket`: yoklama kredi düşürür. `ders_basi`: yoklama `ucret_tarifeleri`ne göre bakiye borçlandırır. `yok`: hiçbir finans etkisi yoktur. Satır yoksa model `yok`tur. Olaylar: yok.
+Profil: `KS`. RLS: evet. Sütunlar: `ogrenci_id uuid NOT NULL` (bileşik FK), `model text NOT NULL DEFAULT 'paket'` (CHECK `IN ('paket','ders_basi','yok')`), `odeyen_ad text NULL` (CHECK ≤ 200), `odeyen_telefon text NULL` (CHECK ≤ 32). Faz 1'de veli hesabı olmadığı için ödeyen kişi öğrenci kartında düz bilgidir ([şartname](../urun/ozellik-sartnamesi.md#paket-kredi-ve-tahsilat)). **Ödeyen bilgisi hiçbir olaya, loga, denetim kaydının değerlerine ve Excel dışında dış çıktıya girmez; öğrenci rolüne dönmez.** `UNIQUE (kurum_id, ogrenci_id)`. `paket`: yoklama kredi düşürür. `ders_basi`: yoklama `ucret_tarifeleri`ne göre bakiye borçlandırır. `yok`: hiçbir finans etkisi yoktur. Satır yoksa model `yok`tur. Paket satışı, profil yoksa `paket` modeliyle profil açar (mevcut modele dokunmaz). Olaylar: yok.
 
 ### `finans.paketler`
 
@@ -914,12 +914,14 @@ Kısıtlar:
 - `CHECK (tur <> 'dusum' OR (yoklama_id IS NOT NULL AND yoklama_surumu IS NOT NULL AND miktar < 0))`.
 - `CHECK (tur NOT IN ('iade','ters_kayit') OR ters_cevrilen_id IS NOT NULL)` ve `CHECK (ters_cevrilen_id IS NULL OR tur IN ('iade','ters_kayit'))`. Ters kayıt özgün satırın tersidir: `miktar = -(özgün.miktar)`.
 - Etkin düşüm tanımı: ters çevrilmemiş `dusum` satırı.
+- **Satın alma tekilliği:** `UNIQUE (paket_satisi_id) WHERE tur = 'satin_alma'`. Süresi dolan paketin kalanı `son_kullanma` ile düşülür (gece işi, her çalışmada yalnız kalan > 0 ise; tekrar çalışması yeni satır eklemez).
+- Ek işaret CHECK'i: `satin_alma`/`iade` pozitif, `dusum`/`iptal_dusum`/`son_kullanma` negatif; `duzeltme`/`ters_kayit` için `neden` zorunlu. `iade` hem `dusum` hem `iptal_dusum` satırını ters çevirir.
 Yoklama değişikliği algoritması (aynı `tx`, `yoklamalar` satırı `FOR UPDATE` kilitliyken):
 1. Bu yoklamanın ters çevrilmemiş `dusum` satırını bul. Varsa ve yeni durum artık düşürmüyorsa ya da yoklama silindiyse: `iade` ekle (`ters_cevrilen_id = dusum.id`, `miktar = -dusum.miktar`), `kredi_bakiyeleri` +.
 2. Yeni durum çözümlenen kredi politikasına (paket > kurum > varsayılan) göre düşürüyorsa ve etkin düşüm yoksa: `yoklama_surumu = yoklamalar.surum` ile `dusum` ekle.
 3. Durum değişmediyse (`geldi` -> `geldi`) hiçbir şey eklenmez.
 İndeks: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, paket_satisi_id)`, `(kurum_id, yoklama_id)`.
-Görünüm: `v_kredi_hareketleri_net`. Olaylar: `finans.kredi.azaldi.v1` (bakiye eşiğin altına inince, yalnızca eşiği geçtiği hareketle).
+Görünüm: `v_kredi_hareketleri_net`. Olaylar: `finans.kredi.azaldi.v1` (bakiye eşiğe ya da altına inince, yalnızca eşiği geçtiği hareketle: önceki bakiye > eşik ve yeni bakiye ≤ eşik. Rozet kuralıyla tutarlıdır: eşik 2 iken "2 ders kaldı" uyarı verir).
 
 ### `finans.kredi_bakiyeleri`
 
@@ -980,14 +982,15 @@ Profil: `D`. RLS: evet.
 | `tur` | text | hayır | | CHECK `IN ('ders_ucreti','paket_satisi','tahsilat','duzeltme','ters_kayit')` |
 | `tutar_kurus` | bigint | hayır | | İşaretli. CHECK `<> 0`. `ders_ucreti`/`paket_satisi` negatif, `tahsilat` pozitif. |
 | `para_birimi` | text | hayır | `'TRY'` | CHECK `= 'TRY'` |
-| `kaynak_turu` | text | hayır | | `yoklama`, `paket_satisi`, `tahsilat`, `elle` |
+| `kaynak_turu` | text | hayır | | `yoklama`, `paket_satisi`, `tahsilat`, `elle`, `ders_iptal` |
 | `kaynak_id` | uuid | evet | | |
+| `ders_id` | uuid | evet | | Eklendi (0007): ders iptali kaynaklı ücretin ders + öğrenci tekilliği ve dersin ücretlerini bulmak için |
 | `yoklama_id` | uuid | evet | | |
 | `yoklama_surumu` | bigint | evet | | |
 | `ters_cevrilen_id` | uuid | evet | | FK `bakiye_hareketleri(id)` |
 | `neden` | text | evet | | `duzeltme`, `ters_kayit` için zorunlu |
 
-Kısıtlar: `UNIQUE (yoklama_id, yoklama_surumu) WHERE tur = 'ders_ucreti'` (ücret düşümü tekilliği), `UNIQUE (ters_cevrilen_id) WHERE ters_cevrilen_id IS NOT NULL`, `UNIQUE (kaynak_turu, kaynak_id) WHERE tur IN ('tahsilat','paket_satisi')`, `CHECK (tur NOT IN ('ters_kayit') OR ters_cevrilen_id IS NOT NULL)`. Yoklama değişikliğinde ücret, kredi ile aynı algoritmayla ters çevrilir/yeniden eklenir. İndeks: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, yoklama_id)`. Olaylar: yok (`tahsilat.alindi` yeterli).
+Kısıtlar: `UNIQUE (yoklama_id, yoklama_surumu) WHERE tur = 'ders_ucreti'` (ücret düşümü tekilliği), `UNIQUE (ters_cevrilen_id) WHERE ters_cevrilen_id IS NOT NULL`, `UNIQUE (kaynak_turu, kaynak_id) WHERE tur IN ('tahsilat','paket_satisi')`, `UNIQUE (ders_id, ogrenci_id) WHERE tur = 'ders_ucreti' AND kaynak_turu = 'ders_iptal'` (öğrenci kaynaklı geç iptal ücreti bir kez), `CHECK (tur NOT IN ('ters_kayit') OR ters_cevrilen_id IS NOT NULL)`. Yoklama değişikliğinde ücret, kredi ile aynı algoritmayla ters çevrilir/yeniden eklenir. İndeks: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, yoklama_id)`. Olaylar: yok (`tahsilat.alindi` yeterli).
 
 ### `finans.ogrenci_bakiyeleri`
 
@@ -1573,3 +1576,30 @@ Hata kodları: `davet_gecersiz`, `davet_beklemiyor`, `yeniden_gonderilemez`, `go
 Hata kodları: `ders_cakismasi`, `surum_cakismasi`, `ogretmen_gerekli`, `ogretmen_gecersiz`, `brans_gerekli`, `iptal_kaynagi_gecersiz`, `ders_planli_degil`, `ders_seride_degil`, `tarih_degisikligi_yalniz_bu`, `zaten_katilimci`, `degisiklik_yok`, `tekrar_kapsami_asildi`.
 
 Gece işi: `services/api/src/worker.ts` açılışta ve saatte bir `dersSerileriniUret` (`src/sistem/ders-seri-uret.ts`, `api_sistem`/`withSistem`) çağırır; yalnızca ufku ilerlemesi gereken seriler işlenir, iş idempotenttir ve yapılacak iş yoksa hiçbir satır yazmaz. Çakışan seri dersi atlanır (kullanıcıya sorulamaz). pg-boss henüz depoda olmadığı için zamanlayıcı süreç içi `setInterval`dir; pg-boss gelince aynı fonksiyon günlük işe taşınır.
+## `finans` uç noktaları
+
+`/v1/finans` altında, `/kurumlar/:kurum_id/...`; tutarlar kuruş tamsayısı. Modül kapalıysa `403 modul_kapali`. Hata gövdesi standarttır; doğrulama `400`, iş kuralı ihlali `409`/`422`. Her yazma `hesap.denetim_kayitlari`na düşer (ödeyen değerleri ve kişisel veri yazılmaz). İzin sözlüğü sürümü 3: `finans.paket.yaz` eklendi; `ogretmen`e `finans.oku` ve `finans.tahsilat.yaz` (`grup` kapsamı), `ogrenci` `finans.oku: kendi`. Bireysel kurumda hoca `sahip` üyeliğiyle oturum açar (`uyelikSec` rol önceliği), ek kural yoktur.
+
+| Yöntem | Yol | İzin | Açıklama |
+| --- | --- | --- | --- |
+| GET / POST | `/paketler` | `finans.oku` / `finans.paket.yaz` | Paket şablonları (`?durum=aktif\|arsiv\|hepsi`, sayfalı) / oluştur |
+| PATCH | `/paketler/:paket_id` | `finans.paket.yaz` | Güncelle (satılmış paketler satış anı kopyasını korur); arşivli `409 paket_arsivde` |
+| POST | `/paketler/:paket_id/arsivle` | `finans.paket.yaz` | Arşivle (tekrar çağrı etkisiz) |
+| POST | `/paket-satislari` | `finans.tahsilat.yaz` (`grup`) | `{ogrenci_id, paket_id, odeme: {tur: tamami\|kismi\|sonra, tutar_kurus?, yontem?, makbuz_no?}}`; satış + kredi + borç + tahsilat + olaylar tek işlemde. Kısmi tutar fiyattan az olmalı (`422 odeme_gecersiz`) |
+| POST | `/paket-satislari/:satis_id/iptal` | `finans.tahsilat.yaz` (`grup`) | `{neden}` zorunlu; kredi ve borç ters kayıtla geri alınır; kullanılmış/süresi dolmuş `409 paket_kullanilmis`, tekrar `409 paket_iptal_edilmis`. Alınmış tahsilatlar ayrıca iptal edilir |
+| POST | `/tahsilatlar` | `finans.tahsilat.yaz` (`grup`) | `Idempotency-Key` (UUID) → `istek_id`; aynı anahtar `200 tekrar: true` aynı kaydı döner, farklı içerik `409 istek_cakismasi`; yinelenen `makbuz_no` `409 makbuz_no_kullanimda`; gelecek tarih `422 odeme_gecersiz` |
+| POST | `/tahsilatlar/:tahsilat_id/iptal` | `finans.tahsilat.yaz` (`grup`) | `{neden}` zorunlu; ters kayıt; tekrar `409 tahsilat_iptal_edilmis` (iptalin iptali yoktur) |
+| GET | `/tahsilatlar` | `finans.oku` (`grup`) | `?ogrenci_id&ay=YYYY-MM&durum`, yeniden eskiye, sayfalı; kapsam süzgeci |
+| GET | `/ogrenciler/:ogrenci_id/finans` | `finans.oku` | Öğrenci kartı. Personel `gorunum: tam` (kalan kredi, bakiye, `borclu`, etkin paketler, son hareketler, ödeyen); öğrenci rolü `gorunum: ogrenci` ve yalnız `kalan_kredi` (kurum ayarı kapalıysa `null`, 403 değil); başkasının kartı `404` |
+| GET / PUT | `/ogrenciler/:ogrenci_id/finans-profili` | `finans.oku` / `finans.tahsilat.yaz` (`grup`) | Model (`paket`, `ders_basi`, `yok`) ve ödeyen kişi; PUT kısmi yazar |
+| GET | `/ogrenciler/:ogrenci_id/kredi-hareketleri`, `/bakiye-hareketleri` | `finans.oku` (`grup`) | Defter satırları, yeniden eskiye, `imlec` ile sayfalı |
+| GET | `/ogrenciler` | `finans.oku` (`grup`) | `?borclu&dusuk_kredi&q`: kalan ders rozeti (`kalan_kredi`, `dusuk_kredi`, `dusuk_kredi_esigi`), kapsam süzgeci |
+| GET / POST / PATCH / DELETE | `/ucret-tarifeleri[/:tarife_id]` | `finans.oku` / `finans.paket.yaz` | Ders başı tarifeler; aynı kapsamda çakışan aralık `409 tarife_cakisiyor` |
+| GET / PUT | `/kredi-politikasi` | `finans.oku` / `finans.paket.yaz` | Kurum politikası (satır yoksa varsayılan, `varsayilan: true`); PUT kısmi yazar |
+| GET / PUT | `/ayarlar` | `finans.oku` / `finans.paket.yaz` | `ogrenci_kalan_ders_gorur` (`hesap.kurumlar.ayarlar`, varsayılan true) |
+| GET | `/ozet/aylik?ay=YYYY-MM` | `finans.oku` (`grup`) | Geçerli (iptal edilmemiş) tahsilat toplamı ve yönteme göre kırılım; `Europe/Istanbul` ayı, kapsam süzgeci |
+| GET | `/disa-aktar?ay=YYYY-MM` | `finans.oku` (`grup`) | Gerçek `.xlsx`: tahsilatlar ve öğrenci bakiyeleri (ödeyen adı/telefonu yalnız burada); kuruş TL'ye yalnız burada çevrilir; metin hücrelerinde formül kaçırma; indirme denetlenir |
+
+**İç API** (`modules/finans/index.ts`, yoklama paketi aynı işlemde çağırır): `krediVeUcretiUygula(tx, girdi)`, `dersIptalUygula(tx, girdi)`, `gecIptalSaatiBul(tx, kurumId)`. Modül kapalıysa etkisiz; aynı girdi ikinci kez çağrılırsa tekillik indeksleri nedeniyle ikinci satır oluşmaz, istisna fırlamaz; eşzamanlı çağrılar yoklama başına advisory kilidiyle serileşir. Gece işleri (`src/sistem/finans-gece-isleri.ts`, `withSistem`): özet ↔ `SUM(defter)` denetimi (uyuşmazlıkta `error` log `finans_ozet_uyusmazligi`) ve süresi dolan paketlerin `son_kullanma` satırı. Zamanlayıcı worker'da (`geceIsiZamanla`, Europe/Istanbul 03:00); pg-boss henüz depoda olmadığından basit zamanlayıcıdır, aynı fonksiyonlar pg-boss işine taşınabilir.
+
+Hata kodları: `paket_kullanilmis`, `paket_iptal_edilmis`, `tahsilat_iptal_edilmis`, `istek_cakismasi`, `makbuz_no_kullanimda`, `tarife_cakisiyor`, `odeme_gecersiz`, `paket_arsivde`.
