@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { govdeOku, hataYaniti } from '@/sunucu/bff';
+import { istemciIpBasliklari } from '@/sunucu/istemci-ip';
 import { mockModu } from '@/sunucu/kimlik';
 import { apiAdresi } from '@/sunucu/kimlik/api';
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     const yanit = await fetch(`${apiAdresi()}/auth/eposta/dogrulama-gonder`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...istemciIpBasliklari(request.headers) },
       body: JSON.stringify({ eposta: govde.veri.eposta }),
       cache: 'no-store',
     });

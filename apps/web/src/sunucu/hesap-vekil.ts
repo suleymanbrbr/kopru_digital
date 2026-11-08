@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { ayniKaynakMi, hataYaniti } from './bff';
 import { hesapMock } from './hesap-mock';
+import { istemciIpBasliklari } from './istemci-ip';
 import { mockModu } from './kimlik';
 import { apiAdresi } from './kimlik/api';
 
@@ -70,6 +71,7 @@ export async function hesapVekili(
       method: request.method,
       headers: {
         authorization: `Bearer ${erisim}`,
+        ...istemciIpBasliklari(request.headers),
         ...(request.method === 'GET' || request.method === 'DELETE'
           ? {}
           : { 'content-type': 'application/json' }),

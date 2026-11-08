@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { hataYaniti } from '@/sunucu/bff';
+import { istemciIpBasliklari } from '@/sunucu/istemci-ip';
 import { mockModu } from '@/sunucu/kimlik';
 import { apiAdresi } from '@/sunucu/kimlik/api';
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
   try {
     const yanit = await fetch(
       `${apiAdresi()}/auth/eposta/dogrula?belirtec=${encodeURIComponent(belirtec)}`,
-      { cache: 'no-store' },
+      { cache: 'no-store', headers: istemciIpBasliklari(request.headers) },
     );
     return new NextResponse(await yanit.text(), {
       status: yanit.status,

@@ -1,9 +1,20 @@
 import { ApiHatasi, createServisIstemcileri } from '@kopru/api-client';
 import { MODUL_KODLARI } from '@kopru/contracts';
+import { headers } from 'next/headers';
 
+import { istemciIpBasliklari } from '../istemci-ip';
 import { KimlikHatasi, type KimlikAdaptoru } from './arayuz';
 
 import type { Oturum, Uyelik } from '@/oturum/tipler';
+
+/** Istek kapsami disinda (birim testleri) `next/headers` hata verir; o zaman baslik eklenmez. */
+async function gelenIpBasliklari(): Promise<Record<string, string>> {
+  try {
+    return istemciIpBasliklari(await headers());
+  } catch {
+    return {};
+  }
+}
 
 /**
  * `api` servisine (`hesap` modulu) baglanan gercek adaptor (ADR 0004). Butun cagrilar
@@ -27,7 +38,13 @@ function istemci(belirtec?: string) {
   return createServisIstemcileri({
     adresler: { api: apiAdresi() },
     tokenAl: () => belirtec,
-    fetch: (istek) => fetch(istek, { cache: 'no-store' }),
+    fetch: async (istek) => {
+      const giden = new Request(istek);
+      for (const [ad, deger] of Object.entries(await gelenIpBasliklari())) {
+        giden.headers.set(ad, deger);
+      }
+      return fetch(giden, { cache: 'no-store' });
+    },
   }).api;
 }
 
