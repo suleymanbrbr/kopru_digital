@@ -168,26 +168,30 @@ export const DavetSema = z.object({
   created_at: zaman,
 });
 
-export const DavetOlusturGirdiSema = z
-  .object({
-    kanal: DavetKanalSema,
-    rol: DavetRolSema,
-    telefon: z.string().trim().min(7).max(20).optional().describe('`sms` kanalında zorunlu.'),
-    eposta: z.email().optional().describe('`eposta` kanalında zorunlu.'),
-    hedef_ad: z.string().trim().min(1).max(200).optional(),
-    grup_id: z.uuid().optional().describe('Yalnız `ogrenci` daveti için: kabulde gruba eklenir.'),
-    kademe_id: z.uuid().optional().describe('Yalnız `ogrenci` daveti için.'),
-    sube_id: z.uuid().optional(),
-    max_kullanim: z
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .default(1)
-      .describe('Çok kullanımlı olabilmesi için kanal `baglanti` olmalı.'),
-    gecerlilik_gun: z.number().int().min(1).max(30).default(7),
-  })
-  .superRefine((v, ctx) => {
+const DavetOlusturTemelSema = z.object({
+  kanal: DavetKanalSema,
+  rol: DavetRolSema,
+  telefon: z.string().trim().min(7).max(20).optional().describe('`sms` kanalında zorunlu.'),
+  eposta: z.email().optional().describe('`eposta` kanalında zorunlu.'),
+  hedef_ad: z.string().trim().min(1).max(200).optional(),
+  grup_id: z.uuid().optional().describe('Yalnız `ogrenci` daveti için: kabulde gruba eklenir.'),
+  kademe_id: z.uuid().optional().describe('Yalnız `ogrenci` daveti için.'),
+  sube_id: z.uuid().optional(),
+  max_kullanim: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(1)
+    .describe('Çok kullanımlı olabilmesi için kanal `baglanti` olmalı.'),
+  gecerlilik_gun: z.number().int().min(1).max(30).default(7),
+});
+
+type DavetTemel = z.infer<typeof DavetOlusturTemelSema>;
+
+/** Tekil davet girdisi: alanlar + kanal/rol tutarlilik kurallari. */
+export const DavetOlusturGirdiSema = DavetOlusturTemelSema.superRefine(
+  (v: DavetTemel, ctx: z.RefinementCtx) => {
     if (v.kanal === 'sms' && !v.telefon) {
       ctx.addIssue({
         code: 'custom',
@@ -216,7 +220,42 @@ export const DavetOlusturGirdiSema = z
         message: 'Grup ve kademe yalnızca öğrenci davetinde verilebilir.',
       });
     }
-  });
+  },
+);
+
+// --- Toplu davet ---------------------------------------------------------------------------
+
+export const DAVET_TOPLU_AZAMI = 100;
+
+/**
+ * Toplu davet satiri: yalniz tur denetlenir. Telefon/e-posta gecerliligi ve kanal-rol tutarliligi
+ * satir bazinda denetlenir (hatali satir tum istegi dusurmez).
+ */
+export const DavetTopluSatirSema = DavetOlusturTemelSema.extend({
+  telefon: z.string().max(40).optional().describe('`sms` kanalında zorunlu.'),
+  eposta: z.string().max(320).optional().describe('`eposta` kanalında zorunlu.'),
+});
+export const DavetTopluGirdiSema = z.object({
+  davetler: z
+    .array(DavetTopluSatirSema)
+    .min(1)
+    .max(DAVET_TOPLU_AZAMI)
+    .describe('En çok 100 satır; her satır tekil davetle aynı kurallara tabidir.'),
+});
+export const DavetTopluSatirSonucuSema = z.object({
+  sira: z.number().int().min(0).describe('Girdideki satır sırası (0 tabanlı).'),
+  durum: z.enum(['basarili', 'hata']),
+  davet: DavetSema.nullable(),
+  belirtec: z.string().nullable().describe('Yalnız başarılı satırda ve yalnız bu yanıtta döner.'),
+  gonderim: z.enum(['gonderildi', 'basarisiz', 'yok']).nullable(),
+  hata_kodu: z.string().nullable().describe('Alan hata kodu, örn. `gecersiz_telefon`, `izin_yok`.'),
+  hata_mesaji: z.string().nullable(),
+});
+export const DavetTopluYanitSema = z.object({
+  sonuclar: z.array(DavetTopluSatirSonucuSema),
+  basarili_sayisi: z.number().int(),
+  hata_sayisi: z.number().int(),
+});
 
 export const DavetOlusturYanitSema = z.object({
   davet: DavetSema,

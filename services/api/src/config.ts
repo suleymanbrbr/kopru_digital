@@ -15,6 +15,8 @@ export const envSchema = base.safeExtend({
   DATABASE_SISTEM_URL: z.string().min(1).optional(),
   /** Herkese acik taban adres (Better Auth baseURL, JWT iss varsayilani). */
   PUBLIC_URL: z.url().default('http://localhost:4000'),
+  /** Web uygulamasinin taban adresi; davet baglantilari `${WEB_URL}/davet/<belirtec>` olur. */
+  WEB_URL: z.url().default('http://localhost:3000'),
   /** Better Auth imza sirri ve JWKS ozel anahtar sifreleme anahtarinin kaynagi. */
   BETTER_AUTH_SECRET: z.string().min(32).default(devSecret),
   /** `log`: OTP kodu loga yazilir (yalnizca gelistirme). Gercek saglayici bildirim ile gelir. */
