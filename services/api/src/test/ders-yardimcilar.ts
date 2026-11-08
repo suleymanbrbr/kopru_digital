@@ -4,7 +4,7 @@ import type postgres from 'postgres';
 import { uuidv7 } from 'uuidv7';
 import { expect } from 'vitest';
 
-import { tarihEkle } from '../modules/ders/zaman.js';
+import { tarihEkle } from '../modules/ders/index.js';
 import {
   bearer,
   otpIleGiris,

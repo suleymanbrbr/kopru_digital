@@ -1,10 +1,10 @@
 import { createDb, withTenant, type Database } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
-import { uuidv7 } from 'uuidv7';
 import postgres from 'postgres';
+import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { tarihEkle, utcdenYerel } from './modules/ders/zaman.js';
+import { tarihEkle, utcdenYerel } from './modules/ders/index.js';
 import { dersSerileriniUret } from './sistem/ders-seri-uret.js';
 import {
   BUGUN,
@@ -41,7 +41,7 @@ describe.skipIf(dbYok())('ders takvimi API', () => {
     await appDb.close();
   });
 
-  const hataKodu = (res: { json: <T>() => T }) => res.json<Hata>().error.code;
+  const hataKodu = (res: { json: () => unknown }) => (res.json() as Hata).error.code;
 
   describe('tekil ders', () => {
     it('olusturur: UTC cevrimi, donmus katilimcilar, olay (kisisel veri yok) ve denetim', async () => {

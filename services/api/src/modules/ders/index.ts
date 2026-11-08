@@ -15,5 +15,5 @@ export const dersModule = defineModule('ders', async (app) => {
 });
 
 export { seriDerslerUret, SERI_UFUK_GUN, bitisleSinirla } from './seri-uretimi.js';
-export { bugunYerel, tarihEkle } from './zaman.js';
+export { bugunYerel, tarihEkle, utcdenYerel } from './zaman.js';
 export type { DersOlayBaglami } from './ders-deposu.js';

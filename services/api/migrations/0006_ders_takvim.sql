@@ -94,7 +94,8 @@ create table ders.dersler (
   constraint dersler_durum_chk check (durum in ('planli', 'tamamlandi', 'iptal')),
   constraint dersler_iptal_chk check (durum <> 'iptal' or (iptal_at is not null and iptal_kaynagi is not null)),
   constraint dersler_iptal_kaynagi_chk check (iptal_kaynagi is null or iptal_kaynagi in ('ogretmen', 'ogrenci', 'yonetici')),
-  constraint dersler_gec_iptal_chk check (not gec_iptal or iptal_kaynagi = 'ogrenci'),
+  -- NULL kaynak da reddedilir (`iptal_kaynagi = 'ogrenci'` NULL olunca CHECK'ten gecerdi).
+  constraint dersler_gec_iptal_chk check (not gec_iptal or coalesce(iptal_kaynagi = 'ogrenci', false)),
   constraint dersler_telafi_chk check (telafi or telafi_kaynak_ders_id is null),
   constraint dersler_ertelendi_sayisi_chk check (ertelendi_sayisi >= 0),
   constraint dersler_seri_sirasi_chk check ((seri_id is null) = (seri_sirasi is null)),
