@@ -3,6 +3,7 @@ import { davetYollari } from './davet-yollari.js';
 import { grupYollari } from './grup-yollari.js';
 import { hesapYollari } from './hesap-yollari.js';
 import { kimlikYollari } from './kimlik-yollari.js';
+import { oturumYollari } from './oturum-yollari.js';
 
 /**
  * hesap modulu: kimlik (Better Auth, JWT/JWKS), KVKK riza, kurum, uyelik, modul ayarlari.
@@ -15,6 +16,7 @@ export const hesapModule = defineModule(
       await app.register(hesapYollari);
       await app.register(grupYollari);
       await app.register(davetYollari());
+      await app.register(oturumYollari);
     }
   },
   {
