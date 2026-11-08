@@ -22,3 +22,5 @@ export function createT(messages: Messages = tr) {
 }
 
 export const t = createT();
+
+export { kurusBicimle, tlMetniniKurusaCevir } from './para.js';
