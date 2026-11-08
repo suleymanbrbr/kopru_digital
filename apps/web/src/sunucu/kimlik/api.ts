@@ -122,18 +122,20 @@ export function apiKimlik(): KimlikAdaptoru {
     },
 
     async kurumBaglami(_oturumBelirteci, erisimBelirteci, kurumId) {
-      // `etkin` ucu bir seferde tek modul sorar (kurum > kademe > grup); butun kodlar paralel sorulur.
-      const api = istemci(erisimBelirteci);
-      const yanitlar = await Promise.all(
-        MODUL_KODLARI.map((modulKodu) =>
-          cagir(() =>
-            api.GET('/v1/hesap/modul-ayarlari/etkin', {
-              params: { query: { modul_kodu: modulKodu } },
-            }),
-          ),
-        ),
-      );
-      return { kurumId, moduller: yanitlar.filter((y) => y.acik).map((y) => y.modul_kodu) };
+      // `etkin-tumu` kurum > kademe > grup onceligini tek sorguda cozer (`hesap.modul_acik_mi`).
+      const sonuc = await istemci(erisimBelirteci)
+        .GET('/v1/hesap/modul-ayarlari/etkin-tumu', {})
+        .catch(() => {
+          throw new KimlikHatasi(502, 'hizmet_kullanilamiyor', 'Sunucuya ulaşılamadı.');
+        });
+      if (sonuc.data === undefined) {
+        const hata = hataCevir(sonuc.response.status, sonuc.error);
+        // `modul.ayar.oku` izni olmayan rol: moduller bilinmiyor, yalniz cekirdek bolumler gorunur.
+        if (hata.durum === 403 && hata.kod === 'izin_yok') return { kurumId, moduller: [] };
+        throw hata;
+      }
+      const moduller = MODUL_KODLARI.filter((kod) => sonuc.data.moduller[kod] === true);
+      return { kurumId, moduller };
     },
 
     async rizaMetni(oturumBelirteci) {
