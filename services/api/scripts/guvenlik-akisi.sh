@@ -62,10 +62,11 @@ MSG_ID=$(curl -sS "$MAILPIT/api/v1/search" --get --data-urlencode "query=to:$EPO
 [ -n "$MSG_ID" ] && [ "$MSG_ID" != "null" ] || { echo "BASARISIZ: Mailpit'te dogrulama e-postasi yok"; exit 1; }
 echo "Mailpit mesaji:"
 curl -sS "$MAILPIT/api/v1/message/$MSG_ID" | jq '{Konu:.Subject, Kime:[.To[].Address], Gonderen:.From.Address, Metin:.Text}'
-BAGLANTI=$(curl -sS "$MAILPIT/api/v1/message/$MSG_ID" | jq -r '.Text' | grep -o 'http[^[:space:]]*dogrula?belirtec=[^[:space:]]*' | head -1)
+BAGLANTI=$(curl -sS "$MAILPIT/api/v1/message/$MSG_ID" | jq -r '.Text' | grep -o 'http[^[:space:]]*eposta-dogrula?belirtec=[^[:space:]]*' | head -1)
 [ -n "$BAGLANTI" ] || { echo "BASARISIZ: e-postada dogrulama baglantisi yok"; exit 1; }
 sart "gecersiz belirtec" "$(durum "$API/auth/eposta/dogrula?belirtec=gecersiz-belirtec-xyz")" 400
-sart "baglantidaki belirtec" "$(durum "$BAGLANTI")" 200
+# Baglanti web sayfasina gider (/eposta-dogrula?belirtec=...); sayfa belirteci api ucuna iletir.
+sart "baglantidaki belirtec" "$(durum "$API/auth/eposta/dogrula?belirtec=${BAGLANTI#*belirtec=}")" 200
 sart "dogrulama sonrasi eposta_dogrulandi" "$(j "$API/v1/hesap/ben" -H "authorization: Bearer $AB" | jq -r '.kullanici.eposta_dogrulandi')" true
 sart "dogrulama sonrasi giris hala calisiyor" "$(durum -X POST "$API/auth/eposta/giris" -H 'content-type: application/json' -d "$(jq -nc --arg e "$EPOSTA" '{eposta:$e,parola:"cok-gizli-parola"}')")" 200
 
