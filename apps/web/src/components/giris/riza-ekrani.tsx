@@ -11,6 +11,7 @@ import { Etiket } from '@/components/ui/input';
 import { Iskelet } from '@/components/ui/kart';
 import { Uyari } from '@/components/ui/uyari';
 import { bffIstek, hataMesaji, UygulamaHatasi } from '@/lib/api';
+import { Markdown } from '@/lib/markdown/markdown';
 import { useOturum } from '@/oturum/saglayici';
 import { rizaMetniSema } from '@/oturum/tipler';
 
@@ -76,9 +77,13 @@ export function RizaEkrani({ sonra }: { sonra: () => void }) {
               <h2 className="text-lg font-semibold">{metin.data.baslik}</h2>
             ) : null}
             {metin.data.bolumler.map((bolum) => (
-              <section key={bolum.baslik}>
-                <h3 className="font-semibold">{bolum.baslik}</h3>
-                <p className="mt-1 whitespace-pre-line text-metin-ikincil">{bolum.metin}</p>
+              <section key={bolum.baslik} className="flex flex-col">
+                {metin.data.baslik ? (
+                  <h3 className="font-semibold">{bolum.baslik}</h3>
+                ) : (
+                  <h2 className="text-base font-semibold">{bolum.baslik}</h2>
+                )}
+                <Markdown kaynak={bolum.metin} className="mt-2" />
               </section>
             ))}
             <p className="text-xs text-metin-ikincil">
