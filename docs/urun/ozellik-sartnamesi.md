@@ -89,7 +89,7 @@ Solo hoca hem sahip hem öğretmen rolündedir ve kurum menülerini (şube, kade
 
 **Akış:** Öğretmen öğrencinin adını ve telefonunu girer → sistem davet linki üretir → öğretmen linki WhatsApp'tan gönderir veya SMS ile gönderilir → öğrenci linke dokunur, uygulama açılır (yoksa mağazaya gider, kurulumdan sonra davet hatırlanır) → telefon doğrulama → karakterini seçer.
 
-**Faz 1 kapsamı:** Tekil ve toplu davet, davet durumu (bekliyor/kabul edildi/süresi doldu), yeniden gönderme, sınıf davet kodu (öğrenci 6 haneli kodla kendini sınıfa ekler, öğretmen onaylar), öğrenci profili (ad, sınıf, hedef sınav, notlar), 18 yaş altı bayrağı.
+**Faz 1 kapsamı:** Tekil ve toplu davet, davet durumu (bekliyor/kabul edildi/süresi doldu), yeniden gönderme, sınıf davet kodu (öğrenci 8 karakterli kodla kendini sınıfa ekler, öğretmen onaylar; 6 haneli rakam tahmin edilebilir olduğu için 8 karakter seçildi), öğrenci profili (ad, sınıf, hedef sınav, notlar), 18 yaş altı bayrağı.
 
 **Kalite çıtası:** Davetten aktif öğrenciye dönüşüm ölçülür, hedef %80+; derin link iOS ve Android'de kurulumdan sonra da çalışır.
 
