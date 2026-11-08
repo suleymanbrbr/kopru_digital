@@ -120,6 +120,29 @@ export function boundaryConfigs(rootDir) {
 }
 
 /**
+ * ADR 0003: `withSistem()` (BYPASSRLS) yalnizca `services/<servis>/src/sistem/**` altindan cagrilir.
+ * Diger kodlar, o dizindeki adlandirilmis sistem islemlerini kullanir. Test dosyalari muaftir;
+ * service-kit `withSistem` barindirmaz. Yeni servisler glob ile otomatik kapsanir.
+ */
+export function sistemSiniriConfig() {
+  const message =
+    'withSistem() yalnizca services/*/src/sistem/** altindan cagrilabilir (ADR 0003). Sistem islemini oradaki adlandirilmis bir fonksiyon olarak ekleyin.';
+  return {
+    name: 'kopru/sistem-siniri',
+    files: ['services/*/src/**/*.ts'],
+    ignores: ['services/*/src/sistem/**', '**/*.test.ts', 'services/*/src/test/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: "ImportSpecifier[imported.name='withSistem']", message },
+        { selector: 'ImportDeclaration[source.value=/with-sistem/]', message },
+        { selector: "CallExpression[callee.name='withSistem']", message },
+      ],
+    },
+  };
+}
+
+/**
  * @param {{ rootDir: string }} options  rootDir: monorepo koku (eslint.config.js'in dizini)
  */
 export function createConfig({ rootDir }) {
@@ -178,5 +201,6 @@ export function createConfig({ rootDir }) {
       extends: [tseslint.configs.disableTypeChecked],
     },
     ...boundaryConfigs(rootDir),
+    sistemSiniriConfig(),
   );
 }
