@@ -14,7 +14,7 @@ import type { Oturum, Uyelik } from '@/oturum/tipler';
  * uc noktalari icin gerektiginde `POST /auth/token` ile 15 dk'lik erisim belirteci alinir.
  */
 
-const apiAdresi = () => process.env.API_URL ?? 'http://localhost:4000';
+export const apiAdresi = () => process.env.API_URL ?? 'http://localhost:4000';
 
 /** `api` servisinin hata kodlarini web'in bildigi (i18n'li) kodlara cevirir. */
 const kodEsleme: Record<string, string> = {

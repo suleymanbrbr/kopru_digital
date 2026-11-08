@@ -7,6 +7,8 @@ import { useEffect, type ReactNode } from 'react';
 import { useOturum } from './saglayici';
 import type { Oturum } from './tipler';
 
+import { devamOku } from '@/lib/devam';
+
 export function EkranYukleniyor() {
   return (
     <div
@@ -52,7 +54,8 @@ export function Koruma({
   const hedef = yonlendirmeHedefi(ekran, durum);
 
   useEffect(() => {
-    if (hedef) router.replace(`/${hedef}`);
+    // Giris ve KVKK sonrasi kurum secimi yerine bekleyen devam yoluna (ornegin davet) donulur.
+    if (hedef) router.replace(hedef === 'kurum-sec' ? (devamOku() ?? '/kurum-sec') : `/${hedef}`);
   }, [hedef, router]);
 
   if ((durum.tur === 'yukleniyor' && ekran !== 'giris') || hedef) return <EkranYukleniyor />;

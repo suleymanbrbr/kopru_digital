@@ -27,6 +27,11 @@ export type OturumDurumu =
 let bellekBelirteci: string | null = null;
 export const erisimBelirteciAl = (): string | null => bellekBelirteci;
 
+/** 401 alan istekler belirteci bir kez yenileyip tekrar dener (saglayici kurulunca baglanir). */
+let yenileKancasi: (() => Promise<Oturum | null>) | null = null;
+export const belirteciYenile = (): Promise<Oturum | null> =>
+  yenileKancasi ? yenileKancasi() : Promise.resolve(null);
+
 export interface OturumBaglami {
   durum: OturumDurumu;
   kodIste: (telefon: string) => Promise<{ yenidenSn: number }>;
@@ -83,6 +88,18 @@ export function OturumSaglayici({ children }: { children: ReactNode }) {
     },
     [oturumKoy],
   );
+
+  useEffect(() => {
+    yenileKancasi = () =>
+      yenile(
+        durumRef.current.tur === 'hazir' && durumRef.current.oturum.aktifUyelikId
+          ? { uyelikId: durumRef.current.oturum.aktifUyelikId }
+          : {},
+      );
+    return () => {
+      yenileKancasi = null;
+    };
+  }, [yenile]);
 
   // Acilista cerezden oturumu geri kur.
   useEffect(() => {
