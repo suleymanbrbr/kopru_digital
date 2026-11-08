@@ -9,6 +9,8 @@ import {
   ModulAyariYazGirdiSema,
   ModulAyariYazYanitSema,
   ModulEtkinSorguSema,
+  ModulEtkinTumuSorguSema,
+  ModulEtkinTumuYanitSema,
   ModulEtkinYanitSema,
   RizaKaydetGirdiSema,
   RizaKaydetYanitSema,
@@ -42,7 +44,7 @@ import {
 } from '../../db/schema.js';
 import { kurumOlusturSistem } from '../../sistem/kurum-olustur.js';
 import { kurucuRolleri, kurumYaniti, VARSAYILAN_KADEMELER } from './kurum-deposu.js';
-import { modulAcikMi } from './modul-ayarlari.js';
+import { modulAcikMi, modulDurumlari } from './modul-ayarlari.js';
 import { olayYaz, type OlayBaglami } from './olaylar.js';
 import { onayGerekliMi, rizaDurumu, rizaKaydet } from './riza.js';
 import { uyelikleriGetir } from './uyelik-deposu.js';
@@ -417,6 +419,35 @@ export const hesapYollari: ServicePlugin = (app) => {
         }),
       );
       return { modul_kodu: q.modul_kodu, acik };
+    },
+  );
+
+  app.get(
+    '/modul-ayarlari/etkin-tumu',
+    {
+      preHandler: requirePermission('modul.ayar.oku'),
+      schema: {
+        tags: ['hesap'],
+        summary:
+          'Tum modullerin durumu tek cagrida (kurum > kademe > grup); /modul-ayarlari/etkin ile ayni cozumleme',
+        querystring: ModulEtkinTumuSorguSema,
+        response: { 200: ModulEtkinTumuYanitSema },
+      },
+    },
+    async (request) => {
+      const y = request.yetki;
+      if (!y) throw new AppError(403, errorCodes.izinYok, 'Bu işlem için yetkiniz yok.');
+      const q = request.query;
+      const moduller = await withTenant(
+        db,
+        { kurumId: y.kurumId, kullaniciId: y.kullaniciId },
+        (tx) =>
+          modulDurumlari(tx, y.kurumId, {
+            kademeId: q.kademe_id ?? null,
+            grupId: q.grup_id ?? null,
+          }),
+      );
+      return { moduller };
     },
   );
 
