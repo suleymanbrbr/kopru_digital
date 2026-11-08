@@ -429,6 +429,41 @@ describe.skipIf(dbYok())('yoklama API ve kredi dusumu', () => {
       expect((await kaydet(s, yakin.id, [y.yoklamaSatiri(o)])).statusCode).toBe(200);
     });
 
+    it('yalniz grupta kapatilan modul: yoklama ve takvim yazimlari o grupta 403, kredi etkisi yok', async () => {
+      const { s, ders } = await paketliKurulum(1);
+      const o = ogr(s, 0);
+      await sistem`insert into hesap.modul_ayarlari (id, kurum_id, modul_kodu, kapsam, kapsam_id, acik)
+        values (${uuidv7()}, ${s.k.kurumId}, 'yoklama', 'grup', ${s.grup.id}, false),
+               (${uuidv7()}, ${s.k.kurumId}, 'takvim', 'grup', ${s.grup.id}, false)`;
+      const res = await kaydet(s, ders.id, [y.yoklamaSatiri(o)]);
+      expect(res.statusCode, res.body).toBe(403);
+      expect(hataKodu(res)).toBe('modul_kapali');
+      expect(await y.kalanKredi(o)).toBe(8);
+      const yeni = await y.post(
+        s.k,
+        s.hoca.token,
+        '/dersler',
+        y.dersGovdesi(s.grup.id, { ogretmen_id: s.hoca.uyelikId }),
+      );
+      expect(yeni.statusCode, yeni.body).toBe(403);
+      expect(hataKodu(yeni)).toBe('modul_kapali');
+      const guncelle = await y.patch(s.k, s.hoca.token, `/dersler/${ders.id}`, {
+        surum: 1,
+        yer: 'x',
+      });
+      expect(guncelle.statusCode, guncelle.body).toBe(403);
+    });
+
+    it('yalniz not degisince yoklama olayi tekrar yazilmaz', async () => {
+      const { s, ders } = await paketliKurulum(1);
+      const o = ogr(s, 0);
+      expect((await kaydet(s, ders.id, [y.yoklamaSatiri(o)])).statusCode).toBe(200);
+      const notlu = await kaydet(s, ders.id, [y.yoklamaSatiri(o, 'geldi', { not: 'iyi calisti' })]);
+      expect(notlu.json<KaydetYaniti>().sonuclar[0]?.sonuc).toBe('guncellendi');
+      expect(await olaylar(s.k.kurumId, 'evt.ders.yoklama.kaydedildi.v1')).toHaveLength(1);
+      expect(await y.kalanKredi(o)).toBe(7);
+    });
+
     it('yoklama modulu kapaliysa uclar modul_kapali; finans kapaliysa yoklama kaydedilir, kredi etkisi yok', async () => {
       const { s, ders } = await paketliKurulum(1);
       const o = ogr(s, 0);

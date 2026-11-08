@@ -37,6 +37,7 @@ import {
 } from './ders-deposu.js';
 import {
   dersParam,
+  grupModuluAcikOlmali,
   kiraci,
   kurumParam,
   kurumSaatDilimi,
@@ -172,6 +173,7 @@ export const yoklamaYollari: ServicePlugin = (app) => {
           );
         }
         await yoklamaKilidiniKontrolEt(tx, y, ders, simdi);
+        await grupModuluAcikOlmali(tx, y, 'yoklama', ders.grup_id);
 
         // 3) Katilimci listesi grup uyeligiyle uyumlu mu (yalniz planli ders).
         await dersKatilimcilariniEsitle(tx, y.kurumId, { dersId: ders.id }, baglam, y.kullaniciId);
@@ -260,13 +262,16 @@ export const yoklamaYollari: ServicePlugin = (app) => {
             yoklamaSurumu: satir.surum,
             durum: finansDurumu(g.durum),
           });
-          await yoklamaOlayiYaz(
-            tx,
-            baglam,
-            ders,
-            satir,
-            (mevcut?.durum as YoklamaDurumTipi | undefined) ?? null,
-          );
+          // Olay durum degisimi icindir; yalniz not ya da gec dakikasi degistiyse tuketiciyi ilgilendirmez.
+          if (mevcut?.durum !== g.durum) {
+            await yoklamaOlayiYaz(
+              tx,
+              baglam,
+              ders,
+              satir,
+              (mevcut?.durum as YoklamaDurumTipi | undefined) ?? null,
+            );
+          }
           degisen++;
           sonuclar.push(
             sonucSatiri(g.ogrenci_id, mevcut ? 'guncellendi' : 'yeni', satir, {
