@@ -355,9 +355,10 @@ describe.skipIf(dbYok())('finans: kredi/ucret uygulama ve defterler', () => {
     it('yalniz esigi gecen hareketle yayimlanir; iade ile yukari cikip tekrar inince yine yayimlanir', async () => {
       const x = await finansDunyasi(t, sistem);
       const o = await paketliOgrenci(x, 4);
-      const yoklamalar = [uuidv7(), uuidv7(), uuidv7(), uuidv7()];
+      const [y0, y1, y2, y3] = [uuidv7(), uuidv7(), uuidv7(), uuidv7()] as const;
+      const yoklamalar = [y0, y1, y2];
       const s: (boolean | undefined)[] = [];
-      for (const yoklamaId of yoklamalar.slice(0, 3)) {
+      for (const yoklamaId of yoklamalar) {
         const r = await uygula(x, girdi(x, o.uyelikId, { yoklamaId }));
         s.push(r.kredi_azaldi !== undefined);
       }
@@ -368,7 +369,7 @@ describe.skipIf(dbYok())('finans: kredi/ucret uygulama ve defterler', () => {
       await uygula(
         x,
         girdi(x, o.uyelikId, {
-          yoklamaId: yoklamalar[1] as string,
+          yoklamaId: y1,
           yoklamaSurumu: 2,
           durum: 'izinli',
         }),
@@ -376,13 +377,13 @@ describe.skipIf(dbYok())('finans: kredi/ucret uygulama ve defterler', () => {
       await uygula(
         x,
         girdi(x, o.uyelikId, {
-          yoklamaId: yoklamalar[2] as string,
+          yoklamaId: y2,
           yoklamaSurumu: 2,
           durum: 'izinli',
         }),
       );
       expect(await kalan(o.uyelikId)).toBe(3);
-      const r = await uygula(x, girdi(x, o.uyelikId, { yoklamaId: yoklamalar[3] as string }));
+      const r = await uygula(x, girdi(x, o.uyelikId, { yoklamaId: y3 }));
       expect(r.kredi_azaldi).toEqual({ kalan_kredi: 2, esik: 2 });
       const olay = await olaylar(x, 'evt.finans.kredi.azaldi.v1');
       expect(olay).toHaveLength(2);

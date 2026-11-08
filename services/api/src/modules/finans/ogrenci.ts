@@ -1,6 +1,5 @@
 import {
   BakiyeHareketListeYanitSema,
-  errorCodes,
   FinansOgrenciListeSorguSema,
   FinansOgrenciListeYanitSema,
   FinansProfiliSema,
@@ -11,7 +10,7 @@ import {
   OgrenciParamSema,
   KurumParamSema,
 } from '@kopru/contracts';
-import { AppError, withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
+import { withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
 import { and, asc, desc, eq, lt, gt, sql, type SQL } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { z } from 'zod';

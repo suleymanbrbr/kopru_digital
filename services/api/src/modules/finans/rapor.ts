@@ -1,5 +1,5 @@
-import { AySorguSema, AylikOzetSema, errorCodes, KurumParamSema } from '@kopru/contracts';
-import { AppError, withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
+import { AySorguSema, AylikOzetSema, KurumParamSema } from '@kopru/contracts';
+import { withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
 import { and, asc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import ExcelJS from 'exceljs';
 import type { z } from 'zod';

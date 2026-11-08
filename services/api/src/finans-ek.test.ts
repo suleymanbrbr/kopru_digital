@@ -249,9 +249,9 @@ describe.skipIf(dbYok())('finans: ek senaryolar (kapsam, sayfalama, zamanlayici)
       let simdi = new Date('2026-03-10T00:30:00Z');
       const durdur = geceIsiZamanla(sistemDb, log, () => simdi);
       await vi.advanceTimersByTimeAsync(3_600_000);
-      await vi.waitFor(() =>
-        expect(log.info).toHaveBeenCalledWith(expect.anything(), 'finans_gece_isi_bitti'),
-      );
+      await vi.waitFor(() => {
+        expect(log.info).toHaveBeenCalledWith(expect.anything(), 'finans_gece_isi_bitti');
+      });
       const ilkSayi = log.info.mock.calls.length;
       // ayni gun tekrar: calismaz
       await vi.advanceTimersByTimeAsync(3_600_000);
@@ -270,9 +270,9 @@ describe.skipIf(dbYok())('finans: ek senaryolar (kapsam, sayfalama, zamanlayici)
       simdi = new Date('2026-03-12T00:30:00Z');
       const durdur2 = geceIsiZamanla(bozuk, log2, () => simdi);
       await vi.advanceTimersByTimeAsync(3_600_000);
-      await vi.waitFor(() =>
-        expect(log2.error).toHaveBeenCalledWith(expect.anything(), 'finans_gece_isi_hatasi'),
-      );
+      await vi.waitFor(() => {
+        expect(log2.error).toHaveBeenCalledWith(expect.anything(), 'finans_gece_isi_hatasi');
+      });
       await durdur2();
     });
 

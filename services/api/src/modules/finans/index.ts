@@ -36,11 +36,11 @@ export {
   type KrediVeUcretiUygulaGirdi,
   type YoklamaDurumu,
 } from './kredi-uygula.js';
+export { geceIsiZamanla } from './gece-isi.js';
 export {
-  geceIsiZamanla,
   geceIsleriniCalistir,
   ozetDenetimiCalistir,
   sonKullanmaCalistir,
   type GeceIsiGunlugu,
   type OzetUyusmazligi,
-} from './gece-isi.js';
+} from '../../sistem/finans-gece-isleri.js';

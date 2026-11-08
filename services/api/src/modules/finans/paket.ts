@@ -23,8 +23,6 @@ import {
   bakiyeHareketleri,
   bransler,
   krediHareketleri,
-  krediBakiyeleri,
-  ogrenciBakiyeleri,
   ogrenciFinansProfilleri,
   paketler,
   paketSatislari,

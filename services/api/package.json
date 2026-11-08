@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:finans-kapsam": "vitest run src/finans-api.test.ts src/finans-defter.test.ts src/finans-ek.test.ts --coverage --coverage.provider=v8 --coverage.include='src/modules/finans/**' --coverage.reporter=text",
     "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate-cli.ts migrate",
     "db:generate": "tsx src/db/migrate-cli.ts generate"
   },

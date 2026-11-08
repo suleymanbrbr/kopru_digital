@@ -22,7 +22,7 @@ export const finansHataKodlari = {
 
 const tarih = z.iso.date();
 const zaman = z.iso.datetime({ offset: true });
-const kurus = z.number().int().safe();
+const kurus = z.number().int();
 const pozitifKurus = kurus.positive();
 const negatifOlmayanKurus = kurus.nonnegative();
 
