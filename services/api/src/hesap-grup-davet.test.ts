@@ -572,6 +572,17 @@ describe.skipIf(dbYok())('hesap: gruplar, atamalar, davetler', () => {
         payload: { ogretmen_id: hoca.uyelikId, brans_kodu: 'matematik' },
       });
       expect(tekrarAtama.statusCode).toBe(409);
+      expect(tekrarAtama.json<Hata>().error.code).toBe('atama_cakisiyor');
+      for (const ek of [{}, { ana_ogretmen: true }, { ana_ogretmen: false }]) {
+        const tekrar = await app.inject({
+          method: 'POST',
+          url: api(k, `/gruplar/${gA.id}/atamalar`),
+          headers: bearer(k.token),
+          payload: { ogretmen_id: hoca.uyelikId, brans_kodu: 'matematik', ...ek },
+        });
+        expect(tekrar.statusCode, JSON.stringify(ek)).toBe(409);
+        expect(tekrar.json<Hata>().error.code).toBe('atama_cakisiyor');
+      }
       expect(
         (
           await app.inject({
