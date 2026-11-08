@@ -16,12 +16,14 @@
     "pretest": "pnpm run hazirla",
     "test": "vitest run",
     "e2e": "playwright test",
-    "ekran": "playwright test --config playwright.ekran.config.ts"
+    "ekran": "playwright test --config playwright.ekran.config.ts",
+    "e2e:gercek": "playwright test --config playwright.gercek.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "catalog:",
     "@hookform/resolvers": "catalog:",
     "@kopru/api-client": "workspace:*",
+    "@kopru/contracts": "workspace:*",
     "@kopru/i18n": "workspace:*",
     "@kopru/ui-tokens": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
@@ -57,6 +59,7 @@
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",
+    "postgres": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

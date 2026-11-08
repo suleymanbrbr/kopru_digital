@@ -96,7 +96,7 @@ export function KurumListesi({ oturum }: { oturum: Oturum }) {
       )}
 
       <div className="mt-8 flex items-center justify-between text-sm text-metin-ikincil">
-        <span>{oturum.kullanici.ad}</span>
+        <span>{oturum.kullanici.ad || oturum.kullanici.telefon}</span>
         <Dugme gorunum="hayalet" boyut="sm" onClick={() => void cikis()}>
           {t('oturum.cikis')}
         </Dugme>

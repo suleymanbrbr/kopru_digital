@@ -3,8 +3,9 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  devIndicators: false,
   // Paylasilan paketler derlenmis (dist) ESM olarak gelir.
-  transpilePackages: ['@kopru/i18n', '@kopru/ui-tokens', '@kopru/api-client'],
+  transpilePackages: ['@kopru/i18n', '@kopru/ui-tokens', '@kopru/api-client', '@kopru/contracts'],
   headers() {
     return Promise.resolve([
       {

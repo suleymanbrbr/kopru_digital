@@ -14,6 +14,7 @@ const metin = {
   surum: '2026-11',
   baslik: 'Aydınlatma metni',
   bolumler: [{ baslik: 'Veri sorumlusu', metin: 'Kurum.' }],
+  metinIdleri: ['metin-1'],
 };
 
 function goster(sonra = vi.fn()) {
@@ -44,7 +45,7 @@ describe('RizaEkrani', () => {
     await userEvent.click(kabul);
 
     await waitFor(() => {
-      expect(rizaKabul).toHaveBeenCalledWith('2026-11');
+      expect(rizaKabul).toHaveBeenCalledWith({ surum: '2026-11', metinIdleri: ['metin-1'] });
     });
     expect(sonra).toHaveBeenCalled();
   });

@@ -29,10 +29,11 @@ function BugunBasligi({ aciklama }: { aciklama: string }) {
     day: 'numeric',
     month: 'long',
   }).format(simdi);
-  const ad = kullaniciAd.split(' ')[0] ?? kullaniciAd;
+  const ad = kullaniciAd.split(' ')[0] ?? '';
+  const selamMetni = selam(simdi.getHours());
   return (
     <SayfaBasligi
-      baslik={t('bugun.selam', { selam: selam(simdi.getHours()), ad })}
+      baslik={ad ? t('bugun.selam', { selam: selamMetni, ad }) : selamMetni}
       aciklama={aciklama}
     >
       <time
@@ -118,7 +119,7 @@ function OgrenciBugun() {
   const veri = useOgrenciBugun(uyelik.kurumId);
   const kok = `/${uyelik.kurumId}`;
   const karakter = veri.data?.karakter;
-  const karakterVar = acikModuller.includes('motivasyon');
+  const karakterVar = acikModuller.includes('oyunlastirma');
 
   return (
     <>

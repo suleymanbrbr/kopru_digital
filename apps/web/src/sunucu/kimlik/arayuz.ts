@@ -1,4 +1,4 @@
-import type { KurumBaglami, Oturum, RizaMetni } from '@/oturum/tipler';
+import type { KurumBaglami, Oturum, RizaKabul, RizaMetni } from '@/oturum/tipler';
 
 /** Kimlik katmaninin makine okunur hatasi; BFF bunu standart hata govdesine cevirir. */
 export class KimlikHatasi extends Error {
@@ -46,6 +46,6 @@ export interface KimlikAdaptoru {
   ): Promise<KurumBaglami>;
   rizaMetni(oturumBelirteci: string): Promise<RizaMetni>;
   /** Rizayi kaydeder; belirtec degisebilir. */
-  rizaKabul(oturumBelirteci: string, surum: string): Promise<{ oturumBelirteci: string }>;
+  rizaKabul(oturumBelirteci: string, kabul: RizaKabul): Promise<{ oturumBelirteci: string }>;
   cikis(oturumBelirteci: string): Promise<void>;
 }

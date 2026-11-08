@@ -1,3 +1,4 @@
+import type { ModulKodu } from '@kopru/contracts';
 import type { MessageKey } from '@kopru/i18n';
 import {
   BookOpenCheck,
@@ -28,13 +29,6 @@ export type Rol = 'sahip' | 'yonetici' | 'ogretmen' | 'ogrenci' | 'veli';
 /** Faz 1'de arayuzu olan roller (veli icin arayuz yok). */
 export const faz1Roller: readonly Rol[] = ['sahip', 'yonetici', 'ogretmen', 'ogrenci'];
 
-/**
- * Kapatilabilen modul anahtarlari (hesap.modul_ayarlari.modul_kodu). `null` = cekirdek,
- * her zaman acik. Kesin liste backend'de belirlendiginde yalnizca bu birlesim guncellenir.
- */
-export type ModulAnahtari =
-  'ders' | 'odev' | 'plan' | 'deneme' | 'soru' | 'kayit' | 'finans' | 'motivasyon';
-
 export type NavGrubu = 'calisma' | 'yonetim';
 
 export interface NavOgesi {
@@ -44,8 +38,8 @@ export interface NavOgesi {
   yol: string;
   baslik: MessageKey;
   ikon: LucideIcon;
-  /** Bu modul kapaliysa oge gizlenir; `null` = cekirdek. */
-  modul: ModulAnahtari | null;
+  /** Bu modul (`@kopru/contracts` MODUL_KODLARI) kapaliysa oge gizlenir; `null` = cekirdek. */
+  modul: ModulKodu | null;
   roller: readonly Rol[];
   grup: NavGrubu;
   /** Mobilde alt menude gosterilme onceligi (kucuk = once). Belirtilmeyen "Menu" cekmecesinde kalir. */
@@ -78,7 +72,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'takvim',
     baslik: 'nav.takvim',
     ikon: CalendarDays,
-    modul: 'ders',
+    modul: 'takvim',
     roller: personel,
     grup: 'calisma',
     mobilOncelik: 2,
@@ -117,7 +111,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'planlar',
     baslik: 'nav.planlar',
     ikon: Target,
-    modul: 'plan',
+    modul: 'haftalik_plan',
     roller: personel,
     grup: 'calisma',
   },
@@ -135,7 +129,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'sorular',
     baslik: 'nav.sorular',
     ikon: FileQuestion,
-    modul: 'soru',
+    modul: 'soru_sor',
     roller: personel,
     grup: 'calisma',
   },
@@ -144,7 +138,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'kayitlar',
     baslik: 'nav.kayitlar',
     ikon: Files,
-    modul: 'kayit',
+    modul: 'kayitlar',
     roller: personel,
     grup: 'calisma',
   },
@@ -164,7 +158,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'gorevler',
     baslik: 'nav.gorevler',
     ikon: ListChecks,
-    modul: 'motivasyon',
+    modul: 'oyunlastirma',
     roller: ['ogrenci'],
     grup: 'calisma',
     mobilOncelik: 2,
@@ -184,7 +178,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'soru-sor',
     baslik: 'nav.soruSor',
     ikon: MessageCircleQuestion,
-    modul: 'soru',
+    modul: 'soru_sor',
     roller: ['ogrenci'],
     grup: 'calisma',
     mobilOncelik: 4,
@@ -194,7 +188,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'kayitlarim',
     baslik: 'nav.kayitlarim',
     ikon: Layers,
-    modul: 'kayit',
+    modul: 'kayitlar',
     roller: ['ogrenci'],
     grup: 'calisma',
   },
@@ -203,7 +197,7 @@ export const navOgeleri: readonly NavOgesi[] = [
     yol: 'karakterim',
     baslik: 'nav.karakterim',
     ikon: PawPrint,
-    modul: 'motivasyon',
+    modul: 'oyunlastirma',
     roller: ['ogrenci'],
     grup: 'calisma',
   },
@@ -259,7 +253,7 @@ export const navOgeleri: readonly NavOgesi[] = [
 export interface NavBaglami {
   rol: Rol;
   /** Kurum/kademe/grup duzeyinde cozulmus, acik moduller. */
-  acikModuller: readonly string[];
+  acikModuller: readonly ModulKodu[];
 }
 
 /** Rol ve acik modullere gore gorunen ogeler (sira korunur). */

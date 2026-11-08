@@ -32,7 +32,7 @@ export function RizaEkrani({ sonra }: { sonra: () => void }) {
     setKaydediliyor(true);
     setHata(null);
     try {
-      await rizaKabul(metin.data.surum);
+      await rizaKabul({ surum: metin.data.surum, metinIdleri: metin.data.metinIdleri });
       sonra();
     } catch (e) {
       setHata(hataMesaji(e));
@@ -72,11 +72,13 @@ export function RizaEkrani({ sonra }: { sonra: () => void }) {
           />
         ) : (
           <article className="flex flex-col gap-4 text-[0.9375rem] leading-relaxed">
-            <h2 className="text-lg font-semibold">{metin.data.baslik}</h2>
+            {metin.data.baslik ? (
+              <h2 className="text-lg font-semibold">{metin.data.baslik}</h2>
+            ) : null}
             {metin.data.bolumler.map((bolum) => (
               <section key={bolum.baslik}>
                 <h3 className="font-semibold">{bolum.baslik}</h3>
-                <p className="mt-1 text-metin-ikincil">{bolum.metin}</p>
+                <p className="mt-1 whitespace-pre-line text-metin-ikincil">{bolum.metin}</p>
               </section>
             ))}
             <p className="text-xs text-metin-ikincil">
