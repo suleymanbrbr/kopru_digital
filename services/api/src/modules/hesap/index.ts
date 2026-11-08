@@ -4,6 +4,8 @@ import { grupYollari } from './grup-yollari.js';
 import { hesapYollari } from './hesap-yollari.js';
 import { kimlikYollari } from './kimlik-yollari.js';
 import { oturumYollari } from './oturum-yollari.js';
+import { sinifKatilimKullaniciYollari } from './sinif-katilim-kullanici-yollari.js';
+import { sinifKatilimYollari } from './sinif-katilim-yollari.js';
 
 /**
  * hesap modulu: kimlik (Better Auth, JWT/JWKS), KVKK riza, kurum, uyelik, modul ayarlari.
@@ -17,6 +19,8 @@ export const hesapModule = defineModule(
       await app.register(grupYollari);
       await app.register(davetYollari());
       await app.register(oturumYollari);
+      await app.register(sinifKatilimYollari);
+      await app.register(sinifKatilimKullaniciYollari);
     }
   },
   {
