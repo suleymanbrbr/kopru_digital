@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion -- process.env tipi expo-env.d.ts varligina gore degisir */
 import { Platform } from 'react-native';
 
 /**

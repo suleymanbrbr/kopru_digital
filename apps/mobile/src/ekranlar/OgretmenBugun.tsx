@@ -1,6 +1,7 @@
 import { t } from '@kopru/i18n';
 import { View } from 'react-native';
 
+import { bugunTarihi } from '../lib/saat';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
 import { Kart } from '../ui/Kart';
@@ -15,10 +16,9 @@ import {
   useSaatDilimi,
 } from '../uygulama/operasyon';
 import { useOgretmenBugun } from '../uygulama/sorgular';
-import { bugunTarihi } from '../lib/saat';
 import { BekleyenYoklamaKartlari } from './BekleyenYoklamaKartlari';
-import { DersSatiri } from './DerslerEkrani';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { DersSatiri } from './DerslerEkrani';
 
 function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
   return (

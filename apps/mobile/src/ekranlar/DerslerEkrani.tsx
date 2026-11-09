@@ -11,6 +11,7 @@ import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
+import { hataMesaji } from '../uygulama/hatalar';
 import {
   dersAdi,
   useGruplar,
@@ -18,7 +19,6 @@ import {
   useModulAcik,
   useSaatDilimi,
 } from '../uygulama/operasyon';
-import { hataMesaji } from '../uygulama/hatalar';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersIslemleri } from './DersIslemleri';
 

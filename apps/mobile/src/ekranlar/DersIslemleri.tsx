@@ -50,7 +50,7 @@ export function DersIslemleri({ ders, ad, tz, grupTuru, yoklamaAcik, kapat }: Pr
 
   const seri = ders.seriId !== null;
   const planli = ders.durum === 'planli';
-  const basladi = Date.parse(ders.baslangic) <= Date.now();
+  const [basladi] = useState(() => Date.parse(ders.baslangic) <= Date.now());
 
   const tasi = useMutation({
     networkMode: 'always',

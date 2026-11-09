@@ -1,19 +1,27 @@
 import { t } from '@kopru/i18n';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Alert, Share, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Alert, FlatList, Pressable, Share, View } from 'react-native';
 
+import type { FinansOgrenciSatiri } from '../api/operasyonTipleri';
 import type { GrupKatilimIstegi, SinifBekleyenleri } from '../api/tipler';
+import { trSirala } from '../finans/kurallar';
 import { katilimKarariSecenekleri, sinifBekleyenleriAnahtari } from '../hesap/katilimIstekleri';
 import { kodGoster } from '../hesap/sinifKodu';
 import { tarihGoster } from '../lib/zaman';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
-import { Ekran } from '../ui/Ekran';
+import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
+import { MetinGirdisi } from '../ui/MetinGirdisi';
+import { KalanDersRozeti } from '../ui/Rozet';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
+import { useFinansOgrenciler, useModulAcik } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { bakiyeMetni } from './OgrenciKartiEkrani';
 
 function KodBolumu({
   grupId,
@@ -236,14 +244,49 @@ function SinifKarti({ veri, uyelikId }: { veri: SinifBekleyenleri; uyelikId: str
   );
 }
 
+function OgrenciSatiri({ o, esik }: { o: FinansOgrenciSatiri; esik: number }) {
+  const router = useRouter();
+  const ad = o.ad || t('mobil.ogrenciler.adsiz');
+  const kalan = o.model === 'paket' ? t('mobil.finans.kalanDersSayi', { n: o.kalanKredi }) : '';
+  const bakiye = o.borclu ? bakiyeMetni(o.bakiyeKurus) : '';
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={[ad, kalan, bakiye].filter(Boolean).join(', ')}
+      onPress={() => {
+        router.push({ pathname: '/ogrenci/[id]', params: { id: o.ogrenciId, ad } });
+      }}
+      className="min-h-dokunma gap-1 rounded-buyuk border border-kenar bg-yuzey p-4 active:opacity-80"
+      testID={`ogrenci-${o.ogrenciId}`}
+    >
+      <View className="flex-row items-center justify-between gap-2">
+        <Metin varyant="altBaslik" className="flex-1">
+          {ad}
+        </Metin>
+        <Ikon ad="chevron-forward" boyut={18} />
+      </View>
+      {o.model === 'paket' ? <KalanDersRozeti kalan={o.kalanKredi} esik={esik} /> : null}
+      {o.borclu ? (
+        <Metin varyant="kucuk" className="text-hata">
+          {bakiyeMetni(o.bakiyeKurus)}
+        </Metin>
+      ) : null}
+    </Pressable>
+  );
+}
+
 /**
- * `ogrenciler` sekmesi (ogretmen/sahip/yonetici): sinif gruplari, sinif kodu (goster, paylas,
- * yenile) ve gruba gore bekleyen katilim istekleri (onayla/reddet; iyimser guncelleme).
+ * `ogrenciler` sekmesi (ogretmen/sahip/yonetici): finans modulu aciksa kalan ders rozetli ogrenci
+ * listesi (Turkce siralama, arama) ve ogrenci karti; ayrica sinif gruplari, sinif kodu (goster,
+ * paylas, yenile) ve gruba gore bekleyen katilim istekleri (onayla/reddet; iyimser guncelleme).
  */
 export function OgrencilerEkrani() {
   const { adaptorler } = useServisler();
   const aktif = useAktif();
   const uyelikId = aktif?.uyelik.uyelikId;
+  const finansAcik = useModulAcik('finans');
+  const ogrenciler = useFinansOgrenciler();
+  const [arama, setArama] = useState('');
   const liste = useQuery({
     queryKey: sinifBekleyenleriAnahtari(uyelikId),
     queryFn: () => adaptorler.hesap.sinifBekleyenleri(),
@@ -253,39 +296,95 @@ export function OgrencilerEkrani() {
     refetchInterval: 30_000,
   });
 
+  const gorunen = useMemo(() => {
+    const q = arama.trim().toLocaleLowerCase('tr');
+    const tum = ogrenciler.data?.ogrenciler ?? [];
+    return trSirala(
+      q ? tum.filter((o) => o.ad.toLocaleLowerCase('tr').includes(q)) : tum,
+      (o) => o.ad,
+    );
+  }, [ogrenciler.data, arama]);
+
+  const baslik = (
+    <View className="gap-4">
+      <Metin varyant="baslik" accessibilityRole="header">
+        {t('mobil.ogrenciler.baslik')}
+      </Metin>
+      {finansAcik ? (
+        <View className="gap-3">
+          <MetinGirdisi
+            etiket={t('mobil.finans.ara')}
+            value={arama}
+            onChangeText={setArama}
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+          {ogrenciler.isPending ? <Yukleniyor /> : null}
+          {ogrenciler.isError && !ogrenciler.data ? (
+            <HataDurumu
+              mesaj={hataMesaji(ogrenciler.error)}
+              tekrar={() => {
+                void ogrenciler.refetch();
+              }}
+            />
+          ) : null}
+          {ogrenciler.data && gorunen.length === 0 ? (
+            <BosDurum ikon="sparkles" mesaj={t('mobil.finans.listeBos')} />
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const altBilgi = (
+    <View className="gap-4 pt-4">
+      <Metin varyant="altBaslik" accessibilityRole="header">
+        {t('mobil.ogrenciler.siniflarBaslik')}
+      </Metin>
+      {liste.isPending ? <Yukleniyor /> : null}
+      {liste.isError ? (
+        <HataDurumu
+          mesaj={hataMesaji(liste.error)}
+          tekrar={() => {
+            void liste.refetch();
+          }}
+        />
+      ) : null}
+      {liste.data?.length === 0 ? (
+        <BosDurum ikon="sparkles" mesaj={t('mobil.ogrenciler.sinifYok')} />
+      ) : null}
+      {uyelikId
+        ? liste.data?.map((v) => <SinifKarti key={v.grup.id} veri={v} uyelikId={uyelikId} />)
+        : null}
+      {liste.data ? (
+        <Dugme
+          varyant="hayalet"
+          etiket={t('mobil.sinifKodu.yenile')}
+          yukleniyor={liste.isFetching}
+          onPress={() => {
+            void liste.refetch();
+          }}
+        />
+      ) : null}
+    </View>
+  );
+
   return (
     <>
       <CevrimdisiSerit />
-      <Ekran kenarlar={['top', 'left', 'right']}>
-        <Metin varyant="baslik" accessibilityRole="header">
-          {t('mobil.ogrenciler.baslik')}
-        </Metin>
-        {liste.isPending ? <Yukleniyor /> : null}
-        {liste.isError ? (
-          <HataDurumu
-            mesaj={hataMesaji(liste.error)}
-            tekrar={() => {
-              void liste.refetch();
-            }}
-          />
-        ) : null}
-        {liste.data?.length === 0 ? (
-          <BosDurum ikon="sparkles" mesaj={t('mobil.ogrenciler.sinifYok')} />
-        ) : null}
-        {uyelikId
-          ? liste.data?.map((v) => <SinifKarti key={v.grup.id} veri={v} uyelikId={uyelikId} />)
-          : null}
-        {liste.data ? (
-          <Dugme
-            varyant="hayalet"
-            etiket={t('mobil.sinifKodu.yenile')}
-            yukleniyor={liste.isFetching}
-            onPress={() => {
-              void liste.refetch();
-            }}
-          />
-        ) : null}
-      </Ekran>
+      <View className="flex-1 bg-arkaPlan pt-14">
+        <FlatList
+          data={finansAcik ? gorunen : []}
+          keyExtractor={(o) => o.ogrenciId}
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="gap-3 p-4"
+          ListHeaderComponent={baslik}
+          ListFooterComponent={altBilgi}
+          renderItem={({ item }) => (
+            <OgrenciSatiri o={item} esik={ogrenciler.data?.dusukKrediEsigi ?? 2} />
+          )}
+        />
+      </View>
     </>
   );
 }

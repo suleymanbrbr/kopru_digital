@@ -890,6 +890,7 @@ export const tr = {
       bekleyen: '{n} yoklama bağlantı gelince gönderilecek.',
     },
     finans: {
+      ara: 'Öğrenci ara',
       rozetBitti: 'Ders kalmadı',
       rozetDusuk: '{n} ders kaldı',
       kalanDers: 'Kalan ders',
@@ -987,6 +988,7 @@ export const tr = {
     ogrenciler: {
       baslik: 'Öğrenciler',
       bos: 'Henüz öğrenci yok. Gruplara atanan öğrenciler burada görünür.',
+      siniflarBaslik: 'Sınıflar ve katılma istekleri',
       katilimBaslik: 'Katılma istekleri',
       sinifYok:
         'Henüz sınıf grubun yok. Sınıf oluşturulunca kod ve katılma istekleri burada görünür.',

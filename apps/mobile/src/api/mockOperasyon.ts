@@ -9,6 +9,7 @@ import type {
   OgrenciKarti,
   Paket,
   YoklamaDurumu,
+  YoklamaSonucu,
 } from './operasyonTipleri';
 import { ApiHata } from './tipler';
 
@@ -191,7 +192,6 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
 
   function gorunenDers(d: MockDers): Ders {
     const { katilimcilar: _k, ...ders } = d;
-    void _k;
     return ders;
   }
 
@@ -456,7 +456,7 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
           });
         }
       }
-      const sonuclar = satirlar.map((s) => {
+      const sonuclar = satirlar.map((s): YoklamaSonucu => {
         const anahtar = `${dersId}:${s.ogrenciId}`;
         const var_ = yoklamalar.has(anahtar);
         yoklamalar.set(anahtar, s.durum);
@@ -471,7 +471,7 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
         }
         return {
           ogrenciId: s.ogrenciId,
-          sonuc: (var_ ? 'guncellendi' : 'yeni') as 'yeni' | 'guncellendi',
+          sonuc: var_ ? 'guncellendi' : 'yeni',
           kalanKredi,
         };
       });

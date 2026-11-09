@@ -10,7 +10,6 @@ import type {
   FinansHareketi,
   GrupTuru,
   OgrenciKarti,
-  YoklamaDurumu,
 } from './operasyonTipleri';
 
 type Istemci = ServisIstemcileri['api'];
@@ -265,7 +264,7 @@ export function operasyonAdaptorleri(b: OperasyonBagimliligi): {
         ogrenciId: k.ogrenci_id,
         ad: k.gorunen_ad ?? '',
         tur: k.tur,
-        durum: (k.yoklama?.durum ?? null) as YoklamaDurumu | null,
+        durum: k.yoklama?.durum ?? null,
         not: k.yoklama?.not ?? null,
       }));
     },

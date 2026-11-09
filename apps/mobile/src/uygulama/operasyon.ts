@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useSyncExternalStore } from 'react';
 
 import type { Ders, DersGrubu } from '../api/operasyonTipleri';
-import { modulAcikMi } from '../nav/yapilandirma';
 import type { ModulKodu } from '../api/tipler';
 import { gunAraligi, tarihEkle, VARSAYILAN_SAAT_DILIMI } from '../lib/saat';
+import { modulAcikMi } from '../nav/yapilandirma';
 import type { KuyrukIsi } from '../offline/kuyruk';
 import { useAktif, useServisler } from './baglam';
 

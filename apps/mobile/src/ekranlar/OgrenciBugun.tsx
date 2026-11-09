@@ -1,8 +1,11 @@
 import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
 
+import type { Ders } from '../api/operasyonTipleri';
 import { Companion } from '../karakter/Companion';
+import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import { modulAcikMi } from '../nav/yapilandirma';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
@@ -12,7 +15,6 @@ import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useAktif, useOturum } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import {
   dersAdi,
   useAralikDersleri,
@@ -22,9 +24,8 @@ import {
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
 import { useOgrenciBugun } from '../uygulama/sorgular';
-import type { Ders } from '../api/operasyonTipleri';
-import { DersSatiri } from './DerslerEkrani';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { DersSatiri } from './DerslerEkrani';
 
 /** Ogretmenin "ogrenciye gorunsun" notu (api `ogretmene_ozel` notlari ogrenciye hic donmez). */
 function OgretmenNotu({ ders, tz }: { ders: Ders; tz: string }) {
@@ -59,7 +60,7 @@ export function OgrenciBugun() {
   const kart = useOgrenciKarti(aktif?.uyelik.uyelikId);
   // Ogrenci yalnizca kalan dersini gorur; fiyat/borc/tahsilat bu ekranda hicbir kosulda yoktur.
   const kalan = kart.data?.gorunum === 'ogrenci' ? kart.data.kalanKredi : null;
-  const simdi = Date.now();
+  const [simdi] = useState(() => Date.now());
   const bugunku = (dersler.data ?? []).filter((x) => yerelTarih(x.baslangic, tz) === bugun);
   const yaklasan = (dersler.data ?? [])
     .filter((x) => x.durum === 'planli' && yerelTarih(x.baslangic, tz) > bugun)

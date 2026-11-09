@@ -1,9 +1,9 @@
 import { t } from '@kopru/i18n';
 import { Alert, View } from 'react-native';
 
+import { kisaZaman } from '../lib/saat';
 import type { KuyrukIsi } from '../offline/kuyruk';
 import { YOKLAMA_TURU, type YoklamaYuku } from '../offline/yoklama';
-import { kisaZaman } from '../lib/saat';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
