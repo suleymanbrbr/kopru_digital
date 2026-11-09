@@ -4,19 +4,20 @@ import { DersIslemYanitSema, type DersDetaySema } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
 import { CalendarClock, ExternalLink, MapPin, RefreshCw, Repeat } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
 
+import type { TelafiKaynagi } from './ders-formu';
 import { cakisanlariOku, useDersDetayi, useDersYenile, type CakisanDers } from './ders-verisi';
 
-import { basari, type Bildirim } from '@/components/hesap/ortak';
 import { HataDurumu } from '@/components/hata-durumu';
+import { basari, type Bildirim } from '@/components/hesap/ortak';
 import { Alan, KapsamSecimi, Satir, type Kapsam } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
-import { Rozet } from '@/components/ui/rozet';
 import { Girdi } from '@/components/ui/input';
 import { Iskelet } from '@/components/ui/kart';
 import { Pencere } from '@/components/ui/pencere';
+import { Rozet } from '@/components/ui/rozet';
 import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
 import { hataMesaji, UygulamaHatasi } from '@/lib/api';
@@ -24,7 +25,6 @@ import { bransAdi } from '@/lib/bransler';
 import { dersIstek } from '@/lib/hesap-istek';
 import type { GrupSecenegi } from '@/lib/operasyon-verisi';
 import { gunEtiketi, saatAraligi, yerelSaat, yerelTarih } from '@/lib/saat';
-import type { TelafiKaynagi } from './ders-formu';
 
 type Gorunum = 'ozet' | 'tasi' | 'duzenle' | 'iptal';
 type DersDetayi = z.infer<typeof DersDetaySema>;
@@ -415,7 +415,7 @@ function TasiFormu({
   });
   const seriKapsami = kapsam === 'bu_ve_sonrakiler';
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const tarihDegisti = !seriKapsami && tarih !== ilkTarih;
     const saatDegisti = saat !== ilkSaat;
@@ -528,7 +528,7 @@ function DuzenleFormu({
     mesaj: () => t('operasyon.takvim.duzenle.guncellendi'),
   });
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     if (online.trim() && !/^https?:\/\/\S+$/i.test(online.trim())) {
       setHata(t('operasyon.takvim.hata.online'));
@@ -645,7 +645,7 @@ function IptalFormu({
   // Yoklamasi alinmis ders yalniz tek basina iptal edilir.
   const seriSecilebilir = ders.seri_id !== null && ders.durum === 'planli';
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     mut.mutate({
       surum: ders.surum,

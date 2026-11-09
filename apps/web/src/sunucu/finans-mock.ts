@@ -87,6 +87,7 @@ function bakiyeHareketi(tur: string, tutar: number, kaynak: string, ek: Kayit = 
   };
 }
 
+const metin = (v: unknown, yedek = ''): string => (typeof v === 'string' ? v : yedek);
 const toplam = (liste: Kayit[], alan: string) => liste.reduce((t, h) => t + (h[alan] as number), 0);
 const kalanKredi = (o: OgrFin) => toplam(o.krediHareketleri, 'miktar');
 const bakiye = (o: OgrFin) => toplam(o.bakiyeHareketleri, 'tutar_kurus');
@@ -140,7 +141,7 @@ function kur(kurumId: string): FinansDurumu {
     };
     if (model === 'paket') {
       const adet = Math.max(kalan, 8);
-      const paketSatisi = satisYap(o.id, paketler[0] as Kayit, kalan, adet, 'aktif');
+      const paketSatisi = satisYap(o.id, paketler[0] ?? {}, kalan, adet, 'aktif');
       durum.satislar.push(paketSatisi);
       o.krediHareketleri.push(
         hareket('satin_alma', adet, { paket_satisi_id: paketSatisi.id, created_at: gunOnce(20) }),
@@ -281,7 +282,7 @@ export function finansKrediUygula(
 
 function adi(kurumId: string, ogrenciId: string): string | null {
   const u = mockKurumVerisi(kurumId).uyeler.find((x) => x.uyelik_id === ogrenciId);
-  return u ? (u.gorunen_ad as string) : null;
+  return u ? u.gorunen_ad : null;
 }
 
 function satirOlustur(kurumId: string, f: FinansDurumu, o: OgrFin): Kayit {
@@ -426,10 +427,7 @@ export function finansMock(istek: MockIstek): MockYanit {
         (s) =>
           (!borclu || s.borclu === true) &&
           (!dusuk || s.dusuk_kredi === true) &&
-          (!q ||
-            String(s.gorunen_ad ?? '')
-              .toLocaleLowerCase('tr')
-              .includes(q)),
+          (!q || metin(s.gorunen_ad).toLocaleLowerCase('tr').includes(q)),
       )
       .sort((a, b) => String(a.gorunen_ad).localeCompare(String(b.gorunen_ad), 'tr'));
     const { dilim, sonraki } = sayfala(satirlar, sorgu, 'ogrenci_id');
@@ -586,7 +584,7 @@ export function finansMock(istek: MockIstek): MockYanit {
     o.krediHareketleri.push(
       hareket('ters_kayit', -(s.toplam_kredi as number), {
         paket_satisi_id: s.id,
-        neden: String(g.neden ?? ''),
+        neden: metin(g.neden),
       }),
     );
     o.bakiyeHareketleri.push(
@@ -636,7 +634,7 @@ export function finansMock(istek: MockIstek): MockYanit {
       if (typeof tutar !== 'number' || !Number.isInteger(tutar) || tutar <= 0) return dogrulama();
       const tarih = typeof g.tahsilat_tarihi === 'string' ? g.tahsilat_tarihi : bugun();
       if (tarih > bugun()) return hata(422, 'odeme_gecersiz', 'Ödeme tarihi gelecekte olamaz.');
-      const th = tahsilatYap(o.id, tutar, String(g.yontem ?? 'nakit'), tarih, null);
+      const th = tahsilatYap(o.id, tutar, metin(g.yontem, 'nakit'), tarih, null);
       if (typeof g.makbuz_no === 'string') th.makbuz_no = g.makbuz_no;
       if (typeof g.aciklama === 'string') th.aciklama = g.aciklama;
       f.tahsilatlar.push(th);
@@ -654,7 +652,7 @@ export function finansMock(istek: MockIstek): MockYanit {
       if (!o) return bulunamadi();
       th.durum = 'iptal';
       th.iptal_at = simdi();
-      th.iptal_nedeni = String(g.neden ?? '');
+      th.iptal_nedeni = metin(g.neden);
       o.bakiyeHareketleri.push(
         bakiyeHareketi('ters_kayit', -(th.tutar_kurus as number), 'tahsilat', {
           kaynak_id: th.id,

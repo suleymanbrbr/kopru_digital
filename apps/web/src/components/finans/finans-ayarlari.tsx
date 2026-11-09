@@ -9,11 +9,12 @@ import {
 import { kurusBicimle, t } from '@kopru/i18n';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Download, Plus } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 
 import { finansAnahtari, useFinansYenile, usePaketler } from './finans-verisi';
 
-import { Alan } from '@/components/operasyon/ortak';
+import { BosDurum } from '@/components/bos-durum';
+import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,
   basari,
@@ -22,8 +23,7 @@ import {
   tarihYaz,
   type Bildirim,
 } from '@/components/hesap/ortak';
-import { BosDurum } from '@/components/bos-durum';
-import { HataDurumu } from '@/components/hata-durumu';
+import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { OnayKutusu } from '@/components/ui/checkbox';
 import { Girdi } from '@/components/ui/input';
@@ -34,8 +34,8 @@ import { Uyari } from '@/components/ui/uyari';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
 import { finansDosyaAl, finansIstek } from '@/lib/hesap-istek';
-import { useGruplar, useSaatDilimi } from '@/lib/operasyon-verisi';
 import { tutarCoz } from '@/lib/operasyon';
+import { useGruplar, useSaatDilimi } from '@/lib/operasyon-verisi';
 import { bugunYerel, yerelAy } from '@/lib/saat';
 import { yenidenDene } from '@/lib/sayfali-sorgu';
 
@@ -298,7 +298,7 @@ function PaketFormu({
       kapat();
     },
   });
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const hatalar: typeof h = {};
     const k = Number(kredi);
@@ -511,7 +511,7 @@ function TarifeFormu({
       kapat();
     },
   });
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const c = tutarCoz(ucret);
     setH(c.ok ? {} : { ucret: t('operasyon.finans.odemeAl.hata.tutar') });
@@ -691,7 +691,7 @@ function PolitikaFormu({
     },
   });
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const s = Number(saat);
     const k = Number(esik);

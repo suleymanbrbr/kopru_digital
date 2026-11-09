@@ -9,9 +9,9 @@ import { FinansAyarlari } from './finans-ayarlari';
 import { useFinansOgrencileri } from './finans-verisi';
 import { KrediRozeti } from './kredi-rozeti';
 
-import { DahaFazla, ListeIskeleti } from '@/components/hesap/ortak';
 import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
+import { DahaFazla, ListeIskeleti } from '@/components/hesap/ortak';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { Dugme } from '@/components/ui/button';

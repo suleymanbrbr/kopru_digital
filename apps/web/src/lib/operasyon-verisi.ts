@@ -18,11 +18,7 @@ import { trSirala } from '@/lib/sirala';
 
 const kurumBilgisiSema = z.object({
   saat_dilimi: z.string().default(VARSAYILAN_SAAT_DILIMI),
-  ayarlar: z
-    .object({ yoklama_kilit_gun: z.number().optional() })
-    .partial()
-    .passthrough()
-    .default({}),
+  ayarlar: z.object({ yoklama_kilit_gun: z.number().optional() }).partial().loose().default({}),
 });
 
 /** Kurumun saat dilimi; ders saatleri tarayicinin degil kurumun saat diliminde gosterilir. */

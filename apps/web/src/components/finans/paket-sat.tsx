@@ -3,12 +3,12 @@
 import { PaketSatisYanitSema } from '@kopru/contracts';
 import { kurusBicimle, t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 
 import { usePaketler, useFinansYenile } from './finans-verisi';
 
-import { Alan } from '@/components/operasyon/ortak';
 import { basari, type Bildirim } from '@/components/hesap/ortak';
+import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { Pencere } from '@/components/ui/pencere';
@@ -104,7 +104,7 @@ function Icerik({
     },
   });
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const h: { paket?: string; tutar?: string } = {};
     if (!secili) h.paket = t('operasyon.finans.paketSat.hata.paket');
@@ -115,9 +115,9 @@ function Icerik({
       } else {
         const c = tutarCoz(tutar);
         if (!c.ok) h.tutar = t('operasyon.finans.paketSat.hata.tutar');
-        else if (secili && c.kurus >= secili.fiyat_kurus) {
+        else if (c.kurus >= (secili?.fiyat_kurus ?? Infinity)) {
           h.tutar = t('operasyon.finans.paketSat.hata.kismiFazla');
-        } else odemeGovde = { tur: 'kismi', tutar_kurus: c.ok ? c.kurus : 0, yontem };
+        } else odemeGovde = { tur: 'kismi', tutar_kurus: c.kurus, yontem };
       }
     }
     setHatalar(h);
@@ -128,7 +128,7 @@ function Icerik({
 
   const modelHatasi =
     sat.error instanceof UygulamaHatasi && sat.error.kod === 'ogrenci_modeli_paket_degil';
-  const paketYok = paketler.data !== undefined && paketler.data.paketler.length === 0;
+  const paketYok = paketler.data?.paketler.length === 0;
 
   return (
     <form onSubmit={gonder} noValidate className="flex flex-col gap-4">

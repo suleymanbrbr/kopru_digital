@@ -80,7 +80,7 @@ export function useOgrenciAdi(kurumId: string, ogrenciId: string): string | null
       return '';
     },
   });
-  return q.data ? q.data : null;
+  return q.data === undefined || q.data === '' ? null : q.data;
 }
 
 export function usePaketler(kurumId: string, durum: 'aktif' | 'hepsi' = 'aktif', etkin = true) {

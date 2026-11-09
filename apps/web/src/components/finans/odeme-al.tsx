@@ -3,12 +3,12 @@
 import { TahsilatYanitSema } from '@kopru/contracts';
 import { kurusBicimle, t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type SyntheticEvent } from 'react';
 
 import { useFinansYenile } from './finans-verisi';
 
-import { Alan } from '@/components/operasyon/ortak';
 import { basari, type Bildirim } from '@/components/hesap/ortak';
+import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { OnayPenceresi, Pencere } from '@/components/ui/pencere';
@@ -105,7 +105,7 @@ function Icerik({
     },
   });
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const h: { tutar?: string; tarih?: string } = {};
     const c = tutarCoz(tutar);

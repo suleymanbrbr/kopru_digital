@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
 
 import { DefterPenceresi } from './defter';
@@ -21,7 +21,7 @@ import { bakiyeMetni, KrediRozeti } from './kredi-rozeti';
 import { IptalPenceresi, OdemeAl } from './odeme-al';
 import { PaketSat } from './paket-sat';
 
-import { Alan } from '@/components/operasyon/ortak';
+import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,
   basari,
@@ -29,9 +29,9 @@ import {
   tarihYaz,
   type Bildirim,
 } from '@/components/hesap/ortak';
-import { HataDurumu } from '@/components/hata-durumu';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { Alan } from '@/components/operasyon/ortak';
 import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { Iskelet, Kart } from '@/components/ui/kart';
@@ -488,7 +488,7 @@ function ProfilFormu({
       kapat();
     },
   });
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     kaydet.mutate();
   };

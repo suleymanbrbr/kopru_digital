@@ -8,9 +8,9 @@ import { useState } from 'react';
 
 import { YoklamaFormu } from './yoklama-formu';
 
-import { BildirimKutusu, DahaFazla, ListeIskeleti, type Bildirim } from '@/components/hesap/ortak';
 import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
+import { BildirimKutusu, DahaFazla, ListeIskeleti, type Bildirim } from '@/components/hesap/ortak';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { dersAnahtari } from '@/components/takvim/ders-verisi';

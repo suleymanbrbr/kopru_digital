@@ -6,8 +6,8 @@ import { useState } from 'react';
 
 import { finansAnahtari } from './finans-verisi';
 
-import { DahaFazla, ListeIskeleti, tarihYaz } from '@/components/hesap/ortak';
 import { HataDurumu } from '@/components/hata-durumu';
+import { DahaFazla, ListeIskeleti, tarihYaz } from '@/components/hesap/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Pencere } from '@/components/ui/pencere';
 import { hataMesaji } from '@/lib/api';

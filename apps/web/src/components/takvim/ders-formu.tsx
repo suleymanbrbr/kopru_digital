@@ -4,12 +4,12 @@ import { DersOlusturYanitSema, SeriOlusturYanitSema } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
 import { TriangleAlert } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 
 import { cakisanlariOku, useDersYenile, type CakisanDers } from './ders-verisi';
 
-import { Alan } from '@/components/operasyon/ortak';
 import { basari, type Bildirim } from '@/components/hesap/ortak';
+import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { OnayKutusu } from '@/components/ui/checkbox';
 import { Girdi } from '@/components/ui/input';
@@ -17,8 +17,8 @@ import { Pencere } from '@/components/ui/pencere';
 import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
 import { hataMesaji } from '@/lib/api';
-import { dersIstek } from '@/lib/hesap-istek';
 import { siraliBransler } from '@/lib/bransler';
+import { dersIstek } from '@/lib/hesap-istek';
 import {
   dersFormunuDogrula,
   haftalikKural,
@@ -186,7 +186,7 @@ function FormIcerigi({
     },
   });
 
-  const gonder = (e: FormEvent) => {
+  const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const h = dersFormunuDogrula(f);
     setHatalar(h);

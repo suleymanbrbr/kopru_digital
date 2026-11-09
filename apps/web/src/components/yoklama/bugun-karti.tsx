@@ -8,8 +8,8 @@ import { useState } from 'react';
 import { useYoklamaBekleyen } from './yoklama-ekrani';
 import { YoklamaFormu } from './yoklama-formu';
 
-import { BolumKarti } from '@/components/bugun/bolum-karti';
 import { BosDurum } from '@/components/bos-durum';
+import { BolumKarti } from '@/components/bugun/bolum-karti';
 import { BildirimKutusu, type Bildirim } from '@/components/hesap/ortak';
 import { Dugme } from '@/components/ui/button';
 import { useKurum } from '@/kurum/baglam';

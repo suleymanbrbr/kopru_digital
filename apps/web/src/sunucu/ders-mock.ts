@@ -1,5 +1,5 @@
-import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import { finansKrediUygula } from './finans-mock';
+import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -198,7 +198,7 @@ function dersGorunumu(d: Ders): Kayit {
 
 function adi(kurumId: string, ogrenciId: string): string | null {
   const u = mockKurumVerisi(kurumId).uyeler.find((x) => x.uyelik_id === ogrenciId);
-  return u ? (u.gorunen_ad as string) : null;
+  return u ? u.gorunen_ad : null;
 }
 
 function dersDetayi(kurumId: string, d: Ders): Kayit {
@@ -641,8 +641,7 @@ function yoklamaKaydet(kurumId: string, s: DersDurumu, d: Ders, istek: MockIstek
       yeniNot !== null && r.not_gorunurluk === 'ogrenciye' ? 'ogrenciye' : 'ogretmene_ozel';
     const gecDk = durumu === 'gec' && typeof r.gec_dakika === 'number' ? r.gec_dakika : null;
     const ayni =
-      mevcut &&
-      mevcut.durum === durumu &&
+      mevcut?.durum === durumu &&
       mevcut.gec_dakika === gecDk &&
       mevcut.not === yeniNot &&
       mevcut.not_gorunurluk === gorunurluk;

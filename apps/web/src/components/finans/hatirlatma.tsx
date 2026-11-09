@@ -20,7 +20,8 @@ export function hatirlatmaMetni({
   bakiyeKurus: number;
   kalanKredi: number;
 }): string {
-  const ad = odeyenAd?.trim() || t('operasyon.finans.hatirlatma.genelAd');
+  const ad =
+    (odeyenAd?.trim() ? odeyenAd.trim() : null) ?? t('operasyon.finans.hatirlatma.genelAd');
   return bakiyeKurus < 0
     ? t('operasyon.finans.hatirlatma.sablon', {
         ad,
