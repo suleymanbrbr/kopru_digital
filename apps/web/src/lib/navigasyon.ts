@@ -4,6 +4,7 @@ import {
   BookOpenCheck,
   Building2,
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   FileQuestion,
   Files,
@@ -44,6 +45,8 @@ export interface NavOgesi {
   grup: NavGrubu;
   /** Mobilde alt menude gosterilme onceligi (kucuk = once). Belirtilmeyen "Menu" cekmecesinde kalir. */
   mobilOncelik?: number;
+  /** Bireysel (solo hoca) kurumda gizlenir: kurum yapisi menuleri. */
+  soloGizli?: boolean;
 }
 
 const personel = ['sahip', 'yonetici', 'ogretmen'] as const satisfies readonly Rol[];
@@ -76,6 +79,15 @@ export const navOgeleri: readonly NavOgesi[] = [
     roller: personel,
     grup: 'calisma',
     mobilOncelik: 2,
+  },
+  {
+    anahtar: 'yoklama',
+    yol: 'yoklama',
+    baslik: 'operasyon.yoklama.baslik',
+    ikon: ClipboardCheck,
+    modul: 'yoklama',
+    roller: personel,
+    grup: 'calisma',
   },
   {
     anahtar: 'ogrenciler',
@@ -154,6 +166,15 @@ export const navOgeleri: readonly NavOgesi[] = [
 
   // Ogrenci
   {
+    anahtar: 'takvim-ogrenci',
+    yol: 'takvim',
+    baslik: 'nav.takvim',
+    ikon: CalendarDays,
+    modul: 'takvim',
+    roller: ['ogrenci'],
+    grup: 'calisma',
+  },
+  {
     anahtar: 'gorevler',
     yol: 'gorevler',
     baslik: 'nav.gorevler',
@@ -205,6 +226,7 @@ export const navOgeleri: readonly NavOgesi[] = [
   // Yonetim (yonetici + sahip); abonelik yalnizca sahip
   {
     anahtar: 'kurum',
+    soloGizli: true,
     yol: 'kurum',
     baslik: 'nav.kurum',
     ikon: Building2,
@@ -214,6 +236,7 @@ export const navOgeleri: readonly NavOgesi[] = [
   },
   {
     anahtar: 'ogretmenler',
+    soloGizli: true,
     yol: 'ogretmenler',
     baslik: 'nav.ogretmenler',
     ikon: School,
@@ -223,6 +246,7 @@ export const navOgeleri: readonly NavOgesi[] = [
   },
   {
     anahtar: 'siniflar',
+    soloGizli: true,
     yol: 'siniflar',
     baslik: 'nav.siniflar',
     ikon: Rows3,
@@ -254,12 +278,17 @@ export interface NavBaglami {
   rol: Rol;
   /** Kurum/kademe/grup duzeyinde cozulmus, acik moduller. */
   acikModuller: readonly ModulKodu[];
+  /** Kurum turu; `bireysel` ise kurum yapisi menuleri gizlenir. */
+  kurumTur?: string | null | undefined;
 }
 
 /** Rol ve acik modullere gore gorunen ogeler (sira korunur). */
-export function gorunurOgeler({ rol, acikModuller }: NavBaglami): NavOgesi[] {
+export function gorunurOgeler({ rol, acikModuller, kurumTur }: NavBaglami): NavOgesi[] {
   return navOgeleri.filter(
-    (oge) => oge.roller.includes(rol) && (oge.modul === null || acikModuller.includes(oge.modul)),
+    (oge) =>
+      oge.roller.includes(rol) &&
+      (oge.modul === null || acikModuller.includes(oge.modul)) &&
+      !(oge.soloGizli === true && kurumTur === 'bireysel'),
   );
 }
 

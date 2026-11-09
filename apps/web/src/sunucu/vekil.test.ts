@@ -74,9 +74,11 @@ describe('ikili iletim', () => {
 
 describe('finans vekili', () => {
   it('Idempotency-Key ve istemci IP basligini api ye iletir; gecersiz anahtari dusurur', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response('{}', { status: 201, headers: { 'content-type': 'application/json' } }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response('{}', { status: 201, headers: { 'content-type': 'application/json' } }),
+      );
     vi.stubGlobal('fetch', fetchMock);
     vi.stubEnv('NEXT_PUBLIC_API_MOCK', '0');
     const anahtar = '0190a1b2-1111-4222-8333-444455556666';
@@ -100,10 +102,11 @@ describe('finans vekili', () => {
   });
 
   it('yetkisiz ve izinsiz yolu reddeder', async () => {
-    const yetkisiz = await finansVekili(
-      new NextRequest('http://localhost/x', { method: 'GET' }),
-      ['kurumlar', K, 'paketler'],
-    );
+    const yetkisiz = await finansVekili(new NextRequest('http://localhost/x', { method: 'GET' }), [
+      'kurumlar',
+      K,
+      'paketler',
+    ]);
     expect(yetkisiz.status).toBe(401);
     const yok = await finansVekili(
       new NextRequest('http://localhost/x', {

@@ -87,8 +87,7 @@ function bakiyeHareketi(tur: string, tutar: number, kaynak: string, ek: Kayit = 
   };
 }
 
-const toplam = (liste: Kayit[], alan: string) =>
-  liste.reduce((t, h) => t + (h[alan] as number), 0);
+const toplam = (liste: Kayit[], alan: string) => liste.reduce((t, h) => t + (h[alan] as number), 0);
 const kalanKredi = (o: OgrFin) => toplam(o.krediHareketleri, 'miktar');
 const bakiye = (o: OgrFin) => toplam(o.bakiyeHareketleri, 'tutar_kurus');
 
@@ -154,14 +153,25 @@ function kur(kurumId: string): FinansDurumu {
       );
       const odenen = 480_000 + borc;
       if (odenen > 0) {
-        const th = tahsilatYap(o.id, odenen, 'havale', gunOnce(20).slice(0, 10), paketSatisi.id as string);
+        const th = tahsilatYap(
+          o.id,
+          odenen,
+          'havale',
+          gunOnce(20).slice(0, 10),
+          paketSatisi.id as string,
+        );
         durum.tahsilatlar.push(th);
         o.bakiyeHareketleri.push(
-          bakiyeHareketi('tahsilat', odenen, 'tahsilat', { kaynak_id: th.id, created_at: gunOnce(20) }),
+          bakiyeHareketi('tahsilat', odenen, 'tahsilat', {
+            kaynak_id: th.id,
+            created_at: gunOnce(20),
+          }),
         );
       }
     } else if (model === 'ders_basi') {
-      o.bakiyeHareketleri.push(bakiyeHareketi('ders_ucreti', borc, 'yoklama', { created_at: gunOnce(2) }));
+      o.bakiyeHareketleri.push(
+        bakiyeHareketi('ders_ucreti', borc, 'yoklama', { created_at: gunOnce(2) }),
+      );
     }
     durum.ogrenciler.set(o.id, o);
   });
@@ -300,7 +310,9 @@ function kapsamdakiOgrenciler(kurumId: string, f: FinansDurumu): OgrFin[] {
   const ogretmenId = v.uyeler.find((u) => u.rol === 'ogretmen')?.uyelik_id;
   const gruplar = v.atamalar.filter((a) => a.ogretmen_id === ogretmenId).map((a) => a.grup_id);
   const uyeler = new Set(
-    gruplar.flatMap((gid) => (v.grupUyeleri[gid as string] ?? []).map((u) => u.ogrenci_id as string)),
+    gruplar.flatMap((gid) =>
+      (v.grupUyeleri[gid as string] ?? []).map((u) => u.ogrenci_id as string),
+    ),
   );
   return tum.filter((o) => uyeler.has(o.id));
 }
@@ -314,7 +326,8 @@ function sayfala<T extends { id?: unknown; ogrenci_id?: unknown }>(
   const imlec = sorgu.get('imlec');
   const basla = imlec ? liste.findIndex((o) => o[anahtar] === imlec) + 1 : 0;
   const dilim = liste.slice(basla, basla + limit);
-  const sonraki = basla + limit < liste.length ? (dilim[dilim.length - 1]?.[anahtar] as string) : null;
+  const sonraki =
+    basla + limit < liste.length ? (dilim[dilim.length - 1]?.[anahtar] as string) : null;
   return { dilim, sonraki };
 }
 
@@ -334,7 +347,10 @@ function odemeYaz(
     return { tahsilat: null, hata: dogrulama() };
   }
   if (tur === 'kismi' && tutar >= fiyat) {
-    return { tahsilat: null, hata: hata(422, 'odeme_gecersiz', 'Kısmi tutar paket fiyatından az olmalı.') };
+    return {
+      tahsilat: null,
+      hata: hata(422, 'odeme_gecersiz', 'Kısmi tutar paket fiyatından az olmalı.'),
+    };
   }
   const th = tahsilatYap(
     o.id,
@@ -351,7 +367,8 @@ function odemeYaz(
 export function finansMock(istek: MockIstek): MockYanit {
   const parcalar = istek.yol.split('/');
   const kurumId = parcalar[1];
-  if (parcalar[0] !== 'kurumlar' || !kurumId || !(kurumId in MOCK_KURUM_ROLLERI)) return bulunamadi();
+  if (parcalar[0] !== 'kurumlar' || !kurumId || !(kurumId in MOCK_KURUM_ROLLERI))
+    return bulunamadi();
   const rol = MOCK_KURUM_ROLLERI[kurumId];
   const f = durumu(kurumId);
   const { yontem, sorgu } = istek;
@@ -362,16 +379,15 @@ export function finansMock(istek: MockIstek): MockYanit {
 
   // --- Ogrenci karti (ogrenci rolu yalniz kendisi) ---
   if (kaynak === 'ogrenciler' && id && alt === 'finans' && yontem === 'GET') {
-    const o = f.ogrenciler.get(id);
+    // Mock oturumunda ogrenci kimligi uuid degildir: ogrenci rolu her zaman kendi (deneme) kartini gorur.
+    const o = personel ? f.ogrenciler.get(id) : [...f.ogrenciler.values()][1];
     if (!o) return bulunamadi();
     if (!personel) {
-      const benimId = [...f.ogrenciler.values()][1]?.id;
-      if (id !== benimId) return bulunamadi();
       return {
         durum: 200,
         govde: {
           gorunum: 'ogrenci',
-          ogrenci_id: id,
+          ogrenci_id: o.id,
           kalan_kredi: f.ogrenciKalanDersGorur ? kalanKredi(o) : null,
         },
       };
@@ -397,9 +413,12 @@ export function finansMock(istek: MockIstek): MockYanit {
   if (!personel) return izinYok();
 
   if (kaynak === 'ogrenciler' && !id && yontem === 'GET') {
-    const borclu = sorgu.has('borclu') && sorgu.get('borclu') !== 'false' && sorgu.get('borclu') !== '0';
+    const borclu =
+      sorgu.has('borclu') && sorgu.get('borclu') !== 'false' && sorgu.get('borclu') !== '0';
     const dusuk =
-      sorgu.has('dusuk_kredi') && sorgu.get('dusuk_kredi') !== 'false' && sorgu.get('dusuk_kredi') !== '0';
+      sorgu.has('dusuk_kredi') &&
+      sorgu.get('dusuk_kredi') !== 'false' &&
+      sorgu.get('dusuk_kredi') !== '0';
     const q = (sorgu.get('q') ?? '').toLocaleLowerCase('tr');
     const satirlar = kapsamdakiOgrenciler(kurumId, f)
       .map((o) => satirOlustur(kurumId, f, o))
@@ -407,7 +426,10 @@ export function finansMock(istek: MockIstek): MockYanit {
         (s) =>
           (!borclu || s.borclu === true) &&
           (!dusuk || s.dusuk_kredi === true) &&
-          (!q || String(s.gorunen_ad ?? '').toLocaleLowerCase('tr').includes(q)),
+          (!q ||
+            String(s.gorunen_ad ?? '')
+              .toLocaleLowerCase('tr')
+              .includes(q)),
       )
       .sort((a, b) => String(a.gorunen_ad).localeCompare(String(b.gorunen_ad), 'tr'));
     const { dilim, sonraki } = sayfala(satirlar, sorgu, 'ogrenci_id');
@@ -481,10 +503,19 @@ export function finansMock(istek: MockIstek): MockYanit {
     }
     if (!yonetim) return izinYok();
     if (yontem === 'POST' && !id) {
-      if (typeof g.ad !== 'string' || typeof g.kredi_adedi !== 'number' || typeof g.fiyat_kurus !== 'number') {
+      if (
+        typeof g.ad !== 'string' ||
+        typeof g.kredi_adedi !== 'number' ||
+        typeof g.fiyat_kurus !== 'number'
+      ) {
         return dogrulama();
       }
-      const p = paketYap(g.ad, g.kredi_adedi, g.fiyat_kurus, (g.gecerlilik_gun as number | null) ?? null);
+      const p = paketYap(
+        g.ad,
+        g.kredi_adedi,
+        g.fiyat_kurus,
+        (g.gecerlilik_gun as number | null) ?? null,
+      );
       f.paketler.push(p);
       return { durum: 201, govde: p };
     }
@@ -511,24 +542,40 @@ export function finansMock(istek: MockIstek): MockYanit {
       return hata(422, 'ogrenci_modeli_paket_degil', 'Öğrencinin ödeme modeli paket değil.');
     }
     if (paket.aktif === false) return hata(409, 'paket_arsivde', 'Paket arşivlenmiş.');
-    const s = satisYap(o.id, paket, paket.kredi_adedi as number, paket.kredi_adedi as number, 'aktif');
+    const s = satisYap(
+      o.id,
+      paket,
+      paket.kredi_adedi as number,
+      paket.kredi_adedi as number,
+      'aktif',
+    );
     s.baslangic_tarihi = typeof g.baslangic_tarihi === 'string' ? g.baslangic_tarihi : bugun();
     const sonuc = odemeYaz(f, o, s, nesne(g.odeme));
     if (sonuc.hata) return sonuc.hata;
     f.satislar.push(s);
-    o.krediHareketleri.push(hareket('satin_alma', paket.kredi_adedi as number, { paket_satisi_id: s.id }));
+    o.krediHareketleri.push(
+      hareket('satin_alma', paket.kredi_adedi as number, { paket_satisi_id: s.id }),
+    );
     o.bakiyeHareketleri.push(
-      bakiyeHareketi('paket_satisi', -(paket.fiyat_kurus as number), 'paket_satisi', { kaynak_id: s.id }),
+      bakiyeHareketi('paket_satisi', -(paket.fiyat_kurus as number), 'paket_satisi', {
+        kaynak_id: s.id,
+      }),
     );
     return {
       durum: 201,
-      govde: { satis: s, tahsilat: sonuc.tahsilat, kalan_kredi: kalanKredi(o), bakiye_kurus: bakiye(o) },
+      govde: {
+        satis: s,
+        tahsilat: sonuc.tahsilat,
+        kalan_kredi: kalanKredi(o),
+        bakiye_kurus: bakiye(o),
+      },
     };
   }
   if (kaynak === 'paket-satislari' && yontem === 'POST' && id && alt === 'iptal') {
     const s = f.satislar.find((x) => x.id === id);
     if (!s) return bulunamadi();
-    if (s.durum === 'iptal') return hata(409, 'paket_iptal_edilmis', 'Paket satışı zaten iptal edilmiş.');
+    if (s.durum === 'iptal')
+      return hata(409, 'paket_iptal_edilmis', 'Paket satışı zaten iptal edilmiş.');
     if (s.kalan_kredi !== s.toplam_kredi) {
       return hata(409, 'paket_kullanilmis', 'Kullanılmış paket iptal edilemez.');
     }
@@ -536,8 +583,15 @@ export function finansMock(istek: MockIstek): MockYanit {
     if (!o) return bulunamadi();
     s.durum = 'iptal';
     s.iptal_at = simdi();
-    o.krediHareketleri.push(hareket('ters_kayit', -(s.toplam_kredi as number), { paket_satisi_id: s.id, neden: String(g.neden ?? '') }));
-    o.bakiyeHareketleri.push(bakiyeHareketi('ters_kayit', s.fiyat_kurus as number, 'paket_satisi', { kaynak_id: s.id }));
+    o.krediHareketleri.push(
+      hareket('ters_kayit', -(s.toplam_kredi as number), {
+        paket_satisi_id: s.id,
+        neden: String(g.neden ?? ''),
+      }),
+    );
+    o.bakiyeHareketleri.push(
+      bakiyeHareketi('ters_kayit', s.fiyat_kurus as number, 'paket_satisi', { kaynak_id: s.id }),
+    );
     return { durum: 200, govde: s };
   }
 
@@ -594,14 +648,18 @@ export function finansMock(istek: MockIstek): MockYanit {
     if (yontem === 'POST' && id && alt === 'iptal') {
       const th = f.tahsilatlar.find((x) => x.id === id);
       if (!th) return bulunamadi();
-      if (th.durum === 'iptal') return hata(409, 'tahsilat_iptal_edilmis', 'Tahsilat zaten iptal edilmiş.');
+      if (th.durum === 'iptal')
+        return hata(409, 'tahsilat_iptal_edilmis', 'Tahsilat zaten iptal edilmiş.');
       const o = f.ogrenciler.get(th.ogrenci_id as string);
       if (!o) return bulunamadi();
       th.durum = 'iptal';
       th.iptal_at = simdi();
       th.iptal_nedeni = String(g.neden ?? '');
       o.bakiyeHareketleri.push(
-        bakiyeHareketi('ters_kayit', -(th.tutar_kurus as number), 'tahsilat', { kaynak_id: th.id, neden: th.iptal_nedeni as string }),
+        bakiyeHareketi('ters_kayit', -(th.tutar_kurus as number), 'tahsilat', {
+          kaynak_id: th.id,
+          neden: th.iptal_nedeni as string,
+        }),
       );
       return { durum: 200, govde: { ...th, tekrar: false } };
     }

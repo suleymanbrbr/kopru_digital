@@ -246,7 +246,7 @@ function ogrenciUyarilari(s: DersDurumu, yeni: Ders, haric: string[] = []): Kayi
   const uyarilar: Kayit[] = [];
   for (const d of s.dersler) {
     if (d.id === yeni.id || haric.includes(d.id) || d.durum !== 'planli') continue;
-    if (!(Date.parse(d.baslangic_at) < Date.parse(yeni.bitis_at)) ) continue;
+    if (!(Date.parse(d.baslangic_at) < Date.parse(yeni.bitis_at))) continue;
     if (!(Date.parse(d.bitis_at) > Date.parse(yeni.baslangic_at))) continue;
     const ortak = d.katilimcilar.filter((o) => yeni.katilimcilar.includes(o));
     if (ortak.length > 0 && d.ogretmen_id !== yeni.ogretmen_id) {
@@ -417,14 +417,17 @@ function etkilenenler(s: DersDurumu, d: Ders, kapsam: unknown): Ders[] {
     (x) =>
       x.seri_id === d.seri_id &&
       x.durum === 'planli' &&
-      (x.id === d.id ||
-        ((x.seri_sirasi ?? 0) > (d.seri_sirasi ?? 0) && !x.seri_istisna)),
+      (x.id === d.id || ((x.seri_sirasi ?? 0) > (d.seri_sirasi ?? 0) && !x.seri_istisna)),
   );
 }
 
 function guncelle(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit {
   if (g.surum !== d.surum) {
-    return hata(409, 'surum_cakismasi', 'Ders başka biri tarafından değiştirilmiş. Yenileyip tekrar dene.');
+    return hata(
+      409,
+      'surum_cakismasi',
+      'Ders başka biri tarafından değiştirilmiş. Yenileyip tekrar dene.',
+    );
   }
   if (g.kapsam === 'bu_ve_sonrakiler' && d.seri_id === null) {
     return hata(422, 'ders_seride_degil', 'Bu ders bir seriye bağlı değil.');
@@ -434,7 +437,8 @@ function guncelle(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit 
     for (const alan of ['baslik', 'konu_id', 'online_baglanti', 'yer'] as const) {
       if (g[alan] !== undefined) h[alan] = g[alan];
     }
-    if (g.kapsam !== 'bu_ve_sonrakiler') h.seri_istisna = h.seri_id !== null ? true : h.seri_istisna;
+    if (g.kapsam !== 'bu_ve_sonrakiler')
+      h.seri_istisna = h.seri_id !== null ? true : h.seri_istisna;
     h.surum += 1;
   }
   return {
@@ -449,7 +453,11 @@ function guncelle(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit 
 
 function tasi(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit {
   if (g.surum !== d.surum) {
-    return hata(409, 'surum_cakismasi', 'Ders başka biri tarafından değiştirilmiş. Yenileyip tekrar dene.');
+    return hata(
+      409,
+      'surum_cakismasi',
+      'Ders başka biri tarafından değiştirilmiş. Yenileyip tekrar dene.',
+    );
   }
   if (d.durum !== 'planli') return hata(409, 'ders_planli_degil', 'Yalnız planlı dersler taşınır.');
   const yeniTarih = typeof g.yeni_tarih === 'string' ? g.yeni_tarih : null;
@@ -463,12 +471,16 @@ function tasi(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit {
         'Gün değişikliği yalnızca bu dersi etkiler; seriyi taşımak için yalnız saati değiştir.',
       );
     }
-    if (d.seri_id === null) return hata(422, 'ders_seride_degil', 'Bu ders bir seriye bağlı değil.');
+    if (d.seri_id === null)
+      return hata(422, 'ders_seride_degil', 'Bu ders bir seriye bağlı değil.');
   }
   const hedefler = etkilenenler(s, d, g.kapsam);
   const cak = hedefler.flatMap((h) => {
     const sure = Date.parse(h.bitis_at) - Date.parse(h.baslangic_at);
-    const bas = yerelUtc(yeniTarih ?? yerelTarih(h.baslangic_at), yeniSaat ?? yerelSaat(h.baslangic_at));
+    const bas = yerelUtc(
+      yeniTarih ?? yerelTarih(h.baslangic_at),
+      yeniSaat ?? yerelSaat(h.baslangic_at),
+    );
     return cakisanlar(
       s,
       h.ogretmen_id,
@@ -510,10 +522,18 @@ function iptalEt(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit {
   const v = mockKurumVerisi(kurumId);
   const grup = v.gruplar.find((x) => x.id === d.grup_id);
   if (kaynak === 'ogrenci' && grup?.tur !== 'birebir') {
-    return hata(422, 'iptal_kaynagi_gecersiz', 'Öğrenci kaynaklı iptal yalnız birebir derste olur.');
+    return hata(
+      422,
+      'iptal_kaynagi_gecersiz',
+      'Öğrenci kaynaklı iptal yalnız birebir derste olur.',
+    );
   }
   if (g.surum !== undefined && g.surum !== d.surum) {
-    return hata(409, 'surum_cakismasi', 'Ders başka biri tarafından değiştirilmiş. Yenileyip tekrar dene.');
+    return hata(
+      409,
+      'surum_cakismasi',
+      'Ders başka biri tarafından değiştirilmiş. Yenileyip tekrar dene.',
+    );
   }
   if (d.durum === 'iptal') return hata(409, 'ders_planli_degil', 'Bu ders zaten iptal edilmiş.');
   const hedefler = etkilenenler(s, d, g.kapsam);
@@ -578,11 +598,16 @@ function yoklamaKaydet(kurumId: string, s: DersDurumu, d: Ders, istek: MockIstek
   const onceki = s.idempotency.get(anahtar);
   if (onceki) {
     if (onceki.govde !== ham) {
-      return hata(422, 'idempotency_anahtar_cakismasi', 'Bu anahtar başka bir istekle kullanılmış.');
+      return hata(
+        422,
+        'idempotency_anahtar_cakismasi',
+        'Bu anahtar başka bir istekle kullanılmış.',
+      );
     }
     return onceki.yanit;
   }
-  if (d.durum === 'iptal') return hata(409, 'ders_iptal_edildi', 'İptal edilmiş derse yoklama alınamaz.');
+  if (d.durum === 'iptal')
+    return hata(409, 'ders_iptal_edildi', 'İptal edilmiş derse yoklama alınamaz.');
   if (Date.parse(d.baslangic_at) > Date.now() + 5 * 60_000) {
     return hata(422, 'ders_henuz_baslamadi', 'Ders henüz başlamadı.');
   }
@@ -599,7 +624,8 @@ function yoklamaKaydet(kurumId: string, s: DersDurumu, d: Ders, istek: MockIstek
     }
     const anah = `${d.id}/${ogrenciId}`;
     const mevcut = s.yoklamalar.get(anah);
-    const isaret = typeof r.isaretlenme_at === 'string' ? r.isaretlenme_at : new Date().toISOString();
+    const isaret =
+      typeof r.isaretlenme_at === 'string' ? r.isaretlenme_at : new Date().toISOString();
     if (mevcut && Date.parse(isaret) < Date.parse(mevcut.isaretlenme_at as string)) {
       sonuclar.push({
         ogrenci_id: ogrenciId,
@@ -682,7 +708,8 @@ function sayfala(liste: Ders[], sorgu: URLSearchParams) {
 export function dersMock(istek: MockIstek): MockYanit {
   const parcalar = istek.yol.split('/');
   const kurumId = parcalar[1];
-  if (parcalar[0] !== 'kurumlar' || !kurumId || !(kurumId in MOCK_KURUM_ROLLERI)) return bulunamadi();
+  if (parcalar[0] !== 'kurumlar' || !kurumId || !(kurumId in MOCK_KURUM_ROLLERI))
+    return bulunamadi();
   const rol = rolu(kurumId);
   const s = durum(kurumId);
   const { yontem, sorgu } = istek;

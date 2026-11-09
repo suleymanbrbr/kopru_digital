@@ -55,7 +55,7 @@ function KurumDegistirici() {
 
 function Menu_({ tiklandi }: { tiklandi?: () => void }) {
   const { uyelik, rol, acikModuller } = useKurum();
-  const gruplar = gruplaginaAyir(gorunurOgeler({ rol, acikModuller }));
+  const gruplar = gruplaginaAyir(gorunurOgeler({ rol, acikModuller, kurumTur: uyelik.kurumTur }));
   return (
     <nav aria-label={t('nav.ana')} className="flex flex-col gap-5">
       {gruplar.map(({ grup, ogeler }) => (
@@ -118,7 +118,7 @@ function KullaniciAlani({ tiklandi }: { tiklandi?: () => void }) {
 export function UygulamaKabugu({ children }: { children: ReactNode }) {
   const { uyelik, rol, acikModuller } = useKurum();
   const [cekmeceAcik, setCekmeceAcik] = useState(false);
-  const { alt } = mobilBolme(gorunurOgeler({ rol, acikModuller }));
+  const { alt } = mobilBolme(gorunurOgeler({ rol, acikModuller, kurumTur: uyelik.kurumTur }));
 
   return (
     <div className="min-h-dvh lg:pl-64">

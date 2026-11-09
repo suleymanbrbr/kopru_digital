@@ -19,6 +19,7 @@ describe('navigasyon yapilandirmasi', () => {
     expect(yollar('ogretmen')).toEqual([
       'bugun',
       'takvim',
+      'yoklama',
       'ogrenciler',
       'gruplar',
       'odevler',
@@ -33,6 +34,7 @@ describe('navigasyon yapilandirmasi', () => {
   it('ogrenci menusu belirtilen sirayla gelir', () => {
     expect(yollar('ogrenci')).toEqual([
       'bugun',
+      'takvim',
       'gorevler',
       'odevlerim',
       'soru-sor',
@@ -48,6 +50,31 @@ describe('navigasyon yapilandirmasi', () => {
     expect(yollar('yonetici')).not.toContain('abonelik');
     expect(yollar('sahip')).toContain('abonelik');
     expect(yollar('ogretmen')).not.toContain('kurum');
+  });
+
+  it('bireysel kurumda (solo hoca) kurum yapisi menuleri gizlenir', () => {
+    const solo = gorunurOgeler({
+      rol: 'sahip',
+      acikModuller: tumModuller,
+      kurumTur: 'bireysel',
+    }).map((o) => o.yol);
+    expect(solo).not.toContain('kurum');
+    expect(solo).not.toContain('ogretmenler');
+    expect(solo).not.toContain('siniflar');
+    expect(solo).toEqual(expect.arrayContaining(['takvim', 'yoklama', 'finans', 'abonelik']));
+    const kurum = gorunurOgeler({ rol: 'sahip', acikModuller: tumModuller, kurumTur: 'kurum' });
+    expect(kurum.map((o) => o.yol)).toContain('ogretmenler');
+  });
+
+  it('ogrenci takvimi gorur ama yoklama ve finans menusu yoktur', () => {
+    const ogrenci = yollar('ogrenci');
+    expect(ogrenci).toContain('takvim');
+    expect(ogrenci).not.toContain('yoklama');
+    expect(ogrenci).not.toContain('finans');
+    expect(bolumDurumu('takvim', { rol: 'ogrenci', acikModuller: tumModuller }).durum).toBe('acik');
+    expect(bolumDurumu('yoklama', { rol: 'ogrenci', acikModuller: tumModuller }).durum).toBe(
+      'yetkisiz',
+    );
   });
 
   it('kapali modulun ogeleri gizlenir, cekirdek ogeler kalir', () => {
