@@ -109,10 +109,9 @@ export const odevOgrenciYollari: ServicePlugin = (app) => {
       }
       const baglam = olayBaglami(y, request.correlationId);
       return withTenant(db, kiraci(y), async (tx) => {
-        const [r] = await tx
-          .select({ satir: ogrenciOdevleri, odev: odevler })
+        const [satir] = await tx
+          .select()
           .from(ogrenciOdevleri)
-          .innerJoin(odevler, eq(odevler.id, ogrenciOdevleri.odev_id))
           .where(
             and(
               eq(ogrenciOdevleri.id, request.params.id),
@@ -120,9 +119,10 @@ export const odevOgrenciYollari: ServicePlugin = (app) => {
               eq(ogrenciOdevleri.ogrenci_id, y.uyelikId),
             ),
           )
-          .for('update', { of: ogrenciOdevleri });
-        if (!r) throw odevBulunamadi();
-        const { satir, odev } = r;
+          .for('update');
+        if (!satir) throw odevBulunamadi();
+        const [odev] = await tx.select().from(odevler).where(eq(odevler.id, satir.odev_id));
+        if (!odev) throw odevBulunamadi();
         await odevModuluAcikOlmali(tx, y.kurumId, odev);
         if (odev.durum !== 'yayinda') {
           throw new AppError(409, odevHataKodlari.odevKapali, 'Ödev teslime kapalı.');
