@@ -10,6 +10,8 @@ export class UygulamaHatasi extends Error {
     public readonly kod: string,
     mesaj: string,
     public readonly istekId?: string,
+    /** `api` hata govdesindeki `details` (ornegin `ders_cakismasi` icin `cakisanlar`). */
+    public readonly detaylar?: unknown,
   ) {
     super(mesaj);
     this.name = 'UygulamaHatasi';
@@ -47,9 +49,40 @@ const bilinenKodlar = new Set([
   'cakisma',
 ]);
 
+const operasyonKodlari = new Set([
+  'ders_cakismasi',
+  'surum_cakismasi',
+  'ogretmen_gerekli',
+  'ogretmen_gecersiz',
+  'brans_gerekli',
+  'iptal_kaynagi_gecersiz',
+  'ders_planli_degil',
+  'ders_seride_degil',
+  'tarih_degisikligi_yalniz_bu',
+  'ders_henuz_baslamadi',
+  'ders_iptal_edildi',
+  'yoklama_kilitli',
+  'ogrenci_katilimci_degil',
+  'idempotency_anahtar_cakismasi',
+  'tamamlanmis_ders_yalniz_bu',
+  'paket_kullanilmis',
+  'paket_iptal_edilmis',
+  'tahsilat_iptal_edilmis',
+  'istek_cakismasi',
+  'makbuz_no_kullanimda',
+  'tarife_cakisiyor',
+  'odeme_gecersiz',
+  'ogrenci_degil',
+  'paket_arsivde',
+  'ogrenci_modeli_paket_degil',
+]);
+
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
   if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
+  if (hata instanceof UygulamaHatasi && operasyonKodlari.has(hata.kod)) {
+    return t(`operasyon.hata.${hata.kod}` as MessageKey);
+  }
   if (hata instanceof UygulamaHatasi && bilinenKodlar.has(hata.kod)) {
     return t(`hata.${hata.kod}` as MessageKey);
   }
@@ -59,13 +92,20 @@ export function hataMesaji(hata: unknown): string {
 /** Same-origin BFF istegi. Hata govdesini `UygulamaHatasi`na cevirir. */
 export async function bffIstek<S extends z.ZodType>(
   yol: string,
-  secenekler: { yontem?: string; govde?: unknown; belirtec?: string | null; sema?: S } = {},
+  secenekler: {
+    yontem?: string;
+    govde?: unknown;
+    belirtec?: string | null;
+    sema?: S;
+    basliklar?: Record<string, string>;
+  } = {},
 ): Promise<S extends z.ZodType ? z.output<S> : undefined> {
   let yanit: Response;
   try {
     yanit = await fetch(yol, {
       method: secenekler.yontem ?? (secenekler.govde === undefined ? 'GET' : 'POST'),
       headers: {
+        ...(secenekler.basliklar ?? {}),
         ...(secenekler.govde === undefined ? {} : { 'content-type': 'application/json' }),
         ...(secenekler.belirtec ? { authorization: `Bearer ${secenekler.belirtec}` } : {}),
       },
@@ -81,8 +121,8 @@ export async function bffIstek<S extends z.ZodType>(
     const ham: unknown = await yanit.json().catch(() => null);
     const govde = hataSema.safeParse(ham);
     if (govde.success) {
-      const { code, message, requestId } = govde.data.error;
-      throw new UygulamaHatasi(yanit.status, code, message, requestId);
+      const { code, message, requestId, details } = govde.data.error;
+      throw new UygulamaHatasi(yanit.status, code, message, requestId, details);
     }
     throw new UygulamaHatasi(yanit.status, 'sunucu_hatasi', t('ortak.hataGenel'));
   }
