@@ -1,10 +1,11 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { CalendarClock, ClipboardCheck, MessageCircleQuestion, Sparkles } from 'lucide-react';
+import { ClipboardCheck, MessageCircleQuestion, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import { BolumKarti } from './bolum-karti';
+import { BugunDersleriKarti } from './bugun-dersleri';
 
 import { BosDurum } from '@/components/bos-durum';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
@@ -58,24 +59,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
         aciklama={yonetim ? t('bugun.yoneticiAciklama') : t('bugun.ogretmenAciklama')}
       />
       <div className="grid gap-4 md:grid-cols-2">
-        <BolumKarti
-          baslik={t('bugun.dersler')}
-          yukleniyor={veri.isPending}
-          hata={veri.isError}
-          tekrarDene={() => void veri.refetch()}
-        >
-          {veri.data?.dersler.length ? null : (
-            <BosDurum
-              ikon={CalendarClock}
-              baslik={t('bugun.dersBos')}
-              aciklama={t('bugun.dersBosAciklama')}
-            >
-              <Link href={`${kok}/takvim`} className={dugmeStili({ gorunum: 'ikincil' })}>
-                {t('bugun.dersBosEylem')}
-              </Link>
-            </BosDurum>
-          )}
-        </BolumKarti>
+        <BugunDersleriKarti />
         <BolumKarti
           baslik={t('bugun.sorular')}
           yukleniyor={veri.isPending}
@@ -127,6 +111,7 @@ function OgrenciBugun() {
     <>
       <BugunBasligi aciklama={t('bugun.ogrenciAciklama')} />
       <div className="grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+        <BugunDersleriKarti />
         <BolumKarti
           baslik={t('bugun.gorevler')}
           yukleniyor={veri.isPending}

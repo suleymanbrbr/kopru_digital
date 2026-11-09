@@ -152,6 +152,12 @@ function kur(kurumId: string): DersDurumu {
       );
     }
   }
+  if (sinif) {
+    // Bugune her zaman denk gelen ders ("Bugun" ekrani icin): bugun 20:00 yerel.
+    dersler.push(
+      dersYap(kurumId, sinif.id, yerelUtc(bugun, '20:00'), 45, { baslik: 'Geometri tekrarı' }),
+    );
+  }
   if (birebir) {
     // Yoklama bekleyenler: bundan 26 ve 3 saat once baslamis dersler.
     dersler.push(

@@ -27,14 +27,11 @@ export function cakisanlariOku(hata: unknown): CakisanDers[] | null {
   return sonuc.success ? sonuc.data.cakisanlar : [];
 }
 
-/** Bir haftanin dersleri; sonraki sayfalar (200'luk) otomatik cekilir. */
+/** Bir haftanin dersleri (kurum saat diliminde Pazartesi 00:00 - sonraki Pazartesi 00:00). */
 export function useHaftaDersleri({
-  kurumId,
   haftaBasi,
   saatDilimi,
-  etkin,
-  ogretmenId,
-  grupId,
+  ...ortak
 }: {
   kurumId: string;
   haftaBasi: string;
@@ -43,7 +40,25 @@ export function useHaftaDersleri({
   ogretmenId?: string;
   grupId?: string;
 }) {
-  const { baslangic, bitis } = haftaAraligi(haftaBasi, saatDilimi);
+  return useAralikDersleri({ ...ortak, ...haftaAraligi(haftaBasi, saatDilimi) });
+}
+
+/** Verilen UTC araligindaki dersler; sonraki sayfalar (200'luk) otomatik cekilir. */
+export function useAralikDersleri({
+  kurumId,
+  baslangic,
+  bitis,
+  etkin,
+  ogretmenId,
+  grupId,
+}: {
+  kurumId: string;
+  baslangic: string;
+  bitis: string;
+  etkin: boolean;
+  ogretmenId?: string;
+  grupId?: string;
+}) {
   const sorgu = useSayfaliSorgu({
     servis: 'ders',
     anahtar: [...dersAnahtari(kurumId), 'liste'],

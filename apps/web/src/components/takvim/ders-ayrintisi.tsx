@@ -194,7 +194,9 @@ function Ozet({
             {gunEtiketi(gun)}, {saatAraligi(ders.baslangic_at, ders.bitis_at, saatDilimi)}
           </span>
         </Satir>
-        <Satir etiket={t('operasyon.takvim.ayrinti.grup')}>{grup?.etiket ?? '-'}</Satir>
+        <Satir etiket={t('operasyon.takvim.ayrinti.grup')}>
+          {grup?.etiket ?? bransAdi(ders.brans_kodu)}
+        </Satir>
         {ders.baslik ? <Satir etiket={t('operasyon.takvim.form.konu')}>{ders.baslik}</Satir> : null}
         <Satir etiket={t('operasyon.takvim.ayrinti.brans')}>{bransAdi(ders.brans_kodu)}</Satir>
         {ogretmenAdlari.get(ders.ogretmen_id) ? (

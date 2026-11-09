@@ -42,7 +42,8 @@ test.describe('giris akisi', () => {
     await expect(page).toHaveURL(/\/kurum-ege\/bugun$/);
     await expect(page.getByRole('heading', { name: 'Bugünkü dersler' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Cevap bekleyen sorular' })).toBeVisible();
-    await expect(page.getByText('Bugün için planlanmış ders yok')).toBeVisible();
+    await expect(page.getByText('Geometri tekrarı')).toBeVisible();
+    await expect(page.getByText('Bugün için planlanmış ders yok')).toHaveCount(0);
   });
 
   test('sayfa yenilenince oturum cerezden geri gelir', async ({ page }) => {
@@ -88,6 +89,9 @@ test.describe('rol ve modul duyarli navigasyon', () => {
   test('ogrenci kendi menusunu ve yol arkadasini gorur', async ({ page, isMobile }) => {
     await girisYap(page, 'Atlas Etüt Merkezi');
     await expect(page.getByRole('heading', { name: 'Bugünkü görevler' })).toBeVisible();
+    // Ogrenci bugunku kendi derslerini gorur (kapsam api'dedir).
+    await expect(page.getByRole('heading', { name: 'Bugünkü dersler' })).toBeVisible();
+    await expect(page.getByText('Geometri tekrarı')).toBeVisible();
     await expect(page.getByRole('img', { name: /Kıvılcım/ })).toBeVisible();
     if (isMobile) await page.getByRole('button', { name: 'Menü' }).click();
     const menu = page.getByRole('navigation', { name: 'Ana menü' });

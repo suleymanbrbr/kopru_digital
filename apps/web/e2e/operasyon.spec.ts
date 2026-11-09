@@ -153,6 +153,10 @@ test.describe('yoklama', () => {
     const simdi = Date.now() - saatOnce * 3_600_000;
     const f = await dersFormuDoldur(page, { grup, tarih: tarih(0, simdi), saat: saat(simdi) });
     await f.getByRole('button', { name: 'Dersi ekle' }).click();
+    // Tohum derslerden biriyle (ornegin bugun 20:00) saat cakisabilir; onaylanir.
+    const yine = f.getByRole('button', { name: 'Yine de ekle' });
+    await page.waitForTimeout(600);
+    if (await yine.isVisible()) await yine.click();
     await expect(page.getByText('Ders eklendi.')).toBeVisible();
   }
 

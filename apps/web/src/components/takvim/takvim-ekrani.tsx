@@ -22,6 +22,7 @@ import { Secim } from '@/components/ui/secim';
 import { YoklamaFormu } from '@/components/yoklama/yoklama-formu';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
+import { bransAdi } from '@/lib/bransler';
 import { cn } from '@/lib/cn';
 import { finansIstek } from '@/lib/hesap-istek';
 import { useGruplar, useOgretmenler, useSaatDilimi } from '@/lib/operasyon-verisi';
@@ -382,7 +383,7 @@ const GunSatiri = memo(function GunSatiri({
                   ) : null}
                 </span>
                 <span className="truncate text-sm">
-                  {grupAdlari.get(d.grup_id)?.etiket ?? '-'}
+                  {grupAdlari.get(d.grup_id)?.etiket ?? bransAdi(d.brans_kodu)}
                   {d.baslik ? ` · ${d.baslik}` : ''}
                 </span>
                 {yonetim && ogretmenAdlari.get(d.ogretmen_id) ? (
