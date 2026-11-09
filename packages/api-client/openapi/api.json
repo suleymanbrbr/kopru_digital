@@ -13928,6 +13928,1590 @@
           "hesap"
         ]
       }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/kataloglar": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kataloglar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "en_yuksek_yayinlanmis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "katalog_kodu": {
+                            "enum": [
+                              "lgs",
+                              "tyt",
+                              "ayt",
+                              "ydt",
+                              "okul"
+                            ],
+                            "type": "string"
+                          },
+                          "kurum_surumu": {
+                            "description": "Kurum kapsamında atanmış sürüm.",
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "surumler": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "aciklama": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "ad": {
+                                  "type": "string"
+                                },
+                                "surum_no": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "yayinlandi_at": {
+                                  "format": "date-time",
+                                  "nullable": true,
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "surum_no",
+                                "ad",
+                                "aciklama",
+                                "yayinlandi_at"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "katalog_kodu",
+                          "surumler",
+                          "en_yuksek_yayinlanmis",
+                          "kurum_surumu"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kataloglar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Katalog ve sürüm listesi (yalnız yayınlanmış sürümler) ile kurumun atanmış sürümü.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Verilmezse tüm kataloglar, her biri kendi çözülmüş sürümüyle.",
+            "in": "query",
+            "name": "katalog_kodu",
+            "required": false,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Yalnız `katalog_kodu` ile. Varsayılan: kurumun atanmış sürümü, yoksa en yüksek yayınlanmış.",
+            "in": "query",
+            "name": "surum_no",
+            "required": false,
+            "schema": {
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Atama çözümü için kademe/grup bağlamı.",
+            "in": "query",
+            "name": "kapsam",
+            "required": false,
+            "schema": {
+              "enum": [
+                "kurum",
+                "kademe",
+                "grup"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kapsam_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "brans_kodu",
+            "required": false,
+            "schema": {
+              "maxLength": 50,
+              "pattern": "^[a-z_]+$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ust_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seviye",
+            "required": false,
+            "schema": {
+              "enum": [
+                "unite",
+                "konu",
+                "alt_konu"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sinif_seviyesi",
+            "required": false,
+            "schema": {
+              "maximum": 12,
+              "minimum": 5,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kaynak",
+            "required": false,
+            "schema": {
+              "enum": [
+                "global",
+                "kurum"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Ad araması (Türkçe harf duyarsız).",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "1: kullanımdan kalkan ve arşivlenen konular da gelir (rozetli).",
+            "in": "query",
+            "name": "tumu",
+            "required": false,
+            "schema": {
+              "enum": [
+                "0",
+                "1",
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Önceki sayfanın `sonraki_imlec` değeri.",
+            "in": "query",
+            "name": "imlec",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "konular": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "arsivlendi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "gecerli_surum_baslangic": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "gecerli_surum_bitis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "katalog_kodu": {
+                            "enum": [
+                              "lgs",
+                              "tyt",
+                              "ayt",
+                              "ydt",
+                              "okul"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kazanim_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kullanimdan_kalkti": {
+                            "description": "Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için.",
+                            "type": "boolean"
+                          },
+                          "kurum_id": {
+                            "description": "null: global katalog konusu (salt okunur).",
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "seviye": {
+                            "enum": [
+                              "unite",
+                              "konu",
+                              "alt_konu"
+                            ],
+                            "type": "string"
+                          },
+                          "sinif_seviyesi": {
+                            "maximum": 12,
+                            "minimum": 5,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "surum": {
+                            "description": "Kayıt sürümü (iyimser kilit).",
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "ust_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "yerine_gecen_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kurum_id",
+                          "katalog_kodu",
+                          "brans_kodu",
+                          "ust_id",
+                          "seviye",
+                          "ad",
+                          "kazanim_kodu",
+                          "sira",
+                          "sinif_seviyesi",
+                          "gecerli_surum_baslangic",
+                          "gecerli_surum_bitis",
+                          "yerine_gecen_id",
+                          "arsivlendi_at",
+                          "kullanimdan_kalkti",
+                          "surum"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sonraki_imlec": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "surumler": {
+                      "description": "Sorgunun çözdüğü katalog sürümleri.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "katalog_kodu": {
+                            "enum": [
+                              "lgs",
+                              "tyt",
+                              "ayt",
+                              "ydt",
+                              "okul"
+                            ],
+                            "type": "string"
+                          },
+                          "surum_no": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "katalog_kodu",
+                          "surum_no"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "konular",
+                    "surumler",
+                    "sonraki_imlec"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Konu listesi: global katalog (çözülen sürüme göre) ve kurum konuları. Kullanımdan kalkanlar varsayılan gizli, tumu=1 ile rozetli. Anahtar tabanlı sayfalama.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "brans_kodu": {
+                    "maxLength": 50,
+                    "pattern": "^[a-z_]+$",
+                    "type": "string"
+                  },
+                  "kazanim_kodu": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "seviye": {
+                    "enum": [
+                      "unite",
+                      "konu",
+                      "alt_konu"
+                    ],
+                    "type": "string"
+                  },
+                  "sinif_seviyesi": {
+                    "maximum": 12,
+                    "minimum": 5,
+                    "type": "integer"
+                  },
+                  "sira": {
+                    "default": 0,
+                    "maximum": 100000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "ust_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "brans_kodu",
+                  "seviye",
+                  "ad"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "arsivlendi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "brans_kodu": {
+                      "type": "string"
+                    },
+                    "gecerli_surum_baslangic": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "gecerli_surum_bitis": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kazanim_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kullanimdan_kalkti": {
+                      "description": "Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için.",
+                      "type": "boolean"
+                    },
+                    "kurum_id": {
+                      "description": "null: global katalog konusu (salt okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "seviye": {
+                      "enum": [
+                        "unite",
+                        "konu",
+                        "alt_konu"
+                      ],
+                      "type": "string"
+                    },
+                    "sinif_seviyesi": {
+                      "maximum": 12,
+                      "minimum": 5,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "sira": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "description": "Kayıt sürümü (iyimser kilit).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ust_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yerine_gecen_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "katalog_kodu",
+                    "brans_kodu",
+                    "ust_id",
+                    "seviye",
+                    "ad",
+                    "kazanim_kodu",
+                    "sira",
+                    "sinif_seviyesi",
+                    "gecerli_surum_baslangic",
+                    "gecerli_surum_bitis",
+                    "yerine_gecen_id",
+                    "arsivlendi_at",
+                    "kullanimdan_kalkti",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kuruma özel konu ekle (ünite > konu > alt konu).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "arsivlendi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "brans_kodu": {
+                      "type": "string"
+                    },
+                    "gecerli_surum_baslangic": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "gecerli_surum_bitis": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kazanim_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kullanimdan_kalkti": {
+                      "description": "Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için.",
+                      "type": "boolean"
+                    },
+                    "kurum_id": {
+                      "description": "null: global katalog konusu (salt okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "seviye": {
+                      "enum": [
+                        "unite",
+                        "konu",
+                        "alt_konu"
+                      ],
+                      "type": "string"
+                    },
+                    "sinif_seviyesi": {
+                      "maximum": 12,
+                      "minimum": 5,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "sira": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "description": "Kayıt sürümü (iyimser kilit).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ust_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "ust_zinciri": {
+                      "description": "Kökten yakın üste doğru.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "seviye": {
+                            "enum": [
+                              "unite",
+                              "konu",
+                              "alt_konu"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ad",
+                          "seviye"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "yerine_gecen_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "katalog_kodu",
+                    "brans_kodu",
+                    "ust_id",
+                    "seviye",
+                    "ad",
+                    "kazanim_kodu",
+                    "sira",
+                    "sinif_seviyesi",
+                    "gecerli_surum_baslangic",
+                    "gecerli_surum_bitis",
+                    "yerine_gecen_id",
+                    "arsivlendi_at",
+                    "kullanimdan_kalkti",
+                    "surum",
+                    "ust_zinciri"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Tekil konu ve üst zinciri. Kullanımdan kalkma, kurumun çözülmüş sürümüne göre işaretlenir.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kazanim_kodu": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "seviye": {
+                    "enum": [
+                      "unite",
+                      "konu",
+                      "alt_konu"
+                    ],
+                    "type": "string"
+                  },
+                  "sinif_seviyesi": {
+                    "maximum": 12,
+                    "minimum": 5,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "sira": {
+                    "maximum": 100000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "ust_id": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "arsivlendi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "brans_kodu": {
+                      "type": "string"
+                    },
+                    "gecerli_surum_baslangic": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "gecerli_surum_bitis": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kazanim_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kullanimdan_kalkti": {
+                      "description": "Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için.",
+                      "type": "boolean"
+                    },
+                    "kurum_id": {
+                      "description": "null: global katalog konusu (salt okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "seviye": {
+                      "enum": [
+                        "unite",
+                        "konu",
+                        "alt_konu"
+                      ],
+                      "type": "string"
+                    },
+                    "sinif_seviyesi": {
+                      "maximum": 12,
+                      "minimum": 5,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "sira": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "description": "Kayıt sürümü (iyimser kilit).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ust_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yerine_gecen_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "katalog_kodu",
+                    "brans_kodu",
+                    "ust_id",
+                    "seviye",
+                    "ad",
+                    "kazanim_kodu",
+                    "sira",
+                    "sinif_seviyesi",
+                    "gecerli_surum_baslangic",
+                    "gecerli_surum_bitis",
+                    "yerine_gecen_id",
+                    "arsivlendi_at",
+                    "kullanimdan_kalkti",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum konusunu güncelle. Global katalog konusu için 403 global_konu_yazilamaz.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular/{id}/arsivden-cikar": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "arsivlendi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "brans_kodu": {
+                      "type": "string"
+                    },
+                    "gecerli_surum_baslangic": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "gecerli_surum_bitis": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kazanim_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kullanimdan_kalkti": {
+                      "description": "Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için.",
+                      "type": "boolean"
+                    },
+                    "kurum_id": {
+                      "description": "null: global katalog konusu (salt okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "seviye": {
+                      "enum": [
+                        "unite",
+                        "konu",
+                        "alt_konu"
+                      ],
+                      "type": "string"
+                    },
+                    "sinif_seviyesi": {
+                      "maximum": 12,
+                      "minimum": 5,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "sira": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "description": "Kayıt sürümü (iyimser kilit).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ust_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yerine_gecen_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "katalog_kodu",
+                    "brans_kodu",
+                    "ust_id",
+                    "seviye",
+                    "ad",
+                    "kazanim_kodu",
+                    "sira",
+                    "sinif_seviyesi",
+                    "gecerli_surum_baslangic",
+                    "gecerli_surum_bitis",
+                    "yerine_gecen_id",
+                    "arsivlendi_at",
+                    "kullanimdan_kalkti",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Arşivlenmiş kurum konusunu geri getir (idempotent).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular/{id}/arsivle": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "arsivlendi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "brans_kodu": {
+                      "type": "string"
+                    },
+                    "gecerli_surum_baslangic": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "gecerli_surum_bitis": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kazanim_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kullanimdan_kalkti": {
+                      "description": "Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için.",
+                      "type": "boolean"
+                    },
+                    "kurum_id": {
+                      "description": "null: global katalog konusu (salt okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "seviye": {
+                      "enum": [
+                        "unite",
+                        "konu",
+                        "alt_konu"
+                      ],
+                      "type": "string"
+                    },
+                    "sinif_seviyesi": {
+                      "maximum": 12,
+                      "minimum": 5,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "sira": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "description": "Kayıt sürümü (iyimser kilit).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ust_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yerine_gecen_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "katalog_kodu",
+                    "brans_kodu",
+                    "ust_id",
+                    "seviye",
+                    "ad",
+                    "kazanim_kodu",
+                    "sira",
+                    "sinif_seviyesi",
+                    "gecerli_surum_baslangic",
+                    "gecerli_surum_bitis",
+                    "yerine_gecen_id",
+                    "arsivlendi_at",
+                    "kullanimdan_kalkti",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum konusunu arşivle (silinmez; idempotent).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/mufredat-atamalari": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "atamalar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kapsam": {
+                            "enum": [
+                              "kurum",
+                              "kademe",
+                              "grup"
+                            ],
+                            "type": "string"
+                          },
+                          "kapsam_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "katalog_kodu": {
+                            "enum": [
+                              "lgs",
+                              "tyt",
+                              "ayt",
+                              "ydt",
+                              "okul"
+                            ],
+                            "type": "string"
+                          },
+                          "surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "surum_no": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "updated_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kapsam",
+                          "kapsam_id",
+                          "katalog_kodu",
+                          "surum_no",
+                          "surum",
+                          "updated_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "atamalar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum, kademe ve grup için atanmış katalog sürümleri.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "kapsam": {
+                    "enum": [
+                      "kurum",
+                      "kademe",
+                      "grup"
+                    ],
+                    "type": "string"
+                  },
+                  "kapsam_id": {
+                    "description": "`kurum` için kurum kimliği; `kademe`/`grup` için kendi kimliği.",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "katalog_kodu": {
+                    "enum": [
+                      "lgs",
+                      "tyt",
+                      "ayt",
+                      "ydt",
+                      "okul"
+                    ],
+                    "type": "string"
+                  },
+                  "surum_no": {
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kapsam",
+                  "kapsam_id",
+                  "katalog_kodu",
+                  "surum_no"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kapsam": {
+                      "enum": [
+                        "kurum",
+                        "kademe",
+                        "grup"
+                      ],
+                      "type": "string"
+                    },
+                    "kapsam_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "surum_no": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "updated_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kapsam",
+                    "kapsam_id",
+                    "katalog_kodu",
+                    "surum_no",
+                    "surum",
+                    "updated_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kapsam (kurum/kademe/grup) ve katalog için sürüm ata (upsert). Yalnız yayınlanmış sürüm atanır.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
     }
   }
 }
