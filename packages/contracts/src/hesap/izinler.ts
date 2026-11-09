@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 3;
+export const IZIN_SOZLUGU_SURUMU = 4;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -34,6 +34,8 @@ export const IZINLER = {
   'davet.yaz': { modul: null, aciklama: 'Davet oluşturma' },
   'modul.ayar.oku': { modul: null, aciklama: 'Modül ayarlarını görme' },
   'modul.ayar.yaz': { modul: null, aciklama: 'Modülleri açıp kapatma' },
+  'mufredat.oku': { modul: null, aciklama: 'Müfredat kütüphanesini görme' },
+  'mufredat.konu.yaz': { modul: null, aciklama: 'Kuruma özel müfredat konusu ekleme ve düzenleme' },
   'takvim.oku': { modul: 'takvim', aciklama: 'Ders takvimini görme' },
   'takvim.yaz': { modul: 'takvim', aciklama: 'Ders planlama ve düzenleme' },
   'yoklama.oku': { modul: 'yoklama', aciklama: 'Yoklamayı görme' },
@@ -87,6 +89,8 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     // Ogretmen yalniz atandigi gruba ogrenci davet eder (kapsam sunucuda zorlanir).
     'davet.yaz': 'grup',
     'modul.ayar.oku': 'kurum',
+    'mufredat.oku': 'kurum',
+    'mufredat.konu.yaz': 'grup',
     'takvim.oku': 'grup',
     'takvim.yaz': 'grup',
     'yoklama.oku': 'grup',
@@ -113,6 +117,7 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'kademe.oku': 'kurum',
     'grup.oku': 'kendi',
     'modul.ayar.oku': 'kurum',
+    'mufredat.oku': 'kurum',
     'takvim.oku': 'kendi',
     'yoklama.oku': 'kendi',
     'geri_bildirim.ver': 'kendi',
@@ -132,6 +137,7 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
   veli: {
     'kurum.oku': 'kurum',
     'uyelik.oku': 'kendi',
+    'mufredat.oku': 'kurum',
   },
 };
 
