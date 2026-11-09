@@ -1,5 +1,6 @@
 import { Pressable, View } from 'react-native';
 
+import { useTema } from '../tema/TemaSaglayici';
 import { Ikon } from './Ikon';
 import { Metin } from './Metin';
 
@@ -30,6 +31,7 @@ export function Secici<T extends string>({
   onDegis,
   dikey = false,
 }: Props<T>) {
+  const { renkler } = useTema();
   return (
     <View className="gap-2" accessibilityRole="radiogroup">
       {baslik ? <Metin varyant="etiket">{baslik}</Metin> : null}
@@ -49,7 +51,7 @@ export function Secici<T extends string>({
                 secili ? 'border-birincil bg-birincil' : 'border-kenar bg-yuzeyIkincil'
               } ${dikey ? 'w-full' : ''}`}
             >
-              {secili ? <Ikon ad="checkmark" boyut={18} /> : null}
+              {secili ? <Ikon ad="checkmark" boyut={18} renk={renkler.birincilUzeri} /> : null}
               <Metin
                 varyant="etiket"
                 className={`flex-shrink ${secili ? 'text-birincilUzeri' : 'text-metin'}`}
