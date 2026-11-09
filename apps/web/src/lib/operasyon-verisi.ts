@@ -18,7 +18,11 @@ import { trSirala } from '@/lib/sirala';
 
 const kurumBilgisiSema = z.object({
   saat_dilimi: z.string().default(VARSAYILAN_SAAT_DILIMI),
-  ayarlar: z.object({ yoklama_kilit_gun: z.number().optional() }).partial().passthrough().default({}),
+  ayarlar: z
+    .object({ yoklama_kilit_gun: z.number().optional() })
+    .partial()
+    .passthrough()
+    .default({}),
 });
 
 /** Kurumun saat dilimi; ders saatleri tarayicinin degil kurumun saat diliminde gosterilir. */
@@ -70,7 +74,8 @@ export function useGruplar(kurumId: string, etkin = true) {
       return {
         id: g.id,
         tur: g.tur,
-        etiket: g.tur === 'birebir' ? t('operasyon.takvim.birebirEtiket', { ad: ad ?? g.ad }) : g.ad,
+        etiket:
+          g.tur === 'birebir' ? t('operasyon.takvim.birebirEtiket', { ad: ad ?? g.ad }) : g.ad,
       };
     });
     return trSirala(liste, (g) => g.etiket);

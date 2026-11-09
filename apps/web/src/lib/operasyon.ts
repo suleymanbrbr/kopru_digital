@@ -44,7 +44,9 @@ export interface DersFormu {
   yer: string;
 }
 
-export type DersFormHatalari = Partial<Record<'grup' | 'tarih' | 'saat' | 'sure' | 'bitis' | 'online', string>>;
+export type DersFormHatalari = Partial<
+  Record<'grup' | 'tarih' | 'saat' | 'sure' | 'bitis' | 'online', string>
+>;
 
 const SAAT = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -98,7 +100,9 @@ export interface YoklamaSatiri {
 export function gecDakikaHatasi(g: YoklamaGirdisi): string | null {
   if (g.durum !== 'gec') return null;
   const dk = Number(g.gecDakika);
-  return Number.isInteger(dk) && dk >= 1 && dk <= 240 ? null : t('operasyon.yoklama.hata.gecDakika');
+  return Number.isInteger(dk) && dk >= 1 && dk <= 240
+    ? null
+    : t('operasyon.yoklama.hata.gecDakika');
 }
 
 /** Form durumundan `PUT .../yoklamalar` satirlarini uretir. Not yoksa gorunurluk "bana ozel"e iner. */

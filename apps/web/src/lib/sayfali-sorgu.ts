@@ -4,7 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import type { z } from 'zod';
 
 import { UygulamaHatasi } from '@/lib/api';
-import { hesapIstek, sorguDizgesi } from '@/lib/hesap-istek';
+import { servisIstek, sorguDizgesi, type Servis } from '@/lib/hesap-istek';
 
 /** 4xx hatalari (yetki, bulunamadi) tekrar denemekle duzelmez; yalniz ag/sunucu hatalarinda bir kez daha dene. */
 export function yenidenDene(sayi: number, hata: unknown): boolean {
@@ -24,12 +24,17 @@ export function useSayfaliSorgu<S extends z.ZodType<{ sonraki_imlec: string | nu
   sema,
   sorgu = {},
   etkin = true,
+  servis = 'hesap',
+  sayfaBoyutu = SAYFA_BOYUTU,
 }: {
   anahtar: readonly unknown[];
   yol: string;
   sema: S;
   sorgu?: Record<string, string | number | undefined>;
   etkin?: boolean;
+  /** Hangi BFF gecidi (`/api/<servis>`); varsayilan `hesap`. */
+  servis?: Servis;
+  sayfaBoyutu?: number;
 }) {
   return useInfiniteQuery({
     queryKey: [...anahtar, sorgu],
@@ -37,9 +42,13 @@ export function useSayfaliSorgu<S extends z.ZodType<{ sonraki_imlec: string | nu
     retry: yenidenDene,
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
-      hesapIstek(`${yol}${sorguDizgesi({ ...sorgu, limit: SAYFA_BOYUTU, imlec: pageParam })}`, {
-        sema,
-      }),
+      servisIstek(
+        servis,
+        `${yol}${sorguDizgesi({ ...sorgu, limit: sayfaBoyutu, imlec: pageParam })}`,
+        {
+          sema,
+        },
+      ),
     getNextPageParam: (son) => son.sonraki_imlec ?? undefined,
   });
 }

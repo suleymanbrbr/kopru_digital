@@ -109,7 +109,11 @@ export function kisaGunEtiketi(tarih: string): string {
 }
 
 export function haftaEtiketi(haftaBasiTarihi: string): string {
-  const bicim = new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'long' });
+  const bicim = new Intl.DateTimeFormat('tr-TR', {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'long',
+  });
   const bas = new Date(`${haftaBasiTarihi}T00:00:00Z`);
   const son = new Date(`${tarihEkle(haftaBasiTarihi, 6)}T00:00:00Z`);
   return `${bicim.format(bas)} - ${bicim.format(son)}`;

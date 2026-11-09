@@ -49,7 +49,10 @@ export function hesapIstek<S extends z.ZodType>(yol: string, secenekler: IstekSe
 export function dersIstek<S extends z.ZodType>(yol: string, secenekler: IstekSecenekleri<S> = {}) {
   return servisIstek('ders', yol, secenekler);
 }
-export function finansIstek<S extends z.ZodType>(yol: string, secenekler: IstekSecenekleri<S> = {}) {
+export function finansIstek<S extends z.ZodType>(
+  yol: string,
+  secenekler: IstekSecenekleri<S> = {},
+) {
   return servisIstek('finans', yol, secenekler);
 }
 
