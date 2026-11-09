@@ -69,7 +69,7 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
-| `ogrenme.odev.yayinlandi.v1` | K | Fan-out tamamlandıktan sonra (parça başına bir olay). | `odev_id`, `baslik`, `brans_kodu`, `son_teslim_at`, `veren_id`, `hedef_turu`, `hedef_id`, `ogrenci_idleri[]`, `parca_no`, `parca_sayisi` | `bildirim` |
+| `ogrenme.odev.yayinlandi.v1` | K | Fan-out tamamlandıktan sonra (parça başına bir olay); `atama-esitle` ile sonradan açılan satırlar için de (yalnız yeni öğrenciler). Yeni satır açılmadıysa olay yok. **`baslik` serbest metin olduğundan (kişisel veri riski) yükte yoktur**; bildirim `brans_kodu` ve `odev_id` kullanır. | `odev_id`, `brans_kodu`, `son_teslim_at`, `veren_id`, `hedef_turu`, `hedef_id`, `ogrenci_idleri[]` (≤ 200), `parca_no`, `parca_sayisi` | `bildirim` |
 | `ogrenme.odev.teslim_edildi.v1` | K | Öğrenci teslim edince (yeniden teslimde tekrar). Özne: `ogrenci_odevi`. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `veren_id`, `brans_kodu`, `yapilan_soru_sayisi`, `dosya_sayisi`, `gec_teslim`, `yeniden_teslim` (bool) | `motivasyon`, `bildirim` |
 | `ogrenme.odev.incelendi.v1` | K | Öğretmen inceleyince. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `inceleyen_id`, `brans_kodu`, `inceleme_sonucu` (`tamam`,`eksik`,`tekrar`) | `motivasyon`, `bildirim` |
 | `ogrenme.plan_gorevi.guncellendi.v1` | K | Görevin `gerceklesen_miktar`ı veya durumu değişince. | `gorev_id`, `plan_id`, `ogrenci_id`, `hafta_baslangic`, `gun`, `brans_kodu`, `hedef_turu`, `hedef_miktar`, `gerceklesen_miktar`, `onceki_gerceklesen_miktar`, `durum`, `onceki_durum` | `motivasyon` |

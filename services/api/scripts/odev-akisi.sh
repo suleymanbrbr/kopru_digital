@@ -95,7 +95,7 @@ sart "baska kullanicinin listesi bos (sahip kendi sablonunu gorur)" "$(j "$O/ode
 sart "ogrenci sablon goremez (403)" "$(durum "$O/odev-sablonlari" -H "authorization: Bearer $O1")" 403
 
 adim "3) Odev taslagi (sablondan alanlarla) ve guncelleme"
-SON=$(python3 -c 'import datetime; print((datetime.datetime.utcnow()+datetime.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ"))')
+SON=$(python3 -c 'import datetime as d; print((d.datetime.now(d.timezone.utc)+d.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ"))')
 GOVDE=$(jq -nc --arg g "$GRUP" --arg s "$SON" --argjson sb "$SABLON" '{baslik:$sb.baslik,brans_kodu:$sb.brans_kodu,tur:$sb.tur,kaynak:$sb.kaynak,hedef_soru_sayisi:$sb.hedef_soru_sayisi,hedef_turu:"grup",hedef_id:$g,son_teslim_at:$s}')
 ODEV=$(j -X POST "$O/odevler" -H "authorization: Bearer $HOCA" -d "$GOVDE")
 ODEV_ID=$(echo "$ODEV" | jq -r '.id')

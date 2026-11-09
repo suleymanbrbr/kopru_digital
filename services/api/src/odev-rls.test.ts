@@ -27,26 +27,21 @@ describe.skipIf(dbYok())('ogrenme odev tablolari: RLS izolasyonu ve kisitlar', (
 
   const ctxA = () => ({ kurumId: kurumA, kullaniciId: kullaniciA });
 
-  async function odevEkle(
-    kurum: string,
-    veren: string,
-    ek: Record<string, string | number | boolean | null> = {},
-  ) {
+  interface OdevEk {
+    hedef_id?: string;
+    durum?: string;
+    tur?: string;
+    kaynak?: string;
+    hedef_soru_sayisi?: number;
+  }
+
+  async function odevEkle(kurum: string, veren: string, ek: OdevEk = {}) {
     const id = uuidv7();
-    const alanlar = {
-      baslik: 'Ödev',
-      brans_kodu: 'matematik',
-      hedef_turu: 'kurum',
-      hedef_id: kurum,
-      durum: 'taslak',
-      ...ek,
-    };
+    const durum = ek.durum ?? 'taslak';
     await sistem`
       insert into ogrenme.odevler (id, kurum_id, veren_id, baslik, brans_kodu, hedef_turu, hedef_id, durum, yayin_at, tur, kaynak, hedef_soru_sayisi)
-      values (${id}, ${kurum}, ${veren}, ${String(alanlar.baslik)}, ${String(alanlar.brans_kodu)}, ${String(alanlar.hedef_turu)},
-              ${String(alanlar.hedef_id)}, ${String(alanlar.durum)}, ${alanlar.durum === 'taslak' ? null : new Date()},
-              ${String(alanlar.tur ?? 'soru')}, ${(alanlar.kaynak as string | null | undefined) ?? null},
-              ${(alanlar.hedef_soru_sayisi as number | null | undefined) ?? null})`;
+      values (${id}, ${kurum}, ${veren}, 'Ödev', 'matematik', 'kurum', ${ek.hedef_id ?? kurum}, ${durum},
+              ${durum === 'taslak' ? null : new Date()}, ${ek.tur ?? 'soru'}, ${ek.kaynak ?? null}, ${ek.hedef_soru_sayisi ?? null})`;
     return id;
   }
 
