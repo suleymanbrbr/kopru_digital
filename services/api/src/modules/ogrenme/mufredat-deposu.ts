@@ -74,7 +74,9 @@ export async function surumCoz(
   const [en] = await tx
     .select({ surum_no: mufredatSurumleri.surum_no })
     .from(mufredatSurumleri)
-    .where(and(eq(mufredatSurumleri.katalog_kodu, katalog), isNotNull(mufredatSurumleri.yayinlandi_at)))
+    .where(
+      and(eq(mufredatSurumleri.katalog_kodu, katalog), isNotNull(mufredatSurumleri.yayinlandi_at)),
+    )
     .orderBy(desc(mufredatSurumleri.surum_no))
     .limit(1);
   return en?.surum_no ?? null;
@@ -130,8 +132,7 @@ export async function ustDogrula(
   ustId: string | null | undefined,
   kendiId?: string,
 ): Promise<void> {
-  const gecersiz = (mesaj: string) =>
-    new AppError(400, mufredatHataKodlari.konuUstGecersiz, mesaj);
+  const gecersiz = (mesaj: string) => new AppError(400, mufredatHataKodlari.konuUstGecersiz, mesaj);
   const beklenen = USTUN_SEVIYESI[seviye];
   if (!ustId) {
     if (seviye === 'alt_konu') throw gecersiz('Alt konunun üst konusu olmalı.');

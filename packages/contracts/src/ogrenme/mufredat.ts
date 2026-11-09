@@ -26,7 +26,10 @@ export const MUFREDAT_KAPSAMLARI = ['kurum', 'kademe', 'grup'] as const;
 export const MufredatKapsamSema = z.enum(MUFREDAT_KAPSAMLARI);
 
 const sinifSeviyesi = z.number().int().min(5).max(12);
-const bransKodu = z.string().regex(/^[a-z_]+$/).max(50);
+const bransKodu = z
+  .string()
+  .regex(/^[a-z_]+$/)
+  .max(50);
 const bayrak = z
   .enum(['0', '1', 'true', 'false'])
   .transform((v) => v === '1' || v === 'true')
@@ -63,7 +66,9 @@ export const KonuListeSorguSema = z.object({
     .int()
     .positive()
     .optional()
-    .describe('Yalnız `katalog_kodu` ile. Varsayılan: kurumun atanmış sürümü, yoksa en yüksek yayınlanmış.'),
+    .describe(
+      'Yalnız `katalog_kodu` ile. Varsayılan: kurumun atanmış sürümü, yoksa en yüksek yayınlanmış.',
+    ),
   kapsam: MufredatKapsamSema.optional().describe('Atama çözümü için kademe/grup bağlamı.'),
   kapsam_id: z.uuid().optional(),
   brans_kodu: bransKodu.optional(),

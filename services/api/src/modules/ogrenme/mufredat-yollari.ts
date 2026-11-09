@@ -80,7 +80,8 @@ export const mufredatYollari: ServicePlugin = (app) => {
       ...oku,
       schema: {
         tags: ['ogrenme'],
-        summary: 'Katalog ve sürüm listesi (yalnız yayınlanmış sürümler) ile kurumun atanmış sürümü.',
+        summary:
+          'Katalog ve sürüm listesi (yalnız yayınlanmış sürümler) ile kurumun atanmış sürümü.',
         params: kurumParam,
         response: { 200: KatalogListeYanitSema },
       },
@@ -137,9 +138,12 @@ export const mufredatYollari: ServicePlugin = (app) => {
     async (request) => {
       const y = yetkiAl(request);
       const s = request.query;
-      const kapsam = s.kapsam && s.kapsam_id ? { kapsam: s.kapsam, kapsam_id: s.kapsam_id } : undefined;
+      const kapsam =
+        s.kapsam && s.kapsam_id ? { kapsam: s.kapsam, kapsam_id: s.kapsam_id } : undefined;
       return withTenant(db, kiraci(y), async (tx) => {
-        const katalogler: KatalogKodu[] = s.katalog_kodu ? [s.katalog_kodu] : await yayinliKataloglar(tx);
+        const katalogler: KatalogKodu[] = s.katalog_kodu
+          ? [s.katalog_kodu]
+          : await yayinliKataloglar(tx);
         const surumler: { katalog_kodu: KatalogKodu; surum_no: number }[] = [];
         for (const kod of katalogler) {
           const no =
@@ -150,17 +154,21 @@ export const mufredatYollari: ServicePlugin = (app) => {
         }
 
         const tumu = s.tumu === true;
-        const globalKosul: SQL = or(
-          ...surumler.map((v) =>
-            and(
-              eq(konular.katalog_kodu, v.katalog_kodu),
-              sql`${konular.gecerli_surum_baslangic} <= ${v.surum_no}`,
-              tumu
-                ? undefined
-                : or(isNull(konular.gecerli_surum_bitis), sql`${konular.gecerli_surum_bitis} > ${v.surum_no}`),
+        const globalKosul: SQL =
+          or(
+            ...surumler.map((v) =>
+              and(
+                eq(konular.katalog_kodu, v.katalog_kodu),
+                sql`${konular.gecerli_surum_baslangic} <= ${v.surum_no}`,
+                tumu
+                  ? undefined
+                  : or(
+                      isNull(konular.gecerli_surum_bitis),
+                      sql`${konular.gecerli_surum_bitis} > ${v.surum_no}`,
+                    ),
+              ),
             ),
-          ),
-        ) ?? sql`false`;
+          ) ?? sql`false`;
         const kurumKosul = and(
           eq(konular.kurum_id, y.kurumId),
           tumu ? undefined : isNull(konular.arsivlendi_at),
@@ -183,10 +191,7 @@ export const mufredatYollari: ServicePlugin = (app) => {
         if (s.imlec) {
           const c = imlecCoz(s.imlec);
           kosullar.push(
-            or(
-              gt(konular.sira, c.sira),
-              and(eq(konular.sira, c.sira), gt(konular.id, c.id)),
-            ),
+            or(gt(konular.sira, c.sira), and(eq(konular.sira, c.sira), gt(konular.id, c.id))),
           );
         }
         const satirlar = await tx
@@ -200,7 +205,10 @@ export const mufredatYollari: ServicePlugin = (app) => {
         const surumHaritasi = new Map(surumler.map((v) => [v.katalog_kodu, v.surum_no]));
         return {
           konular: sayfa.map((k) =>
-            konuYaniti(k, k.katalog_kodu ? (surumHaritasi.get(k.katalog_kodu as KatalogKodu) ?? null) : null),
+            konuYaniti(
+              k,
+              k.katalog_kodu ? (surumHaritasi.get(k.katalog_kodu as KatalogKodu) ?? null) : null,
+            ),
           ),
           surumler,
           sonraki_imlec: satirlar.length > s.limit && son ? imlecYaz(son) : null,
@@ -215,7 +223,8 @@ export const mufredatYollari: ServicePlugin = (app) => {
       ...oku,
       schema: {
         tags: ['ogrenme'],
-        summary: 'Tekil konu ve üst zinciri. Kullanımdan kalkma, kurumun çözülmüş sürümüne göre işaretlenir.',
+        summary:
+          'Tekil konu ve üst zinciri. Kullanımdan kalkma, kurumun çözülmüş sürümüne göre işaretlenir.',
         params: KonuParamSema,
         response: { 200: KonuDetaySema },
       },
@@ -399,7 +408,11 @@ export const mufredatYollari: ServicePlugin = (app) => {
           .select()
           .from(mufredatAtamalari)
           .where(eq(mufredatAtamalari.kurum_id, y.kurumId))
-          .orderBy(asc(mufredatAtamalari.kapsam), asc(mufredatAtamalari.katalog_kodu), asc(mufredatAtamalari.id));
+          .orderBy(
+            asc(mufredatAtamalari.kapsam),
+            asc(mufredatAtamalari.katalog_kodu),
+            asc(mufredatAtamalari.id),
+          );
         return { atamalar: satirlar.map(atamaYaniti) };
       });
     },
@@ -444,7 +457,11 @@ export const mufredatYollari: ServicePlugin = (app) => {
             ),
           );
         if (!surum)
-          throw new AppError(404, mufredatHataKodlari.surumBulunamadi, 'Katalog sürümü bulunamadı.');
+          throw new AppError(
+            404,
+            mufredatHataKodlari.surumBulunamadi,
+            'Katalog sürümü bulunamadı.',
+          );
         if (!surum.yayinlandi_at)
           throw new AppError(
             409,
@@ -491,7 +508,12 @@ export const mufredatYollari: ServicePlugin = (app) => {
           'mufredat.ata',
           a.id,
           once ? { surum_no: once.surum_no } : null,
-          { kapsam: a.kapsam, kapsam_id: a.kapsam_id, katalog_kodu: a.katalog_kodu, surum_no: a.surum_no },
+          {
+            kapsam: a.kapsam,
+            kapsam_id: a.kapsam_id,
+            katalog_kodu: a.katalog_kodu,
+            surum_no: a.surum_no,
+          },
           'mufredat_atamasi',
         );
         return atamaYaniti(a);

@@ -1,5 +1,5 @@
-import { uuidv7 } from 'uuidv7';
 import postgres from 'postgres';
+import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { dersYardimcilari } from './test/ders-yardimcilar.js';
