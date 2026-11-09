@@ -5915,6 +5915,601 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/kataloglar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Katalog ve sürüm listesi (yalnız yayınlanmış sürümler) ile kurumun atanmış sürümü. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kataloglar: {
+                                en_yuksek_yayinlanmis: number | null;
+                                /** @enum {string} */
+                                katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                                /** @description Kurum kapsamında atanmış sürüm. */
+                                kurum_surumu: number | null;
+                                surumler: {
+                                    aciklama: string | null;
+                                    ad: string;
+                                    surum_no: number;
+                                    /** Format: date-time */
+                                    yayinlandi_at: string | null;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Konu listesi: global katalog (çözülen sürüme göre) ve kurum konuları. Kullanımdan kalkanlar varsayılan gizli, tumu=1 ile rozetli. Anahtar tabanlı sayfalama. */
+        get: {
+            parameters: {
+                query?: {
+                    brans_kodu?: string;
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    /** @description Atama çözümü için kademe/grup bağlamı. */
+                    kapsam?: "kurum" | "kademe" | "grup";
+                    kapsam_id?: string;
+                    /** @description Verilmezse tüm kataloglar, her biri kendi çözülmüş sürümüyle. */
+                    katalog_kodu?: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                    kaynak?: "global" | "kurum";
+                    limit?: number;
+                    /** @description Ad araması (Türkçe harf duyarsız). */
+                    q?: string;
+                    seviye?: "unite" | "konu" | "alt_konu";
+                    sinif_seviyesi?: number;
+                    /** @description Yalnız `katalog_kodu` ile. Varsayılan: kurumun atanmış sürümü, yoksa en yüksek yayınlanmış. */
+                    surum_no?: number;
+                    /** @description 1: kullanımdan kalkan ve arşivlenen konular da gelir (rozetli). */
+                    tumu?: "0" | "1" | "true" | "false";
+                    ust_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            konular: {
+                                ad: string;
+                                /** Format: date-time */
+                                arsivlendi_at: string | null;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number | null;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string|null} */
+                                katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul" | null;
+                                kazanim_kodu: string | null;
+                                /** @description Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için. */
+                                kullanimdan_kalkti: boolean;
+                                /**
+                                 * Format: uuid
+                                 * @description null: global katalog konusu (salt okunur).
+                                 */
+                                kurum_id: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** @description Kayıt sürümü (iyimser kilit). */
+                                surum: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                            /** @description Sorgunun çözdüğü katalog sürümleri. */
+                            surumler: {
+                                /** @enum {string} */
+                                katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                                surum_no: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Kuruma özel konu ekle (ünite > konu > alt konu). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        brans_kodu: string;
+                        kazanim_kodu?: string;
+                        /** @enum {string} */
+                        seviye: "unite" | "konu" | "alt_konu";
+                        sinif_seviyesi?: number;
+                        /** @default 0 */
+                        sira?: number;
+                        /** Format: uuid */
+                        ust_id?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            gecerli_surum_baslangic: number | null;
+                            gecerli_surum_bitis: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string|null} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul" | null;
+                            kazanim_kodu: string | null;
+                            /** @description Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için. */
+                            kullanimdan_kalkti: boolean;
+                            /**
+                             * Format: uuid
+                             * @description null: global katalog konusu (salt okunur).
+                             */
+                            kurum_id: string | null;
+                            /** @enum {string} */
+                            seviye: "unite" | "konu" | "alt_konu";
+                            sinif_seviyesi: number | null;
+                            sira: number;
+                            /** @description Kayıt sürümü (iyimser kilit). */
+                            surum: number;
+                            /** Format: uuid */
+                            ust_id: string | null;
+                            /** Format: uuid */
+                            yerine_gecen_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tekil konu ve üst zinciri. Kullanımdan kalkma, kurumun çözülmüş sürümüne göre işaretlenir. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            gecerli_surum_baslangic: number | null;
+                            gecerli_surum_bitis: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string|null} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul" | null;
+                            kazanim_kodu: string | null;
+                            /** @description Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için. */
+                            kullanimdan_kalkti: boolean;
+                            /**
+                             * Format: uuid
+                             * @description null: global katalog konusu (salt okunur).
+                             */
+                            kurum_id: string | null;
+                            /** @enum {string} */
+                            seviye: "unite" | "konu" | "alt_konu";
+                            sinif_seviyesi: number | null;
+                            sira: number;
+                            /** @description Kayıt sürümü (iyimser kilit). */
+                            surum: number;
+                            /** Format: uuid */
+                            ust_id: string | null;
+                            /** @description Kökten yakın üste doğru. */
+                            ust_zinciri: {
+                                ad: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                            }[];
+                            /** Format: uuid */
+                            yerine_gecen_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Kurum konusunu güncelle. Global katalog konusu için 403 global_konu_yazilamaz. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad?: string;
+                        kazanim_kodu?: string | null;
+                        /** @enum {string} */
+                        seviye?: "unite" | "konu" | "alt_konu";
+                        sinif_seviyesi?: number | null;
+                        sira?: number;
+                        /** Format: uuid */
+                        ust_id?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            gecerli_surum_baslangic: number | null;
+                            gecerli_surum_bitis: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string|null} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul" | null;
+                            kazanim_kodu: string | null;
+                            /** @description Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için. */
+                            kullanimdan_kalkti: boolean;
+                            /**
+                             * Format: uuid
+                             * @description null: global katalog konusu (salt okunur).
+                             */
+                            kurum_id: string | null;
+                            /** @enum {string} */
+                            seviye: "unite" | "konu" | "alt_konu";
+                            sinif_seviyesi: number | null;
+                            sira: number;
+                            /** @description Kayıt sürümü (iyimser kilit). */
+                            surum: number;
+                            /** Format: uuid */
+                            ust_id: string | null;
+                            /** Format: uuid */
+                            yerine_gecen_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular/{id}/arsivden-cikar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Arşivlenmiş kurum konusunu geri getir (idempotent). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            gecerli_surum_baslangic: number | null;
+                            gecerli_surum_bitis: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string|null} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul" | null;
+                            kazanim_kodu: string | null;
+                            /** @description Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için. */
+                            kullanimdan_kalkti: boolean;
+                            /**
+                             * Format: uuid
+                             * @description null: global katalog konusu (salt okunur).
+                             */
+                            kurum_id: string | null;
+                            /** @enum {string} */
+                            seviye: "unite" | "konu" | "alt_konu";
+                            sinif_seviyesi: number | null;
+                            sira: number;
+                            /** @description Kayıt sürümü (iyimser kilit). */
+                            surum: number;
+                            /** Format: uuid */
+                            ust_id: string | null;
+                            /** Format: uuid */
+                            yerine_gecen_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/konular/{id}/arsivle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kurum konusunu arşivle (silinmez; idempotent). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            gecerli_surum_baslangic: number | null;
+                            gecerli_surum_bitis: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string|null} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul" | null;
+                            kazanim_kodu: string | null;
+                            /** @description Sorgulanan sürümde artık yok (global) ya da arşivlendi (kurum). Rozet için. */
+                            kullanimdan_kalkti: boolean;
+                            /**
+                             * Format: uuid
+                             * @description null: global katalog konusu (salt okunur).
+                             */
+                            kurum_id: string | null;
+                            /** @enum {string} */
+                            seviye: "unite" | "konu" | "alt_konu";
+                            sinif_seviyesi: number | null;
+                            sira: number;
+                            /** @description Kayıt sürümü (iyimser kilit). */
+                            surum: number;
+                            /** Format: uuid */
+                            ust_id: string | null;
+                            /** Format: uuid */
+                            yerine_gecen_id: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/mufredat-atamalari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum, kademe ve grup için atanmış katalog sürümleri. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            atamalar: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                kapsam: "kurum" | "kademe" | "grup";
+                                /** Format: uuid */
+                                kapsam_id: string;
+                                /** @enum {string} */
+                                katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                                surum: number;
+                                surum_no: number;
+                                /** Format: date-time */
+                                updated_at: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /** Kapsam (kurum/kademe/grup) ve katalog için sürüm ata (upsert). Yalnız yayınlanmış sürüm atanır. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        kapsam: "kurum" | "kademe" | "grup";
+                        /**
+                         * Format: uuid
+                         * @description `kurum` için kurum kimliği; `kademe`/`grup` için kendi kimliği.
+                         */
+                        kapsam_id: string;
+                        /** @enum {string} */
+                        katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                        surum_no: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            kapsam: "kurum" | "kademe" | "grup";
+                            /** Format: uuid */
+                            kapsam_id: string;
+                            /** @enum {string} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                            surum: number;
+                            surum_no: number;
+                            /** Format: date-time */
+                            updated_at: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

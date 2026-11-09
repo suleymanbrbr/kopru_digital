@@ -1029,28 +1029,29 @@ erDiagram
 
 ### Müfredat kataloğu
 
-Sürümlü katalog: LGS, TYT, AYT, YDT. Konular **silinmez, kullanımdan kaldırılır** (deprecated). Konu kimliği sürümler arasında sabittir. Bir sürüm, o sürümde geçerli konular kümesidir.
+Sürümlü katalog: LGS, TYT, AYT, YDT ve `okul` (9–12. sınıf okul müfredatı). Konular **silinmez, kullanımdan kaldırılır** (deprecated). Konu kimliği sürümler arasında sabittir. Bir sürüm, o sürümde geçerli konular kümesidir.
 
 #### `ogrenme.mufredat_surumleri`
 
-Profil: `G`. RLS: hayır (global içerik). Sütunlar: `katalog_kodu text NOT NULL` (CHECK `IN ('lgs','tyt','ayt','ydt')`), `surum_no int NOT NULL`, `ad text NOT NULL` (ör. `2026-2027 LGS`), `aciklama text NULL`, `yayinlandi_at timestamptz NULL`. Kısıtlar: `UNIQUE (katalog_kodu, surum_no)`. Yayınlanmış sürüm değiştirilemez; yeni sürüm açılır. Olaylar: yok.
+Profil: `G`. RLS: hayır (global içerik). Sütunlar: `katalog_kodu text NOT NULL` (CHECK `IN ('lgs','tyt','ayt','ydt','okul')`), `surum_no int NOT NULL`, `ad text NOT NULL` (ör. `2026-2027 LGS`), `aciklama text NULL`, `yayinlandi_at timestamptz NULL`. Kısıtlar: `UNIQUE (katalog_kodu, surum_no)`. Yayınlanmış sürüm değiştirilemez (tetikleyici `yayinli_surum_degismez`); yeni sürüm açılır. `api_app` yazamaz; yazma `api_sistem` (BYPASSRLS) veya superuser ile (tohum/platform editörü). Olaylar: yok.
 
 #### `ogrenme.konular`
 
 Konu ağacı. Hem global katalog (`kurum_id IS NULL`) hem kurum özel konuları (`kurum_id` dolu).
 
-Profil: `GS` + `kurum_id uuid NULL`. RLS: evet, karma politika ([README](README.md#rls-politika-sablonu)): herkes global satırları okur, yalnızca kendi kurumunun satırlarını yazar. Global satırları yalnızca `api_owner` (migrasyon/tohum) yazar.
+Profil: `GS` + `kurum_id uuid NULL`. RLS: evet, karma politika ([README](README.md#rls-politika-sablonu)): herkes global satırları okur, yalnızca kendi kurumunun satırlarını yazar. Global satırları yalnızca RLS'i atlayan rol yazar (`api_sistem` veya superuser; tohum/platform editörü). `FORCE ROW LEVEL SECURITY` nedeniyle `api_owner` da yazamaz. RLS üç politikadır: `konular_oku` (`kurum_id IS NULL OR kurum_id = aktif_kurum()`), `konular_ekle`, `konular_guncelle` (`kurum_id = aktif_kurum()`).
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
 | `kurum_id` | uuid | evet | | NULL = global katalog |
-| `katalog_kodu` | text | evet | | Global için zorunlu (`lgs`,`tyt`,`ayt`,`ydt`) |
+| `katalog_kodu` | text | evet | | Global için zorunlu (`lgs`,`tyt`,`ayt`,`ydt`,`okul`) |
 | `brans_kodu` | text | hayır | | FK `ortak.bransler` |
 | `ust_id` | uuid | evet | | FK `konular(id)`. Hiyerarşi: ünite > konu > alt konu. |
 | `seviye` | text | hayır | | CHECK `IN ('unite','konu','alt_konu')` |
 | `ad` | text | hayır | | |
 | `kazanim_kodu` | text | evet | | Ör. MEB kazanım kodu |
 | `sira` | int | hayır | 0 | |
+| `sinif_seviyesi` | smallint | evet | | CHECK `BETWEEN 5 AND 12`. Şartname 9–12. sınıf konularını da kapsar (`okul` kataloğu). |
 | `gecerli_surum_baslangic` | int | evet | | Global için zorunlu. İlk geçerli `surum_no`. |
 | `gecerli_surum_bitis` | int | evet | | Dolu = bu sürümden itibaren **kullanımdan kalktı** (bu sürümde artık yok). NULL = hâlâ geçerli. |
 | `yerine_gecen_id` | uuid | evet | | Önerilen yeni konu |
@@ -1063,14 +1064,16 @@ Kısıtlar:
 - Kullanımdan kaldırma `gecerli_surum_bitis` yazılarak yapılır. `DELETE` yetkisi `api_app`ten alınmıştır. Başka kayıtlar `konu_id` ile başvurmaya devam eder, geçmiş veri bozulmaz.
 - Üst-alt aynı kapsamda olmalı: kurum konusunun `ust_id`si global veya aynı kurumun konusu olabilir, global konunun üstü global olmalıdır (tetikleyici).
 Sürüm sorgusu: sürüm `v` için geçerli konular: `gecerli_surum_baslangic <= v AND (gecerli_surum_bitis IS NULL OR gecerli_surum_bitis > v)`. Yeni konular yeni sürüm numarasıyla eklenir; ad değişikliği yeni konu + eskinin `yerine_gecen_id` bağlanmasıdır. Mevcut ödev/plan/ders kayıtları eski `konu_id`yi korur; arayüz kullanımdan kalkmış konuyu rozetle gösterir ve yeni seçimde sunmaz.
-İndeks: `(katalog_kodu, brans_kodu, ust_id, sira)` global için; `(kurum_id, brans_kodu, ust_id) WHERE kurum_id IS NOT NULL`; `(ust_id)`; `ad gin_trgm_ops`.
+İndeks: `(katalog_kodu, brans_kodu, ust_id, sira) WHERE kurum_id IS NULL` global için; `(kurum_id, brans_kodu, ust_id) WHERE kurum_id IS NOT NULL`; `(ust_id)`; `translate(ad, 'İIı', 'iii') gin_trgm_ops` (arama: sorgu aynı `translate`ten geçer, `ILIKE` ü/Ü, ş/Ş gibi harfleri katlar; `ad gin_trgm_ops` yerine bu ifade kullanılır çünkü `en_US` harmanında `I`/`ı`/`İ` katlanmaz). `DELETE` `api_app` ve `api_sistem`den alınmıştır.
 Olaylar: yok.
 
 #### `ogrenme.mufredat_atamalari`
 
 Kurumun/kademenin/grubun hangi katalog sürümünü kullandığı (liste sabit kalsın diye).
 
-Profil: `KS`. RLS: evet. Sütunlar: `kapsam text NOT NULL` (CHECK `IN ('kurum','kademe','grup')`), `kapsam_id uuid NOT NULL`, `katalog_kodu text NOT NULL`, `surum_no int NOT NULL`. `UNIQUE (kurum_id, kapsam, kapsam_id, katalog_kodu)`. Kayıt yoksa en yüksek yayınlanmış sürüm. Olaylar: yok.
+Profil: `KS`. RLS: evet. Sütunlar: `kapsam text NOT NULL` (CHECK `IN ('kurum','kademe','grup')`), `kapsam_id uuid NOT NULL`, `katalog_kodu text NOT NULL`, `surum_no int NOT NULL`. `UNIQUE (kurum_id, kapsam, kapsam_id, katalog_kodu)`. `(katalog_kodu, surum_no)` bileşik FK `mufredat_surumleri`ne. Kayıt yoksa en yüksek yayınlanmış sürüm; çözüm sırası: istenen kapsam (kademe/grup), `kurum` kapsamı, en yüksek yayınlanmış. Yalnız yayınlanmış sürüm atanır. Olaylar: yok.
+
+**Uçlar** (`/v1/ogrenme/kurumlar/:kurum_id/...`; izin `mufredat.oku` tüm roller `kurum`, `mufredat.konu.yaz` sahip/yönetici `kurum`, öğretmen `grup`): `GET /kataloglar`; `GET /konular` (`katalog_kodu`, `surum_no`, `brans_kodu`, `ust_id`, `seviye`, `sinif_seviyesi`, `kaynak`, `q`, `tumu=1`, `limit`, `imlec`; kullanımdan kalkan/arşivli konular `tumu=1` ile `kullanimdan_kalkti: true` rozetiyle); `GET /konular/:id`; `POST /konular`; `PATCH /konular/:id`; `POST /konular/:id/arsivle` ve `/arsivden-cikar`; `GET|PUT /mufredat-atamalari` (PUT yalnız `kurum` kapsamlı yazma izniyle: sahip/yönetici). Global konu yazma denemesi `403 global_konu_yazilamaz`. Kurum konusu seviye kuralı: ünite üstsüz, konu üstü ünite, alt konu üstü konu; üst aynı branşta olmalı. Yazmalar denetim kaydına girer (`konu.olustur|guncelle|arsivle|arsivden_cikar`, `mufredat.ata`). Örnek tohum: `services/api/scripts/mufredat-tohum.sql`.
 
 ### Ödev
 
