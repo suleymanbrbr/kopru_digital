@@ -9,6 +9,7 @@ import { BolumKarti } from './bolum-karti';
 import { BosDurum } from '@/components/bos-durum';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { Karakter, karakterAdi } from '@/components/karakter';
+import { BugunYoklamaKarti } from '@/components/yoklama/bugun-karti';
 import { dugmeStili } from '@/components/ui/button';
 import { Iskelet, Kart } from '@/components/ui/kart';
 import { useKurum } from '@/kurum/baglam';
@@ -93,6 +94,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
             </BosDurum>
           )}
         </BolumKarti>
+        <BugunYoklamaKarti />
         {yonetim ? (
           <div className="md:col-span-2">
             <BolumKarti
