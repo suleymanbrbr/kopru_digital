@@ -7,6 +7,9 @@ import { servisleriKur, type Servisler } from './servisler';
 
 const Baglam = createContext<Servisler | null>(null);
 
+/** Test ve onizleme icin: hazir servisleri saglar (uygulama `UygulamaSaglayicilari` kullanir). */
+export const ServisBaglami = Baglam;
+
 export function useServisler(): Servisler {
   const s = useContext(Baglam);
   if (!s) throw new Error('useServisler, UygulamaSaglayicilari disinda kullanildi.');

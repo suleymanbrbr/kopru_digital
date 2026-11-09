@@ -1,3 +1,4 @@
+import type { DersAdapter, FinansAdapter } from './operasyonTipleri';
 import type {
   DavetSonucu,
   KatilimIstegi,
@@ -75,4 +76,6 @@ export interface Adaptorler {
   auth: AuthAdapter;
   veri: VeriAdapter;
   hesap: HesapAdapter;
+  ders: DersAdapter;
+  finans: FinansAdapter;
 }

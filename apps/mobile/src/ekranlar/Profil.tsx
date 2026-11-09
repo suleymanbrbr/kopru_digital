@@ -4,6 +4,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 
 import { kurumGirisiVarMi } from '../nav/yapilandirma';
 import { ortam } from '../ortam';
+import { kurumSecenekleri } from '../oturum/kurumSecimi';
 import { useTema } from '../tema/TemaSaglayici';
 import { tercihler, type TemaTercihi } from '../tema/tercihler';
 import { Dugme } from '../ui/Dugme';
@@ -66,111 +67,108 @@ export function Profil() {
   }
 
   return (
-    <>
-      <CevrimdisiSerit />
-      <Ekran kenarlar={['top', 'left', 'right']}>
-        <Metin varyant="baslik" accessibilityRole="header">
-          {t('mobil.profil.baslik')}
+    <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
+      <Metin varyant="baslik" accessibilityRole="header">
+        {t('mobil.profil.baslik')}
+      </Metin>
+      <Kart className="gap-1">
+        <Metin varyant="altBaslik">{durum.kullanici.adSoyad}</Metin>
+        <Metin varyant="ikincil">
+          {t(`roller.${rol}`)} · {aktif.uyelik.kurumAd}
         </Metin>
-        <Kart className="gap-1">
-          <Metin varyant="altBaslik">{durum.kullanici.adSoyad}</Metin>
-          <Metin varyant="ikincil">
-            {t(`roller.${rol}`)} · {aktif.uyelik.kurumAd}
-          </Metin>
-        </Kart>
+      </Kart>
 
-        <Kart className="gap-1">
-          {kurumGirisiVarMi(rol) ? (
-            <Satir
-              ikon="business"
-              etiket={t('mobil.profil.kurumYonet')}
-              onPress={() => {
-                router.push('/kurum');
-              }}
-            />
-          ) : null}
-          {durum.uyelikler.length > 1 ? (
-            <Satir
-              ikon="swap-horizontal"
-              etiket={t('mobil.profil.kurumDegistir')}
-              onPress={() => {
-                oturum.kurumDegistir();
-              }}
-            />
-          ) : null}
-          {rol === 'ogrenci' ? (
-            <Satir
-              ikon="key-outline"
-              etiket={t('mobil.profil.sinifKoduKatil')}
-              onPress={() => {
-                router.push('/katilim');
-              }}
-            />
-          ) : null}
+      <Kart className="gap-1">
+        {kurumGirisiVarMi(rol) ? (
           <Satir
-            ikon="phone-portrait-outline"
-            etiket={t('mobil.profil.oturumlarim')}
+            ikon="business"
+            etiket={t('mobil.profil.kurumYonet')}
             onPress={() => {
-              router.push('/oturumlar');
+              router.push('/kurum');
             }}
           />
-          {ortam.gelistirici ? (
-            <Satir
-              ikon="apps"
-              etiket={`${t('mobil.profil.gelistirici')}: ${t('mobil.profil.bilesenler')}`}
-              onPress={() => {
-                router.push('/bilesenler');
-              }}
-            />
-          ) : null}
-        </Kart>
+        ) : null}
+        {kurumSecenekleri(durum.uyelikler).length > 1 ? (
+          <Satir
+            ikon="swap-horizontal"
+            etiket={t('mobil.profil.kurumDegistir')}
+            onPress={() => {
+              oturum.kurumDegistir();
+            }}
+          />
+        ) : null}
+        {rol === 'ogrenci' ? (
+          <Satir
+            ikon="key-outline"
+            etiket={t('mobil.profil.sinifKoduKatil')}
+            onPress={() => {
+              router.push('/katilim');
+            }}
+          />
+        ) : null}
+        <Satir
+          ikon="phone-portrait-outline"
+          etiket={t('mobil.profil.oturumlarim')}
+          onPress={() => {
+            router.push('/oturumlar');
+          }}
+        />
+        {ortam.gelistirici ? (
+          <Satir
+            ikon="apps"
+            etiket={`${t('mobil.profil.gelistirici')}: ${t('mobil.profil.bilesenler')}`}
+            onPress={() => {
+              router.push('/bilesenler');
+            }}
+          />
+        ) : null}
+      </Kart>
 
-        <Kart className="gap-3">
-          <Metin varyant="altBaslik" accessibilityRole="header">
-            {t('mobil.profil.gorunum')}
-          </Metin>
-          <Metin varyant="ikincil">{t('mobil.profil.tema')}</Metin>
-          <View className="flex-row gap-2" accessibilityRole="radiogroup">
-            {TEMALAR.map((x) => {
-              const secili = t_.tema === x.deger;
-              return (
-                <Pressable
-                  key={x.deger}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: secili }}
-                  accessibilityLabel={t(x.anahtar)}
-                  onPress={() => {
-                    tercihler.ayarla({ tema: x.deger });
-                  }}
-                  className={`min-h-dokunma flex-1 items-center justify-center rounded-orta border ${
-                    secili ? 'border-birincil bg-birincil' : 'border-kenar bg-yuzey'
-                  }`}
-                >
-                  <Metin varyant="etiket" className={secili ? 'text-birincilUzeri' : ''}>
-                    {t(x.anahtar)}
-                  </Metin>
-                </Pressable>
-              );
-            })}
+      <Kart className="gap-3">
+        <Metin varyant="altBaslik" accessibilityRole="header">
+          {t('mobil.profil.gorunum')}
+        </Metin>
+        <Metin varyant="ikincil">{t('mobil.profil.tema')}</Metin>
+        <View className="flex-row gap-2" accessibilityRole="radiogroup">
+          {TEMALAR.map((x) => {
+            const secili = t_.tema === x.deger;
+            return (
+              <Pressable
+                key={x.deger}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: secili }}
+                accessibilityLabel={t(x.anahtar)}
+                onPress={() => {
+                  tercihler.ayarla({ tema: x.deger });
+                }}
+                className={`min-h-dokunma flex-1 items-center justify-center rounded-orta border ${
+                  secili ? 'border-birincil bg-birincil' : 'border-kenar bg-yuzey'
+                }`}
+              >
+                <Metin varyant="etiket" className={secili ? 'text-birincilUzeri' : ''}>
+                  {t(x.anahtar)}
+                </Metin>
+              </Pressable>
+            );
+          })}
+        </View>
+        <View className="min-h-dokunma flex-row items-center gap-3">
+          <View className="flex-1">
+            <Metin varyant="etiket">{t('mobil.profil.animasyonlar')}</Metin>
+            <Metin varyant="kucuk">{t('mobil.profil.animasyonlarAciklama')}</Metin>
           </View>
-          <View className="min-h-dokunma flex-row items-center gap-3">
-            <View className="flex-1">
-              <Metin varyant="etiket">{t('mobil.profil.animasyonlar')}</Metin>
-              <Metin varyant="kucuk">{t('mobil.profil.animasyonlarAciklama')}</Metin>
-            </View>
-            <Switch
-              trackColor={{ true: renkler.birincil }}
-              accessibilityLabel={t('mobil.profil.animasyonlar')}
-              value={t_.animasyonlar}
-              onValueChange={(v) => {
-                tercihler.ayarla({ animasyonlar: v });
-              }}
-            />
-          </View>
-        </Kart>
+          <Switch
+            trackColor={{ true: renkler.birincil }}
+            accessibilityLabel={t('mobil.profil.animasyonlar')}
+            value={t_.animasyonlar}
+            onValueChange={(v) => {
+              tercihler.ayarla({ animasyonlar: v });
+            }}
+          />
+        </View>
+      </Kart>
 
-        <Dugme varyant="ikincil" etiket={t('mobil.profil.cikis')} onPress={cikis} />
-      </Ekran>
-    </>
+      <Dugme varyant="ikincil" etiket={t('mobil.profil.cikis')} onPress={cikis} />
+    </Ekran>
   );
 }

@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
+import { cevrimiciKorumaliOperasyon } from '../api/cevrimiciOperasyon';
 import { apiHatasiMi } from '../api/tipler';
 import { davetYoneticisiOlustur, type DavetYoneticisi } from '../davet/yonetici';
 import { guvenliBelirtecDeposu } from '../depo/belirtecDeposu';
@@ -12,7 +13,8 @@ import { kv, webDeposuOlarak } from '../depo/kv';
 import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
 import { netInfoGozlemcisi } from '../offline/ag';
-import { OfflineKuyruk } from '../offline/kuyruk';
+import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
+import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
 
 const SAAT = 60 * 60 * 1000;
@@ -35,9 +37,14 @@ export function servisleriKur(): Servisler {
   const agGozlemcisi = netInfoGozlemcisi();
   const ham = adaptorleriOlustur(guvenliBelirtecDeposu());
   // Sinif kodu / davet / oturum islemleri kuyruga girmez: cevrimdisiyken acik hata verir.
+  const operasyon = cevrimiciKorumaliOperasyon(ham.ders, ham.finans, () =>
+    agGozlemcisi.cevrimiciMi(),
+  );
   const adaptorler: Adaptorler = {
     ...ham,
     hesap: cevrimiciKorumali(ham.hesap, () => agGozlemcisi.cevrimiciMi()),
+    ders: operasyon.ders,
+    finans: operasyon.finans,
   };
 
   const oturumRef: { current: OturumYoneticisi | null } = { current: null };
@@ -84,7 +91,19 @@ export function servisleriKur(): Servisler {
       return d.asama === 'giris' ? (d.aktif?.uyelik.uyelikId ?? null) : null;
     },
     cevrimiciMi: () => agGozlemcisi.cevrimiciMi(),
+    // Baglanti gelince en gec 1 dakikada eslesme: geri cekilme 1 dakikayi asmaz.
+    gecikme: YOKLAMA_KUYRUGU.gecikme,
+    enFazlaDeneme: YOKLAMA_KUYRUGU.enFazlaDeneme,
   });
+  yoklamaIsleyicisiKaydet(
+    kuyruk,
+    () => adaptorler.ders,
+    () => {
+      void queryClient.invalidateQueries({ queryKey: ['yoklama-bekleyen'] });
+      void queryClient.invalidateQueries({ queryKey: ['dersler'] });
+      void queryClient.invalidateQueries({ queryKey: ['finans'] });
+    },
+  );
 
   return {
     adaptorler,

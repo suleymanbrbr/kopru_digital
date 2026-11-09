@@ -1,5 +1,6 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { mockOperasyon } from './mockOperasyon';
 import {
   ApiHata,
   type GrupKatilimIstegi,
@@ -69,10 +70,11 @@ const kurumlar = {
  * 6 uyeliksiz (sinif kodu / davet akislarini denemek icin).
  */
 function uyelikleriUret(telefon: string): Uyelik[] {
-  const u = (rol: Rol, k: keyof typeof kurumlar): Uyelik => ({
+  const u = (rol: Rol, k: keyof typeof kurumlar, kurumTur?: 'bireysel'): Uyelik => ({
     uyelikId: `uyelik-${rol}-${k}`,
     kurumId: kurumlar[k].id,
     kurumAd: kurumlar[k].ad,
+    ...(kurumTur ? { kurumTur } : {}),
     rol,
   });
   switch (telefon.slice(-1)) {
@@ -83,7 +85,8 @@ function uyelikleriUret(telefon: string): Uyelik[] {
     case '3':
       return [u('yonetici', 'a')];
     case '4':
-      return [u('sahip', 'a'), u('ogretmen', 'a')];
+      // Solo hoca: bireysel kurum, sahip + ogretmen uyeligi (kurum secimi tek satira iner).
+      return [u('sahip', 'a', 'bireysel'), u('ogretmen', 'a', 'bireysel')];
     case '5':
       return [u('ogretmen', 'a'), u('ogrenci', 'b'), u('veli', 'b')];
     default:
@@ -153,6 +156,7 @@ function moduller(rol: MobilRol | Rol, kurum: 'a' | 'b') {
     takvim: true,
     yoklama: true,
     odev: true,
+    finans: kurum === 'a',
     soru_sor: kurum === 'a',
     oyunlastirma: rol === 'ogrenci',
     duyuru: true,
@@ -168,6 +172,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   const istekler: KatilimIstegi[] = [];
   let sayac = 0;
   let oturumlar: OturumKaydi[] = [];
+  let aktifUyelikId: string | null = null;
 
   function tumUyelikler(tel: string): Uyelik[] {
     return [...uyelikleriUret(tel), ...ekUyelikler];
@@ -227,7 +232,15 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
     if (!(await depo.oku())) throw new ApiHata('yetkisiz', undefined, { durum: 401 });
   }
 
+  const operasyon = mockOperasyon({
+    bekle,
+    gecikmeMs,
+    oturumGerekli,
+    aktifUyelikId: () => aktifUyelikId,
+  });
+
   return {
+    ...operasyon,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);
@@ -275,6 +288,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
         await oturumGerekli();
         const uyelik = tumUyelikler(telefon ?? '5550000001').find((x) => x.uyelikId === uyelikId);
         if (!uyelik) throw new ApiHata('bulunamadi', undefined, { durum: 404 });
+        aktifUyelikId = uyelik.uyelikId;
         const k = uyelik.kurumId === 'kurum-b' ? 'b' : 'a';
         return { uyelik, moduller: moduller(uyelik.rol, k), vurgu: kurumlar[k].vurgu };
       },

@@ -3,6 +3,7 @@ import { MODUL_KODLARI, type ModulDurumu } from '@kopru/contracts';
 
 import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { operasyonAdaptorleri } from './gercekOperasyon';
 import {
   ApiHata,
   type GrupKatilimIstegi,
@@ -101,6 +102,7 @@ interface ApiUyelik {
   uyelik_id: string;
   kurum_id: string;
   kurum_ad: string | null;
+  kurum_tur?: 'bireysel' | 'ekip' | 'kurum' | null;
   rol: Rol;
   durum: 'davetli' | 'aktif' | 'askida' | 'ayrildi';
 }
@@ -114,7 +116,12 @@ interface ApiUyelik {
 export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
   const kod = hataGovdesiMi(govde) ? govde.error.code : undefined;
   const mesaj = hataGovdesiMi(govde) ? govde.error.message : undefined;
-  const sec = { durum, ...(kod ? { ayrinti: kod } : {}) };
+  const detay = hataGovdesiMi(govde) ? govde.error.details : undefined;
+  const sec = {
+    durum,
+    ...(kod ? { ayrinti: kod } : {}),
+    ...(detay !== undefined ? { detay } : {}),
+  };
   if (durum === 401) return new ApiHata('yetkisiz', mesaj, sec);
   if (durum === 402 || kod === 'abonelik_gerekli') {
     return new ApiHata('abonelik_gerekli', mesaj, sec);
@@ -272,10 +279,19 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   }
 
   function uyelikCevir(u: ApiUyelik): Uyelik {
-    return { uyelikId: u.uyelik_id, kurumId: u.kurum_id, kurumAd: u.kurum_ad ?? '', rol: u.rol };
+    return {
+      uyelikId: u.uyelik_id,
+      kurumId: u.kurum_id,
+      kurumAd: u.kurum_ad ?? '',
+      kurumTur: u.kurum_tur ?? null,
+      rol: u.rol,
+    };
   }
 
+  const operasyon = operasyonAdaptorleri({ yetkili, etkinKurum, veriAl });
+
   return {
+    ...operasyon,
     auth: {
       async otpIste(telefon) {
         otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));

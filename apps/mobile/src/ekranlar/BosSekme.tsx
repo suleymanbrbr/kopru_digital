@@ -17,14 +17,11 @@ export function BosSekme({
   ikon: ComponentProps<typeof BosDurum>['ikon'];
 }) {
   return (
-    <>
-      <CevrimdisiSerit />
-      <Ekran kenarlar={['top', 'left', 'right']}>
-        <Metin varyant="baslik" accessibilityRole="header">
-          {t(`mobil.${anahtar}.baslik`)}
-        </Metin>
-        <BosDurum ikon={ikon} mesaj={t(`mobil.${anahtar}.bos`)} />
-      </Ekran>
-    </>
+    <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
+      <Metin varyant="baslik" accessibilityRole="header">
+        {t(`mobil.${anahtar}.baslik`)}
+      </Metin>
+      <BosDurum ikon={ikon} mesaj={t(`mobil.${anahtar}.bos`)} />
+    </Ekran>
   );
 }

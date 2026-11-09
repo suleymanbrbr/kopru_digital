@@ -90,118 +90,115 @@ export function Oturumlarim() {
   }
 
   return (
-    <>
-      <CevrimdisiSerit />
-      <Ekran kenarlar={['left', 'right', 'bottom']}>
-        <Metin varyant="ikincil">{t('mobil.oturumlar.aciklama')}</Metin>
+    <Ekran ust={<CevrimdisiSerit />} kenarlar={['left', 'right', 'bottom']}>
+      <Metin varyant="ikincil">{t('mobil.oturumlar.aciklama')}</Metin>
 
-        {liste.isPending ? <Yukleniyor /> : null}
-        {liste.isError ? (
-          <HataDurumu
-            mesaj={hataMesaji(liste.error)}
-            tekrar={() => {
-              void liste.refetch();
-            }}
-          />
-        ) : null}
-        {liste.data?.length === 0 ? (
-          <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.oturumlar.bos')} />
-        ) : null}
+      {liste.isPending ? <Yukleniyor /> : null}
+      {liste.isError ? (
+        <HataDurumu
+          mesaj={hataMesaji(liste.error)}
+          tekrar={() => {
+            void liste.refetch();
+          }}
+        />
+      ) : null}
+      {liste.data?.length === 0 ? (
+        <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.oturumlar.bos')} />
+      ) : null}
 
-        {liste.data?.map((o) => {
-          const cihaz = o.cihaz ?? t('mobil.oturumlar.cihazBilinmiyor');
-          return (
-            <Kart key={o.id} className="gap-3">
-              <View
-                className="flex-row items-start gap-3"
-                accessible
-                accessibilityLabel={[
-                  cihaz,
-                  o.buOturum ? t('mobil.oturumlar.buOturum') : '',
-                  t('mobil.oturumlar.sonKullanim', { zaman: zamanGoster(o.sonKullanim) }),
-                  o.ipMaskeli ? t('mobil.oturumlar.ip', { ip: o.ipMaskeli }) : '',
-                ]
-                  .filter(Boolean)
-                  .join('. ')}
-              >
-                <Ikon ad={o.buOturum ? 'phone-portrait' : 'laptop-outline'} boyut={24} />
-                <View className="flex-1 gap-1">
-                  <Metin varyant="altBaslik">{cihaz}</Metin>
-                  {o.buOturum ? (
-                    <Metin varyant="etiket" className="text-birincil">
-                      {t('mobil.oturumlar.buOturum')}
-                    </Metin>
-                  ) : null}
-                  <Metin varyant="ikincil">
-                    {t('mobil.oturumlar.sonKullanim', { zaman: zamanGoster(o.sonKullanim) })}
+      {liste.data?.map((o) => {
+        const cihaz = o.cihaz ?? t('mobil.oturumlar.cihazBilinmiyor');
+        return (
+          <Kart key={o.id} className="gap-3">
+            <View
+              className="flex-row items-start gap-3"
+              accessible
+              accessibilityLabel={[
+                cihaz,
+                o.buOturum ? t('mobil.oturumlar.buOturum') : '',
+                t('mobil.oturumlar.sonKullanim', { zaman: zamanGoster(o.sonKullanim) }),
+                o.ipMaskeli ? t('mobil.oturumlar.ip', { ip: o.ipMaskeli }) : '',
+              ]
+                .filter(Boolean)
+                .join('. ')}
+            >
+              <Ikon ad={o.buOturum ? 'phone-portrait' : 'laptop-outline'} boyut={24} />
+              <View className="flex-1 gap-1">
+                <Metin varyant="altBaslik">{cihaz}</Metin>
+                {o.buOturum ? (
+                  <Metin varyant="etiket" className="text-birincil">
+                    {t('mobil.oturumlar.buOturum')}
                   </Metin>
-                  {o.ipMaskeli ? (
-                    <Metin varyant="kucuk">{t('mobil.oturumlar.ip', { ip: o.ipMaskeli })}</Metin>
-                  ) : null}
-                </View>
+                ) : null}
+                <Metin varyant="ikincil">
+                  {t('mobil.oturumlar.sonKullanim', { zaman: zamanGoster(o.sonKullanim) })}
+                </Metin>
+                {o.ipMaskeli ? (
+                  <Metin varyant="kucuk">{t('mobil.oturumlar.ip', { ip: o.ipMaskeli })}</Metin>
+                ) : null}
               </View>
-              <Dugme
-                varyant="ikincil"
-                etiket={t('mobil.oturumlar.sonlandir')}
-                accessibilityLabel={t('mobil.oturumlar.sonlandirEtiketi', { cihaz })}
-                disabled={mesgul}
-                yukleniyor={sonlandir.isPending && sonlandir.variables.id === o.id}
-                onPress={() => {
-                  tekSonlandir(o);
-                }}
-              />
-            </Kart>
-          );
-        })}
-
-        {hata ? (
-          <Metin varyant="ikincil" className="text-hata" accessibilityLiveRegion="polite">
-            {hata}
-          </Metin>
-        ) : null}
-        {bilgi ? (
-          <Metin varyant="ikincil" accessibilityLiveRegion="polite">
-            {bilgi}
-          </Metin>
-        ) : null}
-
-        {liste.data && liste.data.length > 0 ? (
-          <View className="gap-2">
+            </View>
             <Dugme
               varyant="ikincil"
-              etiket={t('mobil.oturumlar.digerleriniKapat')}
-              disabled={!digerleriVar || mesgul}
-              yukleniyor={kapat.isPending && kapat.variables}
-              onPress={() => {
-                onayIste(
-                  t('mobil.oturumlar.digerleriOnay'),
-                  t('mobil.oturumlar.digerleriOnayMesaj'),
-                  t('mobil.oturumlar.digerleriniKapat'),
-                  () => {
-                    kapat.mutate(true);
-                  },
-                );
-              }}
-            />
-            <Dugme
-              varyant="tehlike"
-              etiket={t('mobil.oturumlar.hepsiniKapat')}
+              etiket={t('mobil.oturumlar.sonlandir')}
+              accessibilityLabel={t('mobil.oturumlar.sonlandirEtiketi', { cihaz })}
               disabled={mesgul}
-              yukleniyor={kapat.isPending && !kapat.variables}
+              yukleniyor={sonlandir.isPending && sonlandir.variables.id === o.id}
               onPress={() => {
-                onayIste(
-                  t('mobil.oturumlar.hepsiOnay'),
-                  t('mobil.oturumlar.hepsiOnayMesaj'),
-                  t('mobil.oturumlar.hepsiniKapat'),
-                  () => {
-                    kapat.mutate(false);
-                  },
-                );
+                tekSonlandir(o);
               }}
             />
-          </View>
-        ) : null}
-      </Ekran>
-    </>
+          </Kart>
+        );
+      })}
+
+      {hata ? (
+        <Metin varyant="ikincil" className="text-hata" accessibilityLiveRegion="polite">
+          {hata}
+        </Metin>
+      ) : null}
+      {bilgi ? (
+        <Metin varyant="ikincil" accessibilityLiveRegion="polite">
+          {bilgi}
+        </Metin>
+      ) : null}
+
+      {liste.data && liste.data.length > 0 ? (
+        <View className="gap-2">
+          <Dugme
+            varyant="ikincil"
+            etiket={t('mobil.oturumlar.digerleriniKapat')}
+            disabled={!digerleriVar || mesgul}
+            yukleniyor={kapat.isPending && kapat.variables}
+            onPress={() => {
+              onayIste(
+                t('mobil.oturumlar.digerleriOnay'),
+                t('mobil.oturumlar.digerleriOnayMesaj'),
+                t('mobil.oturumlar.digerleriniKapat'),
+                () => {
+                  kapat.mutate(true);
+                },
+              );
+            }}
+          />
+          <Dugme
+            varyant="tehlike"
+            etiket={t('mobil.oturumlar.hepsiniKapat')}
+            disabled={mesgul}
+            yukleniyor={kapat.isPending && !kapat.variables}
+            onPress={() => {
+              onayIste(
+                t('mobil.oturumlar.hepsiOnay'),
+                t('mobil.oturumlar.hepsiOnayMesaj'),
+                t('mobil.oturumlar.hepsiniKapat'),
+                () => {
+                  kapat.mutate(false);
+                },
+              );
+            }}
+          />
+        </View>
+      ) : null}
+    </Ekran>
   );
 }

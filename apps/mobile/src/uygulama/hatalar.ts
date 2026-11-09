@@ -1,10 +1,43 @@
-import { t } from '@kopru/i18n';
+import { t, type MessageKey } from '@kopru/i18n';
 
 import { apiHatasiMi } from '../api/tipler';
+
+/**
+ * Api hata kodlarina (`ayrinti`) ozel anlasilir mesajlar; HTTP durumundan bagimsizdir
+ * (ornegin `yoklama_kilitli` 403, `ders_henuz_baslamadi` 422 doner).
+ */
+const AYRINTI_MESAJLARI: Record<string, MessageKey> = {
+  surum_cakismasi: 'mobil.hata.surumCakismasi',
+  ders_henuz_baslamadi: 'mobil.hata.dersHenuzBaslamadi',
+  ders_iptal_edildi: 'mobil.hata.dersIptalEdildi',
+  yoklama_kilitli: 'mobil.hata.yoklamaKilitli',
+  ogrenci_katilimci_degil: 'mobil.hata.ogrenciKatilimciDegil',
+  yoklama_eski: 'mobil.hata.yoklamaEski',
+  ogretmen_gerekli: 'mobil.hata.ogretmenGerekli',
+  iptal_kaynagi_gecersiz: 'mobil.hata.iptalKaynagiGecersiz',
+  zaten_katilimci: 'mobil.hata.zatenKatilimci',
+  ogrenci_modeli_paket_degil: 'mobil.hata.modelPaketDegil',
+  odeme_gecersiz: 'mobil.hata.odemeGecersiz',
+  paket_arsivde: 'mobil.hata.paketArsivde',
+  istek_cakismasi: 'mobil.hata.istekCakismasi',
+  ders_planli_degil: 'mobil.hata.dersPlanliDegil',
+};
+
+/** Kuyrukta basarisiz olan isin hata kodunu (api `ayrinti` ya da adaptor kodu) mesaja cevirir. */
+export function kuyrukHataMesaji(kod: string | undefined): string {
+  const anahtar = kod ? AYRINTI_MESAJLARI[kod] : undefined;
+  if (anahtar) return t(anahtar);
+  if (kod === 'izin_yok') return t('mobil.hata.izinYok');
+  if (kod === 'modul_kapali') return t('mobil.hata.modulKapali');
+  if (kod === 'abonelik_gerekli') return t('mobil.hata.abonelikGerekli');
+  return t('ortak.hataGenel');
+}
 
 /** Hatayi kullaniciya gorunur Turkce mesaja cevirir. */
 export function hataMesaji(e: unknown): string {
   if (!apiHatasiMi(e)) return t('ortak.hataGenel');
+  const ozel = e.ayrinti ? AYRINTI_MESAJLARI[e.ayrinti] : undefined;
+  if (ozel) return t(ozel);
   switch (e.kod) {
     case 'yetkisiz':
       return t('mobil.hata.yetkisiz');

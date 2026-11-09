@@ -15,6 +15,8 @@ export interface KuyrukIsi {
   deneme: number;
   sonrakiDenemeAt: number;
   sonHata?: string;
+  /** Son hatanin makine kodu (api `ayrinti` ya da adaptor kodu); arayuz Turkce mesaj secer. */
+  sonHataKodu?: string;
 }
 
 export type IsIsleyici = (is: KuyrukIsi) => Promise<void>;
@@ -50,6 +52,17 @@ interface Kalici {
   basarisiz: KuyrukIsi[];
 }
 
+/**
+ * Uygulama kuyrugu ayarlari. Bekleme ustel artar, 60 sn'de tavan yapar (baglanti gelince en gec
+ * 1 dakikada eslesme). Gecici ag/5xx hatasinda yaklasik 2 saat denenir (ilk 6 deneme ~63 sn,
+ * sonrasi dakikada bir); ancak bundan sonra is `basarisiz`a duser.
+ */
+export const YOKLAMA_KUYRUGU = {
+  gecikmeTavanMs: 60_000,
+  enFazlaDeneme: 125,
+  gecikme: (deneme: number) => Math.min(2 ** deneme * 1000, 60_000),
+} as const;
+
 const ustelGecikme = (deneme: number) => Math.min(2 ** deneme * 1000, 5 * 60_000);
 
 /**
@@ -65,6 +78,10 @@ export class OfflineKuyruk {
   private readonly dinleyiciler = new Set<() => void>();
   private suruyor: Promise<BosaltmaSonucu> | null = null;
   private zamanlayici: ReturnType<typeof setTimeout> | null = null;
+  /** `baglan` aktifken (ag izleniyor) bosaltma bitince yeniden deneme zamanlanir. */
+  private ag: AgGozlemcisi | null = null;
+  /** Bosaltma surerken yeni is eklendi: bitince bir tur daha calisir. */
+  private tekrarBosalt = false;
   private readonly anahtar: string;
 
   constructor(private readonly sec: KuyrukSecenekleri) {
@@ -117,6 +134,7 @@ export class OfflineKuyruk {
       sonrakiDenemeAt: 0,
     };
     this.durum = { ...this.durum, bekleyen: [...this.durum.bekleyen, is] };
+    if (this.suruyor) this.tekrarBosalt = true;
     this.yaz();
     return is;
   }
@@ -159,6 +177,12 @@ export class OfflineKuyruk {
   bosalt(): Promise<BosaltmaSonucu> {
     this.suruyor ??= this.calistir().finally(() => {
       this.suruyor = null;
+      // Zamanlama bosaltmayi kim cagirirsa cagirsin (ekran, ag olayi, zamanlayici) bitisine baglidir.
+      this.planla();
+      if (this.tekrarBosalt) {
+        this.tekrarBosalt = false;
+        void this.bosalt();
+      }
     });
     return this.suruyor;
   }
@@ -196,10 +220,12 @@ export class OfflineKuyruk {
         const tekrar = !apiHatasiMi(e) || e.yenidenDenenebilir;
         const deneme = is.deneme + 1;
         const hata = e instanceof Error ? e.message : String(e);
+        const hataKodu = apiHatasiMi(e) ? (e.ayrinti ?? e.kod) : undefined;
         if (tekrar && deneme < enFazla) {
           this.guncelle(is, {
             deneme,
             sonHata: hata,
+            ...(hataKodu ? { sonHataKodu: hataKodu } : {}),
             sonrakiDenemeAt: this.simdi() + gecikme(deneme),
           });
           break;
@@ -207,7 +233,10 @@ export class OfflineKuyruk {
         this.durum = {
           ...this.durum,
           bekleyen: this.durum.bekleyen.filter((i) => i !== is),
-          basarisiz: [...this.durum.basarisiz, { ...is, deneme, sonHata: hata }],
+          basarisiz: [
+            ...this.durum.basarisiz,
+            { ...is, deneme, sonHata: hata, ...(hataKodu ? { sonHataKodu: hataKodu } : {}) },
+          ],
         };
         this.yaz();
       }
@@ -228,28 +257,33 @@ export class OfflineKuyruk {
    * Dondurulen fonksiyon her seyi birakir.
    */
   baglan(ag: AgGozlemcisi): () => void {
-    const planla = () => {
-      if (this.zamanlayici) clearTimeout(this.zamanlayici);
-      this.zamanlayici = null;
-      const siradaki = this.durum.bekleyen[0];
-      if (!siradaki || !ag.cevrimiciMi()) return;
-      const bekleme = Math.max(siradaki.sonrakiDenemeAt - this.simdi(), 0);
-      if (bekleme === 0 && siradaki.deneme === 0) return;
-      this.zamanlayici = setTimeout(() => void tetikle(), bekleme + 50);
-    };
-    const tetikle = async () => {
-      await this.bosalt();
-      planla();
-    };
+    this.ag = ag;
     const birak = ag.abone((cevrimici) => {
-      if (cevrimici) void tetikle();
-      else planla();
+      if (cevrimici) void this.bosalt();
+      else this.planla();
     });
-    if (ag.cevrimiciMi()) void tetikle();
+    if (ag.cevrimiciMi()) void this.bosalt();
     return () => {
       birak();
+      this.ag = null;
       if (this.zamanlayici) clearTimeout(this.zamanlayici);
       this.zamanlayici = null;
     };
+  }
+
+  /** Geri cekilmedeki ilk is icin zamanlayici kurar; `bosalt` bitisinde ve ag degisince cagrilir. */
+  private planla() {
+    if (this.zamanlayici) clearTimeout(this.zamanlayici);
+    this.zamanlayici = null;
+    const ag = this.ag;
+    if (!ag) return;
+    const siradaki = this.durum.bekleyen[0];
+    if (!siradaki || !ag.cevrimiciMi()) return;
+    const bekleme = Math.max(siradaki.sonrakiDenemeAt - this.simdi(), 0);
+    if (bekleme === 0 && siradaki.deneme === 0) return;
+    this.zamanlayici = setTimeout(() => {
+      this.zamanlayici = null;
+      void this.bosalt();
+    }, bekleme + 50);
   }
 }

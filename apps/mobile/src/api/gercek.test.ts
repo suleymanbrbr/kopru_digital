@@ -352,6 +352,7 @@ describe('gercek adaptor: KVKK ve uyelik secimi', () => {
 
     const b = await adaptorler.auth.uyelikSec(UYELIK);
     expect(b.uyelik).toEqual({
+      kurumTur: 'kurum',
       uyelikId: UYELIK,
       kurumId: KURUM,
       kurumAd: 'Deneme Kurumu',
