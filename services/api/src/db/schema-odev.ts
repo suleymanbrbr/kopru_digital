@@ -3,12 +3,13 @@ import {
   boolean,
   index,
   integer,
-  pgSchema,
   text,
   timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+
+import { ogrenme } from './schema-mufredat.js';
 
 /**
  * `ogrenme` semasi, odev tablolari (migrations/0010_ogrenme_odev.sql). `schema.ts` bunu yeniden disa
@@ -25,8 +26,6 @@ const kiraci = () => ({
   created_by: uuid('created_by'),
 });
 const surumlu = () => ({ surum: bigint('surum', { mode: 'number' }).notNull().default(1) });
-
-export const ogrenme = pgSchema('ogrenme');
 
 export const odevler = ogrenme.table(
   'odevler',
