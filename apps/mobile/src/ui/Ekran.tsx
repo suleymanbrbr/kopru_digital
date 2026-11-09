@@ -11,6 +11,11 @@ interface Props {
   /** Sekme cubugu zaten alt bosluk verir; o zaman 'bottom' dislanir. */
   kenarlar?: readonly Edge[];
   className?: string;
+  /**
+   * Guvenli alanin (durum cubugu/Dynamic Island) ALTINDA, icerigin ustunde sabit duran yuva
+   * (ornegin cevrimdisi seridi). Icerik ayrica ust bosluk almaz.
+   */
+  ust?: ReactNode;
 }
 
 /** Guvenli alan + opsiyonel kaydirma/klavye isleme ile ekran iskeleti. */
@@ -20,6 +25,7 @@ export function Ekran({
   klavye = false,
   kenarlar = ['top', 'bottom', 'left', 'right'],
   className = '',
+  ust,
 }: Props) {
   const ins = useSafeAreaInsets();
   const stil = {
@@ -41,6 +47,7 @@ export function Ekran({
   );
   return (
     <View className="flex-1 bg-arkaPlan" style={stil}>
+      {ust}
       {klavye ? (
         // Android'de kenardan kenara duzende pencere klavyeyle kuculmez; iki platformda da bosluk birakilir.
         <KeyboardAvoidingView className="flex-1" behavior="padding">

@@ -213,15 +213,12 @@ function TamKart({ k, ad }: { k: OgrenciKartiTam; ad: string }) {
 export function OgrenciKartiEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: string }) {
   const sorgu = useOgrenciKarti(ogrenciId);
   return (
-    <>
-      <CevrimdisiSerit />
-      <Ekran kenarlar={['left', 'right', 'bottom']}>
-        {sorgu.isPending ? <Yukleniyor /> : null}
-        {sorgu.isError && !sorgu.data ? (
-          <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
-        ) : null}
-        {sorgu.data?.gorunum === 'tam' ? <TamKart k={sorgu.data} ad={ad} /> : null}
-      </Ekran>
-    </>
+    <Ekran ust={<CevrimdisiSerit />} kenarlar={['left', 'right', 'bottom']}>
+      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isError && !sorgu.data ? (
+        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+      ) : null}
+      {sorgu.data?.gorunum === 'tam' ? <TamKart k={sorgu.data} ad={ad} /> : null}
+    </Ekran>
   );
 }

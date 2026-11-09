@@ -128,113 +128,110 @@ export function SinifKoduKatil({ geri, kenarlar }: Props) {
   }
 
   return (
-    <>
-      <CevrimdisiSerit />
-      <Ekran klavye {...(kenarlar ? { kenarlar } : {})}>
-        <View className="gap-2">
-          <Metin varyant="baslik" accessibilityRole="header">
-            {t('mobil.sinifKodu.baslik')}
-          </Metin>
-          <Metin varyant="ikincil">{t('mobil.sinifKodu.aciklama')}</Metin>
-        </View>
+    <Ekran ust={<CevrimdisiSerit />} klavye {...(kenarlar ? { kenarlar } : {})}>
+      <View className="gap-2">
+        <Metin varyant="baslik" accessibilityRole="header">
+          {t('mobil.sinifKodu.baslik')}
+        </Metin>
+        <Metin varyant="ikincil">{t('mobil.sinifKodu.aciklama')}</Metin>
+      </View>
 
-        <MetinGirdisi
-          etiket={t('mobil.sinifKodu.girdiEtiketi')}
-          placeholder={t('mobil.sinifKodu.ipucu')}
-          value={kod}
-          onChangeText={(v) => {
-            setKod(kodBicimle(v));
-            setGirdiHatasi(null);
-          }}
-          hata={girdiHatasi}
-          autoCapitalize="characters"
-          autoCorrect={false}
-          autoComplete="off"
-          spellCheck={false}
-          returnKeyType="send"
-          onSubmitEditing={gonder}
-        />
-        <Dugme
-          etiket={t('mobil.sinifKodu.gonder')}
-          buyuk
-          yukleniyor={katil.isPending}
-          onPress={gonder}
-        />
+      <MetinGirdisi
+        etiket={t('mobil.sinifKodu.girdiEtiketi')}
+        placeholder={t('mobil.sinifKodu.ipucu')}
+        value={kod}
+        onChangeText={(v) => {
+          setKod(kodBicimle(v));
+          setGirdiHatasi(null);
+        }}
+        hata={girdiHatasi}
+        autoCapitalize="characters"
+        autoCorrect={false}
+        autoComplete="off"
+        spellCheck={false}
+        returnKeyType="send"
+        onSubmitEditing={gonder}
+      />
+      <Dugme
+        etiket={t('mobil.sinifKodu.gonder')}
+        buyuk
+        yukleniyor={katil.isPending}
+        onPress={gonder}
+      />
 
-        {gonderilen ? (
-          <Kart className="flex-row items-start gap-3" accessibilityLiveRegion="polite">
-            <Ikon ad="hourglass-outline" boyut={24} />
-            <View className="flex-1 gap-1">
-              <Metin varyant="altBaslik">{t('mobil.sinifKodu.onayBekliyorBaslik')}</Metin>
-              <Metin varyant="ikincil">
-                {t('mobil.sinifKodu.onayBekliyor', {
-                  kurum: gonderilen.kurumAd,
-                  grup: gonderilen.grupAd,
-                })}
-              </Metin>
+      {gonderilen ? (
+        <Kart className="flex-row items-start gap-3" accessibilityLiveRegion="polite">
+          <Ikon ad="hourglass-outline" boyut={24} />
+          <View className="flex-1 gap-1">
+            <Metin varyant="altBaslik">{t('mobil.sinifKodu.onayBekliyorBaslik')}</Metin>
+            <Metin varyant="ikincil">
+              {t('mobil.sinifKodu.onayBekliyor', {
+                kurum: gonderilen.kurumAd,
+                grup: gonderilen.grupAd,
+              })}
+            </Metin>
+          </View>
+        </Kart>
+      ) : null}
+
+      {bilgi ? (
+        <Metin varyant="ikincil" accessibilityLiveRegion="polite">
+          {bilgi}
+        </Metin>
+      ) : null}
+
+      <View className="gap-3">
+        <Metin varyant="altBaslik" accessibilityRole="header">
+          {t('mobil.sinifKodu.bekleyenlerBaslik')}
+        </Metin>
+        {istekler.isPending ? <Yukleniyor /> : null}
+        {istekler.isError ? (
+          <HataDurumu
+            mesaj={hataMesaji(istekler.error)}
+            tekrar={() => {
+              void istekler.refetch();
+            }}
+          />
+        ) : null}
+        {istekler.data?.length === 0 ? (
+          <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.sinifKodu.bekleyenYok')} />
+        ) : null}
+        {istekler.data?.map((i) => (
+          <Kart
+            key={i.id}
+            className="gap-3"
+            accessible
+            accessibilityLabel={t('mobil.sinifKodu.bekleyenEtiketi', {
+              kurum: i.kurumAd,
+              grup: i.grupAd,
+            })}
+          >
+            <View className="gap-1">
+              <Metin varyant="altBaslik">{i.grupAd}</Metin>
+              <Metin varyant="ikincil">{i.kurumAd}</Metin>
+              <Metin varyant="kucuk">{t('mobil.sinifKodu.onayBekliyorKisa')}</Metin>
             </View>
-          </Kart>
-        ) : null}
-
-        {bilgi ? (
-          <Metin varyant="ikincil" accessibilityLiveRegion="polite">
-            {bilgi}
-          </Metin>
-        ) : null}
-
-        <View className="gap-3">
-          <Metin varyant="altBaslik" accessibilityRole="header">
-            {t('mobil.sinifKodu.bekleyenlerBaslik')}
-          </Metin>
-          {istekler.isPending ? <Yukleniyor /> : null}
-          {istekler.isError ? (
-            <HataDurumu
-              mesaj={hataMesaji(istekler.error)}
-              tekrar={() => {
-                void istekler.refetch();
+            <Dugme
+              varyant="ikincil"
+              etiket={t('mobil.sinifKodu.iptal')}
+              yukleniyor={iptal.isPending && iptal.variables === i.id}
+              onPress={() => {
+                iptalEt(i);
               }}
             />
-          ) : null}
-          {istekler.data?.length === 0 ? (
-            <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.sinifKodu.bekleyenYok')} />
-          ) : null}
-          {istekler.data?.map((i) => (
-            <Kart
-              key={i.id}
-              className="gap-3"
-              accessible
-              accessibilityLabel={t('mobil.sinifKodu.bekleyenEtiketi', {
-                kurum: i.kurumAd,
-                grup: i.grupAd,
-              })}
-            >
-              <View className="gap-1">
-                <Metin varyant="altBaslik">{i.grupAd}</Metin>
-                <Metin varyant="ikincil">{i.kurumAd}</Metin>
-                <Metin varyant="kucuk">{t('mobil.sinifKodu.onayBekliyorKisa')}</Metin>
-              </View>
-              <Dugme
-                varyant="ikincil"
-                etiket={t('mobil.sinifKodu.iptal')}
-                yukleniyor={iptal.isPending && iptal.variables === i.id}
-                onPress={() => {
-                  iptalEt(i);
-                }}
-              />
-            </Kart>
-          ))}
-          <Dugme
-            varyant="hayalet"
-            etiket={t('mobil.sinifKodu.yenile')}
-            yukleniyor={istekler.isFetching && !istekler.isPending}
-            onPress={() => void yenile()}
-          />
-        </View>
+          </Kart>
+        ))}
+        <Dugme
+          varyant="hayalet"
+          etiket={t('mobil.sinifKodu.yenile')}
+          yukleniyor={istekler.isFetching && !istekler.isPending}
+          onPress={() => void yenile()}
+        />
+      </View>
 
-        {geri ? (
-          <Dugme varyant="hayalet" etiket={t('mobil.sinifKodu.kurumSeceDon')} onPress={geri} />
-        ) : null}
-      </Ekran>
-    </>
+      {geri ? (
+        <Dugme varyant="hayalet" etiket={t('mobil.sinifKodu.kurumSeceDon')} onPress={geri} />
+      ) : null}
+    </Ekran>
   );
 }

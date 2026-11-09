@@ -42,53 +42,47 @@ export function OgretmenBugun() {
   const ad = oturum.asama === 'giris' ? oturum.kullanici.adSoyad.split(' ')[0] : '';
 
   return (
-    <>
-      <CevrimdisiSerit />
-      <Ekran kenarlar={['top', 'left', 'right']}>
-        <View>
-          <Metin varyant="baslik" accessibilityRole="header">
-            {t('mobil.sekmeler.bugun')}
-          </Metin>
-          <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
-        </View>
-        {yoklama ? <BekleyenYoklamaKartlari /> : null}
-        {takvim ? (
-          <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
-            {bugun.isPending ? <Yukleniyor /> : null}
-            {bugun.data?.length === 0 ? (
+    <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
+      <View>
+        <Metin varyant="baslik" accessibilityRole="header">
+          {t('mobil.sekmeler.bugun')}
+        </Metin>
+        <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
+      </View>
+      {yoklama ? <BekleyenYoklamaKartlari /> : null}
+      {takvim ? (
+        <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
+          {bugun.isPending ? <Yukleniyor /> : null}
+          {bugun.data?.length === 0 ? (
+            <BosDurum ikon="calendar-outline" mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')} />
+          ) : null}
+          {bugun.data?.map((d) => (
+            <DersSatiri key={d.id} ders={d} ad={dersAdi(d, gruplar.data)} tz={tz} />
+          ))}
+        </Bolum>
+      ) : null}
+      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isError ? (
+        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+      ) : null}
+      {sorgu.data ? (
+        <>
+          <Bolum baslik={t('mobil.bugun.ogretmen.bekleyenSorular')}>
+            {sorgu.data.bekleyenSorular.length === 0 ? (
               <BosDurum
-                ikon="calendar-outline"
-                mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')}
+                ikon="chatbubbles-outline"
+                mesaj={t('mobil.bugun.ogretmen.bekleyenSorularBos')}
               />
-            ) : null}
-            {bugun.data?.map((d) => (
-              <DersSatiri key={d.id} ders={d} ad={dersAdi(d, gruplar.data)} tz={tz} />
-            ))}
+            ) : (
+              sorgu.data.bekleyenSorular.map((s) => (
+                <Metin key={s.id}>
+                  {s.ogrenciAd}: {s.konu}
+                </Metin>
+              ))
+            )}
           </Bolum>
-        ) : null}
-        {sorgu.isPending ? <Yukleniyor /> : null}
-        {sorgu.isError ? (
-          <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
-        ) : null}
-        {sorgu.data ? (
-          <>
-            <Bolum baslik={t('mobil.bugun.ogretmen.bekleyenSorular')}>
-              {sorgu.data.bekleyenSorular.length === 0 ? (
-                <BosDurum
-                  ikon="chatbubbles-outline"
-                  mesaj={t('mobil.bugun.ogretmen.bekleyenSorularBos')}
-                />
-              ) : (
-                sorgu.data.bekleyenSorular.map((s) => (
-                  <Metin key={s.id}>
-                    {s.ogrenciAd}: {s.konu}
-                  </Metin>
-                ))
-              )}
-            </Bolum>
-          </>
-        ) : null}
-      </Ekran>
-    </>
+        </>
+      ) : null}
+    </Ekran>
   );
 }

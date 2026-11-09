@@ -12,6 +12,7 @@ import { kodGoster } from '../hesap/sinifKodu';
 import { tarihGoster } from '../lib/zaman';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { Ekran } from '../ui/Ekran';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
@@ -370,21 +371,18 @@ export function OgrencilerEkrani() {
   );
 
   return (
-    <>
-      <CevrimdisiSerit />
-      <View className="flex-1 bg-arkaPlan pt-14">
-        <FlatList
-          data={finansAcik ? gorunen : []}
-          keyExtractor={(o) => o.ogrenciId}
-          keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-3 p-4"
-          ListHeaderComponent={baslik}
-          ListFooterComponent={altBilgi}
-          renderItem={({ item }) => (
-            <OgrenciSatiri o={item} esik={ogrenciler.data?.dusukKrediEsigi ?? 2} />
-          )}
-        />
-      </View>
-    </>
+    <Ekran kaydir={false} kenarlar={['top', 'left', 'right']} ust={<CevrimdisiSerit />}>
+      <FlatList
+        data={finansAcik ? gorunen : []}
+        keyExtractor={(o) => o.ogrenciId}
+        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="gap-3 pb-4"
+        ListHeaderComponent={baslik}
+        ListFooterComponent={altBilgi}
+        renderItem={({ item }) => (
+          <OgrenciSatiri o={item} esik={ogrenciler.data?.dusukKrediEsigi ?? 2} />
+        )}
+      />
+    </Ekran>
   );
 }

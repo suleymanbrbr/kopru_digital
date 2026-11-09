@@ -8,6 +8,7 @@ import type { Ders } from '../api/operasyonTipleri';
 import { bugunTarihi, gunBasligi, gunKisa, gunNumarasi, saatAraligi, tarihEkle } from '../lib/saat';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { Ekran } from '../ui/Ekran';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
@@ -163,8 +164,7 @@ export function DerslerEkrani() {
 
   return (
     <>
-      <CevrimdisiSerit />
-      <View className="flex-1 gap-3 bg-arkaPlan px-4 pt-14">
+      <Ekran kaydir={false} kenarlar={['top', 'left', 'right']} ust={<CevrimdisiSerit />}>
         <View className="flex-row items-center justify-between gap-2">
           <Metin varyant="baslik" accessibilityRole="header">
             {t('mobil.sekmeler.dersler')}
@@ -283,7 +283,7 @@ export function DerslerEkrani() {
             )}
           />
         ) : null}
-      </View>
+      </Ekran>
       {islem ? (
         <DersIslemleri
           ders={islem}
