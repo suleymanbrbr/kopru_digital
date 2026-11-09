@@ -233,11 +233,17 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
     });
   }
 
-  function ogrenciCakisiyorMu(grupId: string, baslangic: string, bitis: string) {
+  function ogrenciCakisiyorMu(
+    grupId: string,
+    baslangic: string,
+    bitis: string,
+    haric?: Set<string>,
+  ) {
     const uyeler = grupUyeleri[grupId] ?? [];
     return dersler.some(
       (d) =>
         d.durum === 'planli' &&
+        !haric?.has(d.id) &&
         d.katilimcilar.some((k) => uyeler.includes(k)) &&
         Date.parse(d.baslangic) < Date.parse(bitis) &&
         Date.parse(d.bitis) > Date.parse(baslangic),
@@ -309,8 +315,8 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
           yer: g.yer ?? null,
         }),
       );
-      dersler = [...dersler, ...yeni];
       const ogrCak = adaylar.some((a) => ogrenciCakisiyorMu(g.grupId, a.baslangic, a.bitis));
+      dersler = [...dersler, ...yeni];
       return {
         dersler: yeni.map(gorunenDers),
         cakisanlar: [...cakisan.values()].map((d) => ({
@@ -373,6 +379,7 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
           hedef.grupId,
           yeniAralik(hedef).baslangic,
           yeniAralik(hedef).bitis,
+          haric,
         ),
       };
     },

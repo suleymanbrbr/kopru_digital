@@ -1,14 +1,18 @@
+/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/require-await, @typescript-eslint/no-non-null-assertion --
+   react-test-renderer React 19'da kullanimdan kaldirildi ama React Native icin ek bagimlilik
+   (@testing-library/react-native) gerektirmeyen tek renderer; `props` tipsizdir (any). */
 /**
  * Mock modda (EXPO_PUBLIC_API_MOCK) tum yeni ekranlarin Jest duzeyinde render edildigini ve temel
  * akislarin calistigini gosterir. Metro/simulator yerine react-test-renderer kullanilir; veri mock
  * adaptorlerden gelir (`gecikme: 0`).
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
+import { act } from 'react';
 import type { ReactElement } from 'react';
+import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 
-import { ApiHata } from '../api/tipler';
 import { mockAdaptorler } from '../api/mock';
+import { ApiHata } from '../api/tipler';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
 import { OfflineKuyruk } from '../offline/kuyruk';
@@ -50,8 +54,13 @@ jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('../karakter/Companion', () => ({ Companion: () => null }));
 
 const render: ReactTestRenderer[] = [];
+const istemciler: QueryClient[] = [];
 afterEach(() => {
-  for (const r of render.splice(0)) act(() => r.unmount());
+  for (const r of render.splice(0))
+    act(() => {
+      r.unmount();
+    });
+  for (const q of istemciler.splice(0)) q.clear();
   jest.clearAllMocks();
 });
 
@@ -84,8 +93,13 @@ function ortamKur(): Ortam {
   });
   yoklamaIsleyicisiKaydet(kuyruk, () => adaptorler.ders);
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: 0 } },
+    // Mutation onbellegi varsayilan 5 dk'lik zamanlayici acar; test sureci kapanabilsin diye 0.
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity, staleTime: 0 },
+      mutations: { gcTime: 0 },
+    },
   });
+  istemciler.push(queryClient);
   const servisler = {
     adaptorler,
     oturum,
@@ -131,8 +145,6 @@ async function ac(o: Ortam, ekran: ReactElement): Promise<ReactTestRenderer> {
   return r;
 }
 
-type Dugum = ReturnType<ReactTestRenderer['toJSON']>;
-
 function duzMetin(d: unknown): string {
   if (d === null || d === undefined) return '';
   if (typeof d === 'string') return d;
@@ -144,7 +156,7 @@ function duzMetin(d: unknown): string {
 /** Render agacindaki tum `Text` kuyruklarinin metni (` | ` ile ayrilmis). */
 function metinler(r: ReactTestRenderer): string {
   const parcalar: string[] = [];
-  const gez = (d: Dugum | unknown) => {
+  const gez = (d: unknown) => {
     if (d === null || d === undefined || typeof d === 'string') return;
     if (Array.isArray(d)) {
       d.forEach(gez);
@@ -494,7 +506,8 @@ describe('ogrenci bugun ekrani', () => {
     const m = metinler(r);
     expect(m).toContain('Bugünkü dersler');
     expect(m).toContain('Yaklaşan dersler');
-    expect(m).toContain('Kalan dersin: 5');
+    // Yoklamada "geldi" isaretlenince paket modelinde 5 -> 4.
+    expect(m).toContain('Kalan dersin: 4');
     expect(m).toContain('Üslü sayılar tekrarı yap');
     expect(m).not.toContain('Sadece öğretmen görür');
     // Fiyat, borc, tahsilat, TL tutari ogrenci ekraninda yok.

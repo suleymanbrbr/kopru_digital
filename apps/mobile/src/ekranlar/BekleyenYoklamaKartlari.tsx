@@ -22,14 +22,23 @@ import {
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
 
-function Kart1({ ders, ad, tz }: { ders: BekleyenYoklamaDersi; ad: string; tz: string }) {
+function Kart1({
+  ders,
+  ad,
+  tz,
+  alindi,
+}: {
+  ders: BekleyenYoklamaDersi;
+  ad: string;
+  tz: string;
+  alindi: (id: string, ad: string) => void;
+}) {
   const router = useRouter();
   const qc = useQueryClient();
   const { kuyruk } = useServisler();
   const uyelikId = useAktif()?.uyelik.uyelikId;
   // Katilimcilar kart gorununce onbellege alinir: cevrimdisiyken de "Geldi" calisir.
   const kat = useYoklamaKatilimcilari(ders.id);
-  const [alindi, setAlindi] = useState(false);
   const birebir = ders.katilimciSayisi === 1 && kat.data?.length === 1;
 
   function ac() {
@@ -52,21 +61,13 @@ function Kart1({ ders, ad, tz }: { ders: BekleyenYoklamaDersi; ad: string; tz: s
       ],
     };
     yoklamaKuyrugaAl(kuyruk, yuk);
-    setAlindi(true);
+    alindi(ders.id, ad);
     qc.setQueryData<BekleyenYoklamaDersi[]>(['yoklama-bekleyen', uyelikId], (eski) =>
       eski?.filter((d) => d.id !== ders.id),
     );
   }
 
   const zaman = `${kisaZaman(ders.baslangic, tz)}, ${saatAraligi(ders.baslangic, ders.bitis, tz)}`;
-  if (alindi) {
-    return (
-      <Kart className="gap-1" accessibilityLiveRegion="polite" testID={`yoklama-kart-${ders.id}`}>
-        <Metin varyant="etiket">{ad}</Metin>
-        <Metin varyant="ikincil">{t('mobil.yoklama.alindiMesaj')}</Metin>
-      </Kart>
-    );
-  }
   return (
     <Kart className="gap-3" testID={`yoklama-kart-${ders.id}`}>
       <View
@@ -108,7 +109,10 @@ export function BekleyenYoklamaKartlari() {
   const { tz } = useSaatDilimi();
   const { bekleyen } = useKuyruk();
   const kuyrukta = new Set(bekleyen.map((i) => (i.yuk as YoklamaYuku).dersId));
-  const liste = (sorgu.data ?? []).filter((d) => !kuyrukta.has(d.id));
+  // Iyimser: "alindi" gosterilen dersler sunucu esleseye kadar (ve sonra da) onay satiri olarak kalir.
+  const [alinan, setAlinan] = useState<{ id: string; ad: string }[]>([]);
+  const alinanIdler = new Set(alinan.map((a) => a.id));
+  const liste = (sorgu.data ?? []).filter((d) => !kuyrukta.has(d.id) && !alinanIdler.has(d.id));
 
   return (
     <Kart className="gap-3" testID="yoklama-bekleyen">
@@ -119,11 +123,30 @@ export function BekleyenYoklamaKartlari() {
       {sorgu.isError && !sorgu.data ? (
         <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
-      {sorgu.data && liste.length === 0 ? (
+      {sorgu.data && liste.length === 0 && alinan.length === 0 ? (
         <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.yoklama.bekleyenBos')} />
       ) : null}
       {liste.map((d) => (
-        <Kart1 key={d.id} ders={d} ad={dersAdi(d, gruplar.data)} tz={tz} />
+        <Kart1
+          key={d.id}
+          ders={d}
+          ad={dersAdi(d, gruplar.data)}
+          tz={tz}
+          alindi={(id, ad) => {
+            setAlinan((a) => [...a, { id, ad }]);
+          }}
+        />
+      ))}
+      {alinan.map((a) => (
+        <Kart
+          key={a.id}
+          className="gap-1"
+          accessibilityLiveRegion="polite"
+          testID={`yoklama-kart-${a.id}`}
+        >
+          <Metin varyant="etiket">{a.ad}</Metin>
+          <Metin varyant="ikincil">{t('mobil.yoklama.alindiMesaj')}</Metin>
+        </Kart>
       ))}
     </Kart>
   );

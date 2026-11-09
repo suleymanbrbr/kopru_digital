@@ -11,6 +11,7 @@ import type {
   GrupTuru,
   IptalKaynagi,
 } from '../api/operasyonTipleri';
+import { useHareketAzalt } from '../hooks/useHareketAzalt';
 import { cakisanDersleriOku } from '../lib/cakisma';
 import { saatAraligi, saatGecerliMi, tarihGecerliMi, yerelSaat, yerelTarih } from '../lib/saat';
 import { Dugme } from '../ui/Dugme';
@@ -39,6 +40,7 @@ export function DersIslemleri({ ders, ad, tz, grupTuru, yoklamaAcik, kapat }: Pr
   const router = useRouter();
   const qc = useQueryClient();
   const { adaptorler } = useServisler();
+  const azalt = useHareketAzalt();
   const [adim, setAdim] = useState<Adim>('menu');
   const [kapsam, setKapsam] = useState<DersKapsami>('yalniz_bu');
   const [yeniGun, setYeniGun] = useState(yerelTarih(ders.baslangic, tz));
@@ -64,9 +66,9 @@ export function DersIslemleri({ ders, ad, tz, grupTuru, yoklamaAcik, kapat }: Pr
     onSuccess: (s) => {
       void qc.invalidateQueries({ queryKey: ['dersler'] });
       void qc.invalidateQueries({ queryKey: ['yoklama-bekleyen'] });
-      kapat(
-        s.etkilenen > 1 ? t('mobil.ders.tasindiN', { n: s.etkilenen }) : t('mobil.ders.tasindi'),
-      );
+      const mesaj =
+        s.etkilenen > 1 ? t('mobil.ders.tasindiN', { n: s.etkilenen }) : t('mobil.ders.tasindi');
+      kapat(s.ogrenciCakismasi ? `${mesaj} ${t('mobil.ders.ogrenciCakismaUyari')}` : mesaj);
     },
     onError: (e) => {
       const c = cakisanDersleriOku(e);
@@ -142,7 +144,7 @@ export function DersIslemleri({ ders, ad, tz, grupTuru, yoklamaAcik, kapat }: Pr
   return (
     <Modal
       visible
-      animationType="slide"
+      animationType={azalt ? 'none' : 'slide'}
       onRequestClose={() => {
         kapat();
       }}

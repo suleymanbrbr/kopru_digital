@@ -823,6 +823,7 @@ export const tr = {
       cakismaVazgec: 'Vazgeç',
       ogrenciCakisma:
         'Uyarı: öğrencilerden birinin bu saatte başka dersi var. Ders yine de kaydedildi.',
+      ogrenciCakismaUyari: 'Uyarı: öğrencilerden birinin bu saatte başka dersi var.',
       tasiBaslik: 'Dersi taşı',
       yeniGun: 'Yeni gün',
       yeniSaat: 'Yeni saat',
