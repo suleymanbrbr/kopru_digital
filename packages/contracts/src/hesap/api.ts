@@ -140,6 +140,8 @@ export const kurumAyarlariSema = z.object({
   yoklama_kilit_gun: z.number().int().min(0).max(365).optional(),
   /** Öğrenci kalan ders sayısını görsün mü (varsayılan true; kapalıysa `kalan_kredi: null`). */
   ogrenci_kalan_ders_gorur: z.boolean().optional(),
+  /** Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer). */
+  ogrenci_deneme_girisi: z.boolean().optional(),
 });
 
 export const KurumSema = z.object({

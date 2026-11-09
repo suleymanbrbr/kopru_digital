@@ -1,4 +1,8 @@
 import { defineModule } from '../define-module.js';
+import { denemeAnalizYollari } from './deneme-analiz-yollari.js';
+import { denemeExcelYollari } from './deneme-excel-yollari.js';
+import { denemeKuralYollari } from './deneme-kural-yollari.js';
+import { denemeYollari } from './deneme-yollari.js';
 import { mufredatYollari } from './mufredat-yollari.js';
 import { odevOgrenciYollari } from './odev-ogrenci-yollari.js';
 import { odevSablonYollari } from './odev-sablon-yollari.js';
@@ -21,6 +25,10 @@ export const ogrenmeModule = defineModule('ogrenme', async (app) => {
     await app.register(planYollari);
     await app.register(planSablonYollari);
     await app.register(planOgrenciYollari);
+    await app.register(denemeKuralYollari);
+    await app.register(denemeYollari);
+    await app.register(denemeExcelYollari);
+    await app.register(denemeAnalizYollari);
   }
 });
 
