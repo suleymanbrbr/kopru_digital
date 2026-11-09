@@ -13,7 +13,7 @@ import { kv, webDeposuOlarak } from '../depo/kv';
 import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
 import { netInfoGozlemcisi } from '../offline/ag';
-import { OfflineKuyruk } from '../offline/kuyruk';
+import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
 
@@ -92,7 +92,8 @@ export function servisleriKur(): Servisler {
     },
     cevrimiciMi: () => agGozlemcisi.cevrimiciMi(),
     // Baglanti gelince en gec 1 dakikada eslesme: geri cekilme 1 dakikayi asmaz.
-    gecikme: (deneme) => Math.min(2 ** deneme * 1000, 60_000),
+    gecikme: YOKLAMA_KUYRUGU.gecikme,
+    enFazlaDeneme: YOKLAMA_KUYRUGU.enFazlaDeneme,
   });
   yoklamaIsleyicisiKaydet(
     kuyruk,

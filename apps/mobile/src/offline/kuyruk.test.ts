@@ -1,6 +1,11 @@
 import { ApiHata } from '../api/tipler';
 import { bellekKv } from '../depo/kv';
-import { OfflineKuyruk, type AgGozlemcisi, type KuyrukSecenekleri } from './kuyruk';
+import {
+  OfflineKuyruk,
+  YOKLAMA_KUYRUGU,
+  type AgGozlemcisi,
+  type KuyrukSecenekleri,
+} from './kuyruk';
 
 function kur(ek: Partial<KuyrukSecenekleri> = {}) {
   let n = 0;
@@ -174,5 +179,44 @@ describe('OfflineKuyruk', () => {
     await q.bosalt();
     expect(f).toHaveBeenCalledTimes(1);
     birak();
+  });
+
+  it('baglan: dogrudan bosalt() ag hatasi alinca da kendiliginden yeniden dener', async () => {
+    jest.useFakeTimers();
+    try {
+      const { q, durum, ilerlet } = kur({ gecikme: () => 1000 });
+      const f = jest.fn().mockRejectedValueOnce(new ApiHata('ag')).mockResolvedValue(undefined);
+      q.kaydet('a', f);
+      const ag: AgGozlemcisi = {
+        cevrimiciMi: () => durum.cevrimici,
+        abone: () => () => undefined,
+      };
+      const birak = q.baglan(ag);
+      await jest.advanceTimersByTimeAsync(0);
+      q.ekle('a', 1);
+      // yoklamaKuyrugaAl gibi: dogrudan bosalt(); baglan'in tetikle yolundan gecilmez
+      await q.bosalt();
+      expect(f).toHaveBeenCalledTimes(1);
+      expect(q.bekleyenler()).toHaveLength(1);
+      // sahte saat ve zamanlayici ilerler: yeniden deneme kendiliginden gelir
+      ilerlet(1100);
+      await jest.advanceTimersByTimeAsync(1100);
+      expect(f).toHaveBeenCalledTimes(2);
+      expect(q.bekleyenler()).toHaveLength(0);
+      birak();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('uygulama ayarlari: gecici hatada yaklasik 2 saat denenir, gecikme 60 sn ustune cikmaz', () => {
+    let toplam = 0;
+    for (let d = 1; d < YOKLAMA_KUYRUGU.enFazlaDeneme; d++) {
+      const g = YOKLAMA_KUYRUGU.gecikme(d);
+      expect(g).toBeLessThanOrEqual(60_000);
+      toplam += g;
+    }
+    expect(toplam).toBeGreaterThanOrEqual(2 * 3600_000 * 0.95);
+    expect(toplam).toBeLessThanOrEqual(2 * 3600_000 * 1.05);
   });
 });
