@@ -34,6 +34,9 @@ function haftaGunu(gun: number): string {
 
 async function ihlaller(page: Page) {
   await expect(page).toHaveTitle(/.+/);
+  // Fare ustundeki ogelin gecis (transition) renkleri yanlis kontrast alarmi vermesin.
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(300);
   const sonuc = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   return sonuc.violations.map(
     (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,

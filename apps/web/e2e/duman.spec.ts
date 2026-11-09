@@ -94,7 +94,10 @@ test.describe('rol ve modul duyarli navigasyon', () => {
     for (const ad of ['Bugün', 'Görevler', 'Ödevlerim', 'Soru sor', 'Kayıtlarım', 'Karakterim']) {
       await expect(menu.getByRole('link', { name: ad, exact: true })).toBeVisible();
     }
-    await expect(menu.getByRole('link', { name: 'Takvim' })).toHaveCount(0);
+    // Ogrenci takvimini (salt okunur) gorur; yoklama ve finans menusu yoktur.
+    await expect(menu.getByRole('link', { name: 'Takvim' })).toBeVisible();
+    await expect(menu.getByRole('link', { name: 'Yoklama' })).toHaveCount(0);
+    await expect(menu.getByRole('link', { name: 'Finans' })).toHaveCount(0);
   });
 
   test('yonetici icin kapali moduller gizlenir, yonetim ogeleri gorunur', async ({
@@ -120,8 +123,8 @@ test.describe('rol ve modul duyarli navigasyon', () => {
 
   test('hazirlanmakta olan bolum yer tutucu gosterir', async ({ page }) => {
     await girisYap(page, 'Ege Işık Dershanesi');
-    await page.goto('/kurum-ege/takvim');
-    await expect(page.getByRole('heading', { name: 'Takvim', level: 1 })).toBeVisible();
+    await page.goto('/kurum-ege/odevler');
+    await expect(page.getByRole('heading', { name: 'Ödevler', level: 1 })).toBeVisible();
     await expect(page.getByText('Bu bölüm hazırlanıyor')).toBeVisible();
   });
 });
