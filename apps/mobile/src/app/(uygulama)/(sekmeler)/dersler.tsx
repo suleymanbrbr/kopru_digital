@@ -1,5 +1,5 @@
-import { BosSekme } from '../../../ekranlar/BosSekme';
+import { DerslerEkrani } from '../../../ekranlar/DerslerEkrani';
 
 export default function Dersler() {
-  return <BosSekme anahtar="dersler" ikon="calendar-outline" />;
+  return <DerslerEkrani />;
 }

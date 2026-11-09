@@ -7,7 +7,17 @@ import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useOturum } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
+import {
+  dersAdi,
+  useGruplar,
+  useGunDersleri,
+  useModulAcik,
+  useSaatDilimi,
+} from '../uygulama/operasyon';
 import { useOgretmenBugun } from '../uygulama/sorgular';
+import { bugunTarihi } from '../lib/saat';
+import { BekleyenYoklamaKartlari } from './BekleyenYoklamaKartlari';
+import { DersSatiri } from './DerslerEkrani';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
 function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
@@ -24,6 +34,11 @@ function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode
 export function OgretmenBugun() {
   const oturum = useOturum();
   const sorgu = useOgretmenBugun();
+  const takvim = useModulAcik('takvim');
+  const yoklama = useModulAcik('yoklama');
+  const { tz } = useSaatDilimi();
+  const bugun = useGunDersleri(bugunTarihi(tz));
+  const gruplar = useGruplar();
   const ad = oturum.asama === 'giris' ? oturum.kullanici.adSoyad.split(' ')[0] : '';
 
   return (
@@ -36,26 +51,27 @@ export function OgretmenBugun() {
           </Metin>
           <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
         </View>
+        {yoklama ? <BekleyenYoklamaKartlari /> : null}
+        {takvim ? (
+          <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
+            {bugun.isPending ? <Yukleniyor /> : null}
+            {bugun.data?.length === 0 ? (
+              <BosDurum
+                ikon="calendar-outline"
+                mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')}
+              />
+            ) : null}
+            {bugun.data?.map((d) => (
+              <DersSatiri key={d.id} ders={d} ad={dersAdi(d, gruplar.data)} tz={tz} />
+            ))}
+          </Bolum>
+        ) : null}
         {sorgu.isPending ? <Yukleniyor /> : null}
         {sorgu.isError ? (
           <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
         ) : null}
         {sorgu.data ? (
           <>
-            <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
-              {sorgu.data.dersler.length === 0 ? (
-                <BosDurum
-                  ikon="calendar-outline"
-                  mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')}
-                />
-              ) : (
-                sorgu.data.dersler.map((d) => (
-                  <Metin key={d.id}>
-                    {d.saat} {d.baslik}
-                  </Metin>
-                ))
-              )}
-            </Bolum>
             <Bolum baslik={t('mobil.bugun.ogretmen.bekleyenSorular')}>
               {sorgu.data.bekleyenSorular.length === 0 ? (
                 <BosDurum

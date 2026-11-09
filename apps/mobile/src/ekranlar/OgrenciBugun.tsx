@@ -12,8 +12,35 @@ import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useAktif, useOturum } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
+import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
+import {
+  dersAdi,
+  useAralikDersleri,
+  useModulAcik,
+  useOgrenciKarti,
+  useSaatDilimi,
+  useYoklamaKatilimcilari,
+} from '../uygulama/operasyon';
 import { useOgrenciBugun } from '../uygulama/sorgular';
+import type { Ders } from '../api/operasyonTipleri';
+import { DersSatiri } from './DerslerEkrani';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+
+/** Ogretmenin "ogrenciye gorunsun" notu (api `ogretmene_ozel` notlari ogrenciye hic donmez). */
+function OgretmenNotu({ ders, tz }: { ders: Ders; tz: string }) {
+  const kat = useYoklamaKatilimcilari(ders.id);
+  const not = kat.data?.find((k) => k.not)?.not;
+  if (!not) return null;
+  return (
+    <Kart className="gap-1" testID={`ogretmen-notu-${ders.id}`}>
+      <Metin varyant="etiket" accessibilityRole="header">
+        {t('mobil.bugun.ogrenci.notBaslik')}
+      </Metin>
+      <Metin varyant="kucuk">{kisaZaman(ders.baslangic, tz)}</Metin>
+      <Metin>{not}</Metin>
+    </Kart>
+  );
+}
 
 export function OgrenciBugun() {
   const router = useRouter();
@@ -24,6 +51,23 @@ export function OgrenciBugun() {
   const oyun = !!aktif && modulAcikMi(aktif.moduller, 'oyunlastirma');
   const soru = !!aktif && modulAcikMi(aktif.moduller, 'soru_sor');
   const d = sorgu.data;
+  const takvim = useModulAcik('takvim');
+  const finans = useModulAcik('finans');
+  const { tz } = useSaatDilimi();
+  const bugun = bugunTarihi(tz);
+  const dersler = useAralikDersleri(tarihEkle(bugun, -7), 22);
+  const kart = useOgrenciKarti(aktif?.uyelik.uyelikId);
+  // Ogrenci yalnizca kalan dersini gorur; fiyat/borc/tahsilat bu ekranda hicbir kosulda yoktur.
+  const kalan = kart.data?.gorunum === 'ogrenci' ? kart.data.kalanKredi : null;
+  const simdi = Date.now();
+  const bugunku = (dersler.data ?? []).filter((x) => yerelTarih(x.baslangic, tz) === bugun);
+  const yaklasan = (dersler.data ?? [])
+    .filter((x) => x.durum === 'planli' && yerelTarih(x.baslangic, tz) > bugun)
+    .slice(0, 5);
+  const gecmis = (dersler.data ?? [])
+    .filter((x) => x.durum !== 'iptal' && Date.parse(x.baslangic) < simdi)
+    .slice(-3)
+    .reverse();
 
   return (
     <>
@@ -67,6 +111,54 @@ export function OgrenciBugun() {
                   </Metin>
                 </View>
               </Kart>
+            ) : null}
+            {finans && kalan !== null ? (
+              <Kart className="flex-row items-center gap-3" testID="kalan-ders">
+                <Ikon ad="ticket-outline" />
+                <Metin varyant="altBaslik">{t('mobil.finans.ogrenciKalan', { n: kalan })}</Metin>
+              </Kart>
+            ) : null}
+            {takvim ? (
+              <>
+                <Kart className="gap-3">
+                  <Metin varyant="altBaslik" accessibilityRole="header">
+                    {t('mobil.bugun.ogrenci.bugunkuDersler')}
+                  </Metin>
+                  {dersler.isPending ? <Yukleniyor /> : null}
+                  {dersler.isError && !dersler.data ? (
+                    <HataDurumu
+                      mesaj={hataMesaji(dersler.error)}
+                      tekrar={() => void dersler.refetch()}
+                    />
+                  ) : null}
+                  {dersler.data && bugunku.length === 0 ? (
+                    <BosDurum
+                      ikon="calendar-outline"
+                      mesaj={t('mobil.bugun.ogrenci.bugunkuDerslerBos')}
+                    />
+                  ) : null}
+                  {bugunku.map((x) => (
+                    <DersSatiri key={x.id} ders={x} ad={dersAdi(x, undefined)} tz={tz} />
+                  ))}
+                </Kart>
+                <Kart className="gap-3">
+                  <Metin varyant="altBaslik" accessibilityRole="header">
+                    {t('mobil.bugun.ogrenci.yaklasanDersler')}
+                  </Metin>
+                  {dersler.data && yaklasan.length === 0 ? (
+                    <BosDurum
+                      ikon="calendar-outline"
+                      mesaj={t('mobil.bugun.ogrenci.yaklasanBos')}
+                    />
+                  ) : null}
+                  {yaklasan.map((x) => (
+                    <DersSatiri key={x.id} ders={x} ad={dersAdi(x, undefined)} tz={tz} />
+                  ))}
+                </Kart>
+                {gecmis.map((x) => (
+                  <OgretmenNotu key={x.id} ders={x} tz={tz} />
+                ))}
+              </>
             ) : null}
             <Kart className="gap-2">
               <Metin varyant="altBaslik" accessibilityRole="header">
