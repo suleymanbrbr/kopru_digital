@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const port = 3100;
+/** `E2E_WEB_PORT` ile degistirilebilir (paralel calisan baska bir web ile cakismamak icin). */
+const port = Number(process.env.E2E_WEB_PORT ?? 3100);
 const chromeYolu = process.env.PLAYWRIGHT_CHROME_PATH;
 const kullan = chromeYolu ? { launchOptions: { executablePath: chromeYolu } } : {};
 
