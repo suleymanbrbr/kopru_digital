@@ -178,17 +178,25 @@ export class ApiHata extends Error {
   readonly yenidenDenenebilir: boolean;
   /** Api hata kodu (ornegin `kapasite_dolu`); kullaniciya ozel mesaj secmek icin. */
   readonly ayrinti: string | undefined;
+  /** Hata govdesinin `details` alani (ornegin `ders_cakismasi` icin cakisan dersler). */
+  readonly detay: unknown;
 
   constructor(
     kod: ApiHataKodu,
     mesaj?: string,
-    secenekler?: { durum?: number; yenidenDenenebilir?: boolean; ayrinti?: string },
+    secenekler?: {
+      durum?: number;
+      yenidenDenenebilir?: boolean;
+      ayrinti?: string;
+      detay?: unknown;
+    },
   ) {
     super(mesaj ?? kod);
     this.name = 'ApiHata';
     this.kod = kod;
     this.durum = secenekler?.durum;
     this.ayrinti = secenekler?.ayrinti;
+    this.detay = secenekler?.detay;
     this.yenidenDenenebilir =
       secenekler?.yenidenDenenebilir ?? (kod === 'ag' || kod === 'zaman_asimi' || kod === 'sunucu');
   }

@@ -10,6 +10,7 @@ import type {
   SinifBekleyenleri,
   UyelikBaglami,
 } from './tipler';
+import type { DersAdapter, FinansAdapter } from './operasyonTipleri';
 
 /**
  * Kimlik dogrulama ve oturum adaptoru (ADR 0004). Belirtec saklama/yenileme adaptorun isidir;
@@ -75,4 +76,6 @@ export interface Adaptorler {
   auth: AuthAdapter;
   veri: VeriAdapter;
   hesap: HesapAdapter;
+  ders: DersAdapter;
+  finans: FinansAdapter;
 }

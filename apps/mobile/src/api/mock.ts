@@ -1,5 +1,6 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { mockOperasyon } from './mockOperasyon';
 import {
   ApiHata,
   type GrupKatilimIstegi,
@@ -153,6 +154,7 @@ function moduller(rol: MobilRol | Rol, kurum: 'a' | 'b') {
     takvim: true,
     yoklama: true,
     odev: true,
+    finans: kurum === 'a',
     soru_sor: kurum === 'a',
     oyunlastirma: rol === 'ogrenci',
     duyuru: true,
@@ -168,6 +170,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   const istekler: KatilimIstegi[] = [];
   let sayac = 0;
   let oturumlar: OturumKaydi[] = [];
+  let aktifUyelikId: string | null = null;
 
   function tumUyelikler(tel: string): Uyelik[] {
     return [...uyelikleriUret(tel), ...ekUyelikler];
@@ -227,7 +230,15 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
     if (!(await depo.oku())) throw new ApiHata('yetkisiz', undefined, { durum: 401 });
   }
 
+  const operasyon = mockOperasyon({
+    bekle,
+    gecikmeMs,
+    oturumGerekli,
+    aktifUyelikId: () => aktifUyelikId,
+  });
+
   return {
+    ...operasyon,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);
@@ -275,6 +286,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
         await oturumGerekli();
         const uyelik = tumUyelikler(telefon ?? '5550000001').find((x) => x.uyelikId === uyelikId);
         if (!uyelik) throw new ApiHata('bulunamadi', undefined, { durum: 404 });
+        aktifUyelikId = uyelik.uyelikId;
         const k = uyelik.kurumId === 'kurum-b' ? 'b' : 'a';
         return { uyelik, moduller: moduller(uyelik.rol, k), vurgu: kurumlar[k].vurgu };
       },
