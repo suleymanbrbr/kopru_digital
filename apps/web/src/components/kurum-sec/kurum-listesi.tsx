@@ -4,13 +4,14 @@ import { t } from '@kopru/i18n';
 import { ArrowRight, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { BosDurum } from '@/components/bos-durum';
 import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Uyari } from '@/components/ui/uyari';
 import { hataMesaji } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { secilebilirUyelikler, secimiAtla } from '@/lib/kurum-secimi';
 import { faz1Roller } from '@/lib/navigasyon';
 import { hexNormalle, okunurMetinRengi } from '@/lib/vurgu';
 import { useOturum } from '@/oturum/saglayici';
@@ -22,7 +23,11 @@ export function KurumListesi({ oturum }: { oturum: Oturum }) {
   const [aciliyor, setAciliyor] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
 
-  const uyelikler = oturum.uyelikler.filter((u) => faz1Roller.includes(u.rol));
+  const faz1 = oturum.uyelikler.filter((u) => faz1Roller.includes(u.rol));
+  // Bireysel kurumda tek satir (sahip uyeligi); tek bireysel kurum varsa secim ekrani atlanir.
+  const uyelikler = secilebilirUyelikler(faz1);
+  const atla = secimiAtla(faz1);
+  const atlandi = useRef(false);
 
   async function sec(uyelikId: string, kurumId: string) {
     setAciliyor(uyelikId);
@@ -34,6 +39,25 @@ export function KurumListesi({ oturum }: { oturum: Oturum }) {
       setHata(hataMesaji(e));
       setAciliyor(null);
     }
+  }
+
+  useEffect(() => {
+    if (!atla || atlandi.current) return;
+    atlandi.current = true;
+    void sec(atla.id, atla.kurumId);
+    // `sec` her render yeni islev; yalniz atlanacak uyelik degisince calisir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atla?.id]);
+
+  if (atla && hata === null) {
+    return (
+      <div
+        role="status"
+        className="mx-auto flex min-h-dvh w-full max-w-2xl items-center justify-center px-5 text-metin-ikincil"
+      >
+        {t('kurumSec.aciliyor')}
+      </div>
+    );
   }
 
   return (

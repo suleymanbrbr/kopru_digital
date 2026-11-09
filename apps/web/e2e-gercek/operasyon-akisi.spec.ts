@@ -66,8 +66,15 @@ test('gercek api: kurum, ogrenci, paket, ders, yoklama, duzeltme ve Excel', asyn
 
   const o = await operasyonOrtaminiKur(telefon, ek);
   await page.reload();
-  // Bireysel kurumda hoca iki uyelik tasir (sahip ve ogretmen); sahip uyeligiyle devam edilir.
-  await page.getByRole('button', { name: new RegExp(`${o.kurumAdi}, Kurum sahibi`) }).click();
+  // Bireysel kurumda hoca iki uyelik tasir (sahip ve ogretmen); tek bireysel kurum oldugu icin secim
+  // ekrani atlanir ve sahip uyeligiyle acilir ("Ogretmen" uyeligi ogrencileri gostermez).
+  await expect(page).toHaveURL(/\/[0-9a-f-]{36}\/bugun$/);
+  await expect(page.getByText('Kurum sahibi').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Bu kurumla devam et/ })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Bugünkü dersler' })).toBeVisible();
+  await expect(page.getByText('Bugün için planlanmış ders yok')).toBeVisible();
+  // Kurum degistiriciden secim ekranina gidilirse tek kurum oldugu icin geri doner.
+  await page.goto('/kurum-sec');
   await expect(page).toHaveURL(/\/[0-9a-f-]{36}\/bugun$/);
 
   // Solo hoca kurum menulerini gormez; takvim, yoklama ve finans gorunur.
@@ -110,6 +117,15 @@ test('gercek api: kurum, ogrenci, paket, ders, yoklama, duzeltme ve Excel', asyn
   if (oncekiHafta) await page.getByRole('button', { name: 'Önceki hafta' }).click();
   await expect(page.getByRole('button', { name: /Üslü sayılar/ })).toBeVisible();
   await goruntu('takvim');
+
+  // "Bugun" ekrani ayni dersi gosterir (bugune denk geliyorsa; gece yarisini asan kosuda atlanir).
+  if (baslangic.tarih === yerel(Date.now()).tarih) {
+    await menu.getByRole('link', { name: 'Bugün' }).click();
+    const kart = page.getByRole('region', { name: 'Bugünkü dersler' });
+    await expect(kart.getByText(`${o.ogrenciAdi} (birebir) · Üslü sayılar`)).toBeVisible();
+    await expect(kart.getByText('Planlı')).toBeVisible();
+    await expect(page.getByText('Bugün için planlanmış ders yok')).toHaveCount(0);
+  }
 
   // --- Yoklama al: birebirde tek dokunus ---------------------------------------------------------
   await menu.getByRole('link', { name: 'Yoklama' }).click();
