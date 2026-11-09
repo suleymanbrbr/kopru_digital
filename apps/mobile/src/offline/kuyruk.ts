@@ -15,6 +15,8 @@ export interface KuyrukIsi {
   deneme: number;
   sonrakiDenemeAt: number;
   sonHata?: string;
+  /** Son hatanin makine kodu (api `ayrinti` ya da adaptor kodu); arayuz Turkce mesaj secer. */
+  sonHataKodu?: string;
 }
 
 export type IsIsleyici = (is: KuyrukIsi) => Promise<void>;
@@ -196,10 +198,12 @@ export class OfflineKuyruk {
         const tekrar = !apiHatasiMi(e) || e.yenidenDenenebilir;
         const deneme = is.deneme + 1;
         const hata = e instanceof Error ? e.message : String(e);
+        const hataKodu = apiHatasiMi(e) ? (e.ayrinti ?? e.kod) : undefined;
         if (tekrar && deneme < enFazla) {
           this.guncelle(is, {
             deneme,
             sonHata: hata,
+            ...(hataKodu ? { sonHataKodu: hataKodu } : {}),
             sonrakiDenemeAt: this.simdi() + gecikme(deneme),
           });
           break;
@@ -207,7 +211,10 @@ export class OfflineKuyruk {
         this.durum = {
           ...this.durum,
           bekleyen: this.durum.bekleyen.filter((i) => i !== is),
-          basarisiz: [...this.durum.basarisiz, { ...is, deneme, sonHata: hata }],
+          basarisiz: [
+            ...this.durum.basarisiz,
+            { ...is, deneme, sonHata: hata, ...(hataKodu ? { sonHataKodu: hataKodu } : {}) },
+          ],
         };
         this.yaz();
       }
