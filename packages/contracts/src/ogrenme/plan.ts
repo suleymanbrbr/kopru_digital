@@ -156,7 +156,7 @@ export const KopyalaGirdiSema = z.object({
 });
 
 /** Sablon ve toplu plan gorevi: tarih yok, haftanin gun sirasi (0 = Pazartesi ... 6 = Pazar). */
-export const SablonGorevGirdiSema = z.object({
+export const PlanSablonGorevGirdiSema = z.object({
   gun_sirasi: z.number().int().min(0).max(6),
   brans_kodu: bransKodu,
   konu_id: z.uuid().optional(),
@@ -165,7 +165,7 @@ export const SablonGorevGirdiSema = z.object({
   hedef_miktar: miktar,
   sira: z.number().int().min(0).max(1000).default(0),
 });
-export const SablonGorevSema = z.object({
+export const PlanSablonGorevSema = z.object({
   id: z.uuid(),
   gun_sirasi: z.number().int(),
   brans_kodu: z.string(),
@@ -183,7 +183,7 @@ export const TopluPlanGirdiSema = z
     grup_id: z.uuid(),
     hafta_baslangic: tarih.describe('Haftanin Pazartesi gunu.'),
     sablon_id: z.uuid().optional(),
-    gorevler: z.array(SablonGorevGirdiSema).min(1).max(SABLON_GOREV_UST).optional(),
+    gorevler: z.array(PlanSablonGorevGirdiSema).min(1).max(SABLON_GOREV_UST).optional(),
     yayinla: z.boolean().default(false),
   })
   .refine((g) => (g.sablon_id === undefined) !== (g.gorevler === undefined), {
@@ -205,17 +205,17 @@ export const TopluPlanYanitSema = z.object({
   ),
 });
 
-export const SablonOlusturGirdiSema = z.object({
+export const PlanSablonOlusturGirdiSema = z.object({
   ad: baslik,
   aciklama: z.string().trim().min(1).max(2000).optional(),
-  gorevler: z.array(SablonGorevGirdiSema).max(SABLON_GOREV_UST).default([]),
+  gorevler: z.array(PlanSablonGorevGirdiSema).max(SABLON_GOREV_UST).default([]),
 });
 
-export const SablonGuncelleGirdiSema = z.object({
+export const PlanSablonGuncelleGirdiSema = z.object({
   ad: baslik.optional(),
   aciklama: z.string().trim().min(1).max(2000).nullable().optional(),
   gorevler: z
-    .array(SablonGorevGirdiSema)
+    .array(PlanSablonGorevGirdiSema)
     .max(SABLON_GOREV_UST)
     .optional()
     .describe('Verilirse sablonun gorev listesinin TAMAMI bununla degistirilir.'),
@@ -226,14 +226,14 @@ export const PlanSablonuSema = z.object({
   ogretmen_id: z.uuid(),
   ad: z.string(),
   aciklama: z.string().nullable(),
-  gorevler: z.array(SablonGorevSema),
+  gorevler: z.array(PlanSablonGorevSema),
   created_at: zaman,
 });
 export type PlanSablonu = z.infer<typeof PlanSablonuSema>;
 
 export const PlanSablonListeYanitSema = z.object({ sablonlar: z.array(PlanSablonuSema) });
 
-export const SablondanKurGirdiSema = z.object({
+export const PlanSablondanKurGirdiSema = z.object({
   ogrenci_id: z.uuid(),
   hafta_baslangic: tarih.describe('Haftanin Pazartesi gunu.'),
 });
