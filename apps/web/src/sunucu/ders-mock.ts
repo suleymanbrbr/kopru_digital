@@ -166,7 +166,8 @@ function kur(kurumId: string): DersDurumu {
       }),
     );
     dersler.push(
-      dersYap(kurumId, birebir.id, new Date(simdi + 26 * SAAT_MS).toISOString(), 45, {
+      // Saat sabit: simdiye gore uretilirse e2e'nin sabit saatli senaryolariyla gunun saatine bagli cakisir.
+      dersYap(kurumId, birebir.id, yerelUtc(gunEkle(bugun, 1), '08:00'), 45, {
         yer: 'Çalışma odası 2',
       }),
     );
