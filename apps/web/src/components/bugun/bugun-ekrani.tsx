@@ -1,16 +1,18 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { CalendarClock, ClipboardCheck, MessageCircleQuestion, Sparkles } from 'lucide-react';
+import { ClipboardCheck, MessageCircleQuestion, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import { BolumKarti } from './bolum-karti';
+import { BugunDersleriKarti } from './bugun-dersleri';
 
 import { BosDurum } from '@/components/bos-durum';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { Karakter, karakterAdi } from '@/components/karakter';
 import { dugmeStili } from '@/components/ui/button';
 import { Iskelet, Kart } from '@/components/ui/kart';
+import { BugunYoklamaKarti } from '@/components/yoklama/bugun-karti';
 import { useKurum } from '@/kurum/baglam';
 import { useOgrenciBugun, useOgretmenBugun } from '@/lib/bugun-verisi';
 import type { NavBaglami } from '@/lib/navigasyon';
@@ -57,24 +59,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
         aciklama={yonetim ? t('bugun.yoneticiAciklama') : t('bugun.ogretmenAciklama')}
       />
       <div className="grid gap-4 md:grid-cols-2">
-        <BolumKarti
-          baslik={t('bugun.dersler')}
-          yukleniyor={veri.isPending}
-          hata={veri.isError}
-          tekrarDene={() => void veri.refetch()}
-        >
-          {veri.data?.dersler.length ? null : (
-            <BosDurum
-              ikon={CalendarClock}
-              baslik={t('bugun.dersBos')}
-              aciklama={t('bugun.dersBosAciklama')}
-            >
-              <Link href={`${kok}/takvim`} className={dugmeStili({ gorunum: 'ikincil' })}>
-                {t('bugun.dersBosEylem')}
-              </Link>
-            </BosDurum>
-          )}
-        </BolumKarti>
+        <BugunDersleriKarti />
         <BolumKarti
           baslik={t('bugun.sorular')}
           yukleniyor={veri.isPending}
@@ -93,6 +78,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
             </BosDurum>
           )}
         </BolumKarti>
+        <BugunYoklamaKarti />
         {yonetim ? (
           <div className="md:col-span-2">
             <BolumKarti
@@ -125,6 +111,7 @@ function OgrenciBugun() {
     <>
       <BugunBasligi aciklama={t('bugun.ogrenciAciklama')} />
       <div className="grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+        <BugunDersleriKarti />
         <BolumKarti
           baslik={t('bugun.gorevler')}
           yukleniyor={veri.isPending}

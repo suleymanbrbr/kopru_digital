@@ -32,6 +32,7 @@ for (const tema of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Kabul et ve devam et' }).click();
       await page.getByRole('button', { name: /Ege Işık Dershanesi/ }).click();
       await expect(page.getByRole('heading', { name: 'Bugünkü dersler' })).toBeVisible();
+      await expect(page.getByText('Geometri tekrarı')).toBeVisible();
       expect(await ihlaller(page)).toEqual([]);
     });
   });

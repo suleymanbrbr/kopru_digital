@@ -8,7 +8,6 @@ import type { KarakterAsamasi, KarakterTuru } from '@/components/karakter';
  * `@kopru/api-client` cagrisina cevrilir; ekranlar degismez.
  */
 export interface OgretmenBugun {
-  dersler: { id: string; baslik: string; saat: string }[];
   sorular: { id: string; baslik: string }[];
 }
 
@@ -20,7 +19,7 @@ export interface OgrenciBugun {
 export function useOgretmenBugun(kurumId: string) {
   return useQuery<OgretmenBugun>({
     queryKey: ['bugun', 'ogretmen', kurumId],
-    queryFn: () => Promise.resolve({ dersler: [], sorular: [] }),
+    queryFn: () => Promise.resolve({ sorular: [] }),
   });
 }
 

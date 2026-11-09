@@ -337,6 +337,25 @@ function kurum(kurumId: string): KurumDurumu {
   return d.kurumlar[kurumId];
 }
 
+/** Ders ve finans mock'lari icin: kurumun deneme gruplari, uyeleri ve atamalari (salt okunur kullanin). */
+export function mockKurumVerisi(kurumId: string) {
+  const k = kurum(kurumId);
+  return {
+    gruplar: k.gruplar,
+    grupUyeleri: k.grupUyeleri,
+    uyeler: k.uyeler,
+    atamalar: k.atamalar,
+  };
+}
+
+/** Deneme kurumlarinin rolleri (kimlik mock'u ile ayni): `kurum-ege` ogretmen, `-mavi` yonetici, `-atlas` ogrenci, `-kuzey` sahip. */
+export const MOCK_KURUM_ROLLERI: Record<string, 'ogretmen' | 'yonetici' | 'ogrenci' | 'sahip'> = {
+  'kurum-ege': 'ogretmen',
+  'kurum-mavi': 'yonetici',
+  'kurum-atlas': 'ogrenci',
+  'kurum-kuzey': 'sahip',
+};
+
 function sayfala<T extends { id?: unknown }>(liste: T[], sorgu: URLSearchParams) {
   const limit = Math.min(Math.max(Number(sorgu.get('limit') ?? 50) || 50, 1), 200);
   const imlec = sorgu.get('imlec');
@@ -430,6 +449,22 @@ function kurumdaIsle(kurumId: string, kalan: string[], istek: Istek): Yanit {
   const { yontem, sorgu } = istek;
   const g = govdeNesnesi(istek.govde);
   const [kaynak, id, alt, altId, eylem] = kalan;
+
+  // --- kurum bilgisi (saat dilimi, ayarlar) ---
+  if (!kaynak) {
+    if (yontem !== 'GET') return izinYok();
+    return {
+      durum: 200,
+      govde: {
+        id: kurumId,
+        ad: KURUM_ADLARI[kurumId] ?? kurumId,
+        tur: 'kurum',
+        saat_dilimi: 'Europe/Istanbul',
+        durum: 'aktif',
+        ayarlar: { yoklama_kilit_gun: 14 },
+      },
+    };
+  }
 
   // --- uyelikler ---
   if (kaynak === 'uyelikler' && yontem === 'GET' && !id) {

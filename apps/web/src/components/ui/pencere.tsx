@@ -68,6 +68,7 @@ export function OnayPenceresi({
   tehlikeli = false,
   bekliyor = false,
   onay,
+  icerik,
 }: {
   acik: boolean;
   degisti: (acik: boolean) => void;
@@ -77,6 +78,8 @@ export function OnayPenceresi({
   tehlikeli?: boolean;
   bekliyor?: boolean;
   onay: () => void;
+  /** Aciklamanin altinda ek alan (ornegin zorunlu neden girdisi). */
+  icerik?: ReactNode;
 }) {
   return (
     <AlertDialog.Root open={acik} onOpenChange={degisti}>
@@ -87,6 +90,7 @@ export function OnayPenceresi({
           <AlertDialog.Description className="mt-2 text-sm text-metin-ikincil">
             {aciklama}
           </AlertDialog.Description>
+          {icerik}
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialog.Cancel asChild>
               <Dugme gorunum="ikincil" disabled={bekliyor}>

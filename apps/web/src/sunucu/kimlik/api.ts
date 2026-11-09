@@ -78,12 +78,14 @@ function uyelikCevir(u: {
   kurum_id: string;
   kurum_ad: string | null;
   rol: Uyelik['rol'];
+  kurum_tur?: Uyelik['kurumTur'];
 }): Uyelik {
   return {
     id: u.uyelik_id,
     kurumId: u.kurum_id,
     kurumAd: u.kurum_ad ?? '',
     rol: u.rol,
+    kurumTur: u.kurum_tur ?? null,
     // Vurgu rengi kurum ayarlarindadir (`GET /v1/hesap/kurumlar/{id}`); secim ekrani icin ek istek atilmaz.
     vurguRengi: null,
   };

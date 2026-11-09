@@ -15,6 +15,7 @@ import { UygulamaKabugu } from '@/components/kabuk/uygulama-kabugu';
 import { dugmeStili } from '@/components/ui/button';
 import { KurumKutusu, type KurumBaglami } from '@/kurum/baglam';
 import { bffIstek, hataMesaji, UygulamaHatasi } from '@/lib/api';
+import { tercihEdilenUyelik } from '@/lib/kurum-secimi';
 import { faz1Roller } from '@/lib/navigasyon';
 import { vurguUygula } from '@/lib/vurgu';
 import { erisimBelirteciAl, useOturum } from '@/oturum/saglayici';
@@ -27,8 +28,16 @@ export default function KurumDuzeni({ children }: { children: ReactNode }) {
   const denenen = useRef<string | null>(null);
 
   const uyelikler = oturum?.uyelikler.filter((u) => faz1Roller.includes(u.rol)) ?? [];
-  const etkin = uyelikler.find((u) => u.id === oturum?.aktifUyelikId && u.kurumId === kurumId);
-  const aday = uyelikler.find((u) => u.kurumId === kurumId);
+  // Bireysel (solo hoca) kurumda sahip uyeligi tercih edilir: "ogretmen" uyeligi atama olmadigi icin
+  // ogrencileri gostermez.
+  const tercih = tercihEdilenUyelik(uyelikler, kurumId);
+  const etkin = uyelikler.find(
+    (u) =>
+      u.id === oturum?.aktifUyelikId &&
+      u.kurumId === kurumId &&
+      (u.kurumTur !== 'bireysel' || tercih?.id === u.id),
+  );
+  const aday = tercih ?? uyelikler.find((u) => u.kurumId === kurumId);
 
   // Adres cubugundaki kurum, etkin uyelikten farkliysa belirteci o kuruma cevir.
   useEffect(() => {

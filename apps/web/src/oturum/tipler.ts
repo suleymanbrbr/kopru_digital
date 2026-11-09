@@ -13,6 +13,8 @@ export const uyelikSema = z.object({
   kurumId: z.string(),
   kurumAd: z.string(),
   rol: rolSema,
+  /** `bireysel` (solo hoca) kurum menulerini gormez; bilinmiyorsa `null`. */
+  kurumTur: z.enum(['bireysel', 'ekip', 'kurum']).nullable().optional(),
   /** Kurumun vurgu rengi (`#RRGGBB`); bos ise varsayilan vurgu kullanilir. */
   vurguRengi: z.string().nullable(),
 });
@@ -52,6 +54,7 @@ export const hataSema = z.object({
     code: z.string(),
     message: z.string(),
     requestId: z.string().optional(),
+    details: z.unknown().optional(),
   }),
 });
 
