@@ -266,6 +266,7 @@ export function operasyonAdaptorleri(b: OperasyonBagimliligi): {
         ad: k.gorunen_ad ?? '',
         tur: k.tur,
         durum: (k.yoklama?.durum ?? null) as YoklamaDurumu | null,
+        not: k.yoklama?.not ?? null,
       }));
     },
 

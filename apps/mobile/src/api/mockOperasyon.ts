@@ -180,6 +180,8 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
     }),
   ];
   const yoklamalar = new Map<string, YoklamaDurumu>();
+  /** Yalniz "ogrenciye gorunsun" notlari ogrenci rolunde dondurulur. */
+  const yoklamaNotlari = new Map<string, { metin: string; gorunur: boolean }>();
   const yoklamaYanitlari = new Map<string, { dersId: string; sonuclar: unknown[] }>();
   const tahsilatAnahtarlari = new Set<string>();
 
@@ -427,6 +429,10 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
         ad: ogrenciAdi(k),
         tur: 'uye' as const,
         durum: yoklamalar.get(`${dersId}:${k}`) ?? null,
+        not: (() => {
+          const n = yoklamaNotlari.get(`${dersId}:${k}`);
+          return n && (n.gorunur || !aktifOgrenciMi()) ? n.metin : null;
+        })(),
       }));
     },
 
@@ -454,6 +460,9 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
         const anahtar = `${dersId}:${s.ogrenciId}`;
         const var_ = yoklamalar.has(anahtar);
         yoklamalar.set(anahtar, s.durum);
+        if (s.not) {
+          yoklamaNotlari.set(anahtar, { metin: s.not, gorunur: s.notGorunurluk === 'ogrenciye' });
+        } else yoklamaNotlari.delete(anahtar);
         const ogr = ogrenciler.find((o) => o.id === s.ogrenciId);
         let kalanKredi: number | null = null;
         if (!var_ && ogr?.model === 'paket' && (s.durum === 'geldi' || s.durum === 'gec')) {

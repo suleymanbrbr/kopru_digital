@@ -49,11 +49,10 @@ describe('yoklama.kaydet kuyrugu', () => {
     const s = await q.bosalt();
     expect(s).toEqual({ gonderilen: 1, bekleyen: 0, basarisiz: 0 });
     expect(kaydet).toHaveBeenCalledTimes(2);
-    const [a, b] = kaydet.mock.calls as [string, YoklamaSatiri[], string][];
-    expect(a[2]).toBe('istek-1');
-    expect(b[2]).toBe('istek-1');
-    expect(a[1][0]?.isaretlenmeAt).toBe('2026-11-09T09:00:00.000Z');
-    expect(b[1][0]?.isaretlenmeAt).toBe(a[1][0]?.isaretlenmeAt);
+    const cagrilar = kaydet.mock.calls as [string, YoklamaSatiri[], string][];
+    expect(cagrilar.map((c) => c[2])).toEqual(['istek-1', 'istek-1']);
+    const zamanlar = cagrilar.map((c) => c[1][0]?.isaretlenmeAt);
+    expect(zamanlar).toEqual(['2026-11-09T09:00:00.000Z', '2026-11-09T09:00:00.000Z']);
   });
 
   it('kalici 4xx hata basarisiz listesine duser ve hata kodu saklanir', async () => {

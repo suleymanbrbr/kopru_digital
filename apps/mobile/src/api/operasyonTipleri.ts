@@ -115,6 +115,8 @@ export interface YoklamaKatilimcisi {
   tur: 'uye' | 'misafir' | 'telafi';
   /** Mevcut yoklama; yoksa null. */
   durum: YoklamaDurumu | null;
+  /** Ogrenciye gorunur ders notu (ogrenci rolunde `ogretmene_ozel` not hep null); yoksa null. */
+  not: string | null;
 }
 
 export type YoklamaSonucTuru = 'yeni' | 'guncellendi' | 'ayni' | 'eski';
