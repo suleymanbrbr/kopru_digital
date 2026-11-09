@@ -1088,7 +1088,9 @@ Profil: `KS`. RLS: evet.
 | `baslik` | text | hayır | | |
 | `aciklama` | text | evet | | |
 | `brans_kodu` | text | hayır | | |
-| `konu_id` | uuid | evet | | |
+| `konu_id` | uuid | evet | | Müfredat konusu; FK yok (müfredat tabloları ayrı pakette) |
+| `tur` | text | hayır | `'soru'` | CHECK `IN ('soru','sayfa','serbest')` (şartname: soru sayısı / sayfa / serbest metin) |
+| `kaynak` | text | evet | | ≤ 200 (ör. "X Yayınları Test 4") |
 | `hedef_turu` | text | hayır | | CHECK `IN ('ogrenci','grup','kademe','kurum')` |
 | `hedef_id` | uuid | hayır | | `ogrenci`: `uyelikler.id`, `grup`: `gruplar.id`, `kademe`: `kademeler.id`, `kurum`: `kurum_id` |
 | `veren_id` | uuid | hayır | | Öğretmen/yönetici üyeliği |
@@ -1118,7 +1120,9 @@ Profil: `KS`. RLS: evet.
 | `durum` | text | hayır | `'atandi'` | CHECK `IN ('atandi','teslim_edildi','incelendi','tekrar_istendi','iptal')` |
 | `son_teslim_at` | timestamptz | evet | | Başlangıçta `odevler.son_teslim_at`. Bireysel uzatma burada. |
 | `yapilan_soru_sayisi` | int | evet | | Teslim sayısı. CHECK `>= 0` |
-| `dogru_sayisi` | int | evet | | İsteğe bağlı. CHECK `<= yapilan_soru_sayisi` |
+| `dogru_sayisi` | int | evet | | İsteğe bağlı. CHECK `>= 0` |
+| `yanlis_sayisi` | int | evet | | İsteğe bağlı. CHECK `>= 0` |
+| `bos_sayisi` | int | evet | | İsteğe bağlı. CHECK `>= 0` |
 | `ogrenci_notu` | text | evet | | ≤ 1000 |
 | `teslim_at` | timestamptz | evet | | |
 | `gec_teslim` | boolean | hayır | false | `teslim_at > son_teslim_at` |
@@ -1127,9 +1131,32 @@ Profil: `KS`. RLS: evet.
 | `inceleyen_id` | uuid | evet | | |
 | `incelendi_at` | timestamptz | evet | | |
 
-Kısıtlar: `UNIQUE (odev_id, ogrenci_id)` (`ogrenci_odevleri_odev_id_ogrenci_id_uniq`: fan-out idempotency), `UNIQUE (kurum_id, id)`, `CHECK ((durum IN ('teslim_edildi','incelendi','tekrar_istendi')) = (teslim_at IS NOT NULL) OR durum = 'iptal')`, `CHECK ((durum = 'incelendi') = (incelendi_at IS NOT NULL) OR durum IN ('tekrar_istendi','iptal'))`. Teslim yalnızca `atandi` veya `tekrar_istendi` durumunda; `tekrar_istendi` öğrenciyi yeniden teslime açar. En az bir kanıt kuralı: `fotograf_gerekli` ise teslimde `teslim_dosyalari` ≥ 1 (uygulama); aksi halde `yapilan_soru_sayisi` yeterlidir.
+Kısıtlar: `CHECK (dogru + yanlis + bos <= yapilan_soru_sayisi)` (NULL'lar 0 sayılır; `ogrenci_odevleri_toplam_chk`), `UNIQUE (odev_id, ogrenci_id)` (`ogrenci_odevleri_odev_id_ogrenci_id_uniq`: fan-out idempotency), `UNIQUE (kurum_id, id)`, `CHECK ((durum IN ('teslim_edildi','incelendi','tekrar_istendi')) = (teslim_at IS NOT NULL) OR durum = 'iptal')`, `CHECK ((durum = 'incelendi') = (incelendi_at IS NOT NULL) OR durum IN ('tekrar_istendi','iptal'))`. Teslim yalnızca `atandi` veya `tekrar_istendi` durumunda; `tekrar_istendi` öğrenciyi yeniden teslime açar. En az bir kanıt kuralı: `fotograf_gerekli` ise teslimde `teslim_dosyalari` ≥ 1 (uygulama); aksi halde `yapilan_soru_sayisi` yeterlidir. **Uygulama durumu:** `teslim_dosyalari` tablosu medya bloğunda açılacağından `fotograf_gerekli` şimdilik teslimde zorlanmaz; teslim olayında `dosya_sayisi` 0'dır. Yeniden teslimde (`tekrar_istendi` → `teslim_edildi`) önceki inceleme alanları (`inceleme_*`, `inceleyen_id`, `incelendi_at`) temizlenir; `tekrar` incelemesi `incelendi_at`'ı boş bırakır ve durumu `tekrar_istendi` yapar.
 İndeks: `(kurum_id, ogrenci_id, durum, son_teslim_at)`, `(kurum_id, odev_id, durum)`.
 Olaylar: `ogrenme.odev.teslim_edildi.v1`, `ogrenme.odev.incelendi.v1`.
+
+#### `ogrenme.odev_sablonlari`
+
+Öğretmen başına tekrar kullanılabilir ödev taslağı (hedef ve tarih içermez). Profil: `K`. RLS: evet.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ogretmen_id` | uuid | hayır | | Sahibi (bileşik FK `uyelikler`); yalnız sahibi görür ve değiştirir |
+| `baslik` | text | hayır | | 1-200 |
+| `aciklama` | text | evet | | ≤ 4000 |
+| `brans_kodu` | text | hayır | | FK `ortak.bransler` |
+| `konu_id` | uuid | evet | | |
+| `tur` | text | hayır | `'soru'` | CHECK `IN ('soru','sayfa','serbest')` |
+| `kaynak` | text | evet | | ≤ 200 |
+| `hedef_soru_sayisi` | int | evet | | CHECK `> 0` |
+
+İndeks: `(kurum_id, ogretmen_id, created_at DESC)`. Olaylar: yok.
+
+**Uygulama notları (api `ogrenme` modülü).**
+- Uçlar `/v1/ogrenme/kurumlar/:kurum_id/...`: `POST|GET /odevler`, `GET|PATCH /odevler/:id`, `POST /odevler/:id/yayinla|kapat|atama-esitle`, `GET /odevler/:id/ozet`, `GET /odevlerim`, `POST /ogrenci-odevleri/:id/teslim|inceleme`, `POST|GET /odev-sablonlari`, `GET|PATCH|DELETE /odev-sablonlari/:id`.
+- Yayın ve atama eşitleme aynı işlemde yapılır (500'lük parçalarla `ON CONFLICT DO NOTHING`); pg-boss işi (`odev.fan_out`) henüz yoktur. Yayındaki ödevde yayın tekrarı etkisizdir (200); kapalı ödevde 409. `atama-esitle` yeni gelen öğrenciye satır açar, gruptan ayrılıp dönenin `iptal` (teslimsiz) satırını `atandi` yapar ve yeni açılanlar için `yayinlandi` olayı yayımlar; gruptan çıkanın satırını iptal etme (`grup_uyesi` işleyicisi) henüz yoktur.
+- Okuma kapsamı: öğretmen kendi ödevini, atandığı gruba veya gruptaki öğrenciye verilenleri görür (liste yalnız kendi ödevleridir); değiştirme ve inceleme yalnız `veren_id` sahibine (diğerine 403), sahip/yönetici kapsamındaki tümüne. Kapsam dışı 404. `kademe`/`kurum` hedefi yalnız kurum kapsamlı roller (öğretmene 403). `odev` modülü hedefin grubunda/kademesinde kapalıysa yazma 403 `modul_kapali`.
+- Özet (`/ozet`): öğrenci satırları (ad, durum, doğru oranı, geç teslim, öğrenci notu, inceleme) ve sayılar tek istekte döner.
 
 #### `ogrenme.odev_ekleri`
 
