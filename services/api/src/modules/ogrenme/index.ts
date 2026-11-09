@@ -8,5 +8,18 @@ import { mufredatYollari } from './mufredat-yollari.js';
 export const ogrenmeModule = defineModule('ogrenme', async (app) => {
   if (app.hasDecorator('kimlik')) {
     await app.register(mufredatYollari);
+import { odevOgrenciYollari } from './odev-ogrenci-yollari.js';
+import { odevSablonYollari } from './odev-sablon-yollari.js';
+import { odevYollari } from './odev-yollari.js';
+
+/**
+ * ogrenme modulu (`ogrenme` PostgreSQL semasi): odev (hedefleme, fan-out, teslim, inceleme, sablon).
+ * Rotalar `app.kimlik` (hesap modulu) hazirsa kaydolur. Haftalik plan, deneme ve soru sonraki paketlerdir.
+ */
+export const ogrenmeModule = defineModule('ogrenme', async (app) => {
+  if (app.hasDecorator('kimlik')) {
+    await app.register(odevYollari);
+    await app.register(odevSablonYollari);
+    await app.register(odevOgrenciYollari);
   }
 });
