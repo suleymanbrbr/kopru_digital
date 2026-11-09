@@ -6510,6 +6510,1095 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odev-sablonlari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kendi odev sablonlarim (yeniden eskiye). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sablonlar: {
+                                aciklama: string | null;
+                                baslik: string;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                hedef_soru_sayisi: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kaynak: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                /** @enum {string} */
+                                tur: "soru" | "sayfa" | "serbest";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Odev sablonu olustur (hedef ve tarih icermez). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string;
+                        baslik: string;
+                        brans_kodu: string;
+                        hedef_soru_sayisi?: number;
+                        kaynak?: string;
+                        /** Format: uuid */
+                        konu_id?: string;
+                        /**
+                         * @default soru
+                         * @enum {string}
+                         */
+                        tur?: "soru" | "sayfa" | "serbest";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            hedef_soru_sayisi: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odev-sablonlari/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tek sablon (baskasinin sablonu 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            hedef_soru_sayisi: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Sablonu sil (olusturulmus odevler etkilenmez). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Sablonu guncelle. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string | null;
+                        baslik?: string;
+                        brans_kodu?: string;
+                        hedef_soru_sayisi?: number | null;
+                        kaynak?: string | null;
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        /** @enum {string} */
+                        tur?: "soru" | "sayfa" | "serbest";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            hedef_soru_sayisi: number | null;
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Odev listesi (sayfali, yeniden eskiye). Ogretmen yalniz kendi odevlerini, yonetici kapsamindaki hepsini gorur. */
+        get: {
+            parameters: {
+                query?: {
+                    brans_kodu?: string;
+                    durum?: "taslak" | "yayinda" | "kapali";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            odevler: {
+                                aciklama: string | null;
+                                atanan_sayisi: number;
+                                baslik: string;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda" | "kapali";
+                                /** @enum {string} */
+                                fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                                fotograf_gerekli: boolean;
+                                /** Format: uuid */
+                                hedef_id: string;
+                                hedef_soru_sayisi: number | null;
+                                /** @enum {string} */
+                                hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                                /** Format: uuid */
+                                id: string;
+                                kaynak: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: date-time */
+                                son_teslim_at: string | null;
+                                surum: number;
+                                /** @enum {string} */
+                                tur: "soru" | "sayfa" | "serbest";
+                                /** Format: uuid */
+                                veren_id: string;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string;
+                        baslik: string;
+                        brans_kodu: string;
+                        /** @default false */
+                        fotograf_gerekli?: boolean;
+                        /**
+                         * Format: uuid
+                         * @description `kurum` hedefinde verilmez; sunucu kurum kimliğini yazar.
+                         */
+                        hedef_id?: string;
+                        hedef_soru_sayisi?: number;
+                        /** @enum {string} */
+                        hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                        kaynak?: string;
+                        /** Format: uuid */
+                        konu_id?: string;
+                        /** Format: date-time */
+                        son_teslim_at?: string;
+                        /**
+                         * @default soru
+                         * @enum {string}
+                         */
+                        tur?: "soru" | "sayfa" | "serbest";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            atanan_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "kapali";
+                            /** @enum {string} */
+                            fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                            fotograf_gerekli: boolean;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_soru_sayisi: number | null;
+                            /** @enum {string} */
+                            hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            /** Format: uuid */
+                            veren_id: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Odev detayi (kapsam disi 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            atanan_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "kapali";
+                            /** @enum {string} */
+                            fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                            fotograf_gerekli: boolean;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_soru_sayisi: number | null;
+                            /** @enum {string} */
+                            hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            /** Format: uuid */
+                            veren_id: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Taslak odevi guncelle (yayindaki odev degistirilemez: 409). Iyimser kilit: `surum`. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string | null;
+                        baslik?: string;
+                        brans_kodu?: string;
+                        fotograf_gerekli?: boolean;
+                        /** Format: uuid */
+                        hedef_id?: string;
+                        hedef_soru_sayisi?: number | null;
+                        /** @enum {string} */
+                        hedef_turu?: "ogrenci" | "grup" | "kademe" | "kurum";
+                        kaynak?: string | null;
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        /** Format: date-time */
+                        son_teslim_at?: string | null;
+                        /** @description İyimser kilit. */
+                        surum?: number;
+                        /** @enum {string} */
+                        tur?: "soru" | "sayfa" | "serbest";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            atanan_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "kapali";
+                            /** @enum {string} */
+                            fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                            fotograf_gerekli: boolean;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_soru_sayisi: number | null;
+                            /** @enum {string} */
+                            hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            /** Format: uuid */
+                            veren_id: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}/atama-esitle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yayindaki odevin hedefini yeniden cozer: sonradan katilan ogrenciye satir acar, ayrilip donen ogrencinin iptal satirini yeniden acar. Idempotent: ikinci cagri yeni satir yaratmaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            atanan_sayisi: number;
+                            eklenen: number;
+                            yeniden_acilan: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}/kapat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yayindaki odevi kapat (yeni teslim alinmaz; mevcut teslim/inceleme korunur). Kapali odevde tekrar cagri etkisizdir; taslakta 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            atanan_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "kapali";
+                            /** @enum {string} */
+                            fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                            fotograf_gerekli: boolean;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_soru_sayisi: number | null;
+                            /** @enum {string} */
+                            hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            /** Format: uuid */
+                            veren_id: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}/ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Odev ozeti: tek sorguyla butun ogrenci satirlari (ad, durum, dogru orani, gec teslim) ve sayilar. 30 kisilik sinif tek ekran. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            odev: {
+                                aciklama: string | null;
+                                atanan_sayisi: number;
+                                baslik: string;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda" | "kapali";
+                                /** @enum {string} */
+                                fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                                fotograf_gerekli: boolean;
+                                /** Format: uuid */
+                                hedef_id: string;
+                                hedef_soru_sayisi: number | null;
+                                /** @enum {string} */
+                                hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                                /** Format: uuid */
+                                id: string;
+                                kaynak: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: date-time */
+                                son_teslim_at: string | null;
+                                surum: number;
+                                /** @enum {string} */
+                                tur: "soru" | "sayfa" | "serbest";
+                                /** Format: uuid */
+                                veren_id: string;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            };
+                            ogrenciler: {
+                                bos_sayisi: number | null;
+                                dogru_orani: number | null;
+                                dogru_sayisi: number | null;
+                                /** @enum {string} */
+                                durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                                gec_teslim: boolean;
+                                gorunen_ad: string | null;
+                                inceleme_notu: string | null;
+                                /** @enum {string|null} */
+                                inceleme_sonucu: "tamam" | "eksik" | "tekrar" | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                ogrenci_notu: string | null;
+                                /** Format: uuid */
+                                ogrenci_odev_id: string;
+                                /** Format: date-time */
+                                son_teslim_at: string | null;
+                                /** Format: date-time */
+                                teslim_at: string | null;
+                                /** @description Bir kez de olsa teslim edilmiş mi. */
+                                teslim_edildi: boolean;
+                                yanlis_sayisi: number | null;
+                                yapilan_soru_sayisi: number | null;
+                            }[];
+                            sayilar: {
+                                atanan: number;
+                                atandi: number;
+                                gec_teslim: number;
+                                incelendi: number;
+                                iptal: number;
+                                /** @description Doğru sayısı girilen teslimlerin ortalaması (0-1). */
+                                ortalama_dogru_orani: number | null;
+                                tekrar_istendi: number;
+                                teslim_edildi: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}/yayinla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslagi yayinla: hedefteki etkin ogrencilere ayni islemde 500 luk parcalarla satir acilir, `ogrenme.odev.yayinlandi.v1` 200 luk parcalarla yayimlanir. Yayindaki odevde tekrar cagri etkisizdir (200); kapali odevde 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            atanan_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "kapali";
+                            /** @enum {string} */
+                            fan_out_durum: "bekliyor" | "calisiyor" | "tamamlandi";
+                            fotograf_gerekli: boolean;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_soru_sayisi: number | null;
+                            /** @enum {string} */
+                            hedef_turu: "ogrenci" | "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            surum: number;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            /** Format: uuid */
+                            veren_id: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevlerim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin kendi odevleri (yalniz kendi satirlari; yayindaki/kapali odevler, iptal satirlar haric). Sayfali. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            odevler: {
+                                aciklama: string | null;
+                                baslik: string;
+                                bos_sayisi: number | null;
+                                brans_kodu: string;
+                                dogru_sayisi: number | null;
+                                /** @enum {string} */
+                                durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                                fotograf_gerekli: boolean;
+                                gec_teslim: boolean;
+                                hedef_soru_sayisi: number | null;
+                                /**
+                                 * Format: uuid
+                                 * @description `ogrenci_odevleri.id`; teslim bu kimlikle yapılır.
+                                 */
+                                id: string;
+                                inceleme_notu: string | null;
+                                /** @enum {string|null} */
+                                inceleme_sonucu: "tamam" | "eksik" | "tekrar" | null;
+                                /** Format: date-time */
+                                incelendi_at: string | null;
+                                kaynak: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** @enum {string} */
+                                odev_durum: "taslak" | "yayinda" | "kapali";
+                                /** Format: uuid */
+                                odev_id: string;
+                                ogrenci_notu: string | null;
+                                /** Format: date-time */
+                                son_teslim_at: string | null;
+                                /** Format: date-time */
+                                teslim_at: string | null;
+                                /** @enum {string} */
+                                tur: "soru" | "sayfa" | "serbest";
+                                yanlis_sayisi: number | null;
+                                yapilan_soru_sayisi: number | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenci-odevleri/{id}/inceleme": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Teslimi incele: `tamam`/`eksik` -> `incelendi`, `tekrar` -> `tekrar_istendi`. Yalniz `teslim_edildi` satiri; ogretmen yalniz kendi odevini inceler. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        not?: string;
+                        /** @enum {string} */
+                        sonuc: "tamam" | "eksik" | "tekrar";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            baslik: string;
+                            bos_sayisi: number | null;
+                            brans_kodu: string;
+                            dogru_sayisi: number | null;
+                            /** @enum {string} */
+                            durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                            fotograf_gerekli: boolean;
+                            gec_teslim: boolean;
+                            hedef_soru_sayisi: number | null;
+                            /**
+                             * Format: uuid
+                             * @description `ogrenci_odevleri.id`; teslim bu kimlikle yapılır.
+                             */
+                            id: string;
+                            inceleme_notu: string | null;
+                            /** @enum {string|null} */
+                            inceleme_sonucu: "tamam" | "eksik" | "tekrar" | null;
+                            /** Format: date-time */
+                            incelendi_at: string | null;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** @enum {string} */
+                            odev_durum: "taslak" | "yayinda" | "kapali";
+                            /** Format: uuid */
+                            odev_id: string;
+                            ogrenci_notu: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            /** Format: date-time */
+                            teslim_at: string | null;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            yanlis_sayisi: number | null;
+                            yapilan_soru_sayisi: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenci-odevleri/{id}/teslim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Odevi teslim et (yalniz `atandi`/`tekrar_istendi`; yeniden teslimde onceki inceleme temizlenir). `gec_teslim` sunucuda hesaplanir. Fotograf baglama medya blogundadir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        bos_sayisi?: number;
+                        dogru_sayisi?: number;
+                        ogrenci_notu?: string;
+                        yanlis_sayisi?: number;
+                        yapilan_soru_sayisi: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            baslik: string;
+                            bos_sayisi: number | null;
+                            brans_kodu: string;
+                            dogru_sayisi: number | null;
+                            /** @enum {string} */
+                            durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                            fotograf_gerekli: boolean;
+                            gec_teslim: boolean;
+                            hedef_soru_sayisi: number | null;
+                            /**
+                             * Format: uuid
+                             * @description `ogrenci_odevleri.id`; teslim bu kimlikle yapılır.
+                             */
+                            id: string;
+                            inceleme_notu: string | null;
+                            /** @enum {string|null} */
+                            inceleme_sonucu: "tamam" | "eksik" | "tekrar" | null;
+                            /** Format: date-time */
+                            incelendi_at: string | null;
+                            kaynak: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** @enum {string} */
+                            odev_durum: "taslak" | "yayinda" | "kapali";
+                            /** Format: uuid */
+                            odev_id: string;
+                            ogrenci_notu: string | null;
+                            /** Format: date-time */
+                            son_teslim_at: string | null;
+                            /** Format: date-time */
+                            teslim_at: string | null;
+                            /** @enum {string} */
+                            tur: "soru" | "sayfa" | "serbest";
+                            yanlis_sayisi: number | null;
+                            yapilan_soru_sayisi: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
