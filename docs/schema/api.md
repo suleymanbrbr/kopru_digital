@@ -1183,9 +1183,9 @@ Profil: `KS`. RLS: evet.
 | `hazirlayan_id` | uuid | hayır | | Öğretmen ya da öğrenci üyeliği |
 | `durum` | text | hayır | `'taslak'` | CHECK `IN ('taslak','yayinda')` |
 | `yayin_at` | timestamptz | evet | | |
-| `not` | text | evet | | |
+| `not` | text | evet | | Öğretmen notu (≤ 2000) |
 
-Kısıtlar: **`CHECK (EXTRACT(ISODOW FROM hafta_baslangic) = 1)`** (`haftalik_planlar_pazartesi_chk`). `UNIQUE (kurum_id, ogrenci_id, hafta_baslangic)`. `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, ogrenci_id, hafta_baslangic DESC)`.
+Kısıtlar: **`CHECK (EXTRACT(ISODOW FROM hafta_baslangic) = 1)`** (`haftalik_planlar_pazartesi_chk`). `CHECK (durum = 'taslak' OR yayin_at IS NOT NULL)`. `CHECK (not IS NULL OR char_length(not) <= 2000)`. `UNIQUE (kurum_id, ogrenci_id, hafta_baslangic)`. `UNIQUE (kurum_id, id)`. `UNIQUE (id, hafta_baslangic)`. Bileşik FK `(kurum_id, ogrenci_id)` ve `(kurum_id, hazirlayan_id)` -> `hesap.uyelikler`. İndeks: `(kurum_id, ogrenci_id, hafta_baslangic DESC)`. Sürümlüdür (`surum`, iyimser kilit).
 Olaylar: yok.
 
 #### `ogrenme.plan_gorevleri`
@@ -1212,11 +1212,53 @@ Profil: `KS`. RLS: evet.
 | `sira` | smallint | hayır | 0 | |
 | `ekleyen_id` | uuid | hayır | | |
 
-Kısıtlar: `CHECK (gun >= hafta_baslangic AND gun < hafta_baslangic + 7)`. `UNIQUE (devreden_gorev_id) WHERE devreden_gorev_id IS NOT NULL` (bir görev yalnızca bir kez devredilir). `CHECK (devreden_gorev_id IS NULL OR devreden_gorev_id <> id)`. `UNIQUE (kurum_id, id)`.
-Yetki ayrımı (uygulama, izin anahtarları): görev ekleme/düzenleme/silme `plan.gorev.yaz` (öğretmen, ve öğrenci kendi planında `ogrenci_plani` açıksa); `gerceklesen_miktar` ve `durum` yazma `plan.gerceklesen.yaz` (öğrenci `kendi`). Öğrenci `hedef_*` alanlarını değiştiremez. Öğretmen `gerceklesen_miktar`ı değiştiremez.
-Devretme: `durum IN ('bekliyor','kismen','yapilmadi')` görev, `devret` isteğiyle sonraki haftanın planına (yoksa açılır) yeni görev olarak kopyalanır: `hedef_miktar` = kalan (`hedef - gerceklesen`, en az 1), `devreden_gorev_id` = eski görev; eski görev `durum='devredildi'`. Aynı gün/hafta sınırı kuralı geçerlidir. Haftanın geçmişi (hafta sonu + 14 gün) kilitlenir.
-İndeks: `(kurum_id, ogrenci_id, hafta_baslangic, gun)`, `(plan_id, sira)`, `(devreden_gorev_id)`.
+Kısıtlar: `CHECK (gun >= hafta_baslangic AND gun < hafta_baslangic + 7)` (`plan_gorevleri_gun_chk`). Bileşik FK `(plan_id, hafta_baslangic)` -> `haftalik_planlar(id, hafta_baslangic)` (görevin haftası planla aynı) ve `(kurum_id, plan_id)` -> `haftalik_planlar(kurum_id, id)` (plan aynı kiracıda). `UNIQUE (devreden_gorev_id) WHERE devreden_gorev_id IS NOT NULL` (bir görev yalnızca bir kez devredilir; `plan_gorevleri_devreden_gorev_id_uniq`). `CHECK (devreden_gorev_id IS NULL OR devreden_gorev_id <> id)`. `CHECK (durum <> 'tamam' OR tamamlandi_at IS NOT NULL)`. `UNIQUE (kurum_id, id)`.
+Yetki ayrımı (izin sözlüğü sürümü 5, `plan.yaz` kaldırıldı): görev, plan ve şablon yazımı `plan.gorev.yaz` (öğretmen `grup`; sahip/yönetici `kurum`); `gerceklesen_miktar` ve `durum` yazma ile devretme `plan.gerceklesen.yaz` (**yalnız öğrenci, `kendi`**; sahip ve yönetici de yazamaz); okuma `plan.oku`. Öğrenci `hedef_*` alanlarını değiştiremez ve görev ekleyemez; öğretmen `gerceklesen_miktar`ı değiştiremez. "Öğrencinin kendi planını önermesi" sonraki iyileştirmedir (şartname), bu yüzden `ogrenci_plani` ayarı Faz 1'de yoktur.
+Devretme: `durum IN ('bekliyor','kismen','yapilmadi')` görev (`tamam` ve `devredildi` devredilmez) öğrencinin `devret` isteğiyle **sonraki güne** taşınır (öğretmen planda görür). `hedef_gun` isteğe bağlıdır; varsayılan görevin gününden bir sonraki gündür, görevin gününden sonra olmalıdır. Hedef gün Pazartesi'ye düşüyorsa (görev Pazar ise) sonraki haftanın planına eklenir; o hafta planı yoksa **yayında** açılır (`hazirlayan_id` = öğrenci), varsa (taslak olsa da) o plana eklenir. Yeni görev: `hedef_miktar` = kalan (`hedef - gerceklesen`, en az 1), `devreden_gorev_id` = eski görev; eski görev `durum='devredildi'` olur (gerçekleşeni korunur) ve `ogrenme.plan_gorevi.guncellendi` olayı yayımlanır. Tekrar devir 409 `gorev_zaten_devredildi`. Hafta sonu + 14 gün geçen hafta kilitlenir (aşağıda).
+Durum hesabı sunucudadır: `gerceklesen_miktar >= hedef_miktar` `tamam` (`tamamlandi_at` dolar), `0 < x < hedef` `kismen`, `0` `yapilmadi`. Öğretmen hedefi değiştirince gerçekleşen girilmişse durum yeniden hesaplanır.
+İndeks: `(kurum_id, ogrenci_id, hafta_baslangic, gun)`, `(plan_id, sira)`, `UNIQUE (devreden_gorev_id)`. Sürümlüdür.
 Olaylar: `ogrenme.plan_gorevi.guncellendi.v1` (`gerceklesen_miktar` veya `durum` değişince).
+
+#### `ogrenme.plan_sablonlari`
+
+Öğretmen başına tekrar kullanılabilir hafta şablonu (öğrenci, hafta ve gerçekleşen içermez). Şartnamedeki "şablondan kur" için. Profil: `K`. RLS: evet. Sürümsüz.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ogretmen_id` | uuid | hayır | | Sahibi (bileşik FK `uyelikler`); yalnız sahibi görür ve değiştirir |
+| `ad` | text | hayır | | 1-200 |
+| `aciklama` | text | evet | | ≤ 2000 |
+
+Kısıtlar: `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, ogretmen_id, created_at DESC)`. Olaylar: yok.
+
+#### `ogrenme.plan_sablon_gorevleri`
+
+Şablonun görevleri. Profil: `K`. RLS: evet. Sürümsüz.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `sablon_id` | uuid | hayır | | Bileşik FK `(kurum_id, sablon_id)` -> `plan_sablonlari`, `ON DELETE CASCADE` |
+| `gun_sirasi` | smallint | hayır | | CHECK `BETWEEN 0 AND 6` (0 = Pazartesi ... 6 = Pazar) |
+| `brans_kodu` | text | hayır | | FK `ortak.bransler` |
+| `konu_id` | uuid | evet | | |
+| `baslik` | text | evet | | 1-200 |
+| `hedef_turu` | text | hayır | | CHECK `IN ('soru','dakika')` |
+| `hedef_miktar` | int | hayır | | CHECK `> 0` |
+| `sira` | smallint | hayır | 0 | |
+
+İndeks: `(kurum_id, sablon_id, gun_sirasi, sira)`. Olaylar: yok.
+
+**Uygulama notları (api `ogrenme` modülü, `plan-*.ts`).**
+- Uçlar `/v1/ogrenme/kurumlar/:kurum_id/...` (Zod + OpenAPI). Öğretmen/yönetim (`plan.oku` / `plan.gorev.yaz`, kapsam `grup`): `GET /ogrenciler/:ogrenci_id/plan?hafta=` (plan yoksa `plan: null` ve boş görevlerle iskelet; `hafta` haftanın herhangi bir günü olabilir, verilmezse bu hafta), `POST /planlar` (taslak; Pazartesi dışı 422 `hafta_pazartesi_degil`; aynı hafta 409 `plan_zaten_var`), `GET /planlar/:id`, `PUT /planlar/:id/not` (öğretmen notu), `POST /planlar/:id/yayinla` (yayındaysa etkisiz 200), `POST /planlar/:id/gorevler`, `PATCH|DELETE /gorevler/:id`, `POST /planlar/:id/kopyala` (geçen haftayı çoğalt), `POST /planlar/toplu` (gruba toplu plan), `POST|GET /plan-sablonlari`, `GET|PATCH|DELETE /plan-sablonlari/:id`, `POST /plan-sablonlari/:id/uygula` (şablondan kur), `GET /planlar/:id/ozet`. Öğrenci (`plan.oku` / `plan.gerceklesen.yaz`, `kendi`): `GET /planim?hafta=`, `GET /gorevlerim?gun=` (Bugün ekranı), `PUT /gorevler/:id/gerceklesen`, `POST /gorevler/:id/devret`, `GET /planlar/:id/ozet` (kendi yayındaki planı).
+- Öğrenci yalnız kendi ve yalnız `yayinda` planı görür (taslak = yok/404). `gorevlerim` devredilen görevleri listelemez. Öğretmen yalnız atandığı gruptaki öğrenciye yazar/okur (sahip/yönetici kapsamındaki tümüne); kapsam dışı 404. `haftalik_plan` modülü öğrencinin kademesinde ya da (yazanın kapsamındaki) gruplarının hepsinde kapalıysa yazma 403 `modul_kapali`; okuma serbesttir.
+- Hafta ve gün `Europe/Istanbul` takvimiyle **sunucuda** hesaplanır (`modules/ders/zaman.ts` ile aynı `Intl.DateTimeFormat` yöntemi; istemci saatine güvenilmez). **Kilit:** hafta sonundan (Pazar) 14 gün sonra (`bugun > hafta_baslangic + 20`) o haftanın görev/plan yazımı 409 `plan_kilitli`; okuma serbest. Kilit gerçekleşen yazımı, görev düzenleme/silme, devretme ve kopyalama hedefi için geçerlidir; kilitli haftada aynı değerin tekrar yazımı (çevrimdışı tekrar) yine zararsızdır.
+- Gerçekleşen yazımı: aynı değer tekrar yazılırsa kayıt, sürüm ve olay değişmez (200, mevcut hâl; `surum` bu durumda aranmaz). Farklı değerde `surum` verilmişse eşleşmeli (409 `surum_cakismasi`). Görev düzenleme de `surum` kabul eder. Olay yalnız `gerceklesen_miktar` veya `durum` değişince, aynı işlemde outbox'a yazılır (görev düzenlemede hedef değişip durum yeniden hesaplanınca da; devretmede eski görev `devredildi` olunca da).
+- Silme: yalnız yayın öncesi (taslak plan) ya da gerçekleşen girilmemişse; devredilmiş görev (devir yavrusu var) silinemez (409 `gorev_silinemez`). Devredilmiş görev düzenlenemez (409 `gorev_zaten_devredildi`).
+- Kopyala: kaynak plandaki görevler hedef haftaya (varsayılan sonraki hafta) aynı gün sırasıyla taşınır; `gerceklesen_miktar`, `durum`, `tamamlandi_at` ve `devreden_gorev_id` sıfırlanır, `devredildi` görevler kopyalanmaz, hedef plan taslaktır. Hedef haftada görevli plan varsa 409 `plan_dolu` (boş plan kullanılır). Şablondan kur de aynı kuralla çalışır.
+- Toplu plan: grubun etkin öğrencilerinden o haftada planı olmayanlara aynı görevlerle (`sablon_id` ya da satır içi `gorevler`; ikisi birden değil) plan açılır, `yayinla` true ise yayında. İdempotent: planı olan öğrenciye dokunulmaz (`zaten_var`); `ON CONFLICT DO NOTHING` ile eş zamanlı çağrıda tek plan. Yanıt `olusturulan`, `atlanan` ve öğrenci bazında plan kimliklerini verir.
+- Özet (`/ozet`): ders (`brans_kodu`) bazında `soru` ve `dakika` ayrı toplanır (birbirine eklenmez); `planlanan` = hedef toplamı, `devredildi` görevde yalnız yapılan kısım (kalanı devir yavrusunda sayılır); `gorev_sayisi` devredilenleri saymaz, `tamam_sayisi` `tamam` görevlerdir.
+- Her yazma `hesap.denetim_kayitlari`na (`plan.*` eylemleri) yazılır; kayıtta serbest metin (not, başlık) yoktur. Olay yükünde ad, telefon, e-posta, görev başlığı ve not yoktur.
+- Kapsam dışı (bu paket): PDF/resim plan yükleme (`medya` bloğu), XP ve bildirim (olayı `motivasyon`/`bildirim` tüketir).
 
 ### Deneme sınavı
 
