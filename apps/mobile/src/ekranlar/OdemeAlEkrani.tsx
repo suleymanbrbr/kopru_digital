@@ -31,6 +31,8 @@ export function OdemeAlEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: string
   const [denendi, setDenendi] = useState(false);
   const [sonuc, setSonuc] = useState<{ tekrar: boolean; kurus: number } | null>(null);
   const anahtar = useRef<{ imza: string; id: string } | null>(null);
+  // Ayni tick'te ust uste dokunmalar (state guncellemesinden once) ikinci istegi gondermez.
+  const gonderiyor = useRef(false);
 
   const cozum = tutarCoz(tutar);
   const tutarHata = cozum.ok
@@ -43,6 +45,9 @@ export function OdemeAlEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: string
     networkMode: 'always',
     mutationFn: (g: { kurus: number; istekId: string }) =>
       adaptorler.finans.tahsilatAl({ ogrenciId, tutarKurus: g.kurus, yontem }, g.istekId),
+    onSettled: () => {
+      gonderiyor.current = false;
+    },
     onSuccess: (s, g) => {
       yontemiHatirla(yontem);
       void qc.invalidateQueries({ queryKey: ['finans'] });
@@ -53,7 +58,8 @@ export function OdemeAlEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: string
   function kaydet() {
     setDenendi(true);
     // Cift dokunma: istek suruyorsa ikinci dokunus yok sayilir.
-    if (kaydetIstegi.isPending || !cozum.ok) return;
+    if (gonderiyor.current || !cozum.ok) return;
+    gonderiyor.current = true;
     const imza = `${String(cozum.kurus)}|${yontem}`;
     if (anahtar.current?.imza !== imza) anahtar.current = { imza, id: yeniIstekId() };
     kaydetIstegi.mutate({ kurus: cozum.kurus, istekId: anahtar.current.id });

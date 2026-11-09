@@ -168,6 +168,7 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
   const seri = 'seri-elif';
   let dersler: MockDers[] = [
     dersUret('g-elif', tarihEkle(bugun, -1), '16:00', 60, { yer: 'Evde' }),
+    dersUret('g-8a', tarihEkle(bugun, -1), '18:00', 60, { baslik: 'Denklemler' }),
     dersUret('g-8a', bugun, '08:00', 90, { baslik: 'Üslü sayılar' }),
     dersUret('g-mert', bugun, '11:00', 60, {
       onlineBaglanti: 'https://meet.example.com/mert-matematik',
