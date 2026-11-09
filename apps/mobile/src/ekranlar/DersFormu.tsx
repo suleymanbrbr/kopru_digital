@@ -1,17 +1,18 @@
 import { t, type MessageKey } from '@kopru/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import type { CakisanDers, DersOlusturSonucu } from '../api/operasyonTipleri';
 import { apiHatasiMi } from '../api/tipler';
+import { useHareketAzalt } from '../hooks/useHareketAzalt';
 import { cakisanDersleriOku, hatirla, hatirlananiOku } from '../lib/cakisma';
 import { bugunTarihi, saatGecerliMi, tarihEkle, tarihGecerliMi } from '../lib/saat';
 import { Anahtar } from '../ui/Anahtar';
 import { Dugme } from '../ui/Dugme';
 import { HataDurumu, Yukleniyor } from '../ui/Durumlar';
-import { Ekran } from '../ui/Ekran';
+import { Ekran, type KaydirmaOgesi } from '../ui/Ekran';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { MetinGirdisi } from '../ui/MetinGirdisi';
@@ -20,6 +21,9 @@ import { useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
 import { grupEtiketi, useGruplar, useSaatDilimi } from '../uygulama/operasyon';
 import { CakismaOnayi } from './CakismaOnayi';
+
+/** Saat alani: sabit genislik (NativeWind `w-28` bu olcekte tanimli degildi); buyuk yazida da `16:00` sigar. */
+const SAAT_KUTUSU = { width: 132, flexShrink: 0 } as const;
 
 const SON_GRUP = 'kopru.ders.sonGrup';
 const SON_SAAT = 'kopru.ders.sonSaat';
@@ -74,6 +78,8 @@ export function DersFormu({ tarih }: Props) {
   const [yer, setYer] = useState('');
   const [brans, setBrans] = useState<string | null>(null);
   const [bransSor, setBransSor] = useState(false);
+  const kaydirmaRef = useRef<KaydirmaOgesi>(null);
+  const azalt = useHareketAzalt();
   const [gonderildi, setGonderildi] = useState(false);
   const [cakisanlar, setCakisanlar] = useState<CakisanDers[] | null>(null);
   const [sonuc, setSonuc] = useState<DersOlusturSonucu | null>(null);
@@ -135,6 +141,10 @@ export function DersFormu({ tarih }: Props) {
     },
   });
 
+  // `brans_gerekli` hata degil, bir sorudur: kullaniciya hata metni gosterilmez.
+  const bransHatasi =
+    kaydet.isError && apiHatasiMi(kaydet.error) && kaydet.error.ayrinti === 'brans_gerekli';
+
   function gonder(onayli: boolean) {
     setGonderildi(true);
     if (!gecerli) return;
@@ -174,7 +184,7 @@ export function DersFormu({ tarih }: Props) {
     })) ?? [];
 
   return (
-    <Ekran kenarlar={['left', 'right', 'bottom']} klavye>
+    <Ekran kenarlar={['left', 'right', 'bottom']} klavye kaydirmaRef={kaydirmaRef}>
       <View className="gap-3">
         <Metin varyant="altBaslik" accessibilityRole="header">
           {t('mobil.ders.kime')}
@@ -218,7 +228,7 @@ export function DersFormu({ tarih }: Props) {
             hata={gonderildi ? hatalar.gun : null}
           />
         </View>
-        <View className="w-28">
+        <View style={SAAT_KUTUSU}>
           <MetinGirdisi
             etiket={t('mobil.ders.saat')}
             value={saat}
@@ -296,7 +306,17 @@ export function DersFormu({ tarih }: Props) {
       />
 
       {bransSor ? (
-        <Kart className="gap-3 border-uyari" testID="brans-sor">
+        <Kart
+          className="gap-3 border-uyari"
+          testID="brans-sor"
+          onLayout={(e) => {
+            // Branş sorusu acilinca kaydet dugmesinin ustunde gorunecek sekilde kaydirilir.
+            kaydirmaRef.current?.scrollTo({
+              y: Math.max(e.nativeEvent.layout.y - 16, 0),
+              animated: !azalt,
+            });
+          }}
+        >
           <Metin varyant="altBaslik" accessibilityRole="header">
             {t('mobil.ders.bransBaslik')}
           </Metin>
@@ -307,7 +327,11 @@ export function DersFormu({ tarih }: Props) {
               etiket: t(`mobil.brans.${b}` as MessageKey),
             }))}
             deger={(brans as (typeof BRANSLAR)[number] | null) ?? null}
-            onDegis={setBrans}
+            onDegis={(b) => {
+              setBrans(b);
+              // Eski `brans_gerekli` hatasi sifirlanir; yeni secimle yeniden denenir.
+              kaydet.reset();
+            }}
           />
         </Kart>
       ) : null}
@@ -327,7 +351,7 @@ export function DersFormu({ tarih }: Props) {
         />
       ) : null}
 
-      {kaydet.isError && !cakisanlar && !(bransSor && !brans) ? (
+      {kaydet.isError && !cakisanlar && !bransHatasi ? (
         <Metin varyant="ikincil" className="text-hata" accessibilityLiveRegion="polite">
           {hataMesaji(kaydet.error)}
         </Metin>

@@ -282,7 +282,12 @@ describe('mock modda yeni ekranlar render edilir', () => {
     await dokun(r, 'Mert Aydın · Birebir');
     await dokun(r, 'Haftalık dersleri kaydet');
     expect(bul(r, 'brans-sor')).toBeDefined();
+    // brans_gerekli hata degil soru: genel hata metni gorunmez, tarafsiz soru metni var.
+    expect(metinler(r)).not.toContain('ters gitti');
+    expect(metinler(r)).toContain('Bu ders hangi branşta?');
+    expect(metinler(r)).not.toContain('birden fazla');
     await dokun(r, 'Fizik');
+    expect(metinler(r)).not.toContain('ters gitti');
     await yaz(r, 'Saat', '19:00');
     await dokun(r, 'Haftalık dersleri kaydet');
     expect(mockYonlendirici.back).toHaveBeenCalled();

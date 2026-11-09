@@ -1,6 +1,9 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, ComponentRef, Ref } from 'react';
 import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
+
+/** `Ekran` kaydirma kapsayicisinin ornek tipi. */
+export type KaydirmaOgesi = ComponentRef<typeof ScrollView>;
 
 interface Props {
   children: ReactNode;
@@ -16,6 +19,8 @@ interface Props {
    * (ornegin cevrimdisi seridi). Icerik ayrica ust bosluk almaz.
    */
   ust?: ReactNode;
+  /** Kaydirma kapsayicisi referansi (belirli bir ogeye kaydirmak icin). */
+  kaydirmaRef?: Ref<KaydirmaOgesi>;
 }
 
 /** Guvenli alan + opsiyonel kaydirma/klavye isleme ile ekran iskeleti. */
@@ -26,6 +31,7 @@ export function Ekran({
   kenarlar = ['top', 'bottom', 'left', 'right'],
   className = '',
   ust,
+  kaydirmaRef,
 }: Props) {
   const ins = useSafeAreaInsets();
   const stil = {
@@ -36,6 +42,7 @@ export function Ekran({
   };
   const icerik = kaydir ? (
     <ScrollView
+      ref={kaydirmaRef}
       contentContainerClassName={`grow gap-4 p-4 ${className}`}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
