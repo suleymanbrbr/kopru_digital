@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 4;
+export const IZIN_SOZLUGU_SURUMU = 5;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -54,7 +54,14 @@ export const IZINLER = {
   'odev.teslim': { modul: 'odev', aciklama: 'Ödev teslim etme' },
   'odev.incele': { modul: 'odev', aciklama: 'Teslim edilen ödevi inceleme' },
   'plan.oku': { modul: 'haftalik_plan', aciklama: 'Haftalık planı görme' },
-  'plan.yaz': { modul: 'haftalik_plan', aciklama: 'Haftalık plan oluşturma ve güncelleme' },
+  'plan.gorev.yaz': {
+    modul: 'haftalik_plan',
+    aciklama: 'Haftalık plan, plan görevi ve şablon oluşturma, düzenleme (hedefler)',
+  },
+  'plan.gerceklesen.yaz': {
+    modul: 'haftalik_plan',
+    aciklama: 'Plan görevinin gerçekleşen miktarını girme ve görevi devretme (yalnız öğrenci)',
+  },
   'deneme.oku': { modul: 'deneme', aciklama: 'Deneme sonuçlarını görme' },
   'deneme.yaz': { modul: 'deneme', aciklama: 'Deneme sonucu girme' },
   'soru.sor': { modul: 'soru_sor', aciklama: 'Soru sorma' },
@@ -79,8 +86,9 @@ const hepsi = (kapsam: Kapsam, haric: IzinKodu[] = []): Esleme =>
  * `sube` kapsamli rol: yonetici uyeliginin `sube_id` dolu ise uygulanir (uyelik daraltir).
  */
 export const ROL_IZINLERI: Record<Rol, Esleme> = {
-  sahip: hepsi('kurum'),
-  yonetici: hepsi('kurum', ['rol.yonet', 'kurum.kapat']),
+  // Gerceklesen yalniz ogrencinin kendi girisidir: sahip/yonetici de yazamaz.
+  sahip: hepsi('kurum', ['plan.gerceklesen.yaz']),
+  yonetici: hepsi('kurum', ['rol.yonet', 'kurum.kapat', 'plan.gerceklesen.yaz']),
   ogretmen: {
     'kurum.oku': 'kurum',
     'uyelik.oku': 'grup',
@@ -104,7 +112,7 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'odev.ver': 'grup',
     'odev.incele': 'grup',
     'plan.oku': 'grup',
-    'plan.yaz': 'grup',
+    'plan.gorev.yaz': 'grup',
     'deneme.oku': 'grup',
     'deneme.yaz': 'grup',
     'soru.cevapla': 'grup',
@@ -126,7 +134,7 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'odev.oku': 'kendi',
     'odev.teslim': 'kendi',
     'plan.oku': 'kendi',
-    'plan.yaz': 'kendi',
+    'plan.gerceklesen.yaz': 'kendi',
     'deneme.oku': 'kendi',
     'deneme.yaz': 'kendi',
     'soru.sor': 'kendi',
