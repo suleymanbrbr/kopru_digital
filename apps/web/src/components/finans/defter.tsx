@@ -13,6 +13,8 @@ import { Pencere } from '@/components/ui/pencere';
 import { hataMesaji } from '@/lib/api';
 import { useSayfaliSorgu } from '@/lib/sayfali-sorgu';
 
+const secili = 'border-birincil bg-birincil-yumusak';
+
 type Tur = 'kredi' | 'bakiye';
 
 /** Ayri sayfali defter gorunumu: ders (kredi) ve para (bakiye) hareketleri, yeniden eskiye. */
@@ -43,7 +45,8 @@ function Icerik({ kurumId, ogrenciId }: { kurumId: string; ogrenciId: string }) 
           <Dugme
             key={x}
             boyut="sm"
-            gorunum={tur === x ? 'birincil' : 'ikincil'}
+            gorunum="ikincil"
+            className={tur === x ? secili : undefined}
             aria-pressed={tur === x}
             onClick={() => {
               setTur(x);

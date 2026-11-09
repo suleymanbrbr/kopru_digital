@@ -180,7 +180,7 @@ function Ozet({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Rozet
-          ton={ders.durum === 'iptal' ? 'hata' : ders.durum === 'tamamlandi' ? 'basari' : 'bilgi'}
+          ton={ders.durum === 'iptal' ? 'notr' : ders.durum === 'tamamlandi' ? 'basari' : 'bilgi'}
         >
           {t(`operasyon.takvim.durum.${ders.durum}`)}
         </Rozet>

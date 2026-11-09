@@ -357,7 +357,6 @@ const GunSatiri = memo(function GunSatiri({
                 }}
                 className={cn(
                   'flex min-h-14 w-full flex-col gap-0.5 rounded-orta border border-kenar bg-yuzey-ikincil px-3 py-2 text-left transition-colors hover:border-birincil',
-                  d.durum === 'iptal' && 'opacity-80',
                 )}
               >
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold">
@@ -365,7 +364,7 @@ const GunSatiri = memo(function GunSatiri({
                     {saatAraligi(d.baslangic_at, d.bitis_at, saatDilimi)}
                   </span>
                   {d.durum === 'iptal' ? (
-                    <Rozet ton="hata">{t('operasyon.takvim.rozet.iptal')}</Rozet>
+                    <Rozet ton="notr">{t('operasyon.takvim.rozet.iptal')}</Rozet>
                   ) : null}
                   {d.durum === 'tamamlandi' ? (
                     <Rozet ton="basari">{t('operasyon.takvim.durum.tamamlandi')}</Rozet>

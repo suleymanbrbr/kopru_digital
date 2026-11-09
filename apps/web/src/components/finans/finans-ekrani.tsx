@@ -21,6 +21,8 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
 import { cn } from '@/lib/cn';
 
+const secili = 'border-birincil bg-birincil-yumusak';
+
 type Suzgec = 'tumu' | 'borclu' | 'dusuk';
 const SUZGECLER: readonly Suzgec[] = ['tumu', 'borclu', 'dusuk'];
 
@@ -45,7 +47,8 @@ function FinansIcerigi() {
           {(['ogrenciler', 'ayarlar'] as const).map((s) => (
             <Dugme
               key={s}
-              gorunum={sekme === s ? 'birincil' : 'ikincil'}
+              gorunum="ikincil"
+              className={sekme === s ? secili : undefined}
               aria-pressed={sekme === s}
               onClick={() => {
                 setSekme(s);
@@ -116,7 +119,8 @@ function OgrenciListesi() {
             <Dugme
               key={s}
               boyut="sm"
-              gorunum={suzgec === s ? 'birincil' : 'ikincil'}
+              gorunum="ikincil"
+              className={suzgec === s ? secili : undefined}
               aria-pressed={suzgec === s}
               onClick={() => {
                 setSuzgec(s);
