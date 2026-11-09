@@ -395,7 +395,8 @@ for (const tema of ['light', 'dark'] as const) {
     }) => {
       await girisYap(page, 'Kuzey Yıldızı Akademi');
       await takvimeGit(page);
-      await expect(page.getByRole('button', { name: /16:00-17:00/ }).first()).toBeVisible();
+      // Mock durumu testler arasi paylasilir: "bu ve sonrakiler" testi 16:00 derslerini tasir, bu ders sabit kalir.
+      await expect(page.getByRole('button', { name: /Geometri tekrarı/ }).first()).toBeVisible();
       expect(await ihlaller(page)).toEqual([]);
 
       await page.getByRole('button', { name: 'Ders ekle' }).first().click();
@@ -404,7 +405,7 @@ for (const tema of ['light', 'dark'] as const) {
       await page.keyboard.press('Escape');
 
       await page
-        .getByRole('button', { name: /16:00-17:00/ })
+        .getByRole('button', { name: /Geometri tekrarı/ })
         .first()
         .click();
       await expect(page.getByRole('dialog').getByText('Planlı').first()).toBeVisible();
