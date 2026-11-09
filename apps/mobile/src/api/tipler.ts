@@ -17,6 +17,8 @@ export interface Uyelik {
   uyelikId: string;
   kurumId: string;
   kurumAd: string;
+  /** Kurum turu; bilinmiyorsa null/yok. `bireysel`: solo hoca (sahip + ogretmen uyeligi tasir). */
+  kurumTur?: 'bireysel' | 'ekip' | 'kurum' | null;
   rol: Rol;
 }
 

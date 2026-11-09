@@ -102,6 +102,7 @@ interface ApiUyelik {
   uyelik_id: string;
   kurum_id: string;
   kurum_ad: string | null;
+  kurum_tur?: 'bireysel' | 'ekip' | 'kurum' | null;
   rol: Rol;
   durum: 'davetli' | 'aktif' | 'askida' | 'ayrildi';
 }
@@ -278,7 +279,13 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   }
 
   function uyelikCevir(u: ApiUyelik): Uyelik {
-    return { uyelikId: u.uyelik_id, kurumId: u.kurum_id, kurumAd: u.kurum_ad ?? '', rol: u.rol };
+    return {
+      uyelikId: u.uyelik_id,
+      kurumId: u.kurum_id,
+      kurumAd: u.kurum_ad ?? '',
+      kurumTur: u.kurum_tur ?? null,
+      rol: u.rol,
+    };
   }
 
   const operasyon = operasyonAdaptorleri({ yetkili, etkinKurum, veriAl });

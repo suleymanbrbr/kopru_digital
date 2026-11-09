@@ -70,10 +70,11 @@ const kurumlar = {
  * 6 uyeliksiz (sinif kodu / davet akislarini denemek icin).
  */
 function uyelikleriUret(telefon: string): Uyelik[] {
-  const u = (rol: Rol, k: keyof typeof kurumlar): Uyelik => ({
+  const u = (rol: Rol, k: keyof typeof kurumlar, kurumTur?: 'bireysel'): Uyelik => ({
     uyelikId: `uyelik-${rol}-${k}`,
     kurumId: kurumlar[k].id,
     kurumAd: kurumlar[k].ad,
+    ...(kurumTur ? { kurumTur } : {}),
     rol,
   });
   switch (telefon.slice(-1)) {
@@ -84,7 +85,8 @@ function uyelikleriUret(telefon: string): Uyelik[] {
     case '3':
       return [u('yonetici', 'a')];
     case '4':
-      return [u('sahip', 'a'), u('ogretmen', 'a')];
+      // Solo hoca: bireysel kurum, sahip + ogretmen uyeligi (kurum secimi tek satira iner).
+      return [u('sahip', 'a', 'bireysel'), u('ogretmen', 'a', 'bireysel')];
     case '5':
       return [u('ogretmen', 'a'), u('ogrenci', 'b'), u('veli', 'b')];
     default:

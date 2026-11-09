@@ -13,6 +13,7 @@ import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-te
 
 import { mockAdaptorler } from '../api/mock';
 import { ApiHata } from '../api/tipler';
+import KurumSec from '../app/(onboarding)/kurum-sec';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
 import { OfflineKuyruk } from '../offline/kuyruk';
@@ -474,6 +475,37 @@ describe('mock modda yeni ekranlar render edilir', () => {
     const anahtarlar = al.mock.calls.map((c) => c[1]);
     expect(anahtarlar[0]).toBe(anahtarlar[1]);
     expect(anahtarlar[2]).not.toBe(anahtarlar[0]);
+  });
+});
+
+describe('kurum secimi', () => {
+  async function kvkkSonrasi(o: Ortam, telefon: string) {
+    await o.adaptorler.auth.otpDogrula(telefon, '123456');
+    await o.servisler.oturum.girisTamamlandi();
+    await o.servisler.oturum.kvkkKabulEt();
+  }
+
+  it('solo hoca (bireysel kurum): tek satir, sahip uyeligi otomatik secilir, secim ekrani atlanir', async () => {
+    const o = ortamKur();
+    await kvkkSonrasi(o, '+905551110004'); // sahip + ogretmen, ayni bireysel kurum
+    const r = await ac(o, <KurumSec />);
+    const d = o.servisler.oturum.depo.al();
+    if (d.asama !== 'giris') throw new Error('giris bekleniyordu');
+    expect(d.aktif?.uyelik.rol).toBe('sahip');
+    expect(d.aktif?.uyelik.uyelikId).toBe('uyelik-sahip-a');
+    // "Ogretmen" rol satiri yok ("Ogretmeninden..." aciklamasi ayri bir metindir).
+    expect(metinler(r)).not.toMatch(/(^| \| )Öğretmen( \||$)/);
+  });
+
+  it('birden fazla kurum varsa secim sorulur (otomatik secim yok)', async () => {
+    const o = ortamKur();
+    await kvkkSonrasi(o, '+905551110005'); // ogretmen A + ogrenci B
+    const r = await ac(o, <KurumSec />);
+    const d = o.servisler.oturum.depo.al();
+    if (d.asama !== 'giris') throw new Error('giris bekleniyordu');
+    expect(d.aktif).toBeNull();
+    expect(metinler(r)).toContain('Köprü Dershanesi');
+    expect(metinler(r)).toContain('Atlas Fen Lisesi Kursu');
   });
 });
 

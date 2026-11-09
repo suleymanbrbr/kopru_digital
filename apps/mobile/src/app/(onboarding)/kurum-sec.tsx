@@ -1,8 +1,9 @@
 import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { kurumSecenekleri } from '../../oturum/kurumSecimi';
 import { Dugme } from '../../ui/Dugme';
 import { BosDurum } from '../../ui/Durumlar';
 import { Ekran } from '../../ui/Ekran';
@@ -18,7 +19,8 @@ export default function KurumSec() {
   const durum = useOturum();
   const [secilen, setSecilen] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
-  const uyelikler = durum.asama === 'giris' ? durum.uyelikler : [];
+  const uyelikler = durum.asama === 'giris' ? kurumSecenekleri(durum.uyelikler) : [];
+  const tekId = uyelikler.length === 1 ? (uyelikler[0]?.uyelikId ?? null) : null;
 
   async function sec(id: string) {
     setSecilen(id);
@@ -31,6 +33,18 @@ export default function KurumSec() {
       setSecilen(null);
     }
   }
+
+  // Tek kurum varsa secim ekrani atlanir (solo hoca her acilista sorulmaz).
+  useEffect(() => {
+    if (!tekId) return;
+    let iptal = false;
+    oturum.uyelikSec(tekId).catch((e: unknown) => {
+      if (!iptal) setHata(hataMesaji(e));
+    });
+    return () => {
+      iptal = true;
+    };
+  }, [tekId, oturum]);
 
   return (
     <Ekran>

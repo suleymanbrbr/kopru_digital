@@ -4,6 +4,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 
 import { kurumGirisiVarMi } from '../nav/yapilandirma';
 import { ortam } from '../ortam';
+import { kurumSecenekleri } from '../oturum/kurumSecimi';
 import { useTema } from '../tema/TemaSaglayici';
 import { tercihler, type TemaTercihi } from '../tema/tercihler';
 import { Dugme } from '../ui/Dugme';
@@ -87,7 +88,7 @@ export function Profil() {
             }}
           />
         ) : null}
-        {durum.uyelikler.length > 1 ? (
+        {kurumSecenekleri(durum.uyelikler).length > 1 ? (
           <Satir
             ikon="swap-horizontal"
             etiket={t('mobil.profil.kurumDegistir')}
