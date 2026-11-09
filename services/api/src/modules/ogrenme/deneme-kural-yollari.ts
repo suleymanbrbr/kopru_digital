@@ -8,7 +8,7 @@ import {
   denemeHataKodlari,
   errorCodes,
 } from '@kopru/contracts';
-import { AppError, withTenant, type ServicePlugin } from '@kopru/service-kit';
+import { AppError, withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
 import { and, asc, eq, or, isNull, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { z } from 'zod';
@@ -27,6 +27,23 @@ import {
 import { kiraci, kurumParam, yetkiAl } from './odev-deposu.js';
 
 const kuralParam = kurumParam.extend({ id: z.uuid() });
+
+/**
+ * Yazilacak kural: once kilitsiz okunur (global kural 403 verebilsin diye), sonra kendi kurumun satiri
+ * `FOR UPDATE` ile kilitlenir (global satir UPDATE politikasi geregi kilitlenemez).
+ */
+async function yazilacakKural(tx: Tx, id: string) {
+  const [k] = await tx.select().from(denemeKurallari).where(eq(denemeKurallari.id, id));
+  if (!k) throw kuralBulunamadi();
+  if (k.kurum_id === null) return k;
+  const [kilitli] = await tx
+    .select()
+    .from(denemeKurallari)
+    .where(eq(denemeKurallari.id, id))
+    .for('update');
+  if (!kilitli) throw kuralBulunamadi();
+  return kilitli;
+}
 
 /** Deneme kurallari (global okunur, kurum ozel CRUD) ve kurum deneme ayari. */
 export const denemeKuralYollari: ServicePlugin = (app) => {
@@ -153,12 +170,7 @@ export const denemeKuralYollari: ServicePlugin = (app) => {
       const g = request.body;
       try {
         return await withTenant(db, kiraci(y), async (tx) => {
-          const [k] = await tx
-            .select()
-            .from(denemeKurallari)
-            .where(eq(denemeKurallari.id, request.params.id))
-            .for('update');
-          if (!k) throw kuralBulunamadi();
+          const k = await yazilacakKural(tx, request.params.id);
           if (k.kurum_id === null) {
             throw new AppError(
               403,
@@ -236,12 +248,7 @@ export const denemeKuralYollari: ServicePlugin = (app) => {
       const y = yetkiAl(request);
       try {
         await withTenant(db, kiraci(y), async (tx) => {
-          const [k] = await tx
-            .select()
-            .from(denemeKurallari)
-            .where(eq(denemeKurallari.id, request.params.id))
-            .for('update');
-          if (!k) throw kuralBulunamadi();
+          const k = await yazilacakKural(tx, request.params.id);
           if (k.kurum_id === null) {
             throw new AppError(
               403,

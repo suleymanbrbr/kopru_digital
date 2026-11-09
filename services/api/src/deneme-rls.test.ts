@@ -196,17 +196,19 @@ describe.skipIf(dbYok())('deneme tablolari: RLS izolasyonu ve kisitlar', () => {
       tx.execute(sql`delete from ogrenme.denemeler where id = ${denemeB} returning id`),
     );
     expect(silinen).toHaveLength(0);
-    const [hala] = await sistem<{ ad: string }[]>`select ad from ogrenme.denemeler where id = ${denemeB}`;
+    const [hala] = await sistem<
+      { ad: string }[]
+    >`select ad from ogrenme.denemeler where id = ${denemeB}`;
     expect(hala?.ad).toBe('D');
   });
 
   it('bolum kisitlari: toplam, negatif, tekil bolum_kodu; ayni brans iki bolum (Tarih-1/Tarih-2)', async () => {
-    expect(await hataMetni(bolumEkle(denemeA, kurumA, { kod: 'x1', dogru: 5, yanlis: 5, bos: 5 }))).toMatch(
-      /deneme_bolumleri_toplam_chk/,
-    );
-    expect(await hataMetni(bolumEkle(denemeA, kurumA, { kod: 'x2', dogru: -1, yanlis: 6, bos: 5 }))).toMatch(
-      /deneme_bolumleri_sayilar_chk/,
-    );
+    expect(
+      await hataMetni(bolumEkle(denemeA, kurumA, { kod: 'x1', dogru: 5, yanlis: 5, bos: 5 })),
+    ).toMatch(/deneme_bolumleri_toplam_chk/);
+    expect(
+      await hataMetni(bolumEkle(denemeA, kurumA, { kod: 'x2', dogru: -1, yanlis: 6, bos: 5 })),
+    ).toMatch(/deneme_bolumleri_sayilar_chk/);
     expect(await hataMetni(bolumEkle(denemeA, kurumA))).toMatch(
       /deneme_bolumleri_deneme_id_bolum_kodu_uniq/,
     );
@@ -256,7 +258,11 @@ describe.skipIf(dbYok())('deneme tablolari: RLS izolasyonu ve kisitlar', () => {
 
   it('global kural tohumu: 7 kural, katsayilar ve brans kodlari gecerli, bolum kodlari tekil', async () => {
     const rows = await sistem<
-      { kod: string; k: string; bolumler: { bolum_kodu: string; brans_kodu: string; soru_sayisi: number }[] }[]
+      {
+        kod: string;
+        k: string;
+        bolumler: { bolum_kodu: string; brans_kodu: string; soru_sayisi: number }[];
+      }[]
     >`select kod, yanlis_katsayisi::text k, bolumler from ogrenme.deneme_kurallari where kurum_id is null order by kod`;
     expect(rows.map((r) => [r.kod, r.k])).toEqual([
       ['ayt_dil', '0.2500'],
