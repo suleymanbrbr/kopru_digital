@@ -34,7 +34,6 @@ import {
   planiAcYadaGetir,
   surumUyumluOlmali,
   yetkiAl,
-  type GorevSatiri,
 } from './plan-deposu.js';
 import { haftaBaslangici, haftaKilitliMi, planBugunu, tarihEkle } from './plan-zaman.js';
 
@@ -277,7 +276,7 @@ export const planOgrenciYollari: ServicePlugin = (app) => {
             { durum: gorev.durum },
             { durum: 'devredildi', yeni_gorev_id: yeni.id, hedef_gun: hedefGun, kalan },
           );
-          return { eski: gorevYaniti(eski as GorevSatiri), yeni: gorevYaniti(yeni) };
+          return { eski: gorevYaniti(eski), yeni: gorevYaniti(yeni) };
         });
         return await reply.status(201).send(sonuc);
       } catch (hata) {

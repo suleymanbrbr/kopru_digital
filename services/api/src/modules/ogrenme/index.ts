@@ -23,3 +23,14 @@ export const ogrenmeModule = defineModule('ogrenme', async (app) => {
     await app.register(planOgrenciYollari);
   }
 });
+
+// Plan takvimi (Europe/Istanbul haftasi) yardimcilari: testler ve diger moduller yalniz bu yuzeyi kullanir.
+export {
+  gunFarki,
+  haftaBaslangici,
+  haftaKilitliMi,
+  haftaninGunu,
+  pazartesiMi,
+  planBugunu,
+  tarihEkle,
+} from './plan-zaman.js';

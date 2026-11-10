@@ -7,7 +7,7 @@ import {
   haftaninGunu,
   pazartesiMi,
   planBugunu,
-} from './modules/ogrenme/plan-zaman.js';
+} from './modules/ogrenme/index.js';
 
 describe('plan takvimi (Europe/Istanbul, Pazartesi haftasi)', () => {
   it('hafta Pazartesi baslar: Pazar onceki haftaya, Pazartesi kendi haftasina aittir', () => {

@@ -5915,6 +5915,361 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gorevler/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Gorevi sil. Yalniz yayin oncesi (taslak plan) ya da gerceklesen girilmemisse; baska gune devredilmis gorev de silinemez (409 `gorev_silinemez`). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Gorevin hedef alanlarini duzenle (gun, ders, konu, baslik, hedef, sira). Gerceklesen miktar bu uctan yazilmaz. Hedef degisince gerceklesen girilmisse durum yeniden hesaplanir. Devredilmis gorev 409. Iyimser kilit: `surum`. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik?: string | null;
+                        brans_kodu?: string;
+                        /** Format: date */
+                        gun?: string;
+                        hedef_miktar?: number;
+                        /** @enum {string} */
+                        hedef_turu?: "soru" | "dakika";
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        sira?: number;
+                        surum?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: uuid */
+                            devreden_gorev_id: string | null;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                            gerceklesen_miktar: number | null;
+                            /** Format: date */
+                            gun: string;
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            hedef_miktar: number;
+                            /** @enum {string} */
+                            hedef_turu: "soru" | "dakika";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            plan_id: string;
+                            sira: number;
+                            surum: number;
+                            /** Format: date-time */
+                            tamamlandi_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gorevler/{id}/devret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tamamlanmayan gorevi sonraki gune tasi (ogrenci onerir, ogretmen plandan gorur). `hedef_gun` verilmezse gorevin gunuden bir sonraki gun; Pazar ise sonraki haftanin plani (yoksa yayinda acilir). Yeni gorev: hedef = kalan (en az 1), `devreden_gorev_id` dolu; eski gorev `devredildi`. Ayni gorev tekrar devredilemez (409 `gorev_zaten_devredildi`). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date
+                         * @description Verilmezse gorevin gununden bir sonraki gun.
+                         */
+                        hedef_gun?: string;
+                        surum?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            eski: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            };
+                            yeni: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gorevler/{id}/gerceklesen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ogrenci gerceklesen miktari girer (hedefi degistiremez). Durum sunucuda hesaplanir: >= hedef `tamam`, 0 < x < hedef `kismen`, 0 `yapilmadi`. Ayni deger tekrar yazilirsa hicbir sey degismez (surum artmaz, olay yok; cevrimdisi tekrar guvenli). Yalniz yayindaki kendi plani; kilitli hafta 409 `plan_kilitli`; devredilmis gorev 409. Iyimser kilit: `surum` (ayni deger tekrarinda aranmaz). */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        gerceklesen_miktar: number;
+                        surum?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: uuid */
+                            devreden_gorev_id: string | null;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                            gerceklesen_miktar: number | null;
+                            /** Format: date */
+                            gun: string;
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            hedef_miktar: number;
+                            /** @enum {string} */
+                            hedef_turu: "soru" | "dakika";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            plan_id: string;
+                            sira: number;
+                            surum: number;
+                            /** Format: date-time */
+                            tamamlandi_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gorevlerim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bugun ekrani: ogrencinin o gunku gorevleri (yalniz yayindaki planlar; devredilenler haric). `gun` verilmezse bugun (Europe/Istanbul, sunucu saati). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Verilmezse bugun (Europe/Istanbul, sunucu saati). */
+                    gun?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            gun: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/kataloglar": {
         parameters: {
             query?: never;
@@ -7588,6 +7943,1296 @@ export interface paths {
                             tur: "soru" | "sayfa" | "serbest";
                             yanlis_sayisi: number | null;
                             yapilan_soru_sayisi: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin haftalik plani (ogretmen: taslak dahil). `hafta` haftanin herhangi bir gunu olabilir (verilmezse bu hafta, Europe/Istanbul). Plan yoksa `plan: null` ve bos gorev listesiyle bos iskelet doner. Kapsam disi ogrenci 404. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Haftanin herhangi bir gunu (`YYYY-MM-DD`); verilmezse bu hafta (Europe/Istanbul). */
+                    hafta?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/plan-sablonlari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kendi plan sablonlarim (yeniden eskiye). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sablonlar: {
+                                aciklama: string | null;
+                                ad: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                gorevler: {
+                                    baslik: string | null;
+                                    brans_kodu: string;
+                                    gun_sirasi: number;
+                                    hedef_miktar: number;
+                                    /** @enum {string} */
+                                    hedef_turu: "soru" | "dakika";
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    konu_id: string | null;
+                                    sira: number;
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Plan sablonu olustur (haftanin gun sirasina [0 = Pazartesi] gore gorevlerle). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string;
+                        ad: string;
+                        /** @default [] */
+                        gorevler?: {
+                            baslik?: string;
+                            brans_kodu: string;
+                            gun_sirasi: number;
+                            hedef_miktar: number;
+                            /** @enum {string} */
+                            hedef_turu: "soru" | "dakika";
+                            /** Format: uuid */
+                            konu_id?: string;
+                            /** @default 0 */
+                            sira?: number;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            ad: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                gun_sirasi: number;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/plan-sablonlari/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan sablonu (baskasinin sablonu 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            ad: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                gun_sirasi: number;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Sablonu sil (kurulmus planlar etkilenmez). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Sablonu guncelle. `gorevler` verilirse gorev listesinin tamami bununla degistirilir. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string | null;
+                        ad?: string;
+                        /** @description Verilirse sablonun gorev listesinin TAMAMI bununla degistirilir. */
+                        gorevler?: {
+                            baslik?: string;
+                            brans_kodu: string;
+                            gun_sirasi: number;
+                            hedef_miktar: number;
+                            /** @enum {string} */
+                            hedef_turu: "soru" | "dakika";
+                            /** Format: uuid */
+                            konu_id?: string;
+                            /** @default 0 */
+                            sira?: number;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            ad: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                gun_sirasi: number;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/plan-sablonlari/{id}/uygula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sablondan kur: ogrenci ve haftaya taslak plan acar (varsa bos plani kullanir) ve sablon gorevlerini gun sirasina gore haftaya oturtur. Hedef haftada gorevli plan varsa 409 `plan_dolu`. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date
+                         * @description Haftanin Pazartesi gunu.
+                         */
+                        hafta_baslangic: string;
+                        /** Format: uuid */
+                        ogrenci_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin kendi haftalik plani: yalniz yayindaki plan gorunur (taslak ya da plan yoksa `plan: null` bos iskelet). `hafta` haftanin herhangi bir gunu olabilir (verilmezse bu hafta, Europe/Istanbul). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Haftanin herhangi bir gunu (`YYYY-MM-DD`); verilmezse bu hafta (Europe/Istanbul). */
+                    hafta?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ogrenci ve hafta icin bos plan (taslak) olustur. Hafta Pazartesi olmali (422); ayni hafta plani varsa 409 `plan_zaten_var`; kilitli hafta 409 `plan_kilitli`. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date
+                         * @description Haftanin Pazartesi gunu.
+                         */
+                        hafta_baslangic: string;
+                        not?: string;
+                        /** Format: uuid */
+                        ogrenci_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan ve gorevleri (kapsam disi 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/gorevler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Plana gorev ekle (ders, konu, hedef soru sayisi ya da dakika). `gun` planin haftasi icinde olmali (422). Hedefi yalniz ogretmen/yonetim yazar; ogrenci gorev ekleyemez (403). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik?: string;
+                        brans_kodu: string;
+                        /** Format: date */
+                        gun: string;
+                        hedef_miktar: number;
+                        /** @enum {string} */
+                        hedef_turu: "soru" | "dakika";
+                        /** Format: uuid */
+                        konu_id?: string;
+                        /** @default 0 */
+                        sira?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: uuid */
+                            devreden_gorev_id: string | null;
+                            /** @enum {string} */
+                            durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                            gerceklesen_miktar: number | null;
+                            /** Format: date */
+                            gun: string;
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            hedef_miktar: number;
+                            /** @enum {string} */
+                            hedef_turu: "soru" | "dakika";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            plan_id: string;
+                            sira: number;
+                            surum: number;
+                            /** Format: date-time */
+                            tamamlandi_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/kopyala": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Haftayi cogalt (gecen haftayi bu haftaya): gorevler hedef haftaya ayni gun siralarinda kopyalanir; gerceklesen ve durum sifirlanir, devredilmis gorevler kopyalanmaz, hedef plan taslaktir. Hedef haftada gorevli plan varsa 409 `plan_dolu`. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date
+                         * @description Hedef haftanin Pazartesi gunu; verilmezse kaynak haftadan bir sonraki hafta.
+                         */
+                        hedef_hafta_baslangic?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/not": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ogretmen notu (plan basina tek not; `null` notu siler). Yayindaki planda da yazilir. Iyimser kilit: `surum`. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        not: string | null;
+                        surum?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Haftalik ozet: ders (brans) bazinda planlanan ve gerceklesen; soru ve dakika ayri toplanir. Devredilen gorevde planlanan yalniz yapilan kisimdir. Ogrenci yalniz kendi yayindaki planini gorur. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dersler: {
+                                brans_kodu: string;
+                                dakika: {
+                                    gerceklesen: number;
+                                    planlanan: number;
+                                };
+                                gorev_sayisi: number;
+                                soru: {
+                                    gerceklesen: number;
+                                    planlanan: number;
+                                };
+                                tamam_sayisi: number;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: uuid */
+                            plan_id: string;
+                            toplam: {
+                                dakika: {
+                                    gerceklesen: number;
+                                    planlanan: number;
+                                };
+                                gorev_sayisi: number;
+                                soru: {
+                                    gerceklesen: number;
+                                    planlanan: number;
+                                };
+                                tamam_sayisi: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/yayinla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslagi yayinla (ogrenci artik gorur). Yayindaki planda tekrar cagri etkisizdir (200). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gorevler: {
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                devreden_gorev_id: string | null;
+                                /** @enum {string} */
+                                durum: "bekliyor" | "tamam" | "kismen" | "yapilmadi" | "devredildi";
+                                gerceklesen_miktar: number | null;
+                                /** Format: date */
+                                gun: string;
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                hedef_miktar: number;
+                                /** @enum {string} */
+                                hedef_turu: "soru" | "dakika";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                sira: number;
+                                surum: number;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            }[];
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            /** @description Hafta sonu + 14 gun gectiyse true: yazma 409 `plan_kilitli`. */
+                            kilitli: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            plan: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda";
+                                /** Format: date */
+                                hafta_baslangic: string;
+                                /** Format: uuid */
+                                hazirlayan_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/toplu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gruba toplu plan: grubun etkin ogrencilerinden o haftada plani olmayanlara ayni gorevlerle (`sablon_id` ya da `gorevler`) plan acilir. Idempotent: plani olan ogrenci degistirilmez (`zaten_var`), tekrar cagri yeni plan ya da gorev uretmez. `yayinla` true ise planlar yayinda acilir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        gorevler?: {
+                            baslik?: string;
+                            brans_kodu: string;
+                            gun_sirasi: number;
+                            hedef_miktar: number;
+                            /** @enum {string} */
+                            hedef_turu: "soru" | "dakika";
+                            /** Format: uuid */
+                            konu_id?: string;
+                            /** @default 0 */
+                            sira?: number;
+                        }[];
+                        /** Format: uuid */
+                        grup_id: string;
+                        /**
+                         * Format: date
+                         * @description Haftanin Pazartesi gunu.
+                         */
+                        hafta_baslangic: string;
+                        /** Format: uuid */
+                        sablon_id?: string;
+                        /** @default false */
+                        yayinla?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Plani zaten olan ogrenci sayisi (degistirilmez). */
+                            atlanan: number;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            olusturulan: number;
+                            planlar: {
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                plan_id: string;
+                                /** @enum {string} */
+                                sonuc: "olusturuldu" | "zaten_var";
+                            }[];
                         };
                     };
                 };

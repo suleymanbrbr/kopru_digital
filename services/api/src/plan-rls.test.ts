@@ -179,9 +179,7 @@ describe.skipIf(dbYok())('ogrenme plan tablolari: RLS izolasyonu ve kisitlar', (
     );
     expect(oncesi).toMatch(/plan_gorevleri_gun_chk/);
     // Pazar son gecerli gun
-    expect(
-      await gorevEkle(kurumA, planA, ogrenciA, ogretmenA, { gun: '2030-01-13' }),
-    ).toBeTruthy();
+    expect(await gorevEkle(kurumA, planA, ogrenciA, ogretmenA, { gun: '2030-01-13' })).toBeTruthy();
     const haftaUyumsuz = await hataMetni(
       gorevEkle(kurumA, planA, ogrenciA, ogretmenA, { hafta: '2030-01-14', gun: '2030-01-15' }),
     );
@@ -210,9 +208,9 @@ describe.skipIf(dbYok())('ogrenme plan tablolari: RLS izolasyonu ve kisitlar', (
     );
     expect(ikinci).toMatch(/plan_gorevleri_devreden_gorev_id_uniq|duplicate/);
     const kendisi = await hataMetni(
-      sistem.unsafe(
-        `update ogrenme.plan_gorevleri set devreden_gorev_id = id where id = '${gorevA}'`,
-      ).then(),
+      sistem
+        .unsafe(`update ogrenme.plan_gorevleri set devreden_gorev_id = id where id = '${gorevA}'`)
+        .then(),
     );
     expect(kendisi).toMatch(/plan_gorevleri_devreden_kendisi_chk/);
   });

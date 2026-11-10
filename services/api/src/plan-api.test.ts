@@ -1,8 +1,8 @@
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { haftaBaslangici, planBugunu, tarihEkle } from './modules/ogrenme/index.js';
 import { dersYardimcilari, type Hata, type Kurulum, type Uye } from './test/ders-yardimcilar.js';
-import { haftaBaslangici, planBugunu, tarihEkle } from './modules/ogrenme/plan-zaman.js';
 import { bearer, dbYok, testDb, testServisi } from './test/yardimcilar.js';
 
 interface Gorev {
@@ -190,7 +190,9 @@ describe.skipIf(dbYok())('haftalik plan API', () => {
     });
 
   const gorevOku = async (gorevId: string): Promise<Gorev> => {
-    const [r] = await sistem<Gorev[]>`select * from ogrenme.plan_gorevleri where id = ${gorevId}`;
+    const [r] = await sistem<
+      Gorev[]
+    >`select *, surum::int as surum from ogrenme.plan_gorevleri where id = ${gorevId}`;
     if (!r) throw new Error('gorev yok');
     return r;
   };
@@ -476,7 +478,7 @@ describe.skipIf(dbYok())('haftalik plan API', () => {
       expect(tekrar.statusCode, tekrar.body).toBe(200);
       expect(tekrar.json<Gorev>().surum).toBe(surum);
       expect(await olaylar(s.k.kurumId)).toHaveLength(1);
-      expect(Number((await gorevOku(gorev.id)).surum)).toBe(surum);
+      expect((await gorevOku(gorev.id)).surum).toBe(surum);
       // Farkli deger + eski surum: cakisma
       const eski = await gerceklesenYaz(s, ogr.token, gorev.id, 9, gorev.surum);
       expect(eski.statusCode).toBe(409);

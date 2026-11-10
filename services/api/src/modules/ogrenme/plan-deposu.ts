@@ -25,12 +25,7 @@ import {
   planSablonlari,
   uyelikler,
 } from '../../db/schema.js';
-import {
-  atananGruplar,
-  kapsamdakiGruplar,
-  modulAcikMi,
-  type YetkiBaglami,
-} from '../hesap/index.js';
+import { kapsamdakiGruplar, modulAcikMi, type YetkiBaglami } from '../hesap/index.js';
 import { OUTBOX_TABLOSU, kurumParam, type OdevOlayBaglami } from './odev-deposu.js';
 import { haftaKilitliMi, tarihEkle } from './plan-zaman.js';
 
