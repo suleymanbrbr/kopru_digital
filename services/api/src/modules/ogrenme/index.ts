@@ -3,11 +3,14 @@ import { mufredatYollari } from './mufredat-yollari.js';
 import { odevOgrenciYollari } from './odev-ogrenci-yollari.js';
 import { odevSablonYollari } from './odev-sablon-yollari.js';
 import { odevYollari } from './odev-yollari.js';
+import { planOgrenciYollari } from './plan-ogrenci-yollari.js';
+import { planSablonYollari } from './plan-sablon-yollari.js';
+import { planYollari } from './plan-yollari.js';
 
 /**
  * ogrenme modulu (`ogrenme` PostgreSQL semasi): mufredat kutuphanesi ve odev (hedefleme, fan-out,
- * teslim, inceleme, sablon). Rotalar `app.kimlik` (hesap modulu) hazirsa kaydolur. Haftalik plan,
- * deneme ve soru sonraki paketlerdir.
+ * teslim, inceleme, sablon) ve haftalik plan (plan, gorev, sablon, ogrenci gunluk giris, devretme).
+ * Rotalar `app.kimlik` (hesap modulu) hazirsa kaydolur. Deneme ve soru sonraki paketlerdir.
  */
 export const ogrenmeModule = defineModule('ogrenme', async (app) => {
   if (app.hasDecorator('kimlik')) {
@@ -15,5 +18,19 @@ export const ogrenmeModule = defineModule('ogrenme', async (app) => {
     await app.register(odevYollari);
     await app.register(odevSablonYollari);
     await app.register(odevOgrenciYollari);
+    await app.register(planYollari);
+    await app.register(planSablonYollari);
+    await app.register(planOgrenciYollari);
   }
 });
+
+// Plan takvimi (Europe/Istanbul haftasi) yardimcilari: testler ve diger moduller yalniz bu yuzeyi kullanir.
+export {
+  gunFarki,
+  haftaBaslangici,
+  haftaKilitliMi,
+  haftaninGunu,
+  pazartesiMi,
+  planBugunu,
+  tarihEkle,
+} from './plan-zaman.js';

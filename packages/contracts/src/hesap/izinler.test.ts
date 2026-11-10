@@ -19,8 +19,12 @@ describe('izin sozlugu', () => {
     }
   });
 
-  it('sahip tum izinlere kurum kapsaminda sahiptir; yonetici rol.yonet ve kurum.kapat haric', () => {
-    expect(IZIN_KODLARI.every((k) => izinKapsami('sahip', k) === 'kurum')).toBe(true);
+  it('sahip plan.gerceklesen.yaz haric tum izinlere kurum kapsaminda sahiptir; yonetici rol.yonet ve kurum.kapat de haric', () => {
+    expect(
+      IZIN_KODLARI.filter((k) => k !== 'plan.gerceklesen.yaz').every(
+        (k) => izinKapsami('sahip', k) === 'kurum',
+      ),
+    ).toBe(true);
     expect(izinKapsami('yonetici', 'rol.yonet')).toBeNull();
     expect(izinKapsami('yonetici', 'modul.ayar.yaz')).toBe('kurum');
   });
@@ -40,7 +44,7 @@ describe('izin sozlugu', () => {
   });
 
   it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
-    expect(IZIN_SOZLUGU_SURUMU).toBe(4);
+    expect(IZIN_SOZLUGU_SURUMU).toBe(5);
     expect(izinKapsami('ogretmen', 'finans.oku')).toBe('grup');
     expect(izinKapsami('ogretmen', 'finans.tahsilat.yaz')).toBe('grup');
     expect(izinKapsami('ogretmen', 'finans.paket.yaz')).toBeNull();
@@ -51,5 +55,18 @@ describe('izin sozlugu', () => {
     expect(izinKapsami('ogrenci', 'finans.paket.yaz')).toBeNull();
     expect(izinKapsami('veli', 'finans.oku')).toBeNull();
     expect(izinModulu('finans.paket.yaz')).toBe('finans');
+  });
+
+  it('plan izinleri: hedefler ogretmen/yonetim, gerceklesen yalniz ogrenci', () => {
+    expect(izinKapsami('ogretmen', 'plan.gorev.yaz')).toBe('grup');
+    expect(izinKapsami('sahip', 'plan.gorev.yaz')).toBe('kurum');
+    expect(izinKapsami('yonetici', 'plan.gorev.yaz')).toBe('kurum');
+    expect(izinKapsami('ogrenci', 'plan.gorev.yaz')).toBeNull();
+    expect(izinKapsami('ogrenci', 'plan.gerceklesen.yaz')).toBe('kendi');
+    for (const rol of ['sahip', 'yonetici', 'ogretmen', 'veli'] as const) {
+      expect(izinKapsami(rol, 'plan.gerceklesen.yaz')).toBeNull();
+    }
+    expect(izinKapsami('ogrenci', 'plan.oku')).toBe('kendi');
+    expect(izinModulu('plan.gerceklesen.yaz')).toBe('haftalik_plan');
   });
 });
