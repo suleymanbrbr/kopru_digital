@@ -1271,15 +1271,29 @@ Profil: `GS` + `kurum_id uuid NULL`. RLS: karma (global okur, kurum özel kural�
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
 | `kurum_id` | uuid | evet | | NULL = global |
-| `kod` | text | hayır | | `lgs`, `tyt`, `ayt_say`, `ayt_ea`, `ayt_soz`, `ayt_dil`, `ydt`, `ozel_*` (kurum) |
+| `kod` | text | hayır | | Global: `lgs`, `tyt`, `ayt_say`, `ayt_ea`, `ayt_soz`, `ayt_dil`, `ydt`. Kurum: `ozel_*` (CHECK: global kod `ozel_` ile başlayamaz, kurum kodu başlamalıdır). |
 | `ad` | text | hayır | | |
 | `yanlis_katsayisi` | numeric(5,4) | hayır | | LGS `0.3333`, TYT/AYT/YDT `0.2500`. Net = doğru - yanlış x katsayı. |
-| `bolumler` | jsonb | hayır | | `[{brans_kodu, ad, soru_sayisi}]` Zod ile doğrulanır |
+| `bolumler` | jsonb | hayır | | `[{bolum_kodu, brans_kodu, ad, soru_sayisi}]` Zod ile doğrulanır. `bolum_kodu` kuralda tekildir; aynı `brans_kodu` iki bölümde geçebilir (AYT Tarih-1/Tarih-2, Coğrafya-1/2). `brans_kodu` `ortak.bransler`'de olmalıdır (JSON içinde FK olmadığından migrasyonda tohum için, API'de kurum kuralı için doğrulanır). |
 | `toplam_sure_dk` | int | evet | | |
 | `gecerli_yil` | int | evet | | Kural yılı (ör. 2026). Yıl değişince yeni satır, eskisi kalır. |
-| `aktif` | boolean | hayır | true | |
+| `aktif` | boolean | hayır | true | Pasif kural yeni deneme için çözülmez; eski denemeler etkilenmez. |
 
-Kısıtlar: `UNIQUE (COALESCE(kurum_id, '00000000-0000-0000-0000-000000000000'), kod, COALESCE(gecerli_yil, 0))`. `CHECK (yanlis_katsayisi >= 0 AND yanlis_katsayisi <= 1)`. Tohum notu: LGS 1/3, TYT/AYT/YDT 1/4 değerleri **resmi kılavuzdan doğrulanacak** (doğrulanana kadar yer tutucudur). İndeks: `(kurum_id, aktif)`. Olaylar: yok.
+Ek sütunlar: `id uuid`, `created_at`, `updated_at`, `created_by`, `surum bigint` (iyimser kilit).
+Kısıtlar: `UNIQUE (COALESCE(kurum_id, '00000000-0000-0000-0000-000000000000'), kod, COALESCE(gecerli_yil, 0))`. `CHECK (yanlis_katsayisi >= 0 AND yanlis_katsayisi <= 1)`. İndeks: `(kurum_id, aktif)`. Olaylar: yok.
+RLS (karma): SELECT `kurum_id IS NULL OR kurum_id = aktif_kurum()`; INSERT/UPDATE/DELETE yalnız `kurum_id = aktif_kurum()`. Global tohum migrasyonda, RLS açılmadan önce yazılır (tablo sahibi zorlanmış RLS altında global satır ekleyemez); tohum sonunda her `brans_kodu`nun `ortak.bransler`'de olduğu doğrulanır, yoksa migrasyon başarısız olur.
+**Tohum notu (2026 yer tutucusu, resmi kılavuzdan doğrulanacak):**
+
+| Kod | Yanlış katsayısı | Bölümler (`bolum_kodu`: soru) | Süre |
+| --- | --- | --- | --- |
+| `lgs` | 1/3 (`0.3333`) | `turkce` 20, `inkilap_tarihi` 10, `din_kulturu` 10, `yabanci_dil` (ingilizce) 10, `matematik` 20, `fen_bilimleri` 20 = 90 | 155 dk |
+| `tyt` | 1/4 | `turkce` 40, `sosyal` 20 (`sosyal_bilgiler` branşı), `matematik` 40 (geometri dahil), `fen` 20 (`fen_bilimleri` branşı) = 120 | 135 dk |
+| `ayt_say` | 1/4 | `matematik` 40, `fizik` 14, `kimya` 13, `biyoloji` 13 = 80 | 180 dk |
+| `ayt_ea` | 1/4 | `edebiyat` 24, `tarih_1` 10, `cografya_1` 6, `matematik` 40 = 80 | 180 dk |
+| `ayt_soz` | 1/4 | `edebiyat` 24, `tarih_1` 10, `cografya_1` 6, `tarih_2` 11, `cografya_2` 11, `felsefe` 12 (felsefe grubu), `din_kulturu` 6 = 80 | 180 dk |
+| `ayt_dil`, `ydt` | 1/4 | `yabanci_dil` (ingilizce) 80 | 120 dk |
+
+Doğrulama gerekenler: katsayıların kendisi (LGS 1/3, diğerleri 1/4); LGS ve YDT'de yabancı dil branşının ingilizce varsayılması; TYT Sosyal/Fen bölümlerinin tek bölüm (alt branşsız) tutulması ve `ortak.bransler`'de `sosyal_bilimleri` olmadığından `sosyal_bilgiler`e bağlanması; AYT Fen dağılımı (14/13/13), TDE-Sosyal-1 (24/10/6) ve Sosyal-2 (11/11/12/6) soru sayıları; AYT Matematik'in geometri dahil 40 sayılması; süreler; `ayt_dil`in YDT ile aynı yapıda olması.
 
 #### `ogrenme.denemeler`
 
@@ -1300,10 +1314,16 @@ Profil: `KS`. RLS: evet.
 | `giren_id` | uuid | hayır | | Giren üyelik (öğrenci veya öğretmen) |
 | `kaynak` | text | hayır | | CHECK `IN ('ogrenci','ogretmen')` |
 | `sure_dk` | int | evet | | |
-| `not` | text | evet | | |
+| `not_metni` | text | evet | | Serbest not (≤ 2000). Dokümandaki `not` SQL ayrılmış sözcüğü olduğundan bu adla tutulur; API alanı `not`. |
+| `onay_durumu` | text | hayır | `bekliyor` | `bekliyor`, `onaylandi`, `reddedildi`. Öğretmen/yönetici girişi doğrudan `onaylandi`; öğrenci girişi `bekliyor`. |
+| `onaylayan_id` | uuid | evet | | Onaylayan/reddeden üyelik (öğretmen girişinde girenin kendisi). |
+| `onay_at` | timestamptz | evet | | |
+| `red_nedeni` | text | evet | | Yalnız `reddedildi`de ve zorunlu (≤ 500). |
 
-Kısıtlar: `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, ogrenci_id, sinav_tarihi DESC)`.
-Olaylar: `ogrenme.deneme.girildi.v1`.
+Ek sütunlar: `id uuid`, `created_at`, `updated_at`, `created_by`, `surum bigint` (iyimser kilit).
+Kısıtlar: `UNIQUE (kurum_id, id)`. `UNIQUE (ogrenci_id, kural_id, sinav_tarihi, ad)` (çift tıklama ve Excel'in yeniden yüklenmesine karşı: 409 `deneme_zaten_var`). `CHECK (kaynak <> 'ogrenci' OR giren_id = ogrenci_id)`. `CHECK (kaynak = 'ogrenci' OR onay_durumu = 'onaylandi')` (`denemeler_ogretmen_onayli_chk`). `denemeler_onay_chk`: `bekliyor` iken `onay_at`/`onaylayan_id`/`red_nedeni` boş; `onaylandi` iken `onay_at` ve `onaylayan_id` dolu, `red_nedeni` boş; `reddedildi` iken üçü de dolu. `sure_dk` 1-1000. FK: `(kurum_id, ogrenci_id)`, `(kurum_id, giren_id)`, `(kurum_id, onaylayan_id)` → `hesap.uyelikler`; `kural_id` → `deneme_kurallari(id)`.
+İndeks: `(kurum_id, ogrenci_id, sinav_tarihi DESC)`; gelişim için kısmi `(kurum_id, ogrenci_id, kural_kodu, sinav_tarihi DESC, id DESC) WHERE onay_durumu = 'onaylandi'`; onay kuyruğu için kısmi `(kurum_id, created_at DESC) WHERE onay_durumu = 'bekliyor'`.
+Olaylar: `ogrenme.deneme.girildi.v1` (yalnız onaylanmış sonuçta; aşağıdaki "Olay kararı").
 
 #### `ogrenme.deneme_bolumleri`
 
@@ -1313,8 +1333,9 @@ Profil: `K`. RLS: evet.
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
-| `deneme_id` | uuid | hayır | | Bileşik FK |
-| `brans_kodu` | text | hayır | | |
+| `deneme_id` | uuid | hayır | | Bileşik FK `(kurum_id, deneme_id)` → `denemeler(kurum_id, id)`, `ON DELETE CASCADE` |
+| `bolum_kodu` | text | hayır | | Kuralın `bolumler[].bolum_kodu` değeri (kopya). Aynı branş iki bölümde geçebilir (AYT Tarih-1/Tarih-2). |
+| `brans_kodu` | text | hayır | | FK `ortak.bransler(kod)` |
 | `soru_sayisi` | smallint | hayır | | Kuraldan |
 | `dogru` | smallint | hayır | | |
 | `yanlis` | smallint | hayır | | |
@@ -1322,7 +1343,32 @@ Profil: `K`. RLS: evet.
 | `katsayi` | numeric(5,4) | hayır | | Başlıktaki `yanlis_katsayisi` kopyası (üretilmiş sütun aynı satırdaki değeri kullansın diye) |
 | `net` | numeric(6,2) | hayır | üretilmiş | `GENERATED ALWAYS AS (round(dogru - yanlis * katsayi, 2)) STORED` |
 
-Kısıtlar: `CHECK (dogru >= 0 AND yanlis >= 0 AND bos >= 0)`, `CHECK (dogru + yanlis + bos = soru_sayisi)` (`deneme_bolumleri_toplam_chk`), `UNIQUE (deneme_id, brans_kodu)`. `denemeler.toplam_net` bölüm yazımında `SUM(net)` ile güncellenir. İndeks: `(kurum_id, deneme_id)`, `(kurum_id, brans_kodu, deneme_id)`. Olaylar: yok.
+Ek sütunlar: `id uuid`, `created_at`, `updated_at`, `created_by`.
+Kısıtlar: `CHECK (dogru >= 0 AND yanlis >= 0 AND bos >= 0)`, `CHECK (dogru + yanlis + bos = soru_sayisi)` (`deneme_bolumleri_toplam_chk`), `UNIQUE (deneme_id, bolum_kodu)` (`brans_kodu` tekilliği **yoktur**: AYT'de iki Tarih/Coğrafya bölümü vardır). `denemeler.toplam_net` bölüm yazımında `SUM(net)` ile güncellenir (uygulama aynı işlemde `UPDATE ... SET toplam_net = coalesce(SUM(net), 0)` çalıştırır; toplam, bölüm netlerinin yuvarlanmış toplamıdır). İndeks: `(kurum_id, deneme_id)`, `(kurum_id, brans_kodu, deneme_id)`. Olaylar: yok.
+
+#### Deneme uçları ve kararlar
+
+Yol öneki `/v1/ogrenme/kurumlar/:kurum_id`. Net, sistemde tam sayı olmayan tek değerdir: veritabanı üretilmiş sütunu esastır, uygulama net hesaplamaz; API net değerlerini `number` (2 ondalık) döner; sıralama ve ortalamalar SQL'de yapılır.
+
+| Uç | Yetki | Not |
+| --- | --- | --- |
+| `GET /deneme-kurallari` | `deneme.oku` | Global + kurum kuralları (`global` alanı). |
+| `POST/PATCH/DELETE /deneme-kurallari[/:id]` | `deneme.yaz` kurum kapsamı | `ozel_*`; global 403 `global_kural_yazilamaz`; `surum` zorunlu (PATCH); kullanımdaki kural silinemez 409 `kural_kullanimda`. |
+| `GET/PUT /deneme-ayarlari` | GET `deneme.oku`; PUT `kurum.ayar.yaz` | `ogrenci_deneme_girisi` (kurum ayarı, `kurumlar.ayarlar`; varsayılan true). Kapalıysa öğrenci girişi/düzeltmesi/silmesi 403 `ogrenci_deneme_girisi_kapali`. |
+| `POST /denemeler` | `deneme.yaz` | Öğretmen/yönetici: `ogrenci_id` zorunlu, doğrudan `onaylandi`. Öğrenci: yalnız kendi, `bekliyor`. `kural_id` ya da `kural_kodu` (en yeni aktif sürüm). `bos` verilmezse hesaplanır. |
+| `PATCH/DELETE /denemeler/:id` | `deneme.yaz` | `surum` zorunlu (PATCH; DELETE'te isteğe bağlı sorgu). `bolumler` tek işlemde değişir. Öğrenci yalnız kendi `bekliyor`/`reddedildi` sonucunu değiştirir (düzeltince yeniden `bekliyor`). Düzeltmede eski katsayı kullanılır. |
+| `POST /denemeler/toplu` | `deneme.yaz` grup kapsamı | Bir deneme + N öğrenci (≤ 500), hepsi ya da hiçbiri; hata 422 `toplu_giris_hatali`, `details.hatalar[{satir, ogrenci_id, kod, mesaj}]`. |
+| `GET /denemeler/sablon.xlsx?kural&grup_id` | `deneme.yaz` grup kapsamı | `Veri` sayfası: `ogrenci_id`, `ogrenci_no`, `ad` (yalnız bilgi), her bölüm için `<bolum_kodu>_dogru/_yanlis`; `Bilgi` sayfası. |
+| `POST /denemeler/excel?kural&ad&sinav_tarihi&yayinevi&sure_dk&grup_id` | `deneme.yaz` grup kapsamı | Gövde ham `.xlsx`, `bodyLimit` 2 MB (413), ≤ 500 satır. Öğrenci `ogrenci_id`, yoksa `ogrenci_no` ile eşleşir. Formül hücresi ve tam sayı olmayan puan satır hatasıdır; puansız satır atlanır; atomik. |
+| `GET /denemeler?onay=&ogrenci_id=&kural=` | `deneme.oku` grup kapsamı | `onay=bekliyor` onay kuyruğu. İmleçli sayfalama. |
+| `POST /denemeler/:id/onay`, `/red` | `deneme.yaz` grup kapsamı | Onay olayı üretir; ikinci onay etkisiz; red `red_nedeni` ister, olay üretmez. |
+| `GET /denemelerim` | öğrenci | Kendi sonuçları, tüm onay durumları. |
+| `GET /ogrenciler/:id/deneme-gelisim?kural=&limit=` | `deneme.oku` | Yalnız onaylı. `noktalar` (eskiden yeniye, son `limit`), `son5_ortalama`, `onceki5_ortalama` (6-10. son deneme), `degisim`, `bolum_gelisimi`. Sayılar `limit`ten bağımsızdır. `kural` = kural kodu. |
+| `GET /gruplar/:id/deneme-ozet?kural=` | `deneme.oku` grup kapsamı (öğrenciye kapalı) | `sinif_ortalamasi` = öğrencilerin son 5 ortalamalarının ortalaması; bölüm ortalamaları; öğrenci başına son net. |
+
+Yetki: öğretmen yalnız atandığı grubun öğrencisine, öğrenci yalnız kendine; kapsam dışı 404. `deneme` modülü öğrencinin kademesinde ya da tüm gruplarında kapalıysa yazma 403 `modul_kapali`. Her yazma `hesap.denetim_kayitlari`na yazılır (`deneme.olustur/guncelle/sil/onayla/reddet/toplu_olustur/excel_yukle`, `deneme_kurali.*`, `deneme.ayar_guncelle`).
+
+**Olay kararı:** `ogrenme.deneme.girildi.v1` yalnız onaylanmış sonuçta (öğretmen girişinde kayıt anı, öğrenci girişinde onay anı), aynı işlemde outbox. Düzeltme olayı tekrarlamaz (aynı sonuç için XP ikinci kez verilmesin); silinen sonuç için geri alma olayı Faz 1 dışıdır.
 
 ### Soru sor
 

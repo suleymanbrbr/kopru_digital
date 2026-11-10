@@ -7,6 +7,7 @@ export * from './hesap/olaylar.js';
 export * from './ders/index.js';
 export * from './finans/api.js';
 export * from './finans/olaylar.js';
+export * from './ogrenme/deneme.js';
 export * from './ogrenme/mufredat.js';
 export * from './ogrenme/odev.js';
 export * from './ogrenme/plan.js';
