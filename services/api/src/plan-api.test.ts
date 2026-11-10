@@ -998,7 +998,8 @@ describe.skipIf(dbYok())('haftalik plan API', () => {
       const s = await y.kur();
       const ogr = await girisliOgrenci(s);
       const { gorev } = await hazir(s, ogr.uyelikId, BU, { gun: gun(2) });
-      for (const hedef of [gun(2), gun(1)]) {
+      // ayni gun, onceki gun ve 7 gunden uzak (gun(2) + 8)
+      for (const hedef of [gun(2), gun(1), gun(10)]) {
         const res = await istek('POST', s.k.kurumId, ogr.token, `/gorevler/${gorev.id}/devret`, {
           hedef_gun: hedef,
         });

@@ -39,6 +39,9 @@ import { haftaBaslangici, haftaKilitliMi, planBugunu, tarihEkle } from './plan-z
 
 const gorevParam = kurumParam.extend({ id: z.uuid() });
 
+/** Devirde hedef gun, gorevin gununden en cok bu kadar gun sonra olabilir. */
+const DEVIR_UST_GUN = 7;
+
 const PG_TEKIL_IHLAL = '23505';
 const tekilIhlaliMi = (err: unknown): boolean => {
   const e = err as { code?: string; cause?: { code?: string } } | null;
@@ -188,7 +191,7 @@ export const planOgrenciYollari: ServicePlugin = (app) => {
       schema: {
         tags: ['ogrenme'],
         summary:
-          'Tamamlanmayan gorevi sonraki gune tasi (ogrenci onerir, ogretmen plandan gorur). `hedef_gun` verilmezse gorevin gunuden bir sonraki gun; Pazar ise sonraki haftanin plani (yoksa yayinda acilir). Yeni gorev: hedef = kalan (en az 1), `devreden_gorev_id` dolu; eski gorev `devredildi`. Ayni gorev tekrar devredilemez (409 `gorev_zaten_devredildi`).',
+          'Tamamlanmayan gorevi sonraki gune tasi (ogrenci onerir, ogretmen plandan gorur). `hedef_gun` verilmezse gorevin gunuden bir sonraki gun, en cok 7 gun sonrasi (degilse 422); Pazar ise sonraki haftanin plani (yoksa yayinda acilir). Yeni gorev: hedef = kalan (en az 1), `devreden_gorev_id` dolu; eski gorev `devredildi`. Ayni gorev tekrar devredilemez (409 `gorev_zaten_devredildi`).',
         params: gorevParam,
         body: DevretGirdiSema,
         response: { 201: DevretYanitSema },
@@ -217,11 +220,13 @@ export const planOgrenciYollari: ServicePlugin = (app) => {
           haftaYazilabilirOlmali(gorev.hafta_baslangic);
           surumUyumluOlmali(gorev.surum, g.surum);
           const hedefGun = g.hedef_gun ?? tarihEkle(gorev.gun, 1);
-          if (hedefGun <= gorev.gun) {
+          // Sartname: "sonraki gune tasima". Ogrenci gorevi uzak bir haftaya atip istedigi haftada plan
+          // actiramasin diye hedef en cok bir hafta sonrasi olabilir.
+          if (hedefGun <= gorev.gun || hedefGun > tarihEkle(gorev.gun, DEVIR_UST_GUN)) {
             throw new AppError(
               422,
               planHataKodlari.hedefGunGecersiz,
-              'Hedef gün görevin gününden sonra olmalı.',
+              'Hedef gün görevin gününden sonraki 7 gün içinde olmalı.',
             );
           }
           const hedefHafta = haftaBaslangici(hedefGun);

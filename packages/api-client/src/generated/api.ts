@@ -6027,7 +6027,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tamamlanmayan gorevi sonraki gune tasi (ogrenci onerir, ogretmen plandan gorur). `hedef_gun` verilmezse gorevin gunuden bir sonraki gun; Pazar ise sonraki haftanin plani (yoksa yayinda acilir). Yeni gorev: hedef = kalan (en az 1), `devreden_gorev_id` dolu; eski gorev `devredildi`. Ayni gorev tekrar devredilemez (409 `gorev_zaten_devredildi`). */
+        /** Tamamlanmayan gorevi sonraki gune tasi (ogrenci onerir, ogretmen plandan gorur). `hedef_gun` verilmezse gorevin gunuden bir sonraki gun, en cok 7 gun sonrasi (degilse 422); Pazar ise sonraki haftanin plani (yoksa yayinda acilir). Yeni gorev: hedef = kalan (en az 1), `devreden_gorev_id` dolu; eski gorev `devredildi`. Ayni gorev tekrar devredilemez (409 `gorev_zaten_devredildi`). */
         post: {
             parameters: {
                 query?: never;
