@@ -75,9 +75,18 @@ export function konuAgaci(
   let gorunen = new Set(aday.map((k) => k.id));
   if (sorgu) {
     gorunen = new Set();
+    const eslesen = new Set(aday.filter((k) => aramaAnahtari(k.ad).includes(sorgu)).map((k) => k.id));
     for (const k of aday) {
-      if (!aramaAnahtari(k.ad).includes(sorgu)) continue;
+      // Eslesen konunun ustleri (baglam) ve altlari (alt konu secilebilsin) de gelir.
       let simdiki: Konu | undefined = k;
+      let altta = false;
+      while (simdiki) {
+        if (simdiki !== k && eslesen.has(simdiki.id)) altta = true;
+        simdiki = simdiki.ustId ? id.get(simdiki.ustId) : undefined;
+      }
+      if (altta) gorunen.add(k.id);
+      if (!eslesen.has(k.id)) continue;
+      simdiki = k;
       while (simdiki && !gorunen.has(simdiki.id)) {
         gorunen.add(simdiki.id);
         simdiki = simdiki.ustId ? id.get(simdiki.ustId) : undefined;
