@@ -44,6 +44,18 @@ export function usePlanim(hafta: string) {
   });
 }
 
+/** Bugunun (kurum gunu) gorevleri: `GET /gorevlerim`. */
+export function useGorevlerim(gun: string, etkin = true) {
+  const { adaptorler } = useServisler();
+  const uyelikId = useUyelikId();
+  const acik = useModulAcik('haftalik_plan');
+  return useQuery({
+    queryKey: ['plan', uyelikId, 'gorevlerim', gun],
+    queryFn: () => adaptorler.ogrenme.gorevlerim(gun),
+    enabled: !!uyelikId && acik && etkin,
+  });
+}
+
 export function useOgrenciPlani(ogrenciId: string, hafta: string) {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();
@@ -173,6 +185,18 @@ export function gerceklesenIyimser(
   gorevId: string,
   miktar: number,
 ) {
+  qc.setQueriesData<{ gun: string; gorevler: PlanGorevi[] }>(
+    { queryKey: ['plan', uyelikId, 'gorevlerim'] },
+    (eski) =>
+      eski && {
+        ...eski,
+        gorevler: eski.gorevler.map((g): PlanGorevi =>
+          g.id === gorevId
+            ? { ...g, gerceklesen: miktar, durum: gorevDurumuHesapla(g.hedefMiktar, miktar) }
+            : g,
+        ),
+      },
+  );
   qc.setQueriesData<PlanDetayi>({ queryKey: ['plan', uyelikId, 'planim'] }, (eski) => {
     if (!eski) return eski;
     return {

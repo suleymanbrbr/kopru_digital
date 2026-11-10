@@ -64,7 +64,7 @@ export function ilerlemeMetni(g: PlanGorevi): string {
     : t('mobil.ogrenme.plan.ilerlemeDakika', { yapilan, hedef: g.hedefMiktar });
 }
 
-function GorevKarti({
+export function GorevKarti({
   gorev,
   ad,
   kilitli,

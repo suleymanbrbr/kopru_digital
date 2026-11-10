@@ -17,8 +17,8 @@ export function apiUrlCoz(url: string, platform: string = Platform.OS): string {
  * `process.env.EXPO_PUBLIC_X` dogrudan (dinamik anahtar olmadan) okunmalidir.
  */
 export const ortam = {
-  apiMock: (process.env.EXPO_PUBLIC_API_MOCK as string | undefined) === '1',
-  apiUrl: apiUrlCoz((process.env.EXPO_PUBLIC_API_URL as string | undefined) ?? ''),
+  apiMock: process.env.EXPO_PUBLIC_API_MOCK === '1',
+  apiUrl: apiUrlCoz(process.env.EXPO_PUBLIC_API_URL ?? ''),
   /** Gelistirici ekranlari (Bilesenler) yalnizca gelistirme derlemesinde acilir. */
   gelistirici: __DEV__,
 } as const;

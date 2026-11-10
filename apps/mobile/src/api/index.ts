@@ -50,6 +50,7 @@ function baglanmamisAdaptorler(): Adaptorler {
       odevSablonlari: hata,
       incelemeBekleyenler: hata,
       planim: hata,
+      gorevlerim: hata,
       gorevGerceklesen: hata,
       gorevDevret: hata,
       ogrenciPlani: hata,

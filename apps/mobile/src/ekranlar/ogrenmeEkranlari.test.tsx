@@ -23,6 +23,7 @@ import { KonuSecici, KONU_SECIMI_BOS, type KonuSecimi } from './KonuSecici';
 import { OdevOzetEkrani } from './OdevOzetEkrani';
 import { OdevTeslimEkrani } from './OdevTeslimEkrani';
 import { OdevVerEkrani } from './OdevVerEkrani';
+import { OgrenciBugun } from './OgrenciBugun';
 import { OgrenciDenemeler } from './OgrenciDenemeler';
 import { OgrenciGorevler } from './OgrenciGorevler';
 import { OgrenciKartiEkrani } from './OgrenciKartiEkrani';
@@ -237,6 +238,55 @@ describe('ogrenci Gorevler sekmesi', () => {
     // Kilitli (eski) hafta: hafta sonu + 14 gunden eski plan salt okunur
     for (let i = 0; i < 6; i++) await dokun(r, 'Önceki hafta');
     expect(metinler(r)).toContain('Bu haftanın planı kilitlendi');
+  });
+});
+
+describe('ogrenci Bugun: gercek gorevlerim ve yaklasan odevler', () => {
+  it('bugunun gorevleri, ozet ve yaklasan/geciken odevler; eski mock gorev listesi yok', async () => {
+    const o = await ogrenciOrtami();
+    const gorevlerim = jest.spyOn(o.adaptorler.ogrenme, 'gorevlerim');
+    const r = await ac(o, <OgrenciBugun />);
+    expect(gorevlerim).toHaveBeenCalledWith(bugun());
+    expect(var_(r, 'bugunku-gorevler')).toBe(true);
+    expect(metinler(r)).toContain('Fen bilimleri');
+    expect(metinler(r)).toContain('0/2 görev');
+    expect(var_(r, 'bugun-yaklasan-odevler')).toBe(true);
+    expect(metinler(r)).toContain('Denklemler: 15 soru'); // geciken
+    expect(metinler(r)).toContain('Üslü Sayılar: 20 soru');
+    await testIDDokun(r, 'bugun-odev-oo-odev-2-uyelik-ogrenci-a');
+    expect(mockYonlendirici.push).toHaveBeenCalledWith({
+      pathname: '/odev-teslim/[id]',
+      params: { id: 'oo-odev-2-uyelik-ogrenci-a' },
+    });
+  });
+
+  it('goreve dokun, gir, kaydet: Gorevler sekmesiyle ayni giris', async () => {
+    const o = await ogrenciOrtami();
+    const gorev = (await bugunGorevleri(o)).find((g) => g.hedefTuru === 'dakika')!;
+    const yaz_ = jest.spyOn(o.adaptorler.ogrenme, 'gorevGerceklesen');
+    const r = await ac(o, <OgrenciBugun />);
+    await dokun(r, 'Fen bilimleri, 30 dk, 0 / 30 dk, Bekliyor');
+    await dokun(r, 'Kaydet');
+    await bekle(60);
+    expect(yaz_.mock.calls[0]).toEqual([gorev.id, 30]);
+    expect(metinler(r)).toContain('1/2 görev');
+  });
+
+  it('bos ve hata halleri; modul kapaliysa bolum yok', async () => {
+    const o = await ogrenciOrtami();
+    jest
+      .spyOn(o.adaptorler.ogrenme, 'gorevlerim')
+      .mockResolvedValue({ gun: bugun(), gorevler: [] });
+    jest.spyOn(o.adaptorler.ogrenme, 'odevlerim').mockRejectedValue(new ApiHata('ag'));
+    const r = await ac(o, <OgrenciBugun />);
+    expect(metinler(r)).toContain('Bugün için görevin yok');
+    expect(r.root.findAll((n) => n.props.accessibilityRole === 'alert').length).toBeGreaterThan(0);
+
+    const o2 = await ogrenciOrtami();
+    modulAyarla(o2, { haftalik_plan: false, odev: false });
+    const r2 = await ac(o2, <OgrenciBugun />);
+    expect(var_(r2, 'bugunku-gorevler')).toBe(false);
+    expect(var_(r2, 'bugun-yaklasan-odevler')).toBe(false);
   });
 });
 

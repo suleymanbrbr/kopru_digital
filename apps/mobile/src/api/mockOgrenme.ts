@@ -604,6 +604,18 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
       return detay(ogrenciOlmali(), hafta, false);
     },
 
+    async gorevlerim(gun) {
+      await gecik();
+      const id = ogrenciOlmali();
+      const yayinda = new Set(planlar.filter((p) => p.durum === 'yayinda').map((p) => p.id));
+      return {
+        gun,
+        gorevler: kopya(
+          gorevler.filter((g) => g.ogrenciId === id && g.gun === gun && yayinda.has(g.planId)),
+        ),
+      };
+    },
+
     async gorevGerceklesen(gorevId, miktar) {
       await gecik();
       const id = ogrenciOlmali();

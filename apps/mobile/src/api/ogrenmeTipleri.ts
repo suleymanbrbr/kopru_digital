@@ -304,6 +304,8 @@ export interface OgrenmeAdapter {
   // Plan (ogrenci)
   /** `hafta`: haftanin herhangi bir gunu (kurum yerel gunu). */
   planim: (hafta: string) => Promise<PlanDetayi>;
+  /** Belirli kurum gununun gorevleri (`GET /gorevlerim`; yayindaki plan). */
+  gorevlerim: (gun: string) => Promise<{ gun: string; gorevler: PlanGorevi[] }>;
   /**
    * Gerceklesen miktari yazar. `surum` YOLLANMAZ: ayni deger tekrari sunucuda guvenlidir ve eski
    * surum cevrimdisi tekrarda 409 vermez.
