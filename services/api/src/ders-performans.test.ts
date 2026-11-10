@@ -27,6 +27,8 @@ describe.skipIf(dbYok())('ders takvimi performansi (200 ders, hedef 300 ms)', ()
     await appDb.close();
   });
 
+  // Hazirlik (3200 ders, 64000 katilimci) testin icinde: varsayilan 15 sn CI'da yetmiyor. Olcut
+  // (medyan 300 ms) degismez; yalniz toplam sure siniri.
   it('200 dersli aralik: tek istek, N+1 yok, medyan 300 ms altinda', async () => {
     const y = dersYardimcilari({ t, sistem });
     const s = await y.kur({ ogrenciSayisi: 20 });
@@ -110,7 +112,7 @@ describe.skipIf(dbYok())('ders takvimi performansi (200 ders, hedef 300 ms)', ()
 
     expect(planMetni).toMatch(/Index Scan|Bitmap/);
     expect(medyan).toBeLessThan(300);
-  });
+  }, 60_000);
 
   it('20 ogrencili toplu yoklama PUT: ilk yazim, duzeltme ve idempotent tekrar sureleri (kredi dususu dahil)', async () => {
     const y = dersYardimcilari({ t, sistem });
