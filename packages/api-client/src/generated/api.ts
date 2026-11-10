@@ -10496,6 +10496,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/teslimler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teslim satirlari (varsayilan `teslim_edildi`: inceleme bekleyenler), teslim zamanina gore eskiden yeniye, anahtar tabanli sayfali. Ogretmen yalniz kendi verdigi odevlerin satirlarini, sahip/yonetici kapsamindakileri gorur. Ogrenci 403; `odev` modulu kapaliysa 403. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sonraki_imlec: string | null;
+                            teslimler: {
+                                bos_sayisi: number | null;
+                                brans_kodu: string;
+                                dogru_orani: number | null;
+                                dogru_sayisi: number | null;
+                                /** @enum {string} */
+                                durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                                gec_teslim: boolean;
+                                gorunen_ad: string | null;
+                                odev_baslik: string;
+                                /** Format: uuid */
+                                odev_id: string;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                ogrenci_odev_id: string;
+                                /** Format: date-time */
+                                son_teslim_at: string | null;
+                                /** Format: date-time */
+                                teslim_at: string | null;
+                                yanlis_sayisi: number | null;
+                                yapilan_soru_sayisi: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

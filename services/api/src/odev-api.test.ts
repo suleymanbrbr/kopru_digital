@@ -791,6 +791,149 @@ describe.skipIf(dbYok())('odev API: yayin, fan-out, teslim, inceleme, sablon', (
     });
   });
 
+  describe('teslimler (inceleme bekleyenler)', () => {
+    interface TeslimListe {
+      teslimler: {
+        ogrenci_odev_id: string;
+        odev_id: string;
+        odev_baslik: string;
+        brans_kodu: string;
+        ogrenci_id: string;
+        gorunen_ad: string | null;
+        durum: string;
+        teslim_at: string | null;
+        gec_teslim: boolean;
+        dogru_orani: number | null;
+      }[];
+      sonraki_imlec: string | null;
+    }
+    const teslimEt = async (s: Kurulum, o: OdevJson, ogr: Uye, yapilan = 10, dogru = 8) => {
+      const satirId = await satirBul(o.id, ogr.uyelikId);
+      const res = await istek(
+        'POST',
+        s.k.kurumId,
+        ogr.token,
+        `/ogrenci-odevleri/${satirId}/teslim`,
+        {
+          yapilan_soru_sayisi: yapilan,
+          dogru_sayisi: dogru,
+        },
+      );
+      expect(res.statusCode, res.body).toBe(200);
+      return satirId;
+    };
+
+    it('kendi odevlerinin teslimleri eskiden yeniye; baslik, brans, dogru orani; incelenen listeden duser', async () => {
+      const s = await y.kur({ ogrenciSayisi: 0 });
+      const a = await girisliOgrenci(s);
+      const b = await girisliOgrenci(s);
+      const o = await yayinda(s);
+      const satirA = await teslimEt(s, o, a);
+      const satirB = await teslimEt(s, o, b, 20, 15);
+      const res = await istek('GET', s.k.kurumId, s.hoca.token, '/teslimler');
+      expect(res.statusCode, res.body).toBe(200);
+      const liste = res.json<TeslimListe>();
+      expect(liste.teslimler.map((t) => t.ogrenci_odev_id)).toEqual([satirA, satirB]);
+      expect(liste.teslimler[0]).toMatchObject({
+        odev_id: o.id,
+        odev_baslik: o.baslik,
+        brans_kodu: 'matematik',
+        durum: 'teslim_edildi',
+        gec_teslim: false,
+        dogru_orani: 0.8,
+      });
+      expect(liste.sonraki_imlec).toBeNull();
+      const incele = await istek(
+        'POST',
+        s.k.kurumId,
+        s.hoca.token,
+        `/ogrenci-odevleri/${satirA}/inceleme`,
+        {
+          sonuc: 'tamam',
+        },
+      );
+      expect(incele.statusCode, incele.body).toBe(200);
+      const sonra = (
+        await istek('GET', s.k.kurumId, s.hoca.token, '/teslimler')
+      ).json<TeslimListe>();
+      expect(sonra.teslimler.map((t) => t.ogrenci_odev_id)).toEqual([satirB]);
+    });
+
+    it('baska ogretmenin odevi gorunmez (ayni grupta olsa bile); baska kurum gorunmez', async () => {
+      const s = await y.kur({ ogrenciSayisi: 0 });
+      const hoca2 = await y.davetliUye(s.k, 'ogretmen');
+      await y.ata(s.k, s.grup.id, hoca2.uyelikId);
+      const ogr = await girisliOgrenci(s);
+      const o = await yayinda(s);
+      await teslimEt(s, o, ogr);
+      const digerOgretmen = (
+        await istek('GET', s.k.kurumId, hoca2.token, '/teslimler')
+      ).json<TeslimListe>();
+      expect(digerOgretmen.teslimler).toEqual([]);
+      const baskaKurum = await y.kur({ ogrenciSayisi: 0 });
+      const yabanci = (
+        await istek('GET', baskaKurum.k.kurumId, baskaKurum.hoca.token, '/teslimler')
+      ).json<TeslimListe>();
+      expect(yabanci.teslimler).toEqual([]);
+      // baska kurumun kimligiyle bu kurumun yolu: erisim yok
+      const capraz = await istek('GET', s.k.kurumId, baskaKurum.hoca.token, '/teslimler');
+      expect(capraz.statusCode).toBeGreaterThanOrEqual(400);
+    });
+
+    it('sahip/yonetici kapsamdaki tum ogretmenlerin teslimlerini gorur', async () => {
+      const s = await y.kur({ ogrenciSayisi: 0 });
+      const ogr = await girisliOgrenci(s);
+      const o = await yayinda(s);
+      const satir = await teslimEt(s, o, ogr);
+      const res = await istek('GET', s.k.kurumId, s.k.token, '/teslimler');
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json<TeslimListe>().teslimler.map((t) => t.ogrenci_odev_id)).toContain(satir);
+    });
+
+    it('ogrenci 403; odev modulu kapaliysa 403 modul_kapali', async () => {
+      const s = await y.kur({ ogrenciSayisi: 0 });
+      const ogr = await girisliOgrenci(s);
+      expect((await istek('GET', s.k.kurumId, ogr.token, '/teslimler')).statusCode).toBe(403);
+      await sistem`insert into hesap.modul_ayarlari (id, kurum_id, modul_kodu, kapsam, kapsam_id, acik)
+        values (${uuidv7()}, ${s.k.kurumId}, 'odev', 'kurum', ${s.k.kurumId}, false)`;
+      const res = await istek('GET', s.k.kurumId, s.hoca.token, '/teslimler');
+      expect(res.statusCode).toBe(403);
+      expect(hataKodu(res)).toBe('modul_kapali');
+    });
+
+    it('anahtar tabanli sayfalama: limit, imlec, tekrar ve atlama yok; bozuk imlec 400', async () => {
+      const s = await y.kur({ ogrenciSayisi: 0 });
+      const ogrenciler = [
+        await girisliOgrenci(s),
+        await girisliOgrenci(s),
+        await girisliOgrenci(s),
+      ];
+      const o = await yayinda(s);
+      const beklenen: string[] = [];
+      for (const ogr of ogrenciler) beklenen.push(await teslimEt(s, o, ogr));
+      const ilk = (
+        await istek('GET', s.k.kurumId, s.hoca.token, '/teslimler?limit=2')
+      ).json<TeslimListe>();
+      expect(ilk.teslimler).toHaveLength(2);
+      expect(ilk.sonraki_imlec).not.toBeNull();
+      const ikinci = (
+        await istek(
+          'GET',
+          s.k.kurumId,
+          s.hoca.token,
+          `/teslimler?limit=2&imlec=${ilk.sonraki_imlec ?? ''}`,
+        )
+      ).json<TeslimListe>();
+      expect(ikinci.teslimler).toHaveLength(1);
+      expect(ikinci.sonraki_imlec).toBeNull();
+      expect([...ilk.teslimler, ...ikinci.teslimler].map((t) => t.ogrenci_odev_id)).toEqual(
+        beklenen,
+      );
+      const bozuk = await istek('GET', s.k.kurumId, s.hoca.token, '/teslimler?imlec=bozuk');
+      expect(bozuk.statusCode).toBe(400);
+    });
+  });
+
   describe('sablon', () => {
     it('CRUD; her ogretmen yalniz kendi sablonunu gorur (baskasi 404)', async () => {
       const s = await y.kur({ ogrenciSayisi: 0 });
