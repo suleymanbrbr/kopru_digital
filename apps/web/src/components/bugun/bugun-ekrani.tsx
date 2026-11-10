@@ -10,6 +10,11 @@ import { BugunDersleriKarti } from './bugun-dersleri';
 import { BosDurum } from '@/components/bos-durum';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { Karakter, karakterAdi } from '@/components/karakter';
+import {
+  BugunBekleyenKarti,
+  BugunOdevKarti,
+  BugunPlanKarti,
+} from '@/components/ogrenme/bugun-kartlari';
 import { dugmeStili } from '@/components/ui/button';
 import { Iskelet, Kart } from '@/components/ui/kart';
 import { BugunYoklamaKarti } from '@/components/yoklama/bugun-karti';
@@ -79,6 +84,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
           )}
         </BolumKarti>
         <BugunYoklamaKarti />
+        <BugunBekleyenKarti />
         {yonetim ? (
           <div className="md:col-span-2">
             <BolumKarti
@@ -112,24 +118,29 @@ function OgrenciBugun() {
       <BugunBasligi aciklama={t('bugun.ogrenciAciklama')} />
       <div className="grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
         <BugunDersleriKarti />
-        <BolumKarti
-          baslik={t('bugun.gorevler')}
-          yukleniyor={veri.isPending}
-          hata={veri.isError}
-          tekrarDene={() => void veri.refetch()}
-        >
-          {veri.data?.gorevler.length ? null : (
-            <BosDurum
-              ikon={Sparkles}
-              baslik={t('bugun.gorevBos')}
-              aciklama={t('bugun.gorevBosAciklama')}
-            >
-              <Link href={`${kok}/odevlerim`} className={dugmeStili({ gorunum: 'ikincil' })}>
-                {t('bugun.gorevBosEylem')}
-              </Link>
-            </BosDurum>
-          )}
-        </BolumKarti>
+        {acikModuller.includes('haftalik_plan') ? (
+          <BugunPlanKarti />
+        ) : (
+          <BolumKarti
+            baslik={t('bugun.gorevler')}
+            yukleniyor={veri.isPending}
+            hata={veri.isError}
+            tekrarDene={() => void veri.refetch()}
+          >
+            {veri.data?.gorevler.length ? null : (
+              <BosDurum
+                ikon={Sparkles}
+                baslik={t('bugun.gorevBos')}
+                aciklama={t('bugun.gorevBosAciklama')}
+              >
+                <Link href={`${kok}/odevlerim`} className={dugmeStili({ gorunum: 'ikincil' })}>
+                  {t('bugun.gorevBosEylem')}
+                </Link>
+              </BosDurum>
+            )}
+          </BolumKarti>
+        )}
+        {acikModuller.includes('odev') ? <BugunOdevKarti /> : null}
 
         {karakterVar ? (
           <Kart

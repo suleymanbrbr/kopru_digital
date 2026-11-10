@@ -4,7 +4,7 @@ import type { z } from 'zod';
 import { bffIstek, UygulamaHatasi } from '@/lib/api';
 import { belirteciYenile, erisimBelirteciAl } from '@/oturum/saglayici';
 
-export type Servis = 'hesap' | 'ders' | 'finans';
+export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme';
 
 interface IstekSecenekleri<S> {
   yontem?: string;
@@ -56,6 +56,13 @@ export function finansIstek<S extends z.ZodType>(
   return servisIstek('finans', yol, secenekler);
 }
 
+export function ogrenmeIstek<S extends z.ZodType>(
+  yol: string,
+  secenekler: IstekSecenekleri<S> = {},
+) {
+  return servisIstek('ogrenme', yol, secenekler);
+}
+
 /** `content-disposition` basligindan dosya adini cikarir. */
 export function dosyaAdiCoz(baslik: string | null, yedek: string): string {
   const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(baslik ?? '');
@@ -67,15 +74,16 @@ export function dosyaAdiCoz(baslik: string | null, yedek: string): string {
   }
 }
 
-/** Ikili bir finans yanitini (ornegin Excel) indirir; 401'de bir kez yenileyip tekrarlar. */
-export async function finansDosyaAl(
+/** Ikili bir yaniti (ornegin Excel) indirir; 401'de bir kez yenileyip tekrarlar. */
+export async function servisDosyaAl(
+  servis: Servis,
   yol: string,
   yedekAd: string,
 ): Promise<{ blob: Blob; dosyaAdi: string }> {
   const dene = async () => {
     let yanit: Response;
     try {
-      yanit = await fetch(`/api/finans/${yol}`, {
+      yanit = await fetch(`/api/${servis}/${yol}`, {
         headers: { authorization: `Bearer ${erisimBelirteciAl() ?? ''}` },
         credentials: 'same-origin',
         cache: 'no-store',
@@ -97,6 +105,61 @@ export async function finansDosyaAl(
       blob: await yanit.blob(),
       dosyaAdi: dosyaAdiCoz(yanit.headers.get('content-disposition'), yedekAd),
     };
+  };
+  try {
+    return await dene();
+  } catch (hata) {
+    if (hata instanceof UygulamaHatasi && hata.durum === 401 && (await belirteciYenile())) {
+      return await dene();
+    }
+    throw hata;
+  }
+}
+
+export function finansDosyaAl(yol: string, yedekAd: string) {
+  return servisDosyaAl('finans', yol, yedekAd);
+}
+
+/**
+ * Ham dosya gonderir (ornegin `.xlsx`); yanit JSON'dur. Hata gövdesi `UygulamaHatasi`na cevrilir ve
+ * `detaylar` (satir hatalari) korunur. 401'de bir kez yenileyip tekrarlar.
+ */
+export async function servisDosyaYukle<S extends z.ZodType>(
+  servis: Servis,
+  yol: string,
+  dosya: Blob,
+  sema: S,
+): Promise<z.output<S>> {
+  const dene = async () => {
+    let yanit: Response;
+    try {
+      yanit = await fetch(`/api/${servis}/${yol}`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${erisimBelirteciAl() ?? ''}`,
+          'content-type':
+            dosya.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+        body: dosya,
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+    } catch {
+      throw new UygulamaHatasi(0, 'ag', t('hata.ag'));
+    }
+    if (!yanit.ok) {
+      const ham = (await yanit.json().catch(() => null)) as {
+        error?: { code?: string; message?: string; details?: unknown };
+      } | null;
+      throw new UygulamaHatasi(
+        yanit.status,
+        ham?.error?.code ?? 'sunucu_hatasi',
+        ham?.error?.message ?? t('ortak.hataGenel'),
+        undefined,
+        ham?.error?.details,
+      );
+    }
+    return sema.parse(await yanit.json());
   };
   try {
     return await dene();
