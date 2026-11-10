@@ -364,7 +364,9 @@ describe.skipIf(dbYok())('ders takvimi API', () => {
       const cakisanTarih = tarihEkle(baslangic, 91);
       await y.dersAc(s, { tarih: cakisanTarih });
 
-      const simdi = new Date(Date.now() + 30 * 86_400_000);
+      // Ufuk en az 8 yeni hafta uzasin: yalniz 30 gun ileri alinca, haftanin gunune gore tek yeni
+      // Pazartesi kalabiliyor ve o da asagidaki bilerek cakistirilan gun oluyordu (tarihe bagli test).
+      const simdi = new Date(Date.now() + 60 * 86_400_000);
       const say = async () =>
         (
           await sistem<{ n: number }[]>`
