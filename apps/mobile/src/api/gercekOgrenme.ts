@@ -16,7 +16,6 @@ import type {
 } from './ogrenmeTipleri';
 
 const SAYFA_UST = 10;
-const BEKLEYEN_ODEV_UST = 20;
 
 // --- Api govdeleri (snake_case) -------------------------------------------------------------
 
@@ -451,37 +450,29 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
       }));
     },
 
-    /**
-     * Api'de "inceleme bekleyen teslimler" ucu yoktur: yayindaki son odevlerin ozetleri okunup
-     * `teslim_edildi` satirlari toplanir (en cok `BEKLEYEN_ODEV_UST` odev).
-     */
-    async incelemeBekleyenler() {
-      const kurum_id = b.etkinKurum();
-      const liste = veriAl(
-        await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/odevler', {
-          params: { path: { kurum_id }, query: { durum: 'yayinda', limit: BEKLEYEN_ODEV_UST } },
-        }),
-      );
-      const ozetler = await Promise.all(
-        liste.odevler.slice(0, BEKLEYEN_ODEV_UST).map((o) => adaptor.odevOzeti(o.id)),
-      );
-      const sonuc: BekleyenTeslim[] = [];
-      for (const o of ozetler) {
-        for (const s of o.ogrenciler) {
-          if (s.durum === 'teslim_edildi') {
-            sonuc.push({
-              odevId: o.odev.id,
-              odevBaslik: o.odev.baslik,
-              ogrenciOdevId: s.ogrenciOdevId,
-              ad: s.ad,
-              teslimAt: s.teslimAt,
-              gecTeslim: s.gecTeslim,
-            });
-          }
-        }
-      }
-      return sonuc.sort((x, y) => Date.parse(x.teslimAt ?? '') - Date.parse(y.teslimAt ?? ''));
-    },
+    /** `GET /teslimler?durum=teslim_edildi`: teslim zamanina gore eskiden yeniye (tum sayfalar). */
+    incelemeBekleyenler: () =>
+      sayfalariTopla(async (imlec) => {
+        const d = veriAl(
+          await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/teslimler', {
+            params: {
+              path: { kurum_id: b.etkinKurum() },
+              query: { durum: 'teslim_edildi', limit: 100, ...(imlec ? { imlec } : {}) },
+            },
+          }),
+        );
+        return {
+          liste: d.teslimler.map((t): BekleyenTeslim => ({
+            odevId: t.odev_id,
+            odevBaslik: t.odev_baslik,
+            ogrenciOdevId: t.ogrenci_odev_id,
+            ad: t.gorunen_ad,
+            teslimAt: t.teslim_at,
+            gecTeslim: t.gec_teslim,
+          })),
+          sonraki: d.sonraki_imlec,
+        };
+      }),
 
     // --- Plan (ogrenci) ---
     async planim(hafta) {
@@ -491,6 +482,15 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
         }),
       );
       return planDetayCevir(d);
+    },
+
+    async gorevlerim(gun) {
+      const d = veriAl(
+        await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/gorevlerim', {
+          params: { path: { kurum_id: b.etkinKurum() }, query: { gun } },
+        }),
+      );
+      return { gun: d.gun, gorevler: d.gorevler.map((g) => gorevCevir(g as unknown as ApiGorev)) };
     },
 
     async gorevGerceklesen(id, miktar) {

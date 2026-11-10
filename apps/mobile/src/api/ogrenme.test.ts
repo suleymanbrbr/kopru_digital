@@ -218,6 +218,54 @@ describe('ogrenme adaptoru: uc eslemesi', () => {
     expect(g.gerceklesen).toBe(18);
   });
 
+  it('gorevlerim: gun sorgusu ve esleme', async () => {
+    const { o, cagrilar } = await kur(() => json({ gun: '2026-11-10', gorevler: [apiGorev()] }));
+    const r = await o.gorevlerim('2026-11-10');
+    expect(cagrilar[0]?.yol).toBe(`${YOL}/gorevlerim?gun=2026-11-10`);
+    expect(r.gorevler[0]).toMatchObject({ id: GOREV, hedefMiktar: 20, gerceklesen: 15 });
+  });
+
+  it('incelemeBekleyenler: tek uc (/teslimler), sayfalama, N+1 yok', async () => {
+    const t = (id: string, ek: Record<string, unknown> = {}) => ({
+      ogrenci_odev_id: id,
+      odev_id: ODEV,
+      odev_baslik: 'Üslü',
+      brans_kodu: 'matematik',
+      ogrenci_id: UYELIK,
+      gorunen_ad: 'Elif',
+      durum: 'teslim_edildi',
+      teslim_at: '2026-11-10T10:00:00.000Z',
+      son_teslim_at: null,
+      gec_teslim: true,
+      yapilan_soru_sayisi: 20,
+      dogru_sayisi: 15,
+      yanlis_sayisi: 3,
+      bos_sayisi: 2,
+      dogru_orani: 0.75,
+      ...ek,
+    });
+    const { o, cagrilar } = await kur((c) =>
+      c.yol.includes('imlec=s2')
+        ? json({ teslimler: [t('t2')], sonraki_imlec: null })
+        : json({ teslimler: [t('t1')], sonraki_imlec: 's2' }),
+    );
+    const l = await o.incelemeBekleyenler();
+    expect(l).toEqual([
+      {
+        odevId: ODEV,
+        odevBaslik: 'Üslü',
+        ogrenciOdevId: 't1',
+        ad: 'Elif',
+        teslimAt: '2026-11-10T10:00:00.000Z',
+        gecTeslim: true,
+      },
+      expect.objectContaining({ ogrenciOdevId: 't2' }),
+    ]);
+    expect(cagrilar).toHaveLength(2);
+    expect(cagrilar[0]?.yol).toContain(`${YOL}/teslimler`);
+    expect(cagrilar[0]?.yol).toContain('durum=teslim_edildi');
+  });
+
   it('gorevDevret: hedef gun verilirse govdede, verilmezse bos govde', async () => {
     const { o, cagrilar } = await kur(() =>
       json(
