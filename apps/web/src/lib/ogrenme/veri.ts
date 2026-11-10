@@ -128,6 +128,8 @@ export function useOdevler(kurumId: string, durum: string, etkin = true) {
 export function useOdevOzeti(kurumId: string, odevId: string | null) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'odev-ozet', odevId],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     enabled: odevId !== null,
     retry: yenidenDene,
     queryFn: () =>
@@ -161,6 +163,8 @@ export function useOdevlerim(kurumId: string, durum: string) {
 export function usePlanDetayi(kurumId: string, ogrenciId: string, hafta: string) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'plan', ogrenciId, hafta],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     enabled: ogrenciId !== '',
     retry: yenidenDene,
     queryFn: () =>
@@ -173,6 +177,8 @@ export function usePlanDetayi(kurumId: string, ogrenciId: string, hafta: string)
 export function usePlanim(kurumId: string, hafta: string) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'planim', hafta],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     retry: yenidenDene,
     queryFn: () =>
       ogrenmeIstek(yol(kurumId, `planim${sorguDizgesi({ hafta })}`), { sema: PlanDetaySema }),
@@ -182,6 +188,8 @@ export function usePlanim(kurumId: string, hafta: string) {
 export function usePlanOzeti(kurumId: string, planId: string | null) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'plan-ozet', planId],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     enabled: planId !== null,
     retry: yenidenDene,
     queryFn: () =>
@@ -202,6 +210,8 @@ export function usePlanSablonlari(kurumId: string, etkin = true) {
 export function useGorevlerim(kurumId: string, gun: string | undefined, etkin = true) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'gorevlerim', gun ?? 'bugun'],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     enabled: etkin,
     retry: yenidenDene,
     queryFn: () =>
@@ -269,6 +279,8 @@ export function useDenemelerim(kurumId: string, kural: string) {
 export function useGelisim(kurumId: string, ogrenciId: string, kural: string) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'gelisim', ogrenciId, kural],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     enabled: ogrenciId !== '' && kural !== '',
     retry: yenidenDene,
     queryFn: () =>
@@ -282,6 +294,8 @@ export function useGelisim(kurumId: string, ogrenciId: string, kural: string) {
 export function useGrupOzeti(kurumId: string, grupId: string, kural: string, etkin: boolean) {
   return useQuery({
     queryKey: [...ogrenmeAnahtari(kurumId), 'grup-ozet', grupId, kural],
+    // Baska bir kullanici (ogrenci/ogretmen) degistirmis olabilir: her acilista tazele.
+    refetchOnMount: 'always',
     enabled: etkin && grupId !== '' && kural !== '',
     retry: yenidenDene,
     queryFn: () =>

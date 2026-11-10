@@ -1077,8 +1077,10 @@ export const tr = {
       kaydet: 'Kaydet',
     },
     hata: {
-      global_konu_yazilamaz: 'Katalog konuları değiştirilemez; yalnız kurumuna özel konuları düzenleyebilirsin.',
-      konu_ust_gecersiz: 'Üst konu geçersiz: ünitenin üstü olmaz, konunun üstü ünite, alt konunun üstü konu olmalı.',
+      global_konu_yazilamaz:
+        'Katalog konuları değiştirilemez; yalnız kurumuna özel konuları düzenleyebilirsin.',
+      konu_ust_gecersiz:
+        'Üst konu geçersiz: ünitenin üstü olmaz, konunun üstü ünite, alt konunun üstü konu olmalı.',
       brans_gecersiz: 'Ders geçersiz.',
       surum_bulunamadi: 'Müfredat sürümü bulunamadı.',
       surum_yayinlanmamis: 'Bu müfredat sürümü henüz yayınlanmadı.',
@@ -1127,12 +1129,14 @@ export const tr = {
     },
     mufredat: {
       baslik: 'Müfredat',
-      aciklama: 'Ödev ve planlarda kullanılan ders, ünite ve konu ağacı. Kurumuna özel konu ekleyebilirsin.',
+      aciklama:
+        'Ödev ve planlarda kullanılan ders, ünite ve konu ağacı. Kurumuna özel konu ekleyebilirsin.',
       liste: 'Konu ağacı',
       konuEkle: 'Kurum konusu ekle',
       eklePenceresi: 'Kurum konusu ekle',
       duzenleBaslik: 'Konuyu düzenle',
-      formAciklama: 'Kurum konuları yalnız senin kurumunda görünür. Katalog konuları değiştirilemez.',
+      formAciklama:
+        'Kurum konuları yalnız senin kurumunda görünür. Katalog konuları değiştirilemez.',
       bransSec: 'Ders seç',
       seviye: 'Seviye',
       seviyeAd: { unite: 'Ünite', konu: 'Konu', alt_konu: 'Alt konu' },
@@ -1157,7 +1161,8 @@ export const tr = {
       daralt: '{ad} alt konularını kapat',
       yuklenemedi: 'Müfredat yüklenemedi',
       bos: 'Müfredat henüz boş',
-      bosAciklama: 'Katalog konuları yayınlandığında burada görünür. Kurumuna özel bir konu ekleyebilirsin.',
+      bosAciklama:
+        'Katalog konuları yayınlandığında burada görünür. Kurumuna özel bir konu ekleyebilirsin.',
       bosSuzgec: 'Aramana uyan konu yok',
       bosSuzgecAciklama: 'Aramayı ya da ders ve katalog süzgecini değiştirmeyi dene.',
       hata: {
@@ -1175,7 +1180,8 @@ export const tr = {
       durumSuzgeci: 'Durum',
       yuklenemedi: 'Ödevler yüklenemedi',
       bos: 'Henüz ödev vermedin',
-      bosAciklama: 'İlk ödevini bir gruba ya da öğrenciye ver; teslim durumunu buradan takip edersin.',
+      bosAciklama:
+        'İlk ödevini bir gruba ya da öğrenciye ver; teslim durumunu buradan takip edersin.',
       ilkOdev: 'İlk ödevini ver',
       bosSuzgec: 'Bu durumda ödev yok',
       bosSuzgecAciklama: 'Durum süzgecini değiştirmeyi dene.',
@@ -1270,7 +1276,8 @@ export const tr = {
         asiyor: 'Doğru, yanlış ve boş toplamı yapılan soru sayısını aşamaz.',
       },
       sablonBos: 'Henüz şablon yok',
-      sablonBosAciklama: 'Yeni ödev formunda "Şablon olarak kaydet" ile sık verdiğin ödevleri sakla.',
+      sablonBosAciklama:
+        'Yeni ödev formunda "Şablon olarak kaydet" ile sık verdiğin ödevleri sakla.',
       sablonKullan: 'Şablonla ödev ver',
       sablonKullanEtiket: '{baslik} şablonuyla ödev ver',
       sablonSilEtiket: '{baslik} şablonunu sil',
@@ -1302,9 +1309,11 @@ export const tr = {
       taslak: 'Taslak',
       yayinda: 'Yayında',
       kilitli: 'Kilitli',
-      kilitliAciklama: 'Bu hafta kilitli: yalnız okunabilir. Hafta bittikten 14 gün sonra plan değiştirilemez.',
+      kilitliAciklama:
+        'Bu hafta kilitli: yalnız okunabilir. Hafta bittikten 14 gün sonra plan değiştirilemez.',
       hizliKur: 'Haftayı hızlıca kur',
-      hizliKurAciklama: 'Bir şablondan kur ya da geçen haftanın görevlerini kopyala; sonra düzenle ve yayınla.',
+      hizliKurAciklama:
+        'Bir şablondan kur ya da geçen haftanın görevlerini kopyala; sonra düzenle ve yayınla.',
       sablondanKur: 'Şablondan kur',
       sablonSec: 'Şablon seç',
       sablondanKurDugme: 'Şablondan kur',
@@ -1324,7 +1333,8 @@ export const tr = {
       topluPlan: 'Gruba toplu plan',
       topluAciklama: '{hafta} haftası için bir şablondaki görevler gruptaki öğrencilere verilir.',
       topluSablonYardim: 'Bu haftada planı olan öğrencilere dokunulmaz.',
-      topluSablonYok: 'Önce bir plan şablonu oluşturmalısın: bir haftayı kurup "Şablon olarak kaydet" de.',
+      topluSablonYok:
+        'Önce bir plan şablonu oluşturmalısın: bir haftayı kurup "Şablon olarak kaydet" de.',
       topluYayinla: 'Hemen yayınla',
       topluUygula: 'Plan ver',
       topluHata: 'Grup ve şablon seçmelisin.',
@@ -1381,11 +1391,12 @@ export const tr = {
       ozet: 'Haftalık özet',
       ozetTablo: 'Ders bazında planlanan ve gerçekleşen',
       ozetBos: 'Henüz görev yok.',
-      ozetSoru: 'Soru (yapılan / planlanan)',
-      ozetDakika: 'Dakika (yapılan / planlanan)',
-      ozetGorev: 'Tamamlanan görev',
+      ozetSoru: 'Soru',
+      ozetDakika: 'Dakika',
+      ozetGorev: 'Görev (tamam)',
       ozetToplam: 'Toplam',
-      ozetAciklama: 'Soru ve dakika ayrı toplanır. Devredilen görevlerin kalanı yeni güne sayılır.',
+      ozetAciklama:
+        'Yapılan / planlanan. Soru ve dakika ayrı toplanır. Devredilen görevlerin kalanı yeni güne sayılır.',
       ozetYuklenemedi: 'Özet yüklenemedi.',
       hata: {
         gun: 'Gün bu haftanın içinde olmalı.',
@@ -1418,7 +1429,8 @@ export const tr = {
       tarih: 'Sınav günü',
       yayinevi: 'Yayınevi (isteğe bağlı)',
       bolum: 'Bölüm',
-      bolumlerAciklama: 'Yanlışın doğruyu götürme oranı: {katsayi}. Boş alanı boş bırakırsan otomatik hesaplanır.',
+      bolumlerAciklama:
+        'Yanlışın doğruyu götürme oranı: {katsayi}. Boş alanı boş bırakırsan otomatik hesaplanır.',
       soruSayisi: '{n} soru',
       dogru: 'Doğru',
       yanlis: 'Yanlış',
@@ -1443,10 +1455,12 @@ export const tr = {
         tarih: 'Sınav gününü seç.',
       },
       grupSec: 'Önce bir grup seç',
-      grupSecAciklama: 'Grubun öğrencileri satır satır listelenir; sonuçları tabloya hızlıca girersin.',
+      grupSecAciklama:
+        'Grubun öğrencileri satır satır listelenir; sonuçları tabloya hızlıca girersin.',
       grupBos: 'Bu grupta öğrenci yok',
       grupBosAciklama: 'Gruba öğrenci ekledikten sonra deneme girebilirsin.',
-      tabloAciklama: 'Okla gez, Enter ile alt satıra geç. Boş bıraktığın satırlar atlanır. D: doğru, Y: yanlış.',
+      tabloAciklama:
+        'Okla gez, Enter ile alt satıra geç. Boş bıraktığın satırlar atlanır. D: doğru, Y: yanlış.',
       hucreEtiket: '{ad}, {bolum}, {alan}',
       doluSatir: '{n} / {toplam} öğrenci için sonuç girildi.',
       topluKaydet: 'Hepsini kaydet',
@@ -1456,7 +1470,8 @@ export const tr = {
       topluHatali: 'Bazı satırlarda hata var; hiçbir sonuç kaydedilmedi.',
       satirHatasi: '{ad}: {mesaj}',
       tumOgrenciler: 'Tüm öğrenciler',
-      excelAciklama: 'Şablonu indir, sonuçları doldur ve yükle. Puansız satırlar atlanır; hata varsa hiçbiri kaydedilmez.',
+      excelAciklama:
+        'Şablonu indir, sonuçları doldur ve yükle. Puansız satırlar atlanır; hata varsa hiçbiri kaydedilmez.',
       sablonIndir: 'Excel şablonunu indir',
       sablonIndirildi: 'Şablon indirildi.',
       excelGrupYardim: 'Seçersen şablon bu grubun öğrencileriyle dolar.',
@@ -1516,7 +1531,8 @@ export const tr = {
       girisKapali: 'Kendi sonucunu girme kapalı',
       girisKapaliAciklama: 'Kurumun öğrenci girişini kapatmış. Sonuçlarını öğretmenin girer.',
       ayarOgrenciGirisi: 'Öğrenci kendi denemesini girebilir',
-      ayarOgrenciGirisiAciklama: 'Açıkken öğrencinin girdiği sonuç, öğretmen onaylayana kadar "onay bekliyor" olarak görünür.',
+      ayarOgrenciGirisiAciklama:
+        'Açıkken öğrencinin girdiği sonuç, öğretmen onaylayana kadar "onay bekliyor" olarak görünür.',
       ayarKaydedildi: 'Ayar kaydedildi.',
       ayarYuklenemedi: 'Ayar yüklenemedi',
       yuklenemedi: 'Denemeler yüklenemedi',

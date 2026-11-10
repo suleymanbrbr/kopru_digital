@@ -121,7 +121,7 @@ describe('konu agaci ve arama', () => {
 
   it('konu yolu ust zincirini gosterir', () => {
     const harita = new Map(liste.map((k) => [k.id, k]));
-    expect(konuYolu(liste[2] as Konu, harita)).toBe(
+    expect(konuYolu(liste[2]!, harita)).toBe(
       'Üslü İfadeler › Bilimsel gösterim › Çok büyük sayılar',
     );
   });
