@@ -177,11 +177,10 @@ export function gerceklesenIyimser(
     if (!eski) return eski;
     return {
       ...eski,
-      gorevler: eski.gorevler.map(
-        (g): PlanGorevi =>
-          g.id === gorevId
-            ? { ...g, gerceklesen: miktar, durum: gorevDurumuHesapla(g.hedefMiktar, miktar) }
-            : g,
+      gorevler: eski.gorevler.map((g): PlanGorevi =>
+        g.id === gorevId
+          ? { ...g, gerceklesen: miktar, durum: gorevDurumuHesapla(g.hedefMiktar, miktar) }
+          : g,
       ),
     };
   });

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion --
+/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/no-non-null-assertion, @typescript-eslint/require-await --
    react-test-renderer React 19'da kullanimdan kaldirildi ama React Native icin ek bagimlilik
    gerektirmeyen tek renderer; `props` tipsizdir (any). */
 /**
@@ -175,9 +175,11 @@ export function etiketle(r: ReactTestRenderer, etiket: string): ReactTestInstanc
 }
 
 export function etiketVarMi(r: ReactTestRenderer, etiket: string): boolean {
-  return r.root.findAll(
-    (n) => n.props.accessibilityLabel === etiket && typeof n.props.onPress === 'function',
-  ).length > 0;
+  return (
+    r.root.findAll(
+      (n) => n.props.accessibilityLabel === etiket && typeof n.props.onPress === 'function',
+    ).length > 0
+  );
 }
 
 export async function dokun(r: ReactTestRenderer, etiket: string) {

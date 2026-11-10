@@ -46,7 +46,7 @@ function satirDurumu(s: OdevOgrenciSatiri): string {
 }
 
 function dogruYanlis(s: OdevOgrenciSatiri): string {
-  if (s.dogru === null) return s.yapilanSoru !== null ? `${String(s.yapilanSoru)}` : '–';
+  if (s.dogru === null) return s.yapilanSoru !== null ? String(s.yapilanSoru) : '–';
   return `${String(s.dogru)}/${String(s.yanlis ?? 0)}/${String(s.bos ?? 0)}`;
 }
 
@@ -104,7 +104,10 @@ function SatirDetayi({
   });
 
   return (
-    <View className="gap-3 border-t border-kenar pt-3" testID={`satir-detay-${satir.ogrenciOdevId}`}>
+    <View
+      className="gap-3 border-t border-kenar pt-3"
+      testID={`satir-detay-${satir.ogrenciOdevId}`}
+    >
       {satir.teslimAt ? (
         <Metin varyant="ikincil">
           {t('mobil.ogrenme.odev.teslimZamani')}: {kisaZaman(satir.teslimAt, tz)}
@@ -177,8 +180,7 @@ export function OdevOzetEkrani({ odevId }: { odevId: string }) {
   const [acik, setAcik] = useState<string | null>(null);
   const o = sorgu.data;
   const satirlar = [...(o?.ogrenciler ?? [])].sort(
-    (a, b) =>
-      SIRA[a.durum] - SIRA[b.durum] || (a.ad ?? '').localeCompare(b.ad ?? '', 'tr'),
+    (a, b) => SIRA[a.durum] - SIRA[b.durum] || (a.ad ?? '').localeCompare(b.ad ?? '', 'tr'),
   );
   const yuzde =
     o?.sayilar.ortalamaDogruOrani != null
@@ -218,7 +220,10 @@ export function OdevOzetEkrani({ odevId }: { odevId: string }) {
           >
             {[
               [t('mobil.ogrenme.odev.atanan'), o.sayilar.atanan],
-              [t('mobil.ogrenme.odev.teslimEdildiSayi'), o.sayilar.teslimEdildi + o.sayilar.incelendi],
+              [
+                t('mobil.ogrenme.odev.teslimEdildiSayi'),
+                o.sayilar.teslimEdildi + o.sayilar.incelendi,
+              ],
               [t('mobil.ogrenme.odev.inceleBekleyen'), o.sayilar.teslimEdildi],
               [t('mobil.ogrenme.odev.teslimsiz'), o.sayilar.atandi],
               [t('mobil.ogrenme.odev.ortDogru'), yuzde],

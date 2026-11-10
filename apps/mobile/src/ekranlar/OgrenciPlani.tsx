@@ -6,6 +6,11 @@ import { Pressable, View } from 'react-native';
 import type { PlanGorevi } from '../api/ogrenmeTipleri';
 import { gunKisa, gunNumarasi, bugunTarihi } from '../lib/saat';
 import {
+  gerceklesenKuyrugaAl,
+  PLAN_GERCEKLESEN_TURU,
+  type PlanGerceklesenYuku,
+} from '../offline/plan';
+import {
   gorevOrani,
   gorevSayilari,
   gunBasligi,
@@ -16,7 +21,6 @@ import {
   haftaKaydir,
 } from '../ogrenme/hafta';
 import { bransAdi, konuEtiketi } from '../ogrenme/konu';
-import { gerceklesenKuyrugaAl, PLAN_GERCEKLESEN_TURU, type PlanGerceklesenYuku } from '../offline/plan';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';
@@ -105,7 +109,12 @@ function GorevKarti({
     const n = Number(miktar);
     // Iyimser: arayuz hemen guncellenir; kuyruk (cevrimdisiysa baglanti gelince) gonderir.
     gerceklesenIyimser(qc, uyelikId, gorev.id, n);
-    const yuk: PlanGerceklesenYuku = { gorevId: gorev.id, gorevBaslik: ad, gun: gorev.gun, miktar: n };
+    const yuk: PlanGerceklesenYuku = {
+      gorevId: gorev.id,
+      gorevBaslik: ad,
+      gun: gorev.gun,
+      miktar: n,
+    };
     gerceklesenKuyrugaAl(kuyruk, yuk);
     setAcik(false);
   }
@@ -136,7 +145,10 @@ function GorevKarti({
           </View>
         </View>
         <View className="h-2 overflow-hidden rounded-tam bg-yuzeyIkincil">
-          <View className="h-2 rounded-tam bg-birincil" style={{ width: `${String(oran * 100)}%` }} />
+          <View
+            className="h-2 rounded-tam bg-birincil"
+            style={{ width: `${String(oran * 100)}%` }}
+          />
         </View>
         <Metin varyant="kucuk">{ilerlemeMetni(gorev)}</Metin>
         {bekliyor ? (
@@ -215,7 +227,7 @@ export function OgrenciPlani() {
       .map((i) => (i.yuk as PlanGerceklesenYuku).gorevId),
   );
   const gunSayisi = gorevSayilari(gunGorevleriListesi);
-  const planYok = sorgu.data && sorgu.data.plan === null;
+  const planYok = sorgu.data?.plan === null;
 
   return (
     <View className="gap-3" testID="ogrenci-plani">
@@ -284,7 +296,9 @@ export function OgrenciPlani() {
               </Metin>
               <Metin
                 varyant="etiket"
-                className={secili ? 'text-birincilUzeri' : g === bugun ? 'text-birincil' : 'text-metin'}
+                className={
+                  secili ? 'text-birincilUzeri' : g === bugun ? 'text-birincil' : 'text-metin'
+                }
               >
                 {String(gunNumarasi(g))}
               </Metin>

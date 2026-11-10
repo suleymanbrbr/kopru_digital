@@ -56,10 +56,14 @@ function CizgiGrafigi({ degerler, ozet }: { degerler: number[]; ozet: string }) 
         ))}
         {g.noktalar.length > 0 ? (
           <>
-            <SvgYazi x={2} y={12} fontSize={11} fill={renkler.metinIkincil}>
+            <SvgYazi transform="translate(2 12)" fontSize={11} fill={renkler.metinIkincil}>
               {netBicimle(g.max)}
             </SvgYazi>
-            <SvgYazi x={2} y={YUKSEKLIK - 2} fontSize={11} fill={renkler.metinIkincil}>
+            <SvgYazi
+              transform={`translate(2 ${String(YUKSEKLIK - 2)})`}
+              fontSize={11}
+              fill={renkler.metinIkincil}
+            >
               {netBicimle(g.min)}
             </SvgYazi>
           </>
@@ -75,7 +79,9 @@ function CizgiGrafigi({ degerler, ozet }: { degerler: number[]; ozet: string }) 
  */
 export function DenemeGelisimKarti({ gelisim }: { gelisim: DenemeGelisimi }) {
   const [secim, setSecim] = useState<string>('toplam');
-  const bolumler = gelisim.bolumGelisimi.filter((b) => bolumSerisi(gelisim, b.bolumKodu).length > 0);
+  const bolumler = gelisim.bolumGelisimi.filter(
+    (b) => bolumSerisi(gelisim, b.bolumKodu).length > 0,
+  );
   const bolumKodu = secim === 'toplam' ? null : secim;
   const seri = bolumKodu ? bolumSerisi(gelisim, bolumKodu) : toplamSerisi(gelisim);
   const ozet = grafikOzeti(gelisim, bolumKodu);

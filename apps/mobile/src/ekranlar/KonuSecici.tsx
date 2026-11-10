@@ -126,10 +126,7 @@ export function KonuSecici({ deger, onDegis, etiket, yalnizDers = true }: Props)
         }}
         className="min-h-12 flex-row items-center gap-2 rounded-orta border border-kenar bg-yuzey px-4 py-2 active:opacity-80"
       >
-        <Metin
-          className={`flex-1 ${deger.bransKodu ? '' : 'text-metinIkincil'}`}
-          numberOfLines={2}
-        >
+        <Metin className={`flex-1 ${deger.bransKodu ? '' : 'text-metinIkincil'}`} numberOfLines={2}>
           {gosterim}
         </Metin>
         <Ikon ad={acik ? 'chevron-up' : 'chevron-down'} boyut={18} />
@@ -144,32 +141,33 @@ export function KonuSecici({ deger, onDegis, etiket, yalnizDers = true }: Props)
           {konular ? (
             <>
               <View className="flex-row flex-wrap gap-2" accessibilityRole="radiogroup">
-                {[{ kod: null as string | null, ad: t('mobil.ogrenme.konu.tumBranslar') }, ...branslar].map(
-                  (b) => {
-                    const secili = filtre === b.kod;
-                    return (
-                      <Pressable
-                        key={b.kod ?? 'tum'}
-                        accessibilityRole="radio"
-                        accessibilityLabel={b.ad}
-                        accessibilityState={{ selected: secili, checked: secili }}
-                        onPress={() => {
-                          setFiltre(b.kod);
-                        }}
-                        className={`min-h-dokunma justify-center rounded-tam border px-4 ${
-                          secili ? 'border-birincil bg-birincil' : 'border-kenar bg-yuzeyIkincil'
-                        }`}
+                {[
+                  { kod: null as string | null, ad: t('mobil.ogrenme.konu.tumBranslar') },
+                  ...branslar,
+                ].map((b) => {
+                  const secili = filtre === b.kod;
+                  return (
+                    <Pressable
+                      key={b.kod ?? 'tum'}
+                      accessibilityRole="radio"
+                      accessibilityLabel={b.ad}
+                      accessibilityState={{ selected: secili, checked: secili }}
+                      onPress={() => {
+                        setFiltre(b.kod);
+                      }}
+                      className={`min-h-dokunma justify-center rounded-tam border px-4 ${
+                        secili ? 'border-birincil bg-birincil' : 'border-kenar bg-yuzeyIkincil'
+                      }`}
+                    >
+                      <Metin
+                        varyant="etiket"
+                        className={secili ? 'text-birincilUzeri' : 'text-metin'}
                       >
-                        <Metin
-                          varyant="etiket"
-                          className={secili ? 'text-birincilUzeri' : 'text-metin'}
-                        >
-                          {b.ad}
-                        </Metin>
-                      </Pressable>
-                    );
-                  },
-                )}
+                        {b.ad}
+                      </Metin>
+                    </Pressable>
+                  );
+                })}
               </View>
               <MetinGirdisi
                 etiket={t('mobil.ogrenme.konu.ara')}

@@ -2,10 +2,10 @@ import { t } from '@kopru/i18n';
 import { Alert, View } from 'react-native';
 
 import { kisaZaman } from '../lib/saat';
-import { gunBasligi } from '../ogrenme/hafta';
 import type { KuyrukIsi } from '../offline/kuyruk';
 import { PLAN_GERCEKLESEN_TURU, type PlanGerceklesenYuku } from '../offline/plan';
 import { YOKLAMA_TURU, type YoklamaYuku } from '../offline/yoklama';
+import { gunBasligi } from '../ogrenme/hafta';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';

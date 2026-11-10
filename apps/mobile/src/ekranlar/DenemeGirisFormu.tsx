@@ -17,11 +17,7 @@ import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { Secici } from '../ui/Secici';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import {
-  denemeleriTazele,
-  useDenemeKurallari,
-  useOgrenciDenemeAyari,
-} from '../uygulama/ogrenme';
+import { denemeleriTazele, useDenemeKurallari, useOgrenciDenemeAyari } from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
 
 interface BolumMetinleri {
@@ -186,7 +182,11 @@ export function DenemeGirisFormu({
   if (bitti) {
     return (
       <Ekran kenarlar={['left', 'right']}>
-        <Kart className="items-center gap-3" accessibilityLiveRegion="polite" testID="deneme-kaydedildi">
+        <Kart
+          className="items-center gap-3"
+          accessibilityLiveRegion="polite"
+          testID="deneme-kaydedildi"
+        >
           <Ikon ad="checkmark-circle" boyut={40} />
           <Metin varyant="baslik">
             {bitti === 'onay'
@@ -257,7 +257,7 @@ export function DenemeGirisFormu({
           <Metin varyant="kucuk">{t('mobil.ogrenme.deneme.ogrenciOnayNotu')}</Metin>
         ) : null}
       </View>
-      {kurallar.data && kurallar.data.length > 0 ? (
+      {kurallar.data.length > 0 ? (
         <Secici
           baslik={t('mobil.ogrenme.deneme.tur')}
           deger={kural?.kod ?? null}

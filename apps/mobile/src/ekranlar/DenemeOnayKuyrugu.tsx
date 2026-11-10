@@ -137,7 +137,9 @@ export function DenemeOnayKuyrugu() {
       {sorgu.data?.length === 0 ? (
         <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.ogrenme.deneme.onayBos')} />
       ) : null}
-      {sorgu.data?.map((d) => <DenemeOnayKarti key={d.id} deneme={d} />)}
+      {sorgu.data?.map((d) => (
+        <DenemeOnayKarti key={d.id} deneme={d} />
+      ))}
     </Ekran>
   );
 }

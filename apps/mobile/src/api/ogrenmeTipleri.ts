@@ -309,7 +309,10 @@ export interface OgrenmeAdapter {
    * surum cevrimdisi tekrarda 409 vermez.
    */
   gorevGerceklesen: (gorevId: string, miktar: number) => Promise<PlanGorevi>;
-  gorevDevret: (gorevId: string, hedefGun?: string) => Promise<{ eski: PlanGorevi; yeni: PlanGorevi }>;
+  gorevDevret: (
+    gorevId: string,
+    hedefGun?: string,
+  ) => Promise<{ eski: PlanGorevi; yeni: PlanGorevi }>;
   // Plan (ogretmen)
   ogrenciPlani: (ogrenciId: string, hafta: string) => Promise<PlanDetayi>;
   planOlustur: (ogrenciId: string, haftaBaslangic: string) => Promise<PlanDetayi>;

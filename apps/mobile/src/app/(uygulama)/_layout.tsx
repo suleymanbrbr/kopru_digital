@@ -35,18 +35,9 @@ export default function UygulamaDuzeni() {
         name="odev-teslim/[id]"
         options={{ title: t('mobil.ogrenme.odev.teslimBaslik') }}
       />
-      <Stack.Screen
-        name="denemelerim"
-        options={{ title: t('mobil.ogrenme.deneme.denemelerim') }}
-      />
-      <Stack.Screen
-        name="deneme-gir"
-        options={{ title: t('mobil.ogrenme.deneme.girisBaslik') }}
-      />
-      <Stack.Screen
-        name="deneme-onay"
-        options={{ title: t('mobil.ogrenme.deneme.onayKuyrugu') }}
-      />
+      <Stack.Screen name="denemelerim" options={{ title: t('mobil.ogrenme.deneme.denemelerim') }} />
+      <Stack.Screen name="deneme-gir" options={{ title: t('mobil.ogrenme.deneme.girisBaslik') }} />
+      <Stack.Screen name="deneme-onay" options={{ title: t('mobil.ogrenme.deneme.onayKuyrugu') }} />
       <Stack.Protected guard={ortam.gelistirici}>
         <Stack.Screen name="bilesenler" options={{ title: t('mobil.bilesenler.baslik') }} />
       </Stack.Protected>

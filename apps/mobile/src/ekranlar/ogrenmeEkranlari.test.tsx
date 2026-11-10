@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion --
+/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion --
    react-test-renderer React 19'da kullanimdan kaldirildi ama React Native icin ek bagimlilik
    gerektirmeyen tek renderer; `props` tipsizdir (any). */
 /**
@@ -32,7 +32,6 @@ import {
   OGRETMEN,
   ac,
   bekle,
-  bul,
   dokun,
   etiketVarMi,
   metinler,
@@ -45,7 +44,12 @@ import {
   type Ortam,
 } from './testYardimcisi';
 
-const mockYonlendirici = { push: jest.fn(), back: jest.fn(), navigate: jest.fn(), replace: jest.fn() };
+const mockYonlendirici = {
+  push: jest.fn(),
+  back: jest.fn(),
+  navigate: jest.fn(),
+  replace: jest.fn(),
+};
 jest.mock('expo-router', () => ({
   useRouter: () => mockYonlendirici,
   useLocalSearchParams: () => ({}),
@@ -537,7 +541,7 @@ describe('modul kapaliysa ogretmen karti gorunmez (deneme/haftalik_plan)', () =>
     modulAyarla(o, { haftalik_plan: false, deneme: false });
     const r: ReactTestRenderer = await ac(
       o,
-      <OgrenciKartiEkrani ogrenciId="ogr-elif" ad="Elif Kaya" /> as ReactElement,
+      (<OgrenciKartiEkrani ogrenciId="ogr-elif" ad="Elif Kaya" />) as ReactElement,
     );
     expect(var_(r, 'ogrenci-plan-bolumu')).toBe(false);
     expect(var_(r, 'ogrenci-deneme-bolumu')).toBe(false);

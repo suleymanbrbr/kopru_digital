@@ -53,7 +53,8 @@ function GorevFormu({ planId, hafta, gorev, varsayilanGun, onBitti, onHata }: Fo
   const [miktar, setMiktar] = useState(String(gorev?.hedefMiktar ?? 20));
   const [denendi, setDenendi] = useState(false);
 
-  const gecerliMiktar = /^\d{1,6}$/.test(miktar.trim()) && Number(miktar) >= 1 && Number(miktar) <= 100_000;
+  const gecerliMiktar =
+    /^\d{1,6}$/.test(miktar.trim()) && Number(miktar) >= 1 && Number(miktar) <= 100_000;
   const gecerli = gecerliMiktar && !!konu.bransKodu;
 
   const tazele = () => qc.invalidateQueries({ queryKey: ['plan'] });
@@ -107,9 +108,7 @@ function GorevFormu({ planId, hafta, gorev, varsayilanGun, onBitti, onHata }: Fo
         }))}
       />
       {gorev ? (
-        <Metin varyant="ikincil">
-          {bransAdi(gorev.bransKodu)}
-        </Metin>
+        <Metin varyant="ikincil">{bransAdi(gorev.bransKodu)}</Metin>
       ) : (
         <KonuSecici deger={konu} onDegis={setKonu} etiket={t('mobil.ogrenme.plan.dersKonu')} />
       )}
@@ -153,12 +152,7 @@ function GorevFormu({ planId, hafta, gorev, varsayilanGun, onBitti, onHata }: Fo
             }}
           />
         ) : null}
-        <Dugme
-          className="flex-1"
-          varyant="ikincil"
-          etiket={t('ortak.iptal')}
-          onPress={onBitti}
-        />
+        <Dugme className="flex-1" varyant="ikincil" etiket={t('ortak.iptal')} onPress={onBitti} />
       </View>
     </Kart>
   );
@@ -178,7 +172,7 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
   const hafta = haftaBaslangici(gun ?? bugun);
   const sorgu = useOgrenciPlani(ogrenciId, hafta);
   const konular = useKonuHaritasi();
-  const [form, setForm] = useState<null | 'yeni' | string>(null);
+  const [form, setForm] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
 
   const tazele = () => qc.invalidateQueries({ queryKey: ['plan'] });
@@ -251,7 +245,7 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
         </Metin>
       ) : null}
 
-      {d && d.plan === null ? (
+      {d?.plan === null ? (
         <>
           <BosDurum ikon="calendar-outline" mesaj={t('mobil.ogrenme.plan.ogretmenPlanYok')} />
           {yazilabilir ? (
@@ -277,7 +271,10 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
                 : t('mobil.ogrenme.plan.taslakAciklama')
             }
           >
-            <Ikon ad={d.plan.durum === 'yayinda' ? 'checkmark-circle' : 'create-outline'} boyut={18} />
+            <Ikon
+              ad={d.plan.durum === 'yayinda' ? 'checkmark-circle' : 'create-outline'}
+              boyut={18}
+            />
             <Metin varyant="ikincil" testID="plan-durumu">
               {d.plan.durum === 'yayinda'
                 ? t('mobil.ogrenme.plan.yayinda')
@@ -296,7 +293,11 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
           {haftaGunleri(hafta).map((g) => {
             const liste = gunGorevleri(gorevler, g);
             return (
-              <View key={g} className="gap-1 border-t border-kenar pt-2" testID={`ogretmen-gun-${g}`}>
+              <View
+                key={g}
+                className="gap-1 border-t border-kenar pt-2"
+                testID={`ogretmen-gun-${g}`}
+              >
                 <Metin varyant="etiket" accessibilityRole="header">
                   {gunBasligi(g)}
                 </Metin>
@@ -321,7 +322,9 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
                       key={gv.id}
                       accessibilityRole="button"
                       accessibilityLabel={`${gorevAdi(gv, konular)}, ${hedefMetni(gv)}, ${ilerlemeMetni(gv)}, ${t(`mobil.ogrenme.plan.durum.${gv.durum}`)}`}
-                      accessibilityHint={yazilabilir ? t('mobil.ogrenme.plan.duzenleIpucu') : undefined}
+                      accessibilityHint={
+                        yazilabilir ? t('mobil.ogrenme.plan.duzenleIpucu') : undefined
+                      }
                       disabled={!yazilabilir || gv.durum === 'devredildi'}
                       testID={`ogretmen-gorev-${gv.id}`}
                       onPress={() => {
@@ -355,7 +358,7 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
               })}
             </Metin>
           </View>
-          {form === 'yeni' && d.plan ? (
+          {form === 'yeni' ? (
             <GorevFormu
               planId={d.plan.id}
               hafta={hafta}

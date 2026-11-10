@@ -59,8 +59,7 @@ export function OdevVerEkrani() {
 
   const liste = gruplar.data ?? [];
   // Varsayilan hedef: ilk sinif grubu, yoksa ilk grup.
-  const secilenHedef =
-    hedefId ?? liste.find((g) => g.tur === 'sinif')?.id ?? liste[0]?.id ?? null;
+  const secilenHedef = hedefId ?? liste.find((g) => g.tur === 'sinif')?.id ?? liste[0]?.id ?? null;
   const sayiDegeri = /^\d{1,5}$/.test(sayi.trim()) ? Number(sayi) : null;
   const konuAdi = konu.konuId
     ? (konular.get(konu.konuId)?.ad ?? '')
@@ -69,8 +68,7 @@ export function OdevVerEkrani() {
       : '';
   const oneri = odevBasligiOner(konuAdi || t('mobil.ogrenme.odev.ornekBaslik'), tur, sayiDegeri);
   const baslik = baslikElle ?? oneri;
-  const sonTeslimTarihi =
-    teslim === 'ozel' ? ozelTarih : tarihEkle(bugun, Number(teslim));
+  const sonTeslimTarihi = teslim === 'ozel' ? ozelTarih : tarihEkle(bugun, Number(teslim));
   const tarihHatasi = teslim === 'ozel' && !tarihGecerliMi(ozelTarih);
 
   const hatalar = {

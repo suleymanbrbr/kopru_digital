@@ -341,7 +341,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           },
         }),
       );
-      return ogrenciOdeviCevir(d as unknown as ApiOgrenciOdevi);
+      return ogrenciOdeviCevir(d);
     },
 
     // --- Odev (ogretmen) ---
@@ -384,7 +384,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           body: {} as never,
         }),
       );
-      return odevCevir(yayin as unknown as ApiOdev);
+      return odevCevir(yayin);
     },
 
     async odevOzeti(id) {
@@ -395,7 +395,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
       );
       const s = d.sayilar;
       return {
-        odev: odevCevir(d.odev as unknown as ApiOdev),
+        odev: odevCevir(d.odev),
         sayilar: {
           atanan: s.atanan,
           atandi: s.atandi,
@@ -416,7 +416,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           body: { sonuc, ...(not ? { not } : {}) },
         }),
       );
-      const o = ogrenciOdeviCevir(d as unknown as ApiOgrenciOdevi);
+      const o = ogrenciOdeviCevir(d);
       return {
         ogrenciOdevId: o.id,
         ogrenciId: '',
@@ -490,7 +490,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           params: { path: { kurum_id: b.etkinKurum() }, query: { hafta } },
         }),
       );
-      return planDetayCevir(d as unknown as ApiPlanDetay);
+      return planDetayCevir(d);
     },
 
     async gorevGerceklesen(id, miktar) {
@@ -501,7 +501,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           body: { gerceklesen_miktar: miktar },
         }),
       );
-      return gorevCevir(d as unknown as ApiGorev);
+      return gorevCevir(d);
     },
 
     async gorevDevret(id, hedefGun) {
@@ -512,8 +512,8 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
         }),
       );
       return {
-        eski: gorevCevir(d.eski as unknown as ApiGorev),
-        yeni: gorevCevir(d.yeni as unknown as ApiGorev),
+        eski: gorevCevir(d.eski),
+        yeni: gorevCevir(d.yeni),
       };
     },
 
@@ -524,7 +524,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           params: { path: { kurum_id: b.etkinKurum(), ogrenci_id: ogrenciId }, query: { hafta } },
         }),
       );
-      return planDetayCevir(d as unknown as ApiPlanDetay);
+      return planDetayCevir(d);
     },
 
     async planOlustur(ogrenciId, haftaBaslangic) {
@@ -534,7 +534,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           body: { ogrenci_id: ogrenciId, hafta_baslangic: haftaBaslangic },
         }),
       );
-      return planDetayCevir(d as unknown as ApiPlanDetay);
+      return planDetayCevir(d);
     },
 
     async gorevEkle(planId, g) {
@@ -552,7 +552,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           },
         }),
       );
-      return gorevCevir(d as unknown as ApiGorev);
+      return gorevCevir(d);
     },
 
     async gorevGuncelle(id, g) {
@@ -568,7 +568,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           },
         }),
       );
-      return gorevCevir(d as unknown as ApiGorev);
+      return gorevCevir(d);
     },
 
     async gorevSil(id) {
@@ -586,7 +586,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           body: {} as never,
         }),
       );
-      return planDetayCevir(d as unknown as ApiPlanDetay);
+      return planDetayCevir(d);
     },
 
     // --- Deneme ---
@@ -655,7 +655,7 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
           },
         }),
       );
-      return denemeCevir(d as unknown as ApiDeneme);
+      return denemeCevir(d);
     },
 
     denemeler: (s) =>

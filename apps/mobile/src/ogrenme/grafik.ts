@@ -75,14 +75,14 @@ export function grafikOzeti(g: DenemeGelisimi, bolumKodu: string | null): string
   const baslik = bolumKodu
     ? t('mobil.ogrenme.grafik.bolumBaslik', {
         bolum: bransAdi(
-          g.noktalar.flatMap((n) => n.bolumler).find((b) => b.bolumKodu === bolumKodu)
-            ?.bransKodu ?? bolumKodu,
+          g.noktalar.flatMap((n) => n.bolumler).find((b) => b.bolumKodu === bolumKodu)?.bransKodu ??
+            bolumKodu,
         ),
       })
     : t('mobil.ogrenme.grafik.toplamBaslik');
   if (seri.length === 0) return `${baslik}. ${t('mobil.ogrenme.grafik.veriYok')}`;
-  const ilk = seri[0]!.deger;
-  const son = seri[seri.length - 1]!.deger;
+  const ilk = seri[0]?.deger ?? 0;
+  const son = seri.at(-1)?.deger ?? 0;
   const enYuksek = Math.max(...seri.map((s) => s.deger));
   const parcalar = [
     baslik,

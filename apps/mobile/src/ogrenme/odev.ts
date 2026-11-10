@@ -52,8 +52,7 @@ export function odevBasligiOner(konuAdi: string, tur: OdevTuru, sayi: number | n
 
 export type TeslimHatasi = 'yapilan' | 'gecersiz' | 'asim' | 'toplam';
 
-export type TeslimSonucu =
-  { ok: true; girdi: TeslimGirdisi } | { ok: false; hata: TeslimHatasi };
+export type TeslimSonucu = { ok: true; girdi: TeslimGirdisi } | { ok: false; hata: TeslimHatasi };
 
 function sayiCoz(metin: string): number | null | undefined {
   const m = metin.trim();

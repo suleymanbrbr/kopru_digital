@@ -48,10 +48,7 @@ function SonucOzeti({ odev, tz }: { odev: OgrenciOdevi; tz: string }) {
         <Satir etiket={t('mobil.ogrenme.odev.teslimZamani')} deger={kisaZaman(odev.teslimAt, tz)} />
       ) : null}
       {odev.yapilanSoru !== null ? (
-        <Satir
-          etiket={t('mobil.ogrenme.odev.yapilan')}
-          deger={String(odev.yapilanSoru)}
-        />
+        <Satir etiket={t('mobil.ogrenme.odev.yapilan')} deger={String(odev.yapilanSoru)} />
       ) : null}
       {odev.dogru !== null ? (
         <Satir
@@ -93,6 +90,7 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
   const [not, setNot] = useState('');
   const [hata, setHata] = useState<string | null>(null);
   const [tamam, setTamam] = useState(false);
+  const [simdi] = useState(() => Date.now());
 
   const teslim = useMutation({
     networkMode: 'always',
@@ -110,13 +108,7 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
 
   function gonder() {
     if (!odev) return;
-    const sonuc = teslimKur(
-      yapilan ?? String(odev.hedefSoruSayisi ?? ''),
-      dogru,
-      yanlis,
-      bos,
-      not,
-    );
+    const sonuc = teslimKur(yapilan ?? String(odev.hedefSoruSayisi ?? ''), dogru, yanlis, bos, not);
     if (!sonuc.ok) {
       setHata(HATA_ANAHTARI[sonuc.hata]);
       return;
@@ -145,7 +137,7 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
   }
 
   const konu = odev.konuId ? konular.get(odev.konuId) : undefined;
-  const geciken = odevGecikmisMi(odev, Date.now());
+  const geciken = odevGecikmisMi(odev, simdi);
 
   if (tamam) {
     return (
@@ -176,7 +168,9 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
         <Metin varyant="ikincil">
           {konu ? `${konuEtiketi(konu)} · ` : ''}
           {bransAdi(odev.bransKodu)}
-          {odev.hedefSoruSayisi ? ` · ${t('mobil.ogrenme.plan.hedefSoru', { n: odev.hedefSoruSayisi })}` : ''}
+          {odev.hedefSoruSayisi
+            ? ` · ${t('mobil.ogrenme.plan.hedefSoru', { n: odev.hedefSoruSayisi })}`
+            : ''}
         </Metin>
         {odev.kaynak ? <Metin varyant="kucuk">{odev.kaynak}</Metin> : null}
         {odev.aciklama ? <Metin>{odev.aciklama}</Metin> : null}

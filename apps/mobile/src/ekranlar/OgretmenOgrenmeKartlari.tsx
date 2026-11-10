@@ -37,10 +37,7 @@ function BekleyenTeslimler() {
         <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data && liste.length === 0 ? (
-        <BosDurum
-          ikon="checkmark-circle-outline"
-          mesaj={t('mobil.ogrenme.odev.incelemeBos')}
-        />
+        <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.ogrenme.odev.incelemeBos')} />
       ) : null}
       {liste.slice(0, ONIZLEME).map((b) => (
         <Pressable

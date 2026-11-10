@@ -1,6 +1,6 @@
+import { tarihEkle, yerelDenUtc, yerelTarih } from '../lib/saat';
 import { gorevDurumuHesapla, haftaBaslangici } from '../ogrenme/hafta';
 import { netHesapla, yuvarla2 } from '../ogrenme/net';
-import { tarihEkle, yerelDenUtc, yerelTarih } from '../lib/saat';
 import { MOCK_SAAT_DILIMI, type MockOperasyonSecenekleri } from './mockOperasyon';
 import type {
   BekleyenTeslim,
@@ -109,6 +109,12 @@ const KURALLAR: DenemeKurali[] = [
   },
 ];
 
+function kuralBul(kod: string): DenemeKurali {
+  const k = KURALLAR.find((x) => x.kod === kod);
+  if (!k) throw new Error(`tohum kurali yok: ${kod}`);
+  return k;
+}
+
 interface MockOdevSatiri extends OgrenciOdevi {
   ogrenciId: string;
   ad: string;
@@ -156,8 +162,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
     if (ogrenciKimligi()) throw new ApiHata('izin_yok', undefined, { durum: 403 });
   }
   const bulunamadi = () => new ApiHata('bulunamadi', undefined, { durum: 404 });
-  const cakisma = (kod: string) =>
-    new ApiHata('cakisma', undefined, { durum: 409, ayrinti: kod });
+  const cakisma = (kod: string) => new ApiHata('cakisma', undefined, { durum: 409, ayrinti: kod });
   const dogrulama = (kod: string) =>
     new ApiHata('dogrulama', undefined, { durum: 422, ayrinti: kod });
 
@@ -176,11 +181,16 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
     },
   ];
 
-  const odevler: Odev[] = [
-    odevTohumu('odev-1', 'Üslü Sayılar: 20 soru', 'konu-m-uslu', 20, tarihEkle(bugun, 1)),
-    odevTohumu('odev-2', 'Denklemler: 15 soru', 'konu-m-denklem', 15, tarihEkle(bugun, -1)),
-    odevTohumu('odev-3', 'Paragraf: 10 soru', 'konu-t-anafikir', 10, tarihEkle(bugun, -6)),
-  ];
+  const o1 = odevTohumu('odev-1', 'Üslü Sayılar: 20 soru', 'konu-m-uslu', 20, tarihEkle(bugun, 1));
+  const o2 = odevTohumu(
+    'odev-2',
+    'Denklemler: 15 soru',
+    'konu-m-denklem',
+    15,
+    tarihEkle(bugun, -1),
+  );
+  const o3 = odevTohumu('odev-3', 'Paragraf: 10 soru', 'konu-t-anafikir', 10, tarihEkle(bugun, -6));
+  const odevler: Odev[] = [o1, o2, o3];
 
   function odevTohumu(id: string, baslik: string, konuId: string, n: number, son: string): Odev {
     return {
@@ -239,9 +249,6 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
     bos: n - d - y,
   });
 
-  const o1 = odevler[0]!;
-  const o2 = odevler[1]!;
-  const o3 = odevler[2]!;
   const satirlar: MockOdevSatiri[] = [
     satirUret(o1, 'ogr-elif', {
       ...teslimEdilmis(20, 16, 3),
@@ -413,7 +420,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
     puan: number,
     ek: Partial<Deneme> = {},
   ): Deneme {
-    const kural = KURALLAR.find((k) => k.kod === kuralKodu)!;
+    const kural = kuralBul(kuralKodu);
     const bolumler = bolumHesapla(
       kural,
       kural.bolumler.map((b) => {
@@ -455,7 +462,10 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
     redNedeni: 'Doğru sayıları cevap anahtarıyla tutmuyor.',
   });
   denemeEkle('ogr-elif', 'tyt', 'Elif denemesi', 5, 0.5, { onayDurumu: 'onaylandi' });
-  denemeEkle('ogr-elif', 'tyt', 'Elif evde', 2, 0.65, { kaynak: 'ogrenci', onayDurumu: 'bekliyor' });
+  denemeEkle('ogr-elif', 'tyt', 'Elif evde', 2, 0.65, {
+    kaynak: 'ogrenci',
+    onayDurumu: 'bekliyor',
+  });
 
   const ogrenciGirisiAcik = () => !(aktif() ?? '').endsWith('-b');
 
@@ -776,7 +786,10 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
       personelOlmali();
       return kopya(
         denemeler
-          .filter((d) => (!s.onay || d.onayDurumu === s.onay) && (!s.ogrenciId || d.ogrenciId === s.ogrenciId))
+          .filter(
+            (d) =>
+              (!s.onay || d.onayDurumu === s.onay) && (!s.ogrenciId || d.ogrenciId === s.ogrenciId),
+          )
           .sort((a, b) => b.sinavTarihi.localeCompare(a.sinavTarihi)),
       );
     },
@@ -834,12 +847,13 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         noktalar,
         son5Ortalama: son5Ort,
         onceki5Ortalama: oncekiOrt,
-        degisim:
-          son5Ort !== null && oncekiOrt !== null ? yuvarla2(son5Ort - oncekiOrt) : null,
+        degisim: son5Ort !== null && oncekiOrt !== null ? yuvarla2(son5Ort - oncekiOrt) : null,
         bolumGelisimi: (kural?.bolumler ?? []).map((kb) => {
           const ort = (liste: typeof onayli) =>
             ortalama(
-              liste.flatMap((d) => d.bolumler.filter((b) => b.bolumKodu === kb.bolumKodu).map((b) => b.net)),
+              liste.flatMap((d) =>
+                d.bolumler.filter((b) => b.bolumKodu === kb.bolumKodu).map((b) => b.net),
+              ),
             );
           const s = ort(son5);
           const o = ort(onceki5);

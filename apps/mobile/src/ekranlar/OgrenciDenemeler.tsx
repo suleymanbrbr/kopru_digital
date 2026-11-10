@@ -60,7 +60,8 @@ export function OgrenciDenemeler() {
     ...new Set(denemeler.filter((d) => d.onayDurumu === 'onaylandi').map((d) => d.kuralKodu)),
   ];
   const kuralKodu = secilen ?? onayliKodlar[0] ?? null;
-  const kuralAdi = (kod: string) => kurallar.data?.find((k) => k.kod === kod)?.ad ?? kod.toUpperCase();
+  const kuralAdi = (kod: string) =>
+    kurallar.data?.find((k) => k.kod === kod)?.ad ?? kod.toUpperCase();
 
   return (
     <Ekran ust={<CevrimdisiSerit />} kenarlar={['left', 'right', 'bottom']}>

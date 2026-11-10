@@ -75,7 +75,9 @@ export function konuAgaci(
   let gorunen = new Set(aday.map((k) => k.id));
   if (sorgu) {
     gorunen = new Set();
-    const eslesen = new Set(aday.filter((k) => aramaAnahtari(k.ad).includes(sorgu)).map((k) => k.id));
+    const eslesen = new Set(
+      aday.filter((k) => aramaAnahtari(k.ad).includes(sorgu)).map((k) => k.id),
+    );
     for (const k of aday) {
       // Eslesen konunun ustleri (baglam) ve altlari (alt konu secilebilsin) de gelir.
       let simdiki: Konu | undefined = k;
