@@ -1000,7 +1000,7 @@ describe.skipIf(dbYok())('deneme API: kural, giris, onay, toplu, Excel, gelisim'
     async function xlsx(satirlar: unknown[][], sayfa = 'Veri'): Promise<Buffer> {
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet(sayfa);
-      for (const r of satirlar) ws.addRow(r as ExcelJS.CellValue[]);
+      for (const r of satirlar) ws.addRow(r);
       return Buffer.from(await wb.xlsx.writeBuffer());
     }
     const BASLIK = [
@@ -1062,7 +1062,7 @@ describe.skipIf(dbYok())('deneme API: kural, giris, onay, toplu, Excel, gelisim'
       ]);
       // Veri dogrulama kurallari bos satirlari da bicimlendirir: en az baslik + 3 ogrenci.
       expect(ws?.rowCount).toBeGreaterThanOrEqual(4);
-      const idler = [2, 3, 4].map((r) => String(ws?.getCell(r, 1).value));
+      const idler = [2, 3, 4].map((r) => ws?.getCell(r, 1).text);
       expect(idler.sort()).toEqual([...s.ogrenciler].sort());
       expect(wb.getWorksheet('Bilgi')).toBeDefined();
       const bos = await istek('GET', s.k.kurumId, s.hoca.token, '/denemeler/sablon.xlsx?kural=tyt');
