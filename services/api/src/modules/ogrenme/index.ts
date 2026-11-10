@@ -13,8 +13,8 @@ import { planYollari } from './plan-yollari.js';
 
 /**
  * ogrenme modulu (`ogrenme` PostgreSQL semasi): mufredat kutuphanesi ve odev (hedefleme, fan-out,
- * teslim, inceleme, sablon) ve haftalik plan (plan, gorev, sablon, ogrenci gunluk giris, devretme).
- * Rotalar `app.kimlik` (hesap modulu) hazirsa kaydolur. Deneme ve soru sonraki paketlerdir.
+ * teslim, inceleme, sablon), haftalik plan (plan, gorev, sablon, ogrenci gunluk giris, devretme) ve
+ * deneme analizi. Rotalar `app.kimlik` (hesap modulu) hazirsa kaydolur. Soru sor sonraki pakettir.
  */
 export const ogrenmeModule = defineModule('ogrenme', async (app) => {
   if (app.hasDecorator('kimlik')) {

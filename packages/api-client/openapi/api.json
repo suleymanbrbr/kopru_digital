@@ -8651,6 +8651,9 @@
                               "maxLength": 2000,
                               "type": "string"
                             },
+                            "ogrenci_deneme_girisi": {
+                              "type": "boolean"
+                            },
                             "ogrenci_kalan_ders_gorur": {
                               "type": "boolean"
                             },
@@ -8842,6 +8845,9 @@
                           "maxLength": 2000,
                           "type": "string"
                         },
+                        "ogrenci_deneme_girisi": {
+                          "type": "boolean"
+                        },
                         "ogrenci_kalan_ders_gorur": {
                           "type": "boolean"
                         },
@@ -8990,6 +8996,9 @@
                           "format": "uri",
                           "maxLength": 2000,
                           "type": "string"
+                        },
+                        "ogrenci_deneme_girisi": {
+                          "type": "boolean"
                         },
                         "ogrenci_kalan_ders_gorur": {
                           "type": "boolean"
@@ -13929,6 +13938,2924 @@
         ]
       }
     },
+    "/v1/ogrenme/kurumlar/{kurum_id}/deneme-ayarlari": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ogrenci_deneme_girisi": {
+                      "description": "Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer).",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ogrenci_deneme_girisi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurumun deneme ayari: `ogrenci_deneme_girisi` (varsayilan true). Istemci, kapaliysa ogrenciye \"Deneme ekle\" gostermez.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ogrenci_deneme_girisi": {
+                    "description": "Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer).",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "ogrenci_deneme_girisi"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ogrenci_deneme_girisi": {
+                      "description": "Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer).",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ogrenci_deneme_girisi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrenci deneme girisini ac/kapat (kurum ayari `ogrenci_deneme_girisi`). Kapaliyken ogrenci girisi, duzeltmesi ve silmesi 403.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/deneme-kurallari": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "aktif",
+            "required": false,
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kurallar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "aktif": {
+                            "type": "boolean"
+                          },
+                          "bolumler": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "ad": {
+                                  "maxLength": 200,
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "bolum_kodu": {
+                                  "description": "Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür).",
+                                  "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                                  "type": "string"
+                                },
+                                "brans_kodu": {
+                                  "maxLength": 60,
+                                  "pattern": "^[a-z_]+$",
+                                  "type": "string"
+                                },
+                                "soru_sayisi": {
+                                  "maximum": 200,
+                                  "minimum": 1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "bolum_kodu",
+                                "brans_kodu",
+                                "ad",
+                                "soru_sayisi"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "gecerli_yil": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "global": {
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kod": {
+                            "type": "string"
+                          },
+                          "kurum_id": {
+                            "description": "null = global kural (yalnız okunur).",
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "toplam_soru_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "toplam_sure_dk": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "yanlis_katsayisi": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kurum_id",
+                          "global",
+                          "kod",
+                          "ad",
+                          "yanlis_katsayisi",
+                          "bolumler",
+                          "toplam_soru_sayisi",
+                          "toplam_sure_dk",
+                          "gecerli_yil",
+                          "aktif",
+                          "surum"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kurallar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme kurallari: global (LGS, TYT, AYT, YDT; `global: true`, yalniz okunur) ve kurumun ozel kurallari. Net kurali katsayi ve bolumlerdir.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "aktif": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "bolumler": {
+                    "items": {
+                      "properties": {
+                        "ad": {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "bolum_kodu": {
+                          "description": "Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür).",
+                          "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "maxLength": 60,
+                          "pattern": "^[a-z_]+$",
+                          "type": "string"
+                        },
+                        "soru_sayisi": {
+                          "maximum": 200,
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "bolum_kodu",
+                        "brans_kodu",
+                        "ad",
+                        "soru_sayisi"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 40,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "gecerli_yil": {
+                    "maximum": 2100,
+                    "minimum": 2000,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "kod": {
+                    "pattern": "^ozel_[a-z0-9_]{1,54}$",
+                    "type": "string"
+                  },
+                  "toplam_sure_dk": {
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "yanlis_katsayisi": {
+                    "description": "Yanlışın doğruyu götürme oranı (LGS 0.3333, TYT/AYT/YDT 0.25). En çok 4 ondalık.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kod",
+                  "ad",
+                  "yanlis_katsayisi",
+                  "bolumler"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "aktif": {
+                      "type": "boolean"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "maxLength": 200,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "bolum_kodu": {
+                            "description": "Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür).",
+                            "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                            "type": "string"
+                          },
+                          "brans_kodu": {
+                            "maxLength": 60,
+                            "pattern": "^[a-z_]+$",
+                            "type": "string"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 200,
+                            "minimum": 1,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "ad",
+                          "soru_sayisi"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "gecerli_yil": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kod": {
+                      "type": "string"
+                    },
+                    "kurum_id": {
+                      "description": "null = global kural (yalnız okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_soru_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "global",
+                    "kod",
+                    "ad",
+                    "yanlis_katsayisi",
+                    "bolumler",
+                    "toplam_soru_sayisi",
+                    "toplam_sure_dk",
+                    "gecerli_yil",
+                    "aktif",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kuruma ozel deneme kurali (`ozel_` oneki zorunlu). Ayni kod ve yil ikinci kez 409; global kuralla cakisma olmaz (onek farkli).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/deneme-kurallari/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum ozel kurali sil. Kuralla girilmis deneme varsa 409 `kural_kullanimda` (kurali `aktif: false` yapin); global kural 403.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "aktif": {
+                    "type": "boolean"
+                  },
+                  "bolumler": {
+                    "items": {
+                      "properties": {
+                        "ad": {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "bolum_kodu": {
+                          "description": "Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür).",
+                          "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "maxLength": 60,
+                          "pattern": "^[a-z_]+$",
+                          "type": "string"
+                        },
+                        "soru_sayisi": {
+                          "maximum": 200,
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "bolum_kodu",
+                        "brans_kodu",
+                        "ad",
+                        "soru_sayisi"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 40,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "gecerli_yil": {
+                    "maximum": 2100,
+                    "minimum": 2000,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "surum": {
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "toplam_sure_dk": {
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "yanlis_katsayisi": {
+                    "description": "Yanlışın doğruyu götürme oranı (LGS 0.3333, TYT/AYT/YDT 0.25). En çok 4 ondalık.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "surum"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "aktif": {
+                      "type": "boolean"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "maxLength": 200,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "bolum_kodu": {
+                            "description": "Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür).",
+                            "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                            "type": "string"
+                          },
+                          "brans_kodu": {
+                            "maxLength": 60,
+                            "pattern": "^[a-z_]+$",
+                            "type": "string"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 200,
+                            "minimum": 1,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "ad",
+                          "soru_sayisi"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "gecerli_yil": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kod": {
+                      "type": "string"
+                    },
+                    "kurum_id": {
+                      "description": "null = global kural (yalnız okunur).",
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_soru_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kurum_id",
+                    "global",
+                    "kod",
+                    "ad",
+                    "yanlis_katsayisi",
+                    "bolumler",
+                    "toplam_soru_sayisi",
+                    "toplam_sure_dk",
+                    "gecerli_yil",
+                    "aktif",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum ozel kurali guncelle (iyimser kilit: `surum`; global kural 403). Girilmis denemeler kural anindaki katsayi ve soru sayisini korur: eski net degismez.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "onay",
+            "required": false,
+            "schema": {
+              "enum": [
+                "bekliyor",
+                "onaylandi",
+                "reddedildi"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ogrenci_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kural kodu.",
+            "in": "query",
+            "name": "kural",
+            "required": false,
+            "schema": {
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Önceki sayfanın `sonraki_imlec` değeri.",
+            "in": "query",
+            "name": "imlec",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "denemeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "bolumler": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "bolum_kodu": {
+                                  "type": "string"
+                                },
+                                "bos": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "brans_kodu": {
+                                  "type": "string"
+                                },
+                                "dogru": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "net": {
+                                  "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                                  "type": "number"
+                                },
+                                "soru_sayisi": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "yanlis": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "bolum_kodu",
+                                "brans_kodu",
+                                "soru_sayisi",
+                                "dogru",
+                                "yanlis",
+                                "bos",
+                                "net"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "giren_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "gorunen_ad": {
+                            "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak": {
+                            "enum": [
+                              "ogrenci",
+                              "ogretmen"
+                            ],
+                            "type": "string"
+                          },
+                          "kural_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kural_kodu": {
+                            "type": "string"
+                          },
+                          "not": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "onay_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "onay_durumu": {
+                            "enum": [
+                              "bekliyor",
+                              "onaylandi",
+                              "reddedildi"
+                            ],
+                            "type": "string"
+                          },
+                          "onaylayan_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "red_nedeni": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "sinav_tarihi": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "sure_dk": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "toplam_net": {
+                            "type": "number"
+                          },
+                          "yanlis_katsayisi": {
+                            "type": "number"
+                          },
+                          "yayinevi": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ogrenci_id",
+                          "gorunen_ad",
+                          "kural_id",
+                          "kural_kodu",
+                          "yanlis_katsayisi",
+                          "ad",
+                          "yayinevi",
+                          "sinav_tarihi",
+                          "toplam_net",
+                          "giren_id",
+                          "kaynak",
+                          "sure_dk",
+                          "not",
+                          "onay_durumu",
+                          "onaylayan_id",
+                          "onay_at",
+                          "red_nedeni",
+                          "surum",
+                          "created_at",
+                          "bolumler"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sonraki_imlec": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "denemeler",
+                    "sonraki_imlec"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme listesi (kapsamdaki ogrenciler, yeniden eskiye, sayfali). `onay=bekliyor` ogretmenin onay kuyrugudur.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "bolumler": {
+                    "items": {
+                      "properties": {
+                        "bolum_kodu": {
+                          "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                          "type": "string"
+                        },
+                        "bos": {
+                          "description": "Verilmezse `soru_sayisi - dogru - yanlis` hesaplanır; verilirse toplamı tutmalı.",
+                          "maximum": 1000,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "dogru": {
+                          "maximum": 1000,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "yanlis": {
+                          "maximum": 1000,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "bolum_kodu",
+                        "dogru",
+                        "yanlis"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 40,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "kural_id": {
+                    "description": "Belirli kural sürümü. Yoksa `kural_kodu`nun en yeni aktif sürümü.",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "kural_kodu": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "not": {
+                    "maxLength": 2000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "ogrenci_id": {
+                    "description": "Öğretmen/yönetici için zorunlu; öğrencide yok sayılır (kendisi).",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "sinav_tarihi": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "sure_dk": {
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "yayinevi": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ad",
+                  "sinav_tarihi",
+                  "bolumler"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "bos": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "dogru": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "net": {
+                            "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                            "type": "number"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "yanlis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "soru_sayisi",
+                          "dogru",
+                          "yanlis",
+                          "bos",
+                          "net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "giren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "gorunen_ad": {
+                      "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "ogrenci",
+                        "ogretmen"
+                      ],
+                      "type": "string"
+                    },
+                    "kural_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "onay_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "onay_durumu": {
+                      "enum": [
+                        "bekliyor",
+                        "onaylandi",
+                        "reddedildi"
+                      ],
+                      "type": "string"
+                    },
+                    "onaylayan_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "red_nedeni": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "sinav_tarihi": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_net": {
+                      "type": "number"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    },
+                    "yayinevi": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "gorunen_ad",
+                    "kural_id",
+                    "kural_kodu",
+                    "yanlis_katsayisi",
+                    "ad",
+                    "yayinevi",
+                    "sinav_tarihi",
+                    "toplam_net",
+                    "giren_id",
+                    "kaynak",
+                    "sure_dk",
+                    "not",
+                    "onay_durumu",
+                    "onaylayan_id",
+                    "onay_at",
+                    "red_nedeni",
+                    "surum",
+                    "created_at",
+                    "bolumler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme sonucu ekle. Ogretmen/yonetici: `ogrenci_id` zorunlu, kapsamdaki ogrenciye, dogrudan `onaylandi` (olay uretir). Ogrenci: yalniz kendi sonucu, `bekliyor` (ogretmen onayi gerekir, olay uretmez); kurum ayari `ogrenci_deneme_girisi` kapaliysa 403. Net veritabanince hesaplanir: yanit `net` sayisi (2 ondalik). Ayni ogrenci/kural/tarih/ad 409.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/excel": {
+      "post": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kural",
+            "required": true,
+            "schema": {
+              "maxLength": 60,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ad",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sinav_tarihi",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "yayinevi",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sure_dk",
+            "required": false,
+            "schema": {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Verilirse satırdaki öğrenciler bu grubun üyesi olmalı.",
+            "in": "query",
+            "name": "grup_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "atlanan_satir_sayisi": {
+                      "description": "Excel yüklemede öğrenci kimliği olup hiç puan girilmemiş (atlanan) satırlar; toplu girişte 0.",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "denemeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "deneme_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "toplam_net": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "deneme_id",
+                          "ogrenci_id",
+                          "toplam_net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "olusturulan_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "olusturulan_sayisi",
+                    "atlanan_satir_sayisi",
+                    "denemeler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Excel yukleme: govde HAM .xlsx (Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet), en fazla 2 MB ve 500 satir; deneme adi/tarihi/kural sorgu parametresidir. Ogrenci `ogrenci_id`, yoksa `ogrenci_no` ile eslesir (ad yalniz bilgi). Formul hucresi ve sayi olmayan puan satir hatasidir; HEPSI YA DA HIC: hata varsa 422 `toplu_giris_hatali` ve `details.hatalar` (satir = sayfadaki satir numarasi). Puansiz satirlar atlanir. Bozuk/buyuk dosya 422 `excel_gecersiz` / 413.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/sablon.xlsx": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Kural kodu (en yeni aktif sürüm).",
+            "in": "query",
+            "name": "kural",
+            "required": true,
+            "schema": {
+              "maxLength": 60,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Verilirse şablon bu grubun öğrencileriyle ön doldurulur.",
+            "in": "query",
+            "name": "grup_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Excel sablonu (.xlsx): `Veri` sayfasi (ogrenci_id, ogrenci_no, ad + her bolum icin `<bolum_kodu>_dogru/_yanlis`) ve `Bilgi` sayfasi. `grup_id` verilirse grubun etkin ogrencileriyle on dolu gelir. Deneme adi ve tarihi yukleme isteginde verilir.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/toplu": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kural_id": {
+                    "description": "Belirli kural sürümü. Yoksa `kural_kodu`nun en yeni aktif sürümü.",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "kural_kodu": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "satirlar": {
+                    "items": {
+                      "properties": {
+                        "bolumler": {
+                          "items": {
+                            "properties": {
+                              "bolum_kodu": {
+                                "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                                "type": "string"
+                              },
+                              "bos": {
+                                "description": "Verilmezse `soru_sayisi - dogru - yanlis` hesaplanır; verilirse toplamı tutmalı.",
+                                "maximum": 1000,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "dogru": {
+                                "maximum": 1000,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "yanlis": {
+                                "maximum": 1000,
+                                "minimum": 0,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "bolum_kodu",
+                              "dogru",
+                              "yanlis"
+                            ],
+                            "type": "object"
+                          },
+                          "maxItems": 40,
+                          "minItems": 1,
+                          "type": "array"
+                        },
+                        "not": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "ogrenci_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "ogrenci_id",
+                        "bolumler"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 500,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "sinav_tarihi": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "sure_dk": {
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "yayinevi": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ad",
+                  "sinav_tarihi",
+                  "satirlar"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "atlanan_satir_sayisi": {
+                      "description": "Excel yüklemede öğrenci kimliği olup hiç puan girilmemiş (atlanan) satırlar; toplu girişte 0.",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "denemeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "deneme_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "toplam_net": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "deneme_id",
+                          "ogrenci_id",
+                          "toplam_net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "olusturulan_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "olusturulan_sayisi",
+                    "atlanan_satir_sayisi",
+                    "denemeler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Tablo gorunumunden toplu giris: bir deneme + N ogrenci (en fazla 500), HEPSI YA DA HIC. Hata varsa 422 `toplu_giris_hatali` ve `details.hatalar` (satir bazli: satir, ogrenci_id, kod, mesaj). Basarida her ogrenci icin onayli deneme ve olay.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "surum",
+            "required": false,
+            "schema": {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme sil (bolumleri ile). `surum` verilirse uyusmazlik 409. Ogrenci yalniz kendi onaylanmamis sonucunu siler. Gelisim ve ortalamalar bu sonucu icermez.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "bos": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "dogru": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "net": {
+                            "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                            "type": "number"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "yanlis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "soru_sayisi",
+                          "dogru",
+                          "yanlis",
+                          "bos",
+                          "net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "giren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "gorunen_ad": {
+                      "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "ogrenci",
+                        "ogretmen"
+                      ],
+                      "type": "string"
+                    },
+                    "kural_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "onay_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "onay_durumu": {
+                      "enum": [
+                        "bekliyor",
+                        "onaylandi",
+                        "reddedildi"
+                      ],
+                      "type": "string"
+                    },
+                    "onaylayan_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "red_nedeni": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "sinav_tarihi": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_net": {
+                      "type": "number"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    },
+                    "yayinevi": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "gorunen_ad",
+                    "kural_id",
+                    "kural_kodu",
+                    "yanlis_katsayisi",
+                    "ad",
+                    "yayinevi",
+                    "sinav_tarihi",
+                    "toplam_net",
+                    "giren_id",
+                    "kaynak",
+                    "sure_dk",
+                    "not",
+                    "onay_durumu",
+                    "onaylayan_id",
+                    "onay_at",
+                    "red_nedeni",
+                    "surum",
+                    "created_at",
+                    "bolumler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme detayi (bolumleriyle). Kapsam disi 404; ogrenci yalniz kendi sonucunu gorur.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "bolumler": {
+                    "description": "Verilirse tüm bölümler bu liste ile değişir (tek işlemde).",
+                    "items": {
+                      "properties": {
+                        "bolum_kodu": {
+                          "pattern": "^[a-z][a-z0-9_]{0,59}$",
+                          "type": "string"
+                        },
+                        "bos": {
+                          "description": "Verilmezse `soru_sayisi - dogru - yanlis` hesaplanır; verilirse toplamı tutmalı.",
+                          "maximum": 1000,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "dogru": {
+                          "maximum": 1000,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "yanlis": {
+                          "maximum": 1000,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "bolum_kodu",
+                        "dogru",
+                        "yanlis"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 40,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "not": {
+                    "maxLength": 2000,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "sinav_tarihi": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "sure_dk": {
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "surum": {
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "yayinevi": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "surum"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "bos": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "dogru": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "net": {
+                            "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                            "type": "number"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "yanlis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "soru_sayisi",
+                          "dogru",
+                          "yanlis",
+                          "bos",
+                          "net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "giren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "gorunen_ad": {
+                      "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "ogrenci",
+                        "ogretmen"
+                      ],
+                      "type": "string"
+                    },
+                    "kural_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "onay_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "onay_durumu": {
+                      "enum": [
+                        "bekliyor",
+                        "onaylandi",
+                        "reddedildi"
+                      ],
+                      "type": "string"
+                    },
+                    "onaylayan_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "red_nedeni": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "sinav_tarihi": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_net": {
+                      "type": "number"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    },
+                    "yayinevi": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "gorunen_ad",
+                    "kural_id",
+                    "kural_kodu",
+                    "yanlis_katsayisi",
+                    "ad",
+                    "yayinevi",
+                    "sinav_tarihi",
+                    "toplam_net",
+                    "giren_id",
+                    "kaynak",
+                    "sure_dk",
+                    "not",
+                    "onay_durumu",
+                    "onaylayan_id",
+                    "onay_at",
+                    "red_nedeni",
+                    "surum",
+                    "created_at",
+                    "bolumler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme duzelt (iyimser kilit: `surum` zorunlu; uyusmazlik 409). `bolumler` verilirse tum bolumler tek islemde degisir ve `toplam_net` SUM(net) ile yenilenir. Ogrenci yalniz kendi onaylanmamis sonucunu duzeltir (red edilmis olan yeniden `bekliyor` olur). Duzeltme olay uretmez.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}/onay": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "bos": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "dogru": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "net": {
+                            "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                            "type": "number"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "yanlis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "soru_sayisi",
+                          "dogru",
+                          "yanlis",
+                          "bos",
+                          "net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "giren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "gorunen_ad": {
+                      "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "ogrenci",
+                        "ogretmen"
+                      ],
+                      "type": "string"
+                    },
+                    "kural_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "onay_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "onay_durumu": {
+                      "enum": [
+                        "bekliyor",
+                        "onaylandi",
+                        "reddedildi"
+                      ],
+                      "type": "string"
+                    },
+                    "onaylayan_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "red_nedeni": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "sinav_tarihi": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_net": {
+                      "type": "number"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    },
+                    "yayinevi": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "gorunen_ad",
+                    "kural_id",
+                    "kural_kodu",
+                    "yanlis_katsayisi",
+                    "ad",
+                    "yayinevi",
+                    "sinav_tarihi",
+                    "toplam_net",
+                    "giren_id",
+                    "kaynak",
+                    "sure_dk",
+                    "not",
+                    "onay_durumu",
+                    "onaylayan_id",
+                    "onay_at",
+                    "red_nedeni",
+                    "surum",
+                    "created_at",
+                    "bolumler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrencinin girdigi sonucu onayla: bu anda `ogrenme.deneme.girildi.v1` ayni islemde outbox a yazilir. Zaten onayliysa etkisiz (200, olay yok); reddedilmisse 409.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}/red": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "red_nedeni": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "red_nedeni"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ad": {
+                      "type": "string"
+                    },
+                    "bolumler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "bos": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "dogru": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "net": {
+                            "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                            "type": "number"
+                          },
+                          "soru_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "yanlis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "soru_sayisi",
+                          "dogru",
+                          "yanlis",
+                          "bos",
+                          "net"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "giren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "gorunen_ad": {
+                      "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "ogrenci",
+                        "ogretmen"
+                      ],
+                      "type": "string"
+                    },
+                    "kural_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "onay_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "onay_durumu": {
+                      "enum": [
+                        "bekliyor",
+                        "onaylandi",
+                        "reddedildi"
+                      ],
+                      "type": "string"
+                    },
+                    "onaylayan_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "red_nedeni": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "sinav_tarihi": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "sure_dk": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "toplam_net": {
+                      "type": "number"
+                    },
+                    "yanlis_katsayisi": {
+                      "type": "number"
+                    },
+                    "yayinevi": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "gorunen_ad",
+                    "kural_id",
+                    "kural_kodu",
+                    "yanlis_katsayisi",
+                    "ad",
+                    "yayinevi",
+                    "sinav_tarihi",
+                    "toplam_net",
+                    "giren_id",
+                    "kaynak",
+                    "sure_dk",
+                    "not",
+                    "onay_durumu",
+                    "onaylayan_id",
+                    "onay_at",
+                    "red_nedeni",
+                    "surum",
+                    "created_at",
+                    "bolumler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrencinin girdigi sonucu reddet (`red_nedeni` zorunlu). Olay uretilmez; sonuc gelisim ve ortalamalara girmez. Ogrenci duzeltince yeniden `bekliyor` olur. Zaten reddedilmisse etkisiz; onayliysa 409.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemelerim": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kural",
+            "required": false,
+            "schema": {
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "imlec",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "denemeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "bolumler": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "bolum_kodu": {
+                                  "type": "string"
+                                },
+                                "bos": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "brans_kodu": {
+                                  "type": "string"
+                                },
+                                "dogru": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "net": {
+                                  "description": "Veritabanı üretilmiş değeri, 2 ondalık.",
+                                  "type": "number"
+                                },
+                                "soru_sayisi": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "yanlis": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "bolum_kodu",
+                                "brans_kodu",
+                                "soru_sayisi",
+                                "dogru",
+                                "yanlis",
+                                "bos",
+                                "net"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "giren_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "gorunen_ad": {
+                            "description": "Yalnız öğretmen/yönetici yanıtlarında.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak": {
+                            "enum": [
+                              "ogrenci",
+                              "ogretmen"
+                            ],
+                            "type": "string"
+                          },
+                          "kural_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kural_kodu": {
+                            "type": "string"
+                          },
+                          "not": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "onay_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "onay_durumu": {
+                            "enum": [
+                              "bekliyor",
+                              "onaylandi",
+                              "reddedildi"
+                            ],
+                            "type": "string"
+                          },
+                          "onaylayan_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "red_nedeni": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "sinav_tarihi": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "sure_dk": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "toplam_net": {
+                            "type": "number"
+                          },
+                          "yanlis_katsayisi": {
+                            "type": "number"
+                          },
+                          "yayinevi": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ogrenci_id",
+                          "gorunen_ad",
+                          "kural_id",
+                          "kural_kodu",
+                          "yanlis_katsayisi",
+                          "ad",
+                          "yayinevi",
+                          "sinav_tarihi",
+                          "toplam_net",
+                          "giren_id",
+                          "kaynak",
+                          "sure_dk",
+                          "not",
+                          "onay_durumu",
+                          "onaylayan_id",
+                          "onay_at",
+                          "red_nedeni",
+                          "surum",
+                          "created_at",
+                          "bolumler"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sonraki_imlec": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "denemeler",
+                    "sonraki_imlec"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrencinin kendi denemeleri (onay durumu ve red nedeniyle, tum durumlar). Yalniz ogrenci rolu; baskasinin sonucu donmez.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
     "/v1/ogrenme/kurumlar/{kurum_id}/gorevler/{id}": {
       "delete": {
         "parameters": [
@@ -14806,6 +17733,154 @@
           }
         },
         "summary": "Bugun ekrani: ogrencinin o gunku gorevleri (yalniz yayindaki planlar; devredilenler haric). `gun` verilmezse bugun (Europe/Istanbul, sunucu saati).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/gruplar/{id}/deneme-ozet": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kural",
+            "required": true,
+            "schema": {
+              "maxLength": 60,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bolum_ortalamalari": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "ortalama": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "ortalama"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "denemesi_olan_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "grup_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "ogrenci_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ogrenciler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "deneme_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "gorunen_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "son5_ortalama": {
+                            "nullable": true,
+                            "type": "number"
+                          },
+                          "son_net": {
+                            "nullable": true,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "ogrenci_id",
+                          "gorunen_ad",
+                          "deneme_sayisi",
+                          "son_net",
+                          "son5_ortalama"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sinif_ortalamasi": {
+                      "description": "Öğrencilerin son 5 onaylı deneme ortalamalarının ortalaması.",
+                      "nullable": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "grup_id",
+                    "kural_kodu",
+                    "ogrenci_sayisi",
+                    "denemesi_olan_sayisi",
+                    "sinif_ortalamasi",
+                    "bolum_ortalamalari",
+                    "ogrenciler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Grup deneme ozeti (yalniz ogretmen/yonetici; ogrenciye kapali 403): ogrenci basina deneme sayisi, son net ve son 5 ortalamasi; sinif ortalamasi (ogrencilerin son 5 ortalamalarinin ortalamasi) ve bolum ortalamalari. Yalniz onayli sonuclar; hesaplama SQL de.",
         "tags": [
           "ogrenme"
         ]
@@ -19284,6 +22359,212 @@
           }
         },
         "summary": "Odevi teslim et (yalniz `atandi`/`tekrar_istendi`; yeniden teslimde onceki inceleme temizlenir). `gec_teslim` sunucuda hesaplanir. Fotograf baglama medya blogundadir.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{id}/deneme-gelisim": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Kural kodu (ör. tyt).",
+            "in": "query",
+            "name": "kural",
+            "required": true,
+            "schema": {
+              "maxLength": 60,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bolum_gelisimi": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bolum_kodu": {
+                            "type": "string"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "degisim": {
+                            "nullable": true,
+                            "type": "number"
+                          },
+                          "onceki5_ortalama": {
+                            "nullable": true,
+                            "type": "number"
+                          },
+                          "son5_ortalama": {
+                            "nullable": true,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "bolum_kodu",
+                          "brans_kodu",
+                          "son5_ortalama",
+                          "onceki5_ortalama",
+                          "degisim"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "degisim": {
+                      "description": "son5_ortalama - onceki5_ortalama; önceki yoksa null.",
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "deneme_sayisi": {
+                      "description": "Onaylı deneme sayısı (limit uygulanmadan).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "kural_kodu": {
+                      "type": "string"
+                    },
+                    "noktalar": {
+                      "description": "Eskiden yeniye; son `limit` onaylı deneme.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "bolumler": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "bolum_kodu": {
+                                  "type": "string"
+                                },
+                                "brans_kodu": {
+                                  "type": "string"
+                                },
+                                "net": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "bolum_kodu",
+                                "brans_kodu",
+                                "net"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "deneme_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "sinav_tarihi": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "toplam_net": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "deneme_id",
+                          "ad",
+                          "sinav_tarihi",
+                          "toplam_net",
+                          "bolumler"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "onceki5_ortalama": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "onceki5_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "son5_ortalama": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "son5_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "ogrenci_id",
+                    "kural_kodu",
+                    "deneme_sayisi",
+                    "noktalar",
+                    "son5_sayisi",
+                    "son5_ortalama",
+                    "onceki5_sayisi",
+                    "onceki5_ortalama",
+                    "degisim",
+                    "bolum_gelisimi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrencinin deneme gelisimi (yalniz ONAYLI sonuclar): toplam ve bolum bazinda trend (eskiden yeniye, son `limit`), son 5 ortalamasi, onceki 5 ile degisim. Ogretmen yalniz atandigi grubun ogrencisini, ogrenci yalniz kendini gorur; kapsam disi 404.",
         "tags": [
           "ogrenme"
         ]

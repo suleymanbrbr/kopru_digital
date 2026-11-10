@@ -3520,6 +3520,7 @@ export interface paths {
                                     ders_hatirlatma_dk?: number;
                                     /** Format: uri */
                                     logo_url?: string;
+                                    ogrenci_deneme_girisi?: boolean;
                                     ogrenci_kalan_ders_gorur?: boolean;
                                     sessiz_saat_varsayilan?: string;
                                     vurgu_rengi?: string;
@@ -3594,6 +3595,7 @@ export interface paths {
                                 ders_hatirlatma_dk?: number;
                                 /** Format: uri */
                                 logo_url?: string;
+                                ogrenci_deneme_girisi?: boolean;
                                 ogrenci_kalan_ders_gorur?: boolean;
                                 sessiz_saat_varsayilan?: string;
                                 vurgu_rengi?: string;
@@ -3654,6 +3656,7 @@ export interface paths {
                                 ders_hatirlatma_dk?: number;
                                 /** Format: uri */
                                 logo_url?: string;
+                                ogrenci_deneme_girisi?: boolean;
                                 ogrenci_kalan_ders_gorur?: boolean;
                                 sessiz_saat_varsayilan?: string;
                                 vurgu_rengi?: string;
@@ -5915,6 +5918,1117 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/deneme-ayarlari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurumun deneme ayari: `ogrenci_deneme_girisi` (varsayilan true). Istemci, kapaliysa ogrenciye "Deneme ekle" gostermez. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer). */
+                            ogrenci_deneme_girisi: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        /** Ogrenci deneme girisini ac/kapat (kurum ayari `ogrenci_deneme_girisi`). Kapaliyken ogrenci girisi, duzeltmesi ve silmesi 403. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer). */
+                        ogrenci_deneme_girisi: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Öğrenci kendi deneme sonucunu girebilsin mi (varsayılan true; girişler öğretmen onayına düşer). */
+                            ogrenci_deneme_girisi: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/deneme-kurallari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Deneme kurallari: global (LGS, TYT, AYT, YDT; `global: true`, yalniz okunur) ve kurumun ozel kurallari. Net kurali katsayi ve bolumlerdir. */
+        get: {
+            parameters: {
+                query?: {
+                    aktif?: "true" | "false";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kurallar: {
+                                ad: string;
+                                aktif: boolean;
+                                bolumler: {
+                                    ad: string;
+                                    /** @description Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür). */
+                                    bolum_kodu: string;
+                                    brans_kodu: string;
+                                    soru_sayisi: number;
+                                }[];
+                                gecerli_yil: number | null;
+                                global: boolean;
+                                /** Format: uuid */
+                                id: string;
+                                kod: string;
+                                /**
+                                 * Format: uuid
+                                 * @description null = global kural (yalnız okunur).
+                                 */
+                                kurum_id: string | null;
+                                surum: number;
+                                toplam_soru_sayisi: number;
+                                toplam_sure_dk: number | null;
+                                yanlis_katsayisi: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Kuruma ozel deneme kurali (`ozel_` oneki zorunlu). Ayni kod ve yil ikinci kez 409; global kuralla cakisma olmaz (onek farkli). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        /** @default true */
+                        aktif?: boolean;
+                        bolumler: {
+                            ad: string;
+                            /** @description Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür). */
+                            bolum_kodu: string;
+                            brans_kodu: string;
+                            soru_sayisi: number;
+                        }[];
+                        gecerli_yil?: number | null;
+                        kod: string;
+                        toplam_sure_dk?: number | null;
+                        /** @description Yanlışın doğruyu götürme oranı (LGS 0.3333, TYT/AYT/YDT 0.25). En çok 4 ondalık. */
+                        yanlis_katsayisi: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            bolumler: {
+                                ad: string;
+                                /** @description Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür). */
+                                bolum_kodu: string;
+                                brans_kodu: string;
+                                soru_sayisi: number;
+                            }[];
+                            gecerli_yil: number | null;
+                            global: boolean;
+                            /** Format: uuid */
+                            id: string;
+                            kod: string;
+                            /**
+                             * Format: uuid
+                             * @description null = global kural (yalnız okunur).
+                             */
+                            kurum_id: string | null;
+                            surum: number;
+                            toplam_soru_sayisi: number;
+                            toplam_sure_dk: number | null;
+                            yanlis_katsayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/deneme-kurallari/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Kurum ozel kurali sil. Kuralla girilmis deneme varsa 409 `kural_kullanimda` (kurali `aktif: false` yapin); global kural 403. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Kurum ozel kurali guncelle (iyimser kilit: `surum`; global kural 403). Girilmis denemeler kural anindaki katsayi ve soru sayisini korur: eski net degismez. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad?: string;
+                        aktif?: boolean;
+                        bolumler?: {
+                            ad: string;
+                            /** @description Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür). */
+                            bolum_kodu: string;
+                            brans_kodu: string;
+                            soru_sayisi: number;
+                        }[];
+                        gecerli_yil?: number | null;
+                        surum: number;
+                        toplam_sure_dk?: number | null;
+                        /** @description Yanlışın doğruyu götürme oranı (LGS 0.3333, TYT/AYT/YDT 0.25). En çok 4 ondalık. */
+                        yanlis_katsayisi?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            bolumler: {
+                                ad: string;
+                                /** @description Kuralda tekil bölüm kimliği (AYT Tarih-1 ve Tarih-2 ayrı bölümdür). */
+                                bolum_kodu: string;
+                                brans_kodu: string;
+                                soru_sayisi: number;
+                            }[];
+                            gecerli_yil: number | null;
+                            global: boolean;
+                            /** Format: uuid */
+                            id: string;
+                            kod: string;
+                            /**
+                             * Format: uuid
+                             * @description null = global kural (yalnız okunur).
+                             */
+                            kurum_id: string | null;
+                            surum: number;
+                            toplam_soru_sayisi: number;
+                            toplam_sure_dk: number | null;
+                            yanlis_katsayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Deneme listesi (kapsamdaki ogrenciler, yeniden eskiye, sayfali). `onay=bekliyor` ogretmenin onay kuyrugudur. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    /** @description Kural kodu. */
+                    kural?: string;
+                    limit?: number;
+                    ogrenci_id?: string;
+                    onay?: "bekliyor" | "onaylandi" | "reddedildi";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            denemeler: {
+                                ad: string;
+                                bolumler: {
+                                    bolum_kodu: string;
+                                    bos: number;
+                                    brans_kodu: string;
+                                    dogru: number;
+                                    /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                    net: number;
+                                    soru_sayisi: number;
+                                    yanlis: number;
+                                }[];
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                giren_id: string;
+                                /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                kaynak: "ogrenci" | "ogretmen";
+                                /** Format: uuid */
+                                kural_id: string;
+                                kural_kodu: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                onay_at: string | null;
+                                /** @enum {string} */
+                                onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                                /** Format: uuid */
+                                onaylayan_id: string | null;
+                                red_nedeni: string | null;
+                                /** Format: date */
+                                sinav_tarihi: string;
+                                sure_dk: number | null;
+                                surum: number;
+                                toplam_net: number;
+                                yanlis_katsayisi: number;
+                                yayinevi: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Deneme sonucu ekle. Ogretmen/yonetici: `ogrenci_id` zorunlu, kapsamdaki ogrenciye, dogrudan `onaylandi` (olay uretir). Ogrenci: yalniz kendi sonucu, `bekliyor` (ogretmen onayi gerekir, olay uretmez); kurum ayari `ogrenci_deneme_girisi` kapaliysa 403. Net veritabanince hesaplanir: yanit `net` sayisi (2 ondalik). Ayni ogrenci/kural/tarih/ad 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        bolumler: {
+                            bolum_kodu: string;
+                            /** @description Verilmezse `soru_sayisi - dogru - yanlis` hesaplanır; verilirse toplamı tutmalı. */
+                            bos?: number;
+                            dogru: number;
+                            yanlis: number;
+                        }[];
+                        /**
+                         * Format: uuid
+                         * @description Belirli kural sürümü. Yoksa `kural_kodu`nun en yeni aktif sürümü.
+                         */
+                        kural_id?: string;
+                        kural_kodu?: string;
+                        not?: string;
+                        /**
+                         * Format: uuid
+                         * @description Öğretmen/yönetici için zorunlu; öğrencide yok sayılır (kendisi).
+                         */
+                        ogrenci_id?: string;
+                        /** Format: date */
+                        sinav_tarihi: string;
+                        sure_dk?: number;
+                        yayinevi?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            bolumler: {
+                                bolum_kodu: string;
+                                bos: number;
+                                brans_kodu: string;
+                                dogru: number;
+                                /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                net: number;
+                                soru_sayisi: number;
+                                yanlis: number;
+                            }[];
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            giren_id: string;
+                            /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                            gorunen_ad: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            kaynak: "ogrenci" | "ogretmen";
+                            /** Format: uuid */
+                            kural_id: string;
+                            kural_kodu: string;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            onay_at: string | null;
+                            /** @enum {string} */
+                            onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                            /** Format: uuid */
+                            onaylayan_id: string | null;
+                            red_nedeni: string | null;
+                            /** Format: date */
+                            sinav_tarihi: string;
+                            sure_dk: number | null;
+                            surum: number;
+                            toplam_net: number;
+                            yanlis_katsayisi: number;
+                            yayinevi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Deneme detayi (bolumleriyle). Kapsam disi 404; ogrenci yalniz kendi sonucunu gorur. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            bolumler: {
+                                bolum_kodu: string;
+                                bos: number;
+                                brans_kodu: string;
+                                dogru: number;
+                                /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                net: number;
+                                soru_sayisi: number;
+                                yanlis: number;
+                            }[];
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            giren_id: string;
+                            /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                            gorunen_ad: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            kaynak: "ogrenci" | "ogretmen";
+                            /** Format: uuid */
+                            kural_id: string;
+                            kural_kodu: string;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            onay_at: string | null;
+                            /** @enum {string} */
+                            onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                            /** Format: uuid */
+                            onaylayan_id: string | null;
+                            red_nedeni: string | null;
+                            /** Format: date */
+                            sinav_tarihi: string;
+                            sure_dk: number | null;
+                            surum: number;
+                            toplam_net: number;
+                            yanlis_katsayisi: number;
+                            yayinevi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Deneme sil (bolumleri ile). `surum` verilirse uyusmazlik 409. Ogrenci yalniz kendi onaylanmamis sonucunu siler. Gelisim ve ortalamalar bu sonucu icermez. */
+        delete: {
+            parameters: {
+                query?: {
+                    surum?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Deneme duzelt (iyimser kilit: `surum` zorunlu; uyusmazlik 409). `bolumler` verilirse tum bolumler tek islemde degisir ve `toplam_net` SUM(net) ile yenilenir. Ogrenci yalniz kendi onaylanmamis sonucunu duzeltir (red edilmis olan yeniden `bekliyor` olur). Duzeltme olay uretmez. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad?: string;
+                        /** @description Verilirse tüm bölümler bu liste ile değişir (tek işlemde). */
+                        bolumler?: {
+                            bolum_kodu: string;
+                            /** @description Verilmezse `soru_sayisi - dogru - yanlis` hesaplanır; verilirse toplamı tutmalı. */
+                            bos?: number;
+                            dogru: number;
+                            yanlis: number;
+                        }[];
+                        not?: string | null;
+                        /** Format: date */
+                        sinav_tarihi?: string;
+                        sure_dk?: number | null;
+                        surum: number;
+                        yayinevi?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            bolumler: {
+                                bolum_kodu: string;
+                                bos: number;
+                                brans_kodu: string;
+                                dogru: number;
+                                /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                net: number;
+                                soru_sayisi: number;
+                                yanlis: number;
+                            }[];
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            giren_id: string;
+                            /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                            gorunen_ad: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            kaynak: "ogrenci" | "ogretmen";
+                            /** Format: uuid */
+                            kural_id: string;
+                            kural_kodu: string;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            onay_at: string | null;
+                            /** @enum {string} */
+                            onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                            /** Format: uuid */
+                            onaylayan_id: string | null;
+                            red_nedeni: string | null;
+                            /** Format: date */
+                            sinav_tarihi: string;
+                            sure_dk: number | null;
+                            surum: number;
+                            toplam_net: number;
+                            yanlis_katsayisi: number;
+                            yayinevi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}/onay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ogrencinin girdigi sonucu onayla: bu anda `ogrenme.deneme.girildi.v1` ayni islemde outbox a yazilir. Zaten onayliysa etkisiz (200, olay yok); reddedilmisse 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            bolumler: {
+                                bolum_kodu: string;
+                                bos: number;
+                                brans_kodu: string;
+                                dogru: number;
+                                /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                net: number;
+                                soru_sayisi: number;
+                                yanlis: number;
+                            }[];
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            giren_id: string;
+                            /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                            gorunen_ad: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            kaynak: "ogrenci" | "ogretmen";
+                            /** Format: uuid */
+                            kural_id: string;
+                            kural_kodu: string;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            onay_at: string | null;
+                            /** @enum {string} */
+                            onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                            /** Format: uuid */
+                            onaylayan_id: string | null;
+                            red_nedeni: string | null;
+                            /** Format: date */
+                            sinav_tarihi: string;
+                            sure_dk: number | null;
+                            surum: number;
+                            toplam_net: number;
+                            yanlis_katsayisi: number;
+                            yayinevi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}/red": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ogrencinin girdigi sonucu reddet (`red_nedeni` zorunlu). Olay uretilmez; sonuc gelisim ve ortalamalara girmez. Ogrenci duzeltince yeniden `bekliyor` olur. Zaten reddedilmisse etkisiz; onayliysa 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        red_nedeni: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            bolumler: {
+                                bolum_kodu: string;
+                                bos: number;
+                                brans_kodu: string;
+                                dogru: number;
+                                /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                net: number;
+                                soru_sayisi: number;
+                                yanlis: number;
+                            }[];
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            giren_id: string;
+                            /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                            gorunen_ad: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            kaynak: "ogrenci" | "ogretmen";
+                            /** Format: uuid */
+                            kural_id: string;
+                            kural_kodu: string;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            onay_at: string | null;
+                            /** @enum {string} */
+                            onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                            /** Format: uuid */
+                            onaylayan_id: string | null;
+                            red_nedeni: string | null;
+                            /** Format: date */
+                            sinav_tarihi: string;
+                            sure_dk: number | null;
+                            surum: number;
+                            toplam_net: number;
+                            yanlis_katsayisi: number;
+                            yayinevi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Excel yukleme: govde HAM .xlsx (Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet), en fazla 2 MB ve 500 satir; deneme adi/tarihi/kural sorgu parametresidir. Ogrenci `ogrenci_id`, yoksa `ogrenci_no` ile eslesir (ad yalniz bilgi). Formul hucresi ve sayi olmayan puan satir hatasidir; HEPSI YA DA HIC: hata varsa 422 `toplu_giris_hatali` ve `details.hatalar` (satir = sayfadaki satir numarasi). Puansiz satirlar atlanir. Bozuk/buyuk dosya 422 `excel_gecersiz` / 413. */
+        post: {
+            parameters: {
+                query: {
+                    ad: string;
+                    /** @description Verilirse satırdaki öğrenciler bu grubun üyesi olmalı. */
+                    grup_id?: string;
+                    kural: string;
+                    sinav_tarihi: string;
+                    sure_dk?: number;
+                    yayinevi?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Excel yüklemede öğrenci kimliği olup hiç puan girilmemiş (atlanan) satırlar; toplu girişte 0. */
+                            atlanan_satir_sayisi: number;
+                            denemeler: {
+                                /** Format: uuid */
+                                deneme_id: string;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                toplam_net: number;
+                            }[];
+                            olusturulan_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/sablon.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Excel sablonu (.xlsx): `Veri` sayfasi (ogrenci_id, ogrenci_no, ad + her bolum icin `<bolum_kodu>_dogru/_yanlis`) ve `Bilgi` sayfasi. `grup_id` verilirse grubun etkin ogrencileriyle on dolu gelir. Deneme adi ve tarihi yukleme isteginde verilir. */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Verilirse şablon bu grubun öğrencileriyle ön doldurulur. */
+                    grup_id?: string;
+                    /** @description Kural kodu (en yeni aktif sürüm). */
+                    kural: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemeler/toplu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tablo gorunumunden toplu giris: bir deneme + N ogrenci (en fazla 500), HEPSI YA DA HIC. Hata varsa 422 `toplu_giris_hatali` ve `details.hatalar` (satir bazli: satir, ogrenci_id, kod, mesaj). Basarida her ogrenci icin onayli deneme ve olay. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        /**
+                         * Format: uuid
+                         * @description Belirli kural sürümü. Yoksa `kural_kodu`nun en yeni aktif sürümü.
+                         */
+                        kural_id?: string;
+                        kural_kodu?: string;
+                        satirlar: {
+                            bolumler: {
+                                bolum_kodu: string;
+                                /** @description Verilmezse `soru_sayisi - dogru - yanlis` hesaplanır; verilirse toplamı tutmalı. */
+                                bos?: number;
+                                dogru: number;
+                                yanlis: number;
+                            }[];
+                            not?: string;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                        }[];
+                        /** Format: date */
+                        sinav_tarihi: string;
+                        sure_dk?: number;
+                        yayinevi?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Excel yüklemede öğrenci kimliği olup hiç puan girilmemiş (atlanan) satırlar; toplu girişte 0. */
+                            atlanan_satir_sayisi: number;
+                            denemeler: {
+                                /** Format: uuid */
+                                deneme_id: string;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                toplam_net: number;
+                            }[];
+                            olusturulan_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/denemelerim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin kendi denemeleri (onay durumu ve red nedeniyle, tum durumlar). Yalniz ogrenci rolu; baskasinin sonucu donmez. */
+        get: {
+            parameters: {
+                query?: {
+                    imlec?: string;
+                    kural?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            denemeler: {
+                                ad: string;
+                                bolumler: {
+                                    bolum_kodu: string;
+                                    bos: number;
+                                    brans_kodu: string;
+                                    dogru: number;
+                                    /** @description Veritabanı üretilmiş değeri, 2 ondalık. */
+                                    net: number;
+                                    soru_sayisi: number;
+                                    yanlis: number;
+                                }[];
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                giren_id: string;
+                                /** @description Yalnız öğretmen/yönetici yanıtlarında. */
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                kaynak: "ogrenci" | "ogretmen";
+                                /** Format: uuid */
+                                kural_id: string;
+                                kural_kodu: string;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                onay_at: string | null;
+                                /** @enum {string} */
+                                onay_durumu: "bekliyor" | "onaylandi" | "reddedildi";
+                                /** Format: uuid */
+                                onaylayan_id: string | null;
+                                red_nedeni: string | null;
+                                /** Format: date */
+                                sinav_tarihi: string;
+                                sure_dk: number | null;
+                                surum: number;
+                                toplam_net: number;
+                                yanlis_katsayisi: number;
+                                yayinevi: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/gorevler/{id}": {
         parameters: {
             query?: never;
@@ -6257,6 +7371,68 @@ export interface paths {
                             }[];
                             /** Format: date */
                             gun: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gruplar/{id}/deneme-ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grup deneme ozeti (yalniz ogretmen/yonetici; ogrenciye kapali 403): ogrenci basina deneme sayisi, son net ve son 5 ortalamasi; sinif ortalamasi (ogrencilerin son 5 ortalamalarinin ortalamasi) ve bolum ortalamalari. Yalniz onayli sonuclar; hesaplama SQL de. */
+        get: {
+            parameters: {
+                query: {
+                    kural: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bolum_ortalamalari: {
+                                bolum_kodu: string;
+                                brans_kodu: string;
+                                ortalama: number;
+                            }[];
+                            denemesi_olan_sayisi: number;
+                            /** Format: uuid */
+                            grup_id: string;
+                            kural_kodu: string;
+                            ogrenci_sayisi: number;
+                            ogrenciler: {
+                                deneme_sayisi: number;
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                son_net: number | null;
+                                son5_ortalama: number | null;
+                            }[];
+                            /** @description Öğrencilerin son 5 onaylı deneme ortalamalarının ortalaması. */
+                            sinif_ortalamasi: number | null;
                         };
                     };
                 };
@@ -7948,6 +9124,82 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{id}/deneme-gelisim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin deneme gelisimi (yalniz ONAYLI sonuclar): toplam ve bolum bazinda trend (eskiden yeniye, son `limit`), son 5 ortalamasi, onceki 5 ile degisim. Ogretmen yalniz atandigi grubun ogrencisini, ogrenci yalniz kendini gorur; kapsam disi 404. */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Kural kodu (ör. tyt). */
+                    kural: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bolum_gelisimi: {
+                                bolum_kodu: string;
+                                brans_kodu: string;
+                                degisim: number | null;
+                                onceki5_ortalama: number | null;
+                                son5_ortalama: number | null;
+                            }[];
+                            /** @description son5_ortalama - onceki5_ortalama; önceki yoksa null. */
+                            degisim: number | null;
+                            /** @description Onaylı deneme sayısı (limit uygulanmadan). */
+                            deneme_sayisi: number;
+                            kural_kodu: string;
+                            /** @description Eskiden yeniye; son `limit` onaylı deneme. */
+                            noktalar: {
+                                ad: string;
+                                bolumler: {
+                                    bolum_kodu: string;
+                                    brans_kodu: string;
+                                    net: number;
+                                }[];
+                                /** Format: uuid */
+                                deneme_id: string;
+                                /** Format: date */
+                                sinav_tarihi: string;
+                                toplam_net: number;
+                            }[];
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            onceki5_ortalama: number | null;
+                            onceki5_sayisi: number;
+                            son5_ortalama: number | null;
+                            son5_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
