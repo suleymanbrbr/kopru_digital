@@ -1585,10 +1585,11 @@ function denemeIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockY
     });
   }
   if (p[0] === 'ogrenciler' && p[2] === 'deneme-gelisim' && i.yontem === 'GET') {
-    if (!personel && p[1] !== benId) return bulunamadi();
+    // Mock oturumunda ogrencinin uyelik kimligi gercek ogrenci kimligi degildir: ogrenci kendi verisini alir.
+    const hedef = personel ? ilk(p[1]) : benId;
     const kural = i.sorgu.get('kural');
     if (!kural) return dogrulama();
-    return ok(gelisim(s, ilk(p[1]), kural, Number(i.sorgu.get('limit') ?? 20) || 20));
+    return ok(gelisim(s, hedef, kural, Number(i.sorgu.get('limit') ?? 20) || 20));
   }
   if (p[0] === 'gruplar' && p[2] === 'deneme-ozet' && i.yontem === 'GET') {
     if (!personel) return izinYok();
