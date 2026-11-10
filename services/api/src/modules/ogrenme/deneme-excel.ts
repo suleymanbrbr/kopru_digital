@@ -9,6 +9,7 @@ import ExcelJS from 'exceljs';
 import { z } from 'zod';
 
 import type { KuralSatiri } from './deneme-deposu.js';
+import { zipiDenetle } from './zip-denetimi.js';
 
 /**
  * Deneme Excel sablonu ve yukleme ayrisitirici (saf: veritabani yok).
@@ -159,6 +160,15 @@ function sayacOku(
  * 422 `excel_gecersiz`; satir hatalari (formul, sayi degil, tanimsiz ogrenci kimligi bicimi) listelenir.
  */
 export async function excelOku(govde: Buffer, kural: KuralSatiri): Promise<ExcelSonucu> {
+  // Acmadan once: zip bombasi (kucuk dosya, dev acilmis boyut) sureci bellekten dusurmesin.
+  const zip = zipiDenetle(govde, { acilmisBayt: 20 * 1024 * 1024, dosyaSayisi: 200 });
+  if (!zip.ok) {
+    throw gecersizDosya(
+      zip.neden === 'cok_buyuk' || zip.neden === 'cok_dosya'
+        ? 'Dosya açıldığında çok büyük. Lütfen şablonu kullanın.'
+        : 'Dosya geçerli bir .xlsx değil.',
+    );
+  }
   const wb = new ExcelJS.Workbook();
   try {
     await wb.xlsx.load(govde as unknown as ExcelJS.Buffer);
