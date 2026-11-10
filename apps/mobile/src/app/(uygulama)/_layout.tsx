@@ -29,6 +29,24 @@ export default function UygulamaDuzeni() {
       <Stack.Screen name="ogrenci/[id]" options={{ title: t('mobil.finans.kartBaslik') }} />
       <Stack.Screen name="paket-sat" options={{ title: t('mobil.finans.paketSatBaslik') }} />
       <Stack.Screen name="odeme-al" options={{ title: t('mobil.finans.odemeAlBaslik') }} />
+      <Stack.Screen name="odev-ver" options={{ title: t('mobil.ogrenme.odev.odevVer') }} />
+      <Stack.Screen name="odev/[id]" options={{ title: t('mobil.ogrenme.odev.ozetBaslik') }} />
+      <Stack.Screen
+        name="odev-teslim/[id]"
+        options={{ title: t('mobil.ogrenme.odev.teslimBaslik') }}
+      />
+      <Stack.Screen
+        name="denemelerim"
+        options={{ title: t('mobil.ogrenme.deneme.denemelerim') }}
+      />
+      <Stack.Screen
+        name="deneme-gir"
+        options={{ title: t('mobil.ogrenme.deneme.girisBaslik') }}
+      />
+      <Stack.Screen
+        name="deneme-onay"
+        options={{ title: t('mobil.ogrenme.deneme.onayKuyrugu') }}
+      />
       <Stack.Protected guard={ortam.gelistirici}>
         <Stack.Screen name="bilesenler" options={{ title: t('mobil.bilesenler.baslik') }} />
       </Stack.Protected>

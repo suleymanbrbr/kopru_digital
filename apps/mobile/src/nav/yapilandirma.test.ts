@@ -45,10 +45,19 @@ describe('rol -> sekme yapilandirmasi', () => {
   it('her sekme bir modul anahtari tasir ve rota dosyasi listesinde vardir', () => {
     for (const sekmeler of Object.values(ROL_SEKMELERI)) {
       for (const s of sekmeler) {
-        expect(s.modul === 'cekirdek' || MODUL_KODLARI.includes(s.modul)).toBe(true);
+        const kodlar = typeof s.modul === 'string' ? [s.modul] : s.modul;
+        expect(kodlar.every((k) => k === 'cekirdek' || MODUL_KODLARI.includes(k))).toBe(true);
         expect(TUM_SEKME_ADLARI).toContain(s.ad);
       }
     }
+  });
+
+  it('Gorevler sekmesi odev, haftalik plan ya da deneme modullerinden biri aciksa gorunur', () => {
+    const hepsiKapali = { ...hepsiAcik, odev: false, haftalik_plan: false, deneme: false };
+    expect(adlar('ogrenci', hepsiKapali)).not.toContain('gorevler');
+    expect(adlar('ogrenci', { ...hepsiKapali, haftalik_plan: true })).toContain('gorevler');
+    expect(adlar('ogrenci', { ...hepsiKapali, deneme: true })).toContain('gorevler');
+    expect(adlar('ogrenci', { ...hepsiKapali, odev: true })).toContain('gorevler');
   });
 
   it('Kurum girisi yalnizca sahip ve yoneticide', () => {

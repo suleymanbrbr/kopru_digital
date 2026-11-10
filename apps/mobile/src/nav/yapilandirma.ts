@@ -21,8 +21,11 @@ export interface SekmeTanimi {
   ad: SekmeAdi;
   baslik: MessageKey;
   ikon: IkonAdi;
-  /** 'cekirdek': her zaman acik. Aksi halde modul kapaliysa sekme gizlenir. */
-  modul: ModulKodu | 'cekirdek';
+  /**
+   * 'cekirdek': her zaman acik. Aksi halde modul kapaliysa sekme gizlenir; liste verilirse
+   * modullerden HERHANGI biri aciksa sekme gorunur.
+   */
+  modul: ModulKodu | 'cekirdek' | readonly ModulKodu[];
 }
 
 const bugun: SekmeTanimi = {
@@ -53,7 +56,12 @@ export const ROL_SEKMELERI: Record<MobilRol, readonly SekmeTanimi[]> = {
   yonetici: ogretmenSekmeleri,
   ogrenci: [
     bugun,
-    { ad: 'gorevler', baslik: 'mobil.sekmeler.gorevler', ikon: 'checkbox', modul: 'odev' },
+    {
+      ad: 'gorevler',
+      baslik: 'mobil.sekmeler.gorevler',
+      ikon: 'checkbox',
+      modul: ['odev', 'haftalik_plan', 'deneme'],
+    },
     { ad: 'soru-sor', baslik: 'mobil.sekmeler.soruSor', ikon: 'help-circle', modul: 'soru_sor' },
     {
       ad: 'karakterim',
@@ -78,8 +86,13 @@ export const TUM_SEKME_ADLARI: readonly SekmeAdi[] = [
 ];
 
 /** Modul bilinmiyorsa (kayit yok) kapali sayilir (fail-closed). */
-export function modulAcikMi(moduller: ModulDurumu, modul: ModulKodu | 'cekirdek'): boolean {
-  return modul === 'cekirdek' || moduller[modul] === true;
+export function modulAcikMi(
+  moduller: ModulDurumu,
+  modul: ModulKodu | 'cekirdek' | readonly ModulKodu[],
+): boolean {
+  if (modul === 'cekirdek') return true;
+  if (typeof modul !== 'string') return modul.some((m) => moduller[m] === true);
+  return moduller[modul] === true;
 }
 
 export function gorunenSekmeler(rol: MobilRol, moduller: ModulDurumu): SekmeTanimi[] {

@@ -15,8 +15,10 @@ import { Metin } from '../ui/Metin';
 import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { KalanDersRozeti } from '../ui/Rozet';
 import { hataMesaji } from '../uygulama/hatalar';
-import { useOgrenciKarti, useSaatDilimi } from '../uygulama/operasyon';
+import { useModulAcik, useOgrenciKarti, useSaatDilimi } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { OgrenciDenemeBolumu } from './OgrenciDenemeBolumu';
+import { OgrenciPlanBolumu } from './OgrenciPlanBolumu';
 
 /** Bakiye metni: negatif = borclu. Tum tutarlar `kurusBicimle` ile gosterilir. */
 export function bakiyeMetni(bakiyeKurus: number): string {
@@ -212,13 +214,23 @@ function TamKart({ k, ad }: { k: OgrenciKartiTam; ad: string }) {
 /** Ogrenci karti (ogretmen/sahip/yonetici): kalan ders, bakiye, paketler, hareketler, odeyen. */
 export function OgrenciKartiEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: string }) {
   const sorgu = useOgrenciKarti(ogrenciId);
+  const finans = useModulAcik('finans');
+  const plan = useModulAcik('haftalik_plan');
+  const deneme = useModulAcik('deneme');
   return (
     <Ekran ust={<CevrimdisiSerit />} kenarlar={['left', 'right', 'bottom']}>
-      {sorgu.isPending ? <Yukleniyor /> : null}
-      {sorgu.isError && !sorgu.data ? (
+      {finans && sorgu.isPending ? <Yukleniyor /> : null}
+      {finans && sorgu.isError && !sorgu.data ? (
         <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data?.gorunum === 'tam' ? <TamKart k={sorgu.data} ad={ad} /> : null}
+      {!finans && (plan || deneme) ? (
+        <Metin varyant="baslik" accessibilityRole="header">
+          {ad || t('mobil.ogrenciler.adsiz')}
+        </Metin>
+      ) : null}
+      {plan ? <OgrenciPlanBolumu ogrenciId={ogrenciId} /> : null}
+      {deneme ? <OgrenciDenemeBolumu ogrenciId={ogrenciId} ogrenciAd={ad} /> : null}
     </Ekran>
   );
 }
