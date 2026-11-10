@@ -113,13 +113,14 @@ export function KonuSecici({
 
   return (
     <div ref={kok} className="relative flex flex-col gap-1.5">
-      <label htmlFor={`${kimlik}-dugme`} className="text-sm font-medium">
+      <span id={`${kimlik}-etiket`} className="text-sm font-medium">
         {etiket}
-      </label>
+      </span>
       <div className="flex gap-2">
         <button
           id={`${kimlik}-dugme`}
           type="button"
+          aria-labelledby={`${kimlik}-etiket ${kimlik}-deger`}
           aria-expanded={acik}
           aria-controls={`${kimlik}-panel`}
           onClick={() => {
@@ -130,7 +131,7 @@ export function KonuSecici({
           }}
           className="flex h-11 min-w-0 flex-1 items-center justify-between gap-2 rounded-orta border border-kenar bg-yuzey px-3 text-left text-base"
         >
-          <span className={cn('truncate', !secili && 'text-metin-ikincil')}>
+          <span id={`${kimlik}-deger`} className={cn('truncate', !secili && 'text-metin-ikincil')}>
             {secili ? konuYolu(secili, tum) : t('ogrenme.konu.sec')}
           </span>
           {secili?.kullanimdan_kalkti ? (

@@ -144,7 +144,12 @@ export function CizgiGrafigi({
         <summary className="min-h-11 cursor-pointer py-2 font-medium">
           {t('ogrenme.deneme.tabloGoster')}
         </summary>
-        <div className="overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={t('ogrenme.deneme.tabloGoster')}
+          className="overflow-x-auto"
+        >
           <table className="w-full text-left">
             <caption className="sr-only">{baslik}</caption>
             <thead className="text-xs uppercase tracking-wide text-metin-ikincil">

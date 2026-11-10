@@ -1347,7 +1347,7 @@ export const tr = {
       gorevSilEtiket: '{brans} görevini sil ({gun})',
       gunaEkleEtiket: '{gun} gününe görev ekle',
       hedefTuru: 'Hedef türü',
-      hedefTuruAd: { soru: 'Soru sayısı', dakika: 'Süre (dakika)' },
+      hedefTuruAd: { soru: 'Soru hedefi', dakika: 'Süre hedefi' },
       soruSayisi: 'Soru sayısı',
       dakikaSayisi: 'Dakika',
       miktarSoru: '{n} soru',

@@ -27,6 +27,8 @@ const dogrulama = (mesaj = 'İstek doğrulanamadı.') => hata(400, 'dogrulama_ha
 const ok = (govde: unknown, durum = 200): MockYanit => ({ durum, govde });
 
 const uid = () => crypto.randomUUID();
+/** Mock kurum kimlikleri (`kurum-ege`...) UUID degildir; sozlesmelerdeki `uuid` alanlari icin sabit deger. */
+const KURUM_UUID = '00000000-0000-4000-8000-00000000c0de';
 const GUN_MS = 86_400_000;
 const simdi = () => new Date().toISOString();
 const bugun = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
@@ -597,7 +599,10 @@ function mufredatIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): Moc
     });
   }
   if (p[0] !== 'konular') return null;
-  const kurumKonusu = (k: Konu) => ({ ...k, kurum_id: k.katalog_kodu === null ? kurumId : null });
+  const kurumKonusu = (k: Konu) => ({
+    ...k,
+    kurum_id: k.katalog_kodu === null ? KURUM_UUID : null,
+  });
   if (p.length === 1 && i.yontem === 'GET') {
     const q = metin(i.sorgu.get('q'));
     const tumu = ['1', 'true'].includes(i.sorgu.get('tumu') ?? '');
@@ -635,7 +640,7 @@ function mufredatIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): Moc
     }
     const yeni = konuYap('', brans, ad, seviye, ustId, typeof g.sira === 'number' ? g.sira : 0);
     yeni.katalog_kodu = null;
-    yeni.kurum_id = kurumId;
+    yeni.kurum_id = KURUM_UUID;
     yeni.sinif_seviyesi = null;
     s.konular.push(yeni);
     return ok(kurumKonusu(yeni), 201);
@@ -861,7 +866,7 @@ function odevIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYan
     const hedefTuru = metin(g.hedef_turu);
     if (!baslik || !brans || !hedefTuru) return dogrulama();
     if (['kademe', 'kurum'].includes(hedefTuru) && !yonetimMi(kurumId)) return izinYok();
-    const hedefId = hedefTuru === 'kurum' ? kurumId : metin(g.hedef_id);
+    const hedefId = hedefTuru === 'kurum' ? KURUM_UUID : metin(g.hedef_id);
     if (!hedefId) return dogrulama();
     const o: Odev = {
       id: uid(),

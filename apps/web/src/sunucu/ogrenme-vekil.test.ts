@@ -64,7 +64,7 @@ describe('ogrenme izinli yollar', () => {
 });
 
 describe('ogrenme vekili', () => {
-  const istek = (yol: string, ek: RequestInit = {}) =>
+  const istek = (yol: string, ek: ConstructorParameters<typeof NextRequest>[1] = {}) =>
     new NextRequest(`http://localhost/api/ogrenme/${yol}`, {
       headers: { authorization: 'Bearer tok', host: 'localhost' },
       ...ek,

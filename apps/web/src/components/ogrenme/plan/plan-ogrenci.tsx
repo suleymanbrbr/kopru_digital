@@ -225,7 +225,7 @@ function GorevSatiri({
 
   const girdiId = `gerceklesen-${g.id}`;
   return (
-    <li className={`flex flex-col gap-2 px-4 py-3 ${devredildi ? 'opacity-70' : ''}`}>
+    <li className="flex flex-col gap-2 px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="min-w-0 flex-1">
           <p className={`font-medium ${devredildi ? 'line-through' : ''}`}>

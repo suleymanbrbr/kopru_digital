@@ -232,7 +232,12 @@ export function ExcelYukle({
         >
           <p>{hata}</p>
           {satirHatalari.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div
+              tabIndex={0}
+              role="region"
+              aria-label={t('ogrenme.deneme.excelHataTablo')}
+              className="overflow-x-auto"
+            >
               <table className="w-full min-w-[20rem] text-left">
                 <caption className="sr-only">{t('ogrenme.deneme.excelHataTablo')}</caption>
                 <thead>

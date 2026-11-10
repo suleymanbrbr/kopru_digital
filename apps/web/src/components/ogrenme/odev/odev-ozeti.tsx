@@ -173,7 +173,12 @@ export function OdevOzeti({
           {taslak ? t('ogrenme.odev.taslakOzet') : t('ogrenme.odev.atananYok')}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-buyuk border border-kenar bg-yuzey">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={t('ogrenme.odev.sayilar')}
+          className="overflow-x-auto rounded-buyuk border border-kenar bg-yuzey"
+        >
           <table className="w-full min-w-[40rem] text-left text-sm">
             <caption className="sr-only">
               {t('ogrenme.odev.ozetTablo', { baslik: odev.baslik })}

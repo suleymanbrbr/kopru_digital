@@ -46,22 +46,25 @@ export function konuAgaci(konular: readonly Konu[]): KonuDugumu[] {
 
 /**
  * Suzgeci uygular ve agaci budar: bir dugum, kendisi eslesirse ya da bir torunu eslesirse kalir
- * (eslesen torunun atalari baglam icin gorunur). Kullanimdan kalkan konular `kalkanlariGoster`
- * yoksa atilir.
+ * (eslesen torunun atalari baglam icin gorunur); kendisi eslesen dugumun altindakiler de kalir.
+ * Kullanimdan kalkan konular `kalkanlariGoster` yoksa atilir.
  */
 export function agaciSuz(agac: readonly KonuDugumu[], suzgec: KonuSuzgeci): KonuDugumu[] {
-  const q = suzgec.arama ? trNormalle(suzgec.arama) : '';
-  const gez = (d: KonuDugumu): KonuDugumu | null => {
+  const arama = suzgec.arama ? trNormalle(suzgec.arama) : '';
+  const gez = (d: KonuDugumu, q: string): KonuDugumu | null => {
     const k = d.konu;
     if (!suzgec.kalkanlariGoster && k.kullanimdan_kalkti) return null;
     if (suzgec.katalog && k.katalog_kodu !== suzgec.katalog) return null;
     if (suzgec.brans && k.brans_kodu !== suzgec.brans) return null;
-    const cocuklar = d.cocuklar.map(gez).filter((x): x is KonuDugumu => x !== null);
     const kendi = q === '' || trNormalle(k.ad).includes(q);
+    // Kendisi eslesen konunun altindakiler de gorunur (ornegin "uslu" -> unite ve konulari).
+    const cocuklar = d.cocuklar
+      .map((c) => gez(c, kendi ? '' : q))
+      .filter((x): x is KonuDugumu => x !== null);
     if (!kendi && cocuklar.length === 0) return null;
     return { konu: k, cocuklar };
   };
-  return agac.map(gez).filter((x): x is KonuDugumu => x !== null);
+  return agac.map((d) => gez(d, arama)).filter((x): x is KonuDugumu => x !== null);
 }
 
 /** Agaci, her satirda derinlikle duzlestirir (secici listesi icin). */

@@ -217,7 +217,12 @@ export function TabloGiris({
           />
         </section>
       ) : (
-        <div className="overflow-x-auto rounded-buyuk border border-kenar bg-yuzey">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={t('ogrenme.deneme.tabloAciklama')}
+          className="overflow-x-auto rounded-buyuk border border-kenar bg-yuzey"
+        >
           <table className="w-full border-collapse text-left text-sm">
             <caption className="p-3 text-left text-sm text-metin-ikincil">
               {t('ogrenme.deneme.tabloAciklama')}

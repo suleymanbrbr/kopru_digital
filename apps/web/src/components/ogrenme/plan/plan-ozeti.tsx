@@ -31,7 +31,12 @@ export function PlanOzeti({ kurumId, planId }: { kurumId: string; planId: string
       ? '-'
       : `${String(m.gerceklesen)} / ${String(m.planlanan)}`;
   return (
-    <div className="overflow-x-auto">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label={t('ogrenme.plan.ozetTablo')}
+      className="overflow-x-auto"
+    >
       <table className="w-full min-w-[28rem] text-left text-sm">
         <caption className="sr-only">{t('ogrenme.plan.ozetTablo')}</caption>
         <thead className="text-xs uppercase tracking-wide text-metin-ikincil">

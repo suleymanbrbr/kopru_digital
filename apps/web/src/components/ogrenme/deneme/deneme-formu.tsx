@@ -203,7 +203,12 @@ export function DenemeFormu({
       </div>
 
       {kural ? (
-        <div className="overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={t('ogrenme.deneme.bolum')}
+          className="overflow-x-auto"
+        >
           <table className="w-full min-w-[34rem] text-left text-sm">
             <caption className="mb-2 text-left text-sm text-metin-ikincil">
               {t('ogrenme.deneme.bolumlerAciklama', {

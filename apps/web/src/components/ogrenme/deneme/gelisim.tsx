@@ -124,7 +124,12 @@ export function GelisimPaneli({
         seriler={seriler}
       />
       {veri.bolum_gelisimi.length > 0 ? (
-        <div className="overflow-x-auto rounded-buyuk border border-kenar">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={t('ogrenme.deneme.bolumGelisimTablo')}
+          className="overflow-x-auto rounded-buyuk border border-kenar"
+        >
           <table className="w-full min-w-[28rem] text-left text-sm">
             <caption className="sr-only">{t('ogrenme.deneme.bolumGelisimTablo')}</caption>
             <thead className="border-b border-kenar text-xs uppercase tracking-wide text-metin-ikincil">
@@ -214,7 +219,12 @@ export function SinifOzeti({
           deger={String(o.denemesi_olan_sayisi)}
         />
       </dl>
-      <div className="overflow-x-auto rounded-buyuk border border-kenar bg-yuzey">
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label={t('ogrenme.deneme.sinifTablo')}
+        className="overflow-x-auto rounded-buyuk border border-kenar bg-yuzey"
+      >
         <table className="w-full min-w-[28rem] text-left text-sm">
           <caption className="sr-only">{t('ogrenme.deneme.sinifTablo')}</caption>
           <thead className="border-b border-kenar text-xs uppercase tracking-wide text-metin-ikincil">
