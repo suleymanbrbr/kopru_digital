@@ -32,6 +32,18 @@ function haftaGunu(gun: number): string {
   return tarih(gun - gunNo);
 }
 
+/**
+ * Tohum derslerin bir kismi "simdi"ye goredir (yoklama icin baslamis ders); sabit saatli bir islem
+ * gunun saatine gore onlarla cakisabilir. Cakismayi sinayan test ayridir; burada uyari cikarsa onaylanir.
+ */
+async function cakismaVarsaOnayla(page: Page, dugme: string, basari: string | RegExp) {
+  const onay = page.getByRole('button', { name: dugme });
+  const sonuc = page.getByText(basari);
+  await expect(sonuc.or(onay).first()).toBeVisible();
+  if (await onay.isVisible()) await onay.click();
+  await expect(sonuc).toBeVisible();
+}
+
 async function ihlaller(page: Page) {
   await expect(page).toHaveTitle(/.+/);
   // Fare ustundeki ogelin gecis (transition) renkleri yanlis kontrast alarmi vermesin.
@@ -95,7 +107,7 @@ test.describe('takvim', () => {
       tekrarla: { bitis: tarih(30) },
     });
     await seri.getByRole('button', { name: 'Dersi ekle' }).click();
-    await expect(page.getByText(/\d+ ders eklendi\./)).toBeVisible();
+    await cakismaVarsaOnayla(page, 'Yine de ekle', /\d+ ders eklendi\./);
 
     // Ogretmen cakismasi: ayni ogretmen, Sali 16:30 (tohum 16:00-17:00 ile cakisir).
     const cakisan = await dersFormuDoldur(page, {
@@ -116,7 +128,7 @@ test.describe('takvim', () => {
     await ayrinti.getByRole('button', { name: 'Taşı' }).click();
     await ayrinti.getByLabel('Yeni saat').fill('18:30');
     await ayrinti.getByRole('button', { name: 'Taşı', exact: true }).click();
-    await expect(page.getByText('Ders taşındı.')).toBeVisible();
+    await cakismaVarsaOnayla(page, 'Yine de taşı', 'Ders taşındı.');
 
     // Iptal: ogrenci kaynagi yalniz birebirde sunulur.
     await page.getByRole('button', { name: /Cakisma testi/ }).click();
@@ -141,7 +153,7 @@ test.describe('takvim', () => {
     await expect(tasi.getByLabel('Yeni gün')).toBeDisabled();
     await tasi.getByLabel('Yeni saat').fill('15:00');
     await tasi.getByRole('button', { name: 'Taşı', exact: true }).click();
-    await expect(page.getByText(/ders taşındı\./)).toBeVisible();
+    await cakismaVarsaOnayla(page, 'Yine de taşı', /ders taşındı\./);
   });
 });
 
