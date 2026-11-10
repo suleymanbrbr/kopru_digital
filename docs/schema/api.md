@@ -1346,6 +1346,30 @@ Profil: `K`. RLS: evet.
 Ek sütunlar: `id uuid`, `created_at`, `updated_at`, `created_by`.
 Kısıtlar: `CHECK (dogru >= 0 AND yanlis >= 0 AND bos >= 0)`, `CHECK (dogru + yanlis + bos = soru_sayisi)` (`deneme_bolumleri_toplam_chk`), `UNIQUE (deneme_id, bolum_kodu)` (`brans_kodu` tekilliği **yoktur**: AYT'de iki Tarih/Coğrafya bölümü vardır). `denemeler.toplam_net` bölüm yazımında `SUM(net)` ile güncellenir (uygulama aynı işlemde `UPDATE ... SET toplam_net = coalesce(SUM(net), 0)` çalıştırır; toplam, bölüm netlerinin yuvarlanmış toplamıdır). İndeks: `(kurum_id, deneme_id)`, `(kurum_id, brans_kodu, deneme_id)`. Olaylar: yok.
 
+#### Deneme uçları ve kararlar
+
+Yol öneki `/v1/ogrenme/kurumlar/:kurum_id`. Net, sistemde tam sayı olmayan tek değerdir: veritabanı üretilmiş sütunu esastır, uygulama net hesaplamaz; API net değerlerini `number` (2 ondalık) döner; sıralama ve ortalamalar SQL'de yapılır.
+
+| Uç | Yetki | Not |
+| --- | --- | --- |
+| `GET /deneme-kurallari` | `deneme.oku` | Global + kurum kuralları (`global` alanı). |
+| `POST/PATCH/DELETE /deneme-kurallari[/:id]` | `deneme.yaz` kurum kapsamı | `ozel_*`; global 403 `global_kural_yazilamaz`; `surum` zorunlu (PATCH); kullanımdaki kural silinemez 409 `kural_kullanimda`. |
+| `GET/PUT /deneme-ayarlari` | GET `deneme.oku`; PUT `kurum.ayar.yaz` | `ogrenci_deneme_girisi` (kurum ayarı, `kurumlar.ayarlar`; varsayılan true). Kapalıysa öğrenci girişi/düzeltmesi/silmesi 403 `ogrenci_deneme_girisi_kapali`. |
+| `POST /denemeler` | `deneme.yaz` | Öğretmen/yönetici: `ogrenci_id` zorunlu, doğrudan `onaylandi`. Öğrenci: yalnız kendi, `bekliyor`. `kural_id` ya da `kural_kodu` (en yeni aktif sürüm). `bos` verilmezse hesaplanır. |
+| `PATCH/DELETE /denemeler/:id` | `deneme.yaz` | `surum` zorunlu (PATCH; DELETE'te isteğe bağlı sorgu). `bolumler` tek işlemde değişir. Öğrenci yalnız kendi `bekliyor`/`reddedildi` sonucunu değiştirir (düzeltince yeniden `bekliyor`). Düzeltmede eski katsayı kullanılır. |
+| `POST /denemeler/toplu` | `deneme.yaz` grup kapsamı | Bir deneme + N öğrenci (≤ 500), hepsi ya da hiçbiri; hata 422 `toplu_giris_hatali`, `details.hatalar[{satir, ogrenci_id, kod, mesaj}]`. |
+| `GET /denemeler/sablon.xlsx?kural&grup_id` | `deneme.yaz` grup kapsamı | `Veri` sayfası: `ogrenci_id`, `ogrenci_no`, `ad` (yalnız bilgi), her bölüm için `<bolum_kodu>_dogru/_yanlis`; `Bilgi` sayfası. |
+| `POST /denemeler/excel?kural&ad&sinav_tarihi&yayinevi&sure_dk&grup_id` | `deneme.yaz` grup kapsamı | Gövde ham `.xlsx`, `bodyLimit` 2 MB (413), ≤ 500 satır. Öğrenci `ogrenci_id`, yoksa `ogrenci_no` ile eşleşir. Formül hücresi ve tam sayı olmayan puan satır hatasıdır; puansız satır atlanır; atomik. |
+| `GET /denemeler?onay=&ogrenci_id=&kural=` | `deneme.oku` grup kapsamı | `onay=bekliyor` onay kuyruğu. İmleçli sayfalama. |
+| `POST /denemeler/:id/onay`, `/red` | `deneme.yaz` grup kapsamı | Onay olayı üretir; ikinci onay etkisiz; red `red_nedeni` ister, olay üretmez. |
+| `GET /denemelerim` | öğrenci | Kendi sonuçları, tüm onay durumları. |
+| `GET /ogrenciler/:id/deneme-gelisim?kural=&limit=` | `deneme.oku` | Yalnız onaylı. `noktalar` (eskiden yeniye, son `limit`), `son5_ortalama`, `onceki5_ortalama` (6-10. son deneme), `degisim`, `bolum_gelisimi`. Sayılar `limit`ten bağımsızdır. `kural` = kural kodu. |
+| `GET /gruplar/:id/deneme-ozet?kural=` | `deneme.oku` grup kapsamı (öğrenciye kapalı) | `sinif_ortalamasi` = öğrencilerin son 5 ortalamalarının ortalaması; bölüm ortalamaları; öğrenci başına son net. |
+
+Yetki: öğretmen yalnız atandığı grubun öğrencisine, öğrenci yalnız kendine; kapsam dışı 404. `deneme` modülü öğrencinin kademesinde ya da tüm gruplarında kapalıysa yazma 403 `modul_kapali`. Her yazma `hesap.denetim_kayitlari`na yazılır (`deneme.olustur/guncelle/sil/onayla/reddet/toplu_olustur/excel_yukle`, `deneme_kurali.*`, `deneme.ayar_guncelle`).
+
+**Olay kararı:** `ogrenme.deneme.girildi.v1` yalnız onaylanmış sonuçta (öğretmen girişinde kayıt anı, öğrenci girişinde onay anı), aynı işlemde outbox. Düzeltme olayı tekrarlamaz (aynı sonuç için XP ikinci kez verilmesin); silinen sonuç için geri alma olayı Faz 1 dışıdır.
+
 ### Soru sor
 
 Öğrenci fotoğraflı soru gönderir. Yönlendirme: öğrencinin ilgili branştaki **atanmış öğretmeni** (`atamalar`, `ana_ogretmen` öncelikli), yoksa o branşın **soru masası**, o da yoksa `yonetici` kuyruğu (`masa_id NULL`, `atanan_ogretmen_id NULL`).
