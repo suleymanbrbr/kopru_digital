@@ -36,6 +36,7 @@ export {
   type KimlikSecenekleri,
   type YetkiBaglami,
 } from './kimlik.js';
+export { servisBelirteciUret, type ServisBelirteciIstegi } from './servis-belirteci.js';
 export { modulAcikMi, type ModulBaglami } from './modul-ayarlari.js';
 export {
   LogSmsGonderici,

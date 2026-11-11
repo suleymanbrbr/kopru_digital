@@ -39,6 +39,25 @@ export const tenantContextSchema = z.object({
 export type TenantContext = z.input<typeof tenantContextSchema>;
 
 /**
+ * Acik bir islemde RLS oturum degiskenlerini (`app.kurum_id`, `app.kullanici_id`, `app.roller`)
+ * `is_local => true` ile ayarlar. `withTenant` ve olay tuketicileri (`startConsumer`) kullanir.
+ */
+export async function kiraciBaglaminiAyarla(
+  tx: Pick<Tx, 'execute'>,
+  context: { kurumId: string; kullaniciId?: string | undefined; roller?: readonly string[] },
+): Promise<void> {
+  const { kurumId, kullaniciId, roller } = tenantContextSchema.parse({
+    ...context,
+    roller: [...(context.roller ?? [])],
+  });
+  await tx.execute(
+    sql`select set_config('app.kurum_id', ${kurumId}, true),
+               set_config('app.kullanici_id', ${kullaniciId ?? ''}, true),
+               set_config('app.roller', ${roller.join(',')}, true)`,
+  );
+}
+
+/**
  * Bir islem (transaction) acar ve RLS politikalarinin okuyacagi oturum degiskenlerini
  * `set_config(..., is_local => true)` ile ayarlar; degiskenler islem bitince kaybolur,
  * boylece havuzdaki baglantilar arasinda tenant sizintisi olmaz.
@@ -52,11 +71,7 @@ export async function withTenant<T>(
 ): Promise<T> {
   const { kurumId, kullaniciId, roller } = tenantContextSchema.parse(context);
   return db.orm.transaction(async (tx) => {
-    await tx.execute(
-      sql`select set_config('app.kurum_id', ${kurumId}, true),
-                 set_config('app.kullanici_id', ${kullaniciId ?? ''}, true),
-                 set_config('app.roller', ${roller.join(',')}, true)`,
-    );
+    await kiraciBaglaminiAyarla(tx, { kurumId, kullaniciId, roller });
     return fn(tx);
   });
 }

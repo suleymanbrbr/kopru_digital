@@ -3,13 +3,15 @@ import {
   AppError,
   createDb,
   createJwtVerifier,
+  createServisJwtVerifier,
   type Database,
   type ServicePlugin,
   type VerifyJwt,
+  type VerifyServisJwt,
 } from '@kopru/service-kit';
 import fp from 'fastify-plugin';
 
-import type { Env } from '../../config.js';
+import { serviceName, type Env } from '../../config.js';
 import { AnahtarDeposu } from './anahtarlar.js';
 import { createBetterAuth, type KimlikDogrulama } from './better-auth.js';
 import { epostaGondericiOlustur, type EpostaGonderici } from './eposta.js';
@@ -82,6 +84,13 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
     allowNoKurum: true,
   });
 
+  /** `/ic/*` (servis JWT'si) icin yerinde dogrulama: `aud` = api, ayni anahtarlar (ADR 0004). */
+  const verifyServisJwt: VerifyServisJwt = createServisJwtVerifier({
+    keySet: anahtarlar.keySet,
+    issuer,
+    audience: serviceName,
+  });
+
   const plugin: ServicePlugin = fp(
     (app) => {
       const { db } = app;
@@ -131,5 +140,5 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
     { name: 'kopru-kimlik' },
   );
 
-  return { verifyJwt, plugin };
+  return { verifyJwt, verifyServisJwt, plugin };
 }

@@ -93,7 +93,9 @@ export function installAuth(
   if (!verify) throw new Error('AUTH_ENABLED iken verifyJwt sağlanmalı');
 
   app.addHook('onRequest', async (request) => {
-    if (request.routeOptions.config.public === true) return;
+    const config = request.routeOptions.config;
+    // `/ic/*` (servisScope) rotalari kullanici JWT'si degil servis JWT'si ister (`installServisAuth`).
+    if (config.public === true || config.servisScope !== undefined) return;
     const header = request.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : undefined;
     if (!token) throw unauthorized();
