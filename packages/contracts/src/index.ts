@@ -11,3 +11,5 @@ export * from './ogrenme/deneme.js';
 export * from './ogrenme/mufredat.js';
 export * from './ogrenme/odev.js';
 export * from './ogrenme/plan.js';
+export * from './ortak/dosya.js';
+export * from './medya/olaylar.js';

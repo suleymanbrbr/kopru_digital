@@ -96,6 +96,8 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | `ortak.dosya.baglandi.v1` | K | `api` bir medya dosyasını iş kaydına bağlayınca (ödev eki/teslimi, soru, soru mesajı eki, kurum logosu, avatar, fatura pdf). | `dosya_id`, `bagli_tur` (`odev_eki`,`odev_teslimi`,`soru`,`soru_mesaji`,`kurum`,`kullanici`,`fatura`), `bagli_id` | `medya` |
 | `ortak.dosya.birakildi.v1` | K | Bağlı dosya kayıttan ayrılınca (teslimden dosya çıkarma, avatar değişimi). | `dosya_id`, `bagli_tur`, `bagli_id`, `hemen_sil` (bool) | `medya` |
 
+> **Uygulama notu (dosya olayları).** Beş dosya olayının Zod tanımları `packages/contracts/src/ortak/dosya.ts` (`ortak.dosya.*`) ve `packages/contracts/src/medya/olaylar.ts` (`medya.dosya.*`) içindedir. Dosya `tur` ve `bagli_tur` listeleri tek kaynaktır (`MEDYA_DOSYA_TURLERI`, `MEDYA_BAGLI_TURLERI`; [medya.md](medya.md) ile aynı); `medya.dosya.hazir` yükü `ortak.medya_dosya_kopyalari` sütunlarını besler (`sahip_uyelik_id` dahil). `medya.dosya.islenemedi.hata_kodu` ve `medya.dosya.silindi.silme_nedeni` medya.md'deki listelerle sınırlı bir enum'dur. Yüklerde depolama anahtarı, dosya adı, özet (`sha256`) ve kişisel veri yoktur; `packages/contracts/src/ortak/dosya.test.ts` yasak alanları denetler.
+
 ## `motivasyon`
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
