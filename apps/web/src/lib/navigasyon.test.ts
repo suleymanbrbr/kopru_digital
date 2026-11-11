@@ -55,6 +55,23 @@ describe('navigasyon yapilandirmasi', () => {
     expect(yollar('ogretmen')).not.toContain('kurum');
   });
 
+  it('geri bildirim ozeti yalniz yonetici ve sahipte; kayit menuleri modul kapaliyken gizlenir', () => {
+    expect(yollar('yonetici')).toContain('geri-bildirim');
+    expect(yollar('sahip')).toContain('geri-bildirim');
+    expect(yollar('ogretmen')).not.toContain('geri-bildirim');
+    expect(yollar('ogrenci')).not.toContain('geri-bildirim');
+    const kapali = tumModuller.filter((m) => m !== 'kayitlar' && m !== 'geri_bildirim');
+    expect(yollar('sahip', kapali)).not.toContain('geri-bildirim');
+    expect(yollar('sahip', kapali)).not.toContain('kayitlar');
+    expect(yollar('ogrenci', kapali)).not.toContain('kayitlarim');
+    expect(bolumDurumu('kayitlarim', { rol: 'ogrenci', acikModuller: kapali }).durum).toBe(
+      'modul-kapali',
+    );
+    expect(bolumDurumu('geri-bildirim', { rol: 'ogretmen', acikModuller: tumModuller }).durum).toBe(
+      'yetkisiz',
+    );
+  });
+
   it('bireysel kurumda (solo hoca) kurum yapisi menuleri gizlenir', () => {
     const solo = gorunurOgeler({
       rol: 'sahip',

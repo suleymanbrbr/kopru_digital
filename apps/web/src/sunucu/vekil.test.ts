@@ -19,6 +19,41 @@ describe('izinli yollar', () => {
     expect(dersYoluIzinliMi([])).toBe(false);
   });
 
+  it('ders: kayit, materyal ve geri bildirim uclari tam eslesir, genisletilemez', () => {
+    for (const son of [
+      ['gruplar', 'g', 'materyaller'],
+      ['kaynaklar'],
+      ['kaynaklar', 'k'],
+      ['kaynaklar', 'k', 'izlemeler'],
+      ['kaynaklar', 'k', 'sorunlar'],
+      ['kaynaklar', 'k', 'sorunlar', 'coz'],
+      ['kayitlarim'],
+      ['kayitlarim', 'k'],
+      ['kayitlarim', 'k', 'izledim'],
+      ['kayitlarim', 'k', 'sorunlar'],
+      ['geri-bildirim', 'bekleyen'],
+      ['geri-bildirim', 'ozet'],
+      ['ogrenciler', 'o', 'geri-bildirimler'],
+      ['dersler', 'd', 'kaynaklar'],
+      ['dersler', 'd', 'geri-bildirim'],
+      ['dersler', 'd', 'geri-bildirimler'],
+    ]) {
+      expect(dersYoluIzinliMi(['kurumlar', K, ...son])).toBe(true);
+    }
+    for (const son of [
+      ['gruplar', 'g'],
+      ['gruplar', 'g', 'materyaller', 'x'],
+      ['kaynaklar', 'k', 'gizli'],
+      ['kaynaklar', 'k', 'sorunlar', 'coz', 'x'],
+      ['kayitlarim', 'k', 'izledim', 'x'],
+      ['geri-bildirim'],
+      ['geri-bildirim', 'bekleyen', 'x'],
+      ['ogrenciler', 'o'],
+    ]) {
+      expect(dersYoluIzinliMi(['kurumlar', K, ...son])).toBe(false);
+    }
+  });
+
   it('finans: kullanima acik uclar', () => {
     for (const son of [
       ['paketler'],

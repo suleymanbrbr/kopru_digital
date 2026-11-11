@@ -1,13 +1,12 @@
 'use client';
 
 import {
-  type GeriBildirimBekleyenYanitSema,
   GeriBildirimKaydetYanitSema,
   type GeriBildirimBekleyenDersSema,
   type GeriBildirimDeger,
 } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { CircleCheck } from 'lucide-react';
 import { useMemo, useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
@@ -26,7 +25,7 @@ import { bransAdi } from '@/lib/bransler';
 import { cn } from '@/lib/cn';
 import { dersIstek } from '@/lib/hesap-istek';
 import { GERI_BILDIRIM_DEGERLERI, degistirilebilirMi } from '@/lib/kayit/geri-bildirim';
-import { geriBildirimAnahtari, useGeriBildirimBekleyen } from '@/lib/kayit/veri';
+import { useGeriBildirimBekleyen } from '@/lib/kayit/veri';
 import { useSaatDilimi } from '@/lib/operasyon-verisi';
 import { gunEtiketi, saatAraligi, yerelTarih, yerelSaat } from '@/lib/saat';
 
@@ -41,26 +40,22 @@ export function BugunGeriBildirimKarti() {
   const kurumId = uyelik.kurumId;
   const etkin = rol === 'ogrenci' && acikModuller.includes('geri_bildirim');
   const q = useGeriBildirimBekleyen(kurumId, etkin);
-  const qc = useQueryClient();
-  /** Cevaplanmis dersler sunucu listesinden dusse de kartta kalir (degistirmek icin). */
-  const [cevaplananlar, setCevaplananlar] = useState<BekleyenDers[]>([]);
+  /**
+   * Ilk cevaptan sonra liste sabitlenir: cevaplanan ders sunucunun bekleyen listesinden dusse de kartta
+   * ayni sirada kalir (degistirmek icin); sira atlamaz.
+   */
+  const [sabit, setSabit] = useState<BekleyenDers[] | null>(null);
   const dersler = useMemo(() => {
     const liste = q.data?.dersler ?? [];
-    const kimlikler = new Set(liste.map((d) => d.ders_id));
-    return [...liste, ...cevaplananlar.filter((d) => !kimlikler.has(d.ders_id))];
-  }, [q.data, cevaplananlar]);
+    if (sabit === null) return liste;
+    const kimlikler = new Set(sabit.map((d) => d.ders_id));
+    return [...sabit, ...liste.filter((d) => !kimlikler.has(d.ders_id))];
+  }, [q.data, sabit]);
 
   if (!etkin || q.isPending || q.isError || dersler.length === 0) return null;
 
-  const cevaplandi = (d: BekleyenDers) => {
-    setCevaplananlar((onceki) =>
-      onceki.some((x) => x.ders_id === d.ders_id) ? onceki : [...onceki, d],
-    );
-    qc.setQueryData<z.infer<typeof GeriBildirimBekleyenYanitSema>>(
-      [...geriBildirimAnahtari(kurumId), 'bekleyen'],
-      (onceki) =>
-        onceki ? { dersler: onceki.dersler.filter((x) => x.ders_id !== d.ders_id) } : onceki,
-    );
+  const cevaplandi = () => {
+    setSabit((onceki) => onceki ?? dersler);
   };
 
   return (
@@ -87,7 +82,7 @@ function GeriBildirimOgesi({
 }: {
   kurumId: string;
   ders: BekleyenDers;
-  cevaplandi: (d: BekleyenDers) => void;
+  cevaplandi: () => void;
 }) {
   const { saatDilimi } = useSaatDilimi(kurumId);
   const [deger, setDeger] = useState<GeriBildirimDeger | null>(null);
@@ -111,7 +106,7 @@ function GeriBildirimOgesi({
     onSuccess: (_, g) => {
       setDeger(g.deger);
       setAyrintiKaydedildi(g.ayrinti);
-      cevaplandi(d);
+      cevaplandi();
     },
   });
 

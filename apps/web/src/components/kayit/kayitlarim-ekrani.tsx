@@ -193,12 +193,12 @@ function KayitSatiri({
         onClick={() => {
           setAcik((a) => !a);
         }}
-        className="flex min-h-14 w-full items-start gap-3 px-4 py-3 text-left hover:bg-yuzey-ikincil/60"
+        className="flex min-h-14 w-full flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3 text-left hover:bg-yuzey-ikincil/60"
       >
         <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-orta bg-yuzey-ikincil">
           <SaglayiciIkonu saglayici={k.saglayici} />
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="min-w-[11rem] flex-1">
           <span className={cn('block break-words', k.izlendi ? 'font-medium' : 'font-semibold')}>
             {k.baslik}
           </span>
@@ -213,7 +213,7 @@ function KayitSatiri({
             {k.tur === 'materyal' ? <span>{t('kayitGeriBildirim.tur.materyal')}</span> : null}
           </span>
         </span>
-        <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+        <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 max-sm:pl-12">
           {k.bozuk ? (
             <Rozet ton="uyari">
               <TriangleAlert className="mr-1 size-3" aria-hidden />
