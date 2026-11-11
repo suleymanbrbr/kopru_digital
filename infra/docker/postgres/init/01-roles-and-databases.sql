@@ -28,3 +28,10 @@ create role api_owner nologin;
 create role api_app login nosuperuser nobypassrls password 'api_app';
 create role api_sistem login nosuperuser bypassrls password 'api_sistem';
 grant api_owner to api;
+
+-- medya servisi (ADR 0003 deseni): migration kullanicisi `medya` (db sahibi) medya_owner rolune gecerek tablolari
+-- olusturur. Uygulama `medya_app` (NOBYPASSRLS), sistem isleri (isleme, silme, outbox relay) `medya_sistem` (BYPASSRLS).
+create role medya_owner nologin;
+create role medya_app login nosuperuser nobypassrls password 'medya_app';
+create role medya_sistem login nosuperuser bypassrls password 'medya_sistem';
+grant medya_owner to medya;
