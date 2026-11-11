@@ -14,3 +14,4 @@ export * from './ogrenme/plan.js';
 export * from './ortak/dosya.js';
 export * from './medya/olaylar.js';
 export * from './medya/ic-api.js';
+export * from './medya/api.js';
