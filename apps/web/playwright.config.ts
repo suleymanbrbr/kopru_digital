@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const port = 3000;
+/** `E2E_MOCK_PORT` ile degistirilebilir (baska bir surecle cakismamak icin). */
+const port = Number(process.env.E2E_MOCK_PORT ?? 3000);
 /** Konteynerde Playwright tarayicisi indirilemiyorsa yerel Chrome: PLAYWRIGHT_CHROME_PATH=/usr/bin/google-chrome */
 const chromeYolu = process.env.PLAYWRIGHT_CHROME_PATH;
 const kullan = chromeYolu ? { launchOptions: { executablePath: chromeYolu } } : {};
@@ -28,7 +29,9 @@ export default defineConfig({
   ],
   webServer: {
     // E2E_HAZIR=1: build zaten yapildi (CI). Aksi halde mock modunda build edilip baslatilir.
-    command: process.env.E2E_HAZIR ? 'pnpm start' : 'pnpm build && pnpm start',
+    command: process.env.E2E_HAZIR
+      ? `pnpm exec next start --port ${String(port)}`
+      : `pnpm build && pnpm exec next start --port ${String(port)}`,
     url: `http://localhost:${String(port)}/giris`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,

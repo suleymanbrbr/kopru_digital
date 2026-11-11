@@ -77,11 +77,48 @@ const operasyonKodlari = new Set([
   'ogrenci_modeli_paket_degil',
 ]);
 
+const ogrenmeKodlari = new Set([
+  'global_konu_yazilamaz',
+  'konu_ust_gecersiz',
+  'brans_gecersiz',
+  'surum_bulunamadi',
+  'surum_yayinlanmamis',
+  'kapsam_gecersiz',
+  'odev_taslak_degil',
+  'odev_yayinda_degil',
+  'odev_kapali',
+  'teslim_durumu_gecersiz',
+  'inceleme_durumu_gecersiz',
+  'hedef_gecersiz',
+  'plan_kilitli',
+  'plan_zaten_var',
+  'plan_dolu',
+  'hafta_pazartesi_degil',
+  'gun_hafta_disinda',
+  'gorev_silinemez',
+  'gorev_zaten_devredildi',
+  'devretme_durumu_gecersiz',
+  'hedef_gun_gecersiz',
+  'global_kural_yazilamaz',
+  'kural_kullanimda',
+  'kural_kodu_var',
+  'deneme_bolum_gecersiz',
+  'ogrenci_deneme_girisi_kapali',
+  'deneme_onay_durumu_gecersiz',
+  'deneme_zaten_var',
+  'toplu_giris_hatali',
+  'excel_gecersiz',
+  'deneme_kurali_gerekli',
+]);
+
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
   if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
   if (hata instanceof UygulamaHatasi && operasyonKodlari.has(hata.kod)) {
     return t(`operasyon.hata.${hata.kod}` as MessageKey);
+  }
+  if (hata instanceof UygulamaHatasi && ogrenmeKodlari.has(hata.kod)) {
+    return t(`ogrenme.hata.${hata.kod}` as MessageKey);
   }
   if (hata instanceof UygulamaHatasi && bilinenKodlar.has(hata.kod)) {
     return t(`hata.${hata.kod}` as MessageKey);

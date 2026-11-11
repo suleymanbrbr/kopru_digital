@@ -127,8 +127,8 @@ test.describe('rol ve modul duyarli navigasyon', () => {
 
   test('hazirlanmakta olan bolum yer tutucu gosterir', async ({ page }) => {
     await girisYap(page, 'Ege Işık Dershanesi');
-    await page.goto('/kurum-ege/odevler');
-    await expect(page.getByRole('heading', { name: 'Ödevler', level: 1 })).toBeVisible();
+    await page.goto('/kurum-ege/sorular');
+    await expect(page.getByRole('heading', { name: 'Sorular', level: 1 })).toBeVisible();
     await expect(page.getByText('Bu bölüm hazırlanıyor')).toBeVisible();
   });
 });

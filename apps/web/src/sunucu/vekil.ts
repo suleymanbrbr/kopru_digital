@@ -19,6 +19,8 @@ export interface MockIstek {
   govde: unknown;
   /** Kucuk harfli istek basliklari (mock `Idempotency-Key` gibi basliklari okur). */
   basliklar: Readonly<Record<string, string>>;
+  /** JSON olmayan (ornegin `.xlsx` yukleme) govde: ham baytlar; bu durumda `govde` tanimsizdir. */
+  ikili?: Uint8Array;
 }
 
 export interface MockYanit {
@@ -29,7 +31,7 @@ export interface MockYanit {
 }
 
 export interface VekilTanimi {
-  servis: 'hesap' | 'ders' | 'finans';
+  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme';
   /** Yol parcalarinin (birlestirilmis) eslesmesi gereken desenler. */
   izinli: readonly RegExp[];
   /** Yalniz GET'e acik ek desenler (ornegin kurum bilgisini okuma). */
@@ -38,7 +40,8 @@ export interface VekilTanimi {
 }
 
 const YONTEMLER = new Set(['GET', 'POST', 'PATCH', 'PUT', 'DELETE']);
-const PARCA = /^[A-Za-z0-9_-]+$/;
+/** Parca guvenli karakterlerden olusur; tek bir uzanti (`sablon.xlsx`) serbest, `..` degil. */
+const PARCA = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9]+)?$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Parcalar guvenli karakterlerden olusuyor ve yol izinli desenlerden birine uyuyor mu? */
@@ -123,7 +126,11 @@ export async function servisVekili(
   const yol = parcalar.join('/');
   const arama = request.nextUrl.search;
   const govdesiz = request.method === 'GET' || request.method === 'DELETE';
-  const govde = govdesiz ? '' : await request.text();
+  const icerikTuru = request.headers.get('content-type') ?? '';
+  // JSON disi govde (ornegin `.xlsx` yukleme) bozulmadan, ilk `content-type` ile iletilir.
+  const ikili = !govdesiz && icerikTuru.length > 0 && !icerikTuru.includes('json');
+  const ikiliBayt = ikili ? new Uint8Array(await request.arrayBuffer()) : undefined;
+  const govde = govdesiz || ikili ? '' : await request.text();
   const anahtar = request.headers.get('idempotency-key');
   const idempotency = anahtar && UUID.test(anahtar) ? anahtar : undefined;
 
@@ -135,6 +142,7 @@ export async function servisVekili(
         sorgu: request.nextUrl.searchParams,
         govde: govde.length > 0 ? guvenliJson(govde) : undefined,
         basliklar: idempotency ? { 'idempotency-key': idempotency } : {},
+        ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
       }),
     );
   }
@@ -146,10 +154,12 @@ export async function servisVekili(
         authorization: `Bearer ${erisim}`,
         ...istemciIpBasliklari(request.headers),
         ...(idempotency ? { 'idempotency-key': idempotency } : {}),
-        ...(govdesiz ? {} : { 'content-type': 'application/json' }),
+        ...(govdesiz ? {} : { 'content-type': ikili ? icerikTuru : 'application/json' }),
       },
       // Bos govdeli JSON istegi `api`da 400 verir; bos govde yerine `{}` gonderilir.
-      ...(govdesiz ? {} : { body: govde.length > 0 ? govde : '{}' }),
+      ...(govdesiz
+        ? {}
+        : { body: ikiliBayt ? (ikiliBayt as BodyInit) : govde.length > 0 ? govde : '{}' }),
       cache: 'no-store',
     });
     return await yanitiIlet(yanit);

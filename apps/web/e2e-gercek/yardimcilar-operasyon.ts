@@ -1,7 +1,7 @@
 import { API_URL, sonOtpKodu } from './yardimcilar';
 
 /** Gercek api'ye dogrudan (tarayicisiz) istek; senaryonun on kosullarini hizli kurmak icin. */
-async function api<T>(
+export async function api<T>(
   yol: string,
   {
     yontem = 'POST',
@@ -27,7 +27,7 @@ interface Uyelik {
   rol: string;
 }
 
-async function belirtecAl(oturum: string, kurumId?: string): Promise<string> {
+export async function belirtecAl(oturum: string, kurumId?: string): Promise<string> {
   const { access_token: erisim } = await api<{ access_token: string }>('/auth/token', {
     belirtec: oturum,
     govde: kurumId ? { kurum_id: kurumId } : {},
@@ -36,7 +36,7 @@ async function belirtecAl(oturum: string, kurumId?: string): Promise<string> {
 }
 
 /** Bekleyen KVKK metinlerini kabul eder (yeni kullanici kiraci uclarini ancak bundan sonra kullanir). */
-async function rizaKabul(erisim: string): Promise<void> {
+export async function rizaKabul(erisim: string): Promise<void> {
   const { metinler } = await api<{ metinler: { id: string; kabul_edildi: boolean }[] }>(
     '/v1/hesap/rizalar/guncel',
     { yontem: 'GET', belirtec: erisim },
