@@ -7278,6 +7278,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/cevapladigim-sorular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cevapladigim sorularin arsivi (bir cevap mesaji yazdigim sorular), en yeni hareket once; brans/ogrenci suzgeci ve Turkce harf duyarsiz arama. */
+        get: {
+            parameters: {
+                query?: {
+                    brans_kodu?: string;
+                    imlec?: string;
+                    limit?: number;
+                    ogrenci_id?: string;
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sonraki_imlec: string | null;
+                            sorular: {
+                                /** Format: uuid */
+                                atanan_ogretmen_id: string | null;
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                cozuldu_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_cevap_at: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                masa_id: string | null;
+                                mesaj_sayisi: number;
+                                metin_onizleme: string | null;
+                                ogrenci_adi: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                son_hareket_at: string;
+                                /** Format: uuid */
+                                ustlenen_id: string | null;
+                                /** @enum {string} */
+                                yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/deneme-ayarlari": {
         parameters: {
             query?: never;
@@ -8376,6 +8453,130 @@ export interface paths {
                                 yayinevi: string | null;
                             }[];
                             sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gelen-sorular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cevap bekleyen sorular (varsayilan `acik` + `takip_bekliyor`): kendisine atananlar, uyesi oldugu masalardakiler (masada baskasi ustlendiyse hayir); sahip/yonetici icin yonetici kuyrugu da. En eski once; brans ve ogrenci suzgeci; imleçli. */
+        get: {
+            parameters: {
+                query?: {
+                    brans_kodu?: string;
+                    /** @description Verilmezse cevap bekleyenler (`acik` ve `takip_bekliyor`). */
+                    durum?: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                    imlec?: string;
+                    limit?: number;
+                    ogrenci_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sonraki_imlec: string | null;
+                            sorular: {
+                                /** Format: uuid */
+                                atanan_ogretmen_id: string | null;
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                cozuldu_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_cevap_at: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                masa_id: string | null;
+                                mesaj_sayisi: number;
+                                metin_onizleme: string | null;
+                                ogrenci_adi: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                son_hareket_at: string;
+                                /** Format: uuid */
+                                ustlenen_id: string | null;
+                                /** @enum {string} */
+                                yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/gelen-sorular/sayi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cevap bekleyen soru sayisi (toplam ve brans kirilimi) ve en eski bekleyenin zamani. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bekleyen: number;
+                            branslar: {
+                                bekleyen: number;
+                                brans_kodu: string;
+                            }[];
+                            /** Format: date-time */
+                            en_eski_at: string | null;
                         };
                     };
                 };
@@ -11856,6 +12057,1799 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-ayarlari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum soru ayarlari (kayit yoksa varsayilanlar: gunde 3 soru, aylik sinirsiz, 3 takip, ses 180 sn, fotograf 30 gun). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `null`: sınırsız (varsayılan). Abonelik plan üst sınırıyla `LEAST` alınır (henüz yok). */
+                            aylik_soru_limiti: number | null;
+                            foto_saklama_gun: number;
+                            /** @description `null`: sınırsız. Varsayılan 3. */
+                            gunluk_soru_limiti: number | null;
+                            ses_azami_sn: number;
+                            soru_basina_takip_limiti: number;
+                            surum: number | null;
+                            /** @description `true`: kurum henüz ayar kaydetmedi, varsayılanlar geçerli. */
+                            varsayilan: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        /** Kurum soru ayarlarini guncelle (gonderilen alanlar degisir; limit `null` = sinirsiz). Plan ust siniri abonelik blogu gelince `LEAST` ile uygulanir. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aylik_soru_limiti?: number | null;
+                        foto_saklama_gun?: number;
+                        gunluk_soru_limiti?: number | null;
+                        ses_azami_sn?: number;
+                        soru_basina_takip_limiti?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `null`: sınırsız (varsayılan). Abonelik plan üst sınırıyla `LEAST` alınır (henüz yok). */
+                            aylik_soru_limiti: number | null;
+                            foto_saklama_gun: number;
+                            /** @description `null`: sınırsız. Varsayılan 3. */
+                            gunluk_soru_limiti: number | null;
+                            ses_azami_sn: number;
+                            soru_basina_takip_limiti: number;
+                            surum: number | null;
+                            /** @description `true`: kurum henüz ayar kaydetmedi, varsayılanlar geçerli. */
+                            varsayilan: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-bildirimleri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Uygunsuz icerik bildirimleri (varsayilan acik olanlar), en yeni once, imleçli. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "acik" | "kapandi";
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bildirimler: {
+                                aciklama: string | null;
+                                bildiren_adi: string | null;
+                                /** Format: uuid */
+                                bildiren_id: string;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "kapandi";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                kapandi_at: string | null;
+                                kapatma_notu: string | null;
+                                /** Format: uuid */
+                                mesaj_id: string | null;
+                                /** @enum {string} */
+                                neden: "uygunsuz" | "kisisel_bilgi" | "diger";
+                                /** Format: uuid */
+                                soru_id: string;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-bildirimleri/{id}/kapat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bildirimi kapat (not isteğe bagli). Zaten kapaliysa etkisiz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        not?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            bildiren_adi: string | null;
+                            /** Format: uuid */
+                            bildiren_id: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "kapandi";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            kapandi_at: string | null;
+                            kapatma_notu: string | null;
+                            /** Format: uuid */
+                            mesaj_id: string | null;
+                            /** @enum {string} */
+                            neden: "uygunsuz" | "kisisel_bilgi" | "diger";
+                            /** Format: uuid */
+                            soru_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-kotam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kalan soru hakki (gunluk/aylik) ve sifirlanma zamanlari. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aylik_kalan: number | null;
+                            aylik_kullanilan: number;
+                            aylik_limit: number | null;
+                            /** Format: date-time */
+                            aylik_sifirlanma_at: string;
+                            /** @description `null`: sınırsız. */
+                            gunluk_kalan: number | null;
+                            gunluk_kullanilan: number;
+                            gunluk_limit: number | null;
+                            /**
+                             * Format: date-time
+                             * @description Kurumun yerel gününün bitişi (UTC).
+                             */
+                            gunluk_sifirlanma_at: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-masalari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Soru masalari ve uyeleri (arsivlenmemis). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            masalar: {
+                                ad: string;
+                                aktif: boolean;
+                                /** Format: date-time */
+                                arsivlendi_at: string | null;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                id: string;
+                                surum: number;
+                                uyeler: {
+                                    gorunen_ad: string | null;
+                                    /** Format: uuid */
+                                    ogretmen_id: string;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Soru masasi olustur (brans basina tek arsivlenmemis masa; varsa 409 `masa_var`). Uyeler etkin personel olmali. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        /** @default true */
+                        aktif?: boolean;
+                        brans_kodu: string;
+                        ogretmen_idleri?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            id: string;
+                            surum: number;
+                            uyeler: {
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-masalari/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Masayi arsivle (acik sorular masayla kalir; yeni soru artik bu masaya yonlenmez). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Masa adi/aktiflik guncelle (`surum` zorunlu; eskiyse 409 `surum_cakismasi`). */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad?: string;
+                        aktif?: boolean;
+                        surum: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            id: string;
+                            surum: number;
+                            uyeler: {
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-masalari/{id}/uyeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Masaya ogretmen ekle (zaten uyeyse etkisiz). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        ogretmen_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            aktif: boolean;
+                            /** Format: date-time */
+                            arsivlendi_at: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            id: string;
+                            surum: number;
+                            uyeler: {
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-masalari/{id}/uyeler/{ogretmen_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Masadan ogretmen cikar. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                    ogretmen_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-musaitligim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogretmenin "musait / bugun cevap veremiyorum" durumu (kurum yerel gunu icin gecerli). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            musait: boolean;
+                            /** @description Kurum yerel günü (YYYY-AA-GG); o gün geçince kendiliğinden geçersiz. */
+                            musait_degil_tarihi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** `musait: false`: bugun (kurum yerel gunu) cevap veremiyorum; ogrencinin tahmini cevap yanitinda `hedef_musait: false` gorunur. Gun gecince kendiliginden gecersiz olur. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        musait: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            musait: boolean;
+                            /** @description Kurum yerel günü (YYYY-AA-GG); o gün geçince kendiliğinden geçersiz. */
+                            musait_degil_tarihi: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/soru-olcum": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Olcum ozeti (kurum yerel gunu, tarih araligi; varsayilan son 30 gun): soru sayisi, cevaplanan, ortalama ilk cevap suresi, "anladim" orani (anladim / cevaplanan); ogretmen (ilk cevaplayan) ve brans kirilimi. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Varsayılan: 30 gün önce (kurum yerel günü). */
+                    baslangic?: string;
+                    /** @description Dahil. Varsayılan: bugün. */
+                    bitis?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Öğrencinin "anladım" dediği. */
+                            anladim: number;
+                            /** @description anladım / cevaplanan; cevaplanan 0 ise `null`. */
+                            anladim_orani: number | null;
+                            baslangic: string;
+                            bitis: string;
+                            branslar: {
+                                /** @description Öğrencinin "anladım" dediği. */
+                                anladim: number;
+                                /** @description anladım / cevaplanan; cevaplanan 0 ise `null`. */
+                                anladim_orani: number | null;
+                                brans_kodu: string;
+                                cevaplanan: number;
+                                ortalama_ilk_cevap_sn: number | null;
+                                soru_sayisi: number;
+                            }[];
+                            cevaplanan: number;
+                            ogretmenler: {
+                                /** @description Öğrencinin "anladım" dediği. */
+                                anladim: number;
+                                /** @description anladım / cevaplanan; cevaplanan 0 ise `null`. */
+                                anladim_orani: number | null;
+                                cevaplanan: number;
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                ortalama_ilk_cevap_sn: number | null;
+                                soru_sayisi: number;
+                            }[];
+                            ortalama_ilk_cevap_sn: number | null;
+                            soru_sayisi: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Soru sor (yalniz ogrenci). Once medya servisine yukleyin; dosyalar `hazir` olunca cagirin (kopya yoksa/hazir degilse 409 `dosya_hazir_degil`, istemci yeniden dener). Brans/konu dogrulanir, yonlendirme (atanan ogretmen > masa > yonetici) ve gunluk/aylik kota (429 `kota_asildi`) ayni islemde. `istek_id` ayni ise onceki sonuc doner (200, `tekrar: true`, kota harcanmaz). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik?: string;
+                        brans_kodu: string;
+                        /** @description Medya dosya kimlikleri (`soru_fotografi`, hazır). */
+                        fotograflar: string[];
+                        isaretler?: {
+                            cizim_verisi?: {
+                                [key: string]: unknown;
+                            } | unknown[];
+                            /**
+                             * Format: uuid
+                             * @description `fotograflar` içindeki fotoğraflardan biri.
+                             */
+                            kaynak_dosya_id: string;
+                            /**
+                             * Format: uuid
+                             * @description Düzleştirilmiş görsel (`soru_cizim`).
+                             */
+                            medya_dosya_id: string;
+                        }[];
+                        /**
+                         * Format: uuid
+                         * @description İstemci yeniden denemesine karşı tekil anahtar (UUID). Aynı kurumda aynı `istek_id` ikinci kez gelirse yeni kayıt açılmaz, önceki sonuç döner.
+                         */
+                        istek_id?: string;
+                        /** Format: uuid */
+                        konu_id?: string;
+                        /** @description "Burada takıldım" notu. */
+                        metin?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: medya servisinden adres alınamadı; ek `adres` alanları `null`, soru yine döner. */
+                            adres_alinamadi: boolean;
+                            /** Format: uuid */
+                            atanan_ogretmen_id: string | null;
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            cozuldu_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                            /** Format: date-time */
+                            foto_silinme_at: string | null;
+                            fotograflar: {
+                                adres: {
+                                    asil_url: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_cevap_at: string | null;
+                            kalan_takip_hakki: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            kota: {
+                                aylik_kalan: number | null;
+                                aylik_kullanilan: number;
+                                aylik_limit: number | null;
+                                /** Format: date-time */
+                                aylik_sifirlanma_at: string;
+                                /** @description `null`: sınırsız. */
+                                gunluk_kalan: number | null;
+                                gunluk_kullanilan: number;
+                                gunluk_limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Kurumun yerel gününün bitişi (UTC).
+                                 */
+                                gunluk_sifirlanma_at: string;
+                            };
+                            /** Format: uuid */
+                            masa_id: string | null;
+                            mesaj_sayisi: number;
+                            mesajlar: {
+                                /** Format: date-time */
+                                created_at: string;
+                                derste_konusalim: boolean;
+                                ekler: {
+                                    /** @description Okuma adresi (10 dk geçerli). Medya yanıt vermediyse ya da dosya yoksa `null`. */
+                                    adres: {
+                                        asil_url: string;
+                                        /** Format: date-time */
+                                        gecerlilik_bitis_at: string;
+                                        genislik: number | null;
+                                        kucuk_url: string | null;
+                                        mime_tipi: string;
+                                        orta_url: string | null;
+                                        sure_sn: number | null;
+                                        yukseklik: number | null;
+                                    } | null;
+                                    cizim_verisi: ({
+                                        [key: string]: unknown;
+                                    } | unknown[]) | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kaynak_dosya_id: string | null;
+                                    /** Format: uuid */
+                                    medya_dosya_id: string;
+                                    sira: number;
+                                    sure_sn: number | null;
+                                    /** @enum {string} */
+                                    tur: "fotograf" | "cizimli_fotograf" | "ses";
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                metin: string | null;
+                                sira: number;
+                                /** @enum {string} */
+                                tur: "soru" | "cevap" | "takip";
+                                yazar_adi: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                /** @enum {string} */
+                                yazar_rolu: "ogrenci" | "ogretmen" | "yonetici";
+                            }[];
+                            metin_onizleme: string | null;
+                            ogrenci_adi: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            son_hareket_at: string;
+                            tahmini_cevap: {
+                                /** @description `false`: hedef öğretmen(ler) bugün cevap veremiyorum dedi. Yönetici kuyruğunda `null`. */
+                                hedef_musait: boolean | null;
+                                ornek_sayisi: number;
+                                /** @description Hedefin son 30 gündeki ilk cevap sürelerinin medyanı; 3'ten az örnek varsa `null`. */
+                                sure_sn: number | null;
+                            };
+                            /** @description `true`: aynı `istek_id` önceki istekle işlendi, kota tüketilmedi. */
+                            tekrar: boolean;
+                            /** Format: uuid */
+                            ustlenen_id: string | null;
+                            yeniden_acilma_sayisi: number;
+                            /** @enum {string} */
+                            yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                        };
+                    };
+                };
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: medya servisinden adres alınamadı; ek `adres` alanları `null`, soru yine döner. */
+                            adres_alinamadi: boolean;
+                            /** Format: uuid */
+                            atanan_ogretmen_id: string | null;
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            cozuldu_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                            /** Format: date-time */
+                            foto_silinme_at: string | null;
+                            fotograflar: {
+                                adres: {
+                                    asil_url: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_cevap_at: string | null;
+                            kalan_takip_hakki: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            kota: {
+                                aylik_kalan: number | null;
+                                aylik_kullanilan: number;
+                                aylik_limit: number | null;
+                                /** Format: date-time */
+                                aylik_sifirlanma_at: string;
+                                /** @description `null`: sınırsız. */
+                                gunluk_kalan: number | null;
+                                gunluk_kullanilan: number;
+                                gunluk_limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Kurumun yerel gününün bitişi (UTC).
+                                 */
+                                gunluk_sifirlanma_at: string;
+                            };
+                            /** Format: uuid */
+                            masa_id: string | null;
+                            mesaj_sayisi: number;
+                            mesajlar: {
+                                /** Format: date-time */
+                                created_at: string;
+                                derste_konusalim: boolean;
+                                ekler: {
+                                    /** @description Okuma adresi (10 dk geçerli). Medya yanıt vermediyse ya da dosya yoksa `null`. */
+                                    adres: {
+                                        asil_url: string;
+                                        /** Format: date-time */
+                                        gecerlilik_bitis_at: string;
+                                        genislik: number | null;
+                                        kucuk_url: string | null;
+                                        mime_tipi: string;
+                                        orta_url: string | null;
+                                        sure_sn: number | null;
+                                        yukseklik: number | null;
+                                    } | null;
+                                    cizim_verisi: ({
+                                        [key: string]: unknown;
+                                    } | unknown[]) | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kaynak_dosya_id: string | null;
+                                    /** Format: uuid */
+                                    medya_dosya_id: string;
+                                    sira: number;
+                                    sure_sn: number | null;
+                                    /** @enum {string} */
+                                    tur: "fotograf" | "cizimli_fotograf" | "ses";
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                metin: string | null;
+                                sira: number;
+                                /** @enum {string} */
+                                tur: "soru" | "cevap" | "takip";
+                                yazar_adi: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                /** @enum {string} */
+                                yazar_rolu: "ogrenci" | "ogretmen" | "yonetici";
+                            }[];
+                            metin_onizleme: string | null;
+                            ogrenci_adi: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            son_hareket_at: string;
+                            tahmini_cevap: {
+                                /** @description `false`: hedef öğretmen(ler) bugün cevap veremiyorum dedi. Yönetici kuyruğunda `null`. */
+                                hedef_musait: boolean | null;
+                                ornek_sayisi: number;
+                                /** @description Hedefin son 30 gündeki ilk cevap sürelerinin medyanı; 3'ten az örnek varsa `null`. */
+                                sure_sn: number | null;
+                            };
+                            /** @description `true`: aynı `istek_id` önceki istekle işlendi, kota tüketilmedi. */
+                            tekrar: boolean;
+                            /** Format: uuid */
+                            ustlenen_id: string | null;
+                            yeniden_acilma_sayisi: number;
+                            /** @enum {string} */
+                            yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorular/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Soru detayi (ileti dizisi, ekler, okuma adresleri 10 dk gecerli). Ogrenci yalniz kendi sorusunu; ogretmen kendisine yonlenen/ustlendigi/masasindaki sorulari; `soru.yonet` kurumdaki hepsini gorur, digerleri 404. Medya yanit vermezse soru yine doner (`adres_alinamadi: true`). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: medya servisinden adres alınamadı; ek `adres` alanları `null`, soru yine döner. */
+                            adres_alinamadi: boolean;
+                            /** Format: uuid */
+                            atanan_ogretmen_id: string | null;
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            cozuldu_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                            /** Format: date-time */
+                            foto_silinme_at: string | null;
+                            fotograflar: {
+                                adres: {
+                                    asil_url: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_cevap_at: string | null;
+                            kalan_takip_hakki: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            masa_id: string | null;
+                            mesaj_sayisi: number;
+                            mesajlar: {
+                                /** Format: date-time */
+                                created_at: string;
+                                derste_konusalim: boolean;
+                                ekler: {
+                                    /** @description Okuma adresi (10 dk geçerli). Medya yanıt vermediyse ya da dosya yoksa `null`. */
+                                    adres: {
+                                        asil_url: string;
+                                        /** Format: date-time */
+                                        gecerlilik_bitis_at: string;
+                                        genislik: number | null;
+                                        kucuk_url: string | null;
+                                        mime_tipi: string;
+                                        orta_url: string | null;
+                                        sure_sn: number | null;
+                                        yukseklik: number | null;
+                                    } | null;
+                                    cizim_verisi: ({
+                                        [key: string]: unknown;
+                                    } | unknown[]) | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kaynak_dosya_id: string | null;
+                                    /** Format: uuid */
+                                    medya_dosya_id: string;
+                                    sira: number;
+                                    sure_sn: number | null;
+                                    /** @enum {string} */
+                                    tur: "fotograf" | "cizimli_fotograf" | "ses";
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                metin: string | null;
+                                sira: number;
+                                /** @enum {string} */
+                                tur: "soru" | "cevap" | "takip";
+                                yazar_adi: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                /** @enum {string} */
+                                yazar_rolu: "ogrenci" | "ogretmen" | "yonetici";
+                            }[];
+                            metin_onizleme: string | null;
+                            ogrenci_adi: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            son_hareket_at: string;
+                            /** Format: uuid */
+                            ustlenen_id: string | null;
+                            yeniden_acilma_sayisi: number;
+                            /** @enum {string} */
+                            yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorular/{id}/anladim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Anladim": cevaplanmis soru `cozuldu` olur; `ogrenme.soru.cozuldu.v1` (dosya_idleri, silinecek_at = simdi + foto_saklama_gun). Zaten cozulduyse etkisiz (olay yok). Hic cevaplanmamissa 409 `soru_durumu_gecersiz`. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: medya servisinden adres alınamadı; ek `adres` alanları `null`, soru yine döner. */
+                            adres_alinamadi: boolean;
+                            /** Format: uuid */
+                            atanan_ogretmen_id: string | null;
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            cozuldu_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                            /** Format: date-time */
+                            foto_silinme_at: string | null;
+                            fotograflar: {
+                                adres: {
+                                    asil_url: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_cevap_at: string | null;
+                            kalan_takip_hakki: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            masa_id: string | null;
+                            mesaj_sayisi: number;
+                            mesajlar: {
+                                /** Format: date-time */
+                                created_at: string;
+                                derste_konusalim: boolean;
+                                ekler: {
+                                    /** @description Okuma adresi (10 dk geçerli). Medya yanıt vermediyse ya da dosya yoksa `null`. */
+                                    adres: {
+                                        asil_url: string;
+                                        /** Format: date-time */
+                                        gecerlilik_bitis_at: string;
+                                        genislik: number | null;
+                                        kucuk_url: string | null;
+                                        mime_tipi: string;
+                                        orta_url: string | null;
+                                        sure_sn: number | null;
+                                        yukseklik: number | null;
+                                    } | null;
+                                    cizim_verisi: ({
+                                        [key: string]: unknown;
+                                    } | unknown[]) | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kaynak_dosya_id: string | null;
+                                    /** Format: uuid */
+                                    medya_dosya_id: string;
+                                    sira: number;
+                                    sure_sn: number | null;
+                                    /** @enum {string} */
+                                    tur: "fotograf" | "cizimli_fotograf" | "ses";
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                metin: string | null;
+                                sira: number;
+                                /** @enum {string} */
+                                tur: "soru" | "cevap" | "takip";
+                                yazar_adi: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                /** @enum {string} */
+                                yazar_rolu: "ogrenci" | "ogretmen" | "yonetici";
+                            }[];
+                            metin_onizleme: string | null;
+                            ogrenci_adi: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            son_hareket_at: string;
+                            /** Format: uuid */
+                            ustlenen_id: string | null;
+                            yeniden_acilma_sayisi: number;
+                            /** @enum {string} */
+                            yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorular/{id}/bildir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Soruyu (ya da bir mesajini) uygunsuz icerik olarak bildir (ogrenci ve ogretmen). Ayni kisi ayni soru icin tek acik bildirim acar; tekrar cagri mevcut bildirimi dondurur. Gorunmeyen soru 404. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string;
+                        /** Format: uuid */
+                        mesaj_id?: string;
+                        /** @enum {string} */
+                        neden: "uygunsuz" | "kisisel_bilgi" | "diger";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            aciklama: string | null;
+                            bildiren_adi: string | null;
+                            /** Format: uuid */
+                            bildiren_id: string;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "kapandi";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            kapandi_at: string | null;
+                            kapatma_notu: string | null;
+                            /** Format: uuid */
+                            mesaj_id: string | null;
+                            /** @enum {string} */
+                            neden: "uygunsuz" | "kisisel_bilgi" | "diger";
+                            /** Format: uuid */
+                            soru_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorular/{id}/cevap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Soruyu cevapla: metin ve/veya ekler (fotograf, cizimli fotograf, ses <= 180 sn; en cok 4) ya da "derste konusalim". `acik`/`takip_bekliyor` -> `cevaplandi`. Masada ilk cevaplayan `ustlenen_id` olur; sonra cevaplayan masa uyesi 409 `masa_ustlenildi` (sahip/yonetici haric). Hedefi olmayan ogretmene soru 404. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default false */
+                        derste_konusalim?: boolean;
+                        ekler?: ({
+                            /** Format: uuid */
+                            medya_dosya_id: string;
+                            /** @enum {string} */
+                            tur: "fotograf";
+                        } | {
+                            /** @description Vektör çizgi verisi (JSON, en çok 256 KB). */
+                            cizim_verisi?: {
+                                [key: string]: unknown;
+                            } | unknown[];
+                            /**
+                             * Format: uuid
+                             * @description Üzerine çizilen, aynı sorunun fotoğrafı.
+                             */
+                            kaynak_dosya_id: string;
+                            /**
+                             * Format: uuid
+                             * @description Düzleştirilmiş görsel (`soru_cizim` türünde dosya).
+                             */
+                            medya_dosya_id: string;
+                            /** @enum {string} */
+                            tur: "cizimli_fotograf";
+                        } | {
+                            /** Format: uuid */
+                            medya_dosya_id: string;
+                            sure_sn?: number;
+                            /** @enum {string} */
+                            tur: "ses";
+                        })[];
+                        /**
+                         * Format: uuid
+                         * @description İstemci yeniden denemesine karşı tekil anahtar (UUID). Aynı kurumda aynı `istek_id` ikinci kez gelirse yeni kayıt açılmaz, önceki sonuç döner.
+                         */
+                        istek_id?: string;
+                        metin?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: medya servisinden adres alınamadı; ek `adres` alanları `null`, soru yine döner. */
+                            adres_alinamadi: boolean;
+                            /** Format: uuid */
+                            atanan_ogretmen_id: string | null;
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            cozuldu_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                            /** Format: date-time */
+                            foto_silinme_at: string | null;
+                            fotograflar: {
+                                adres: {
+                                    asil_url: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_cevap_at: string | null;
+                            kalan_takip_hakki: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            masa_id: string | null;
+                            mesaj_sayisi: number;
+                            mesajlar: {
+                                /** Format: date-time */
+                                created_at: string;
+                                derste_konusalim: boolean;
+                                ekler: {
+                                    /** @description Okuma adresi (10 dk geçerli). Medya yanıt vermediyse ya da dosya yoksa `null`. */
+                                    adres: {
+                                        asil_url: string;
+                                        /** Format: date-time */
+                                        gecerlilik_bitis_at: string;
+                                        genislik: number | null;
+                                        kucuk_url: string | null;
+                                        mime_tipi: string;
+                                        orta_url: string | null;
+                                        sure_sn: number | null;
+                                        yukseklik: number | null;
+                                    } | null;
+                                    cizim_verisi: ({
+                                        [key: string]: unknown;
+                                    } | unknown[]) | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kaynak_dosya_id: string | null;
+                                    /** Format: uuid */
+                                    medya_dosya_id: string;
+                                    sira: number;
+                                    sure_sn: number | null;
+                                    /** @enum {string} */
+                                    tur: "fotograf" | "cizimli_fotograf" | "ses";
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                metin: string | null;
+                                sira: number;
+                                /** @enum {string} */
+                                tur: "soru" | "cevap" | "takip";
+                                yazar_adi: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                /** @enum {string} */
+                                yazar_rolu: "ogrenci" | "ogretmen" | "yonetici";
+                            }[];
+                            metin_onizleme: string | null;
+                            ogrenci_adi: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            son_hareket_at: string;
+                            /** Format: uuid */
+                            ustlenen_id: string | null;
+                            yeniden_acilma_sayisi: number;
+                            /** @enum {string} */
+                            yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorular/{id}/takip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Hala anlamadim" + takip sorusu: `cevaplandi` -> `takip_bekliyor`. `cozuldu` soru yeniden acilir (`ogrenme.soru.yeniden_acildi.v1`, fotograf silinme zamani temizlenir). Takip kotaya girmez; `soru_basina_takip_limiti` asilirsa 422 `takip_limiti_asildi`. `istek_id` ile tekrarlanabilir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ekler?: ({
+                            /** Format: uuid */
+                            medya_dosya_id: string;
+                            /** @enum {string} */
+                            tur: "fotograf";
+                        } | {
+                            cizim_verisi?: {
+                                [key: string]: unknown;
+                            } | unknown[];
+                            /** Format: uuid */
+                            kaynak_dosya_id: string;
+                            /** Format: uuid */
+                            medya_dosya_id: string;
+                            /** @enum {string} */
+                            tur: "cizimli_fotograf";
+                        })[];
+                        /**
+                         * Format: uuid
+                         * @description İstemci yeniden denemesine karşı tekil anahtar (UUID). Aynı kurumda aynı `istek_id` ikinci kez gelirse yeni kayıt açılmaz, önceki sonuç döner.
+                         */
+                        istek_id?: string;
+                        metin: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: medya servisinden adres alınamadı; ek `adres` alanları `null`, soru yine döner. */
+                            adres_alinamadi: boolean;
+                            /** Format: uuid */
+                            atanan_ogretmen_id: string | null;
+                            baslik: string | null;
+                            brans_kodu: string;
+                            /** Format: date-time */
+                            cozuldu_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                            /** Format: date-time */
+                            foto_silinme_at: string | null;
+                            fotograflar: {
+                                adres: {
+                                    asil_url: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                sira: number;
+                            }[];
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            ilk_cevap_at: string | null;
+                            kalan_takip_hakki: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** Format: uuid */
+                            masa_id: string | null;
+                            mesaj_sayisi: number;
+                            mesajlar: {
+                                /** Format: date-time */
+                                created_at: string;
+                                derste_konusalim: boolean;
+                                ekler: {
+                                    /** @description Okuma adresi (10 dk geçerli). Medya yanıt vermediyse ya da dosya yoksa `null`. */
+                                    adres: {
+                                        asil_url: string;
+                                        /** Format: date-time */
+                                        gecerlilik_bitis_at: string;
+                                        genislik: number | null;
+                                        kucuk_url: string | null;
+                                        mime_tipi: string;
+                                        orta_url: string | null;
+                                        sure_sn: number | null;
+                                        yukseklik: number | null;
+                                    } | null;
+                                    cizim_verisi: ({
+                                        [key: string]: unknown;
+                                    } | unknown[]) | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    kaynak_dosya_id: string | null;
+                                    /** Format: uuid */
+                                    medya_dosya_id: string;
+                                    sira: number;
+                                    sure_sn: number | null;
+                                    /** @enum {string} */
+                                    tur: "fotograf" | "cizimli_fotograf" | "ses";
+                                }[];
+                                /** Format: uuid */
+                                id: string;
+                                metin: string | null;
+                                sira: number;
+                                /** @enum {string} */
+                                tur: "soru" | "cevap" | "takip";
+                                yazar_adi: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                /** @enum {string} */
+                                yazar_rolu: "ogrenci" | "ogretmen" | "yonetici";
+                            }[];
+                            metin_onizleme: string | null;
+                            ogrenci_adi: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            /** Format: date-time */
+                            son_hareket_at: string;
+                            /** Format: uuid */
+                            ustlenen_id: string | null;
+                            yeniden_acilma_sayisi: number;
+                            /** @enum {string} */
+                            yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/sorularim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin kendi soru arsivi: brans, konu, durum suzgeci ve Turkce harf duyarsiz metin aramasi (baslik ve mesajlar); en yeni hareket once, imecli. */
+        get: {
+            parameters: {
+                query?: {
+                    brans_kodu?: string;
+                    durum?: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                    /** @description Önceki sayfanın `sonraki_imlec` değeri. */
+                    imlec?: string;
+                    konu_id?: string;
+                    limit?: number;
+                    /** @description Türkçe harf duyarsız metin araması. */
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sonraki_imlec: string | null;
+                            sorular: {
+                                /** Format: uuid */
+                                atanan_ogretmen_id: string | null;
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                cozuldu_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_cevap_at: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                masa_id: string | null;
+                                mesaj_sayisi: number;
+                                metin_onizleme: string | null;
+                                ogrenci_adi: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                son_hareket_at: string;
+                                /** Format: uuid */
+                                ustlenen_id: string | null;
+                                /** @enum {string} */
+                                yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/teslimler": {
         parameters: {
             query?: never;
@@ -11910,6 +13904,86 @@ export interface paths {
                                 teslim_at: string | null;
                                 yanlis_sayisi: number | null;
                                 yapilan_soru_sayisi: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/yonetim/sorular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurumdaki tum soru yazismalari (en yeni hareket once): brans, durum, ogrenci, ogretmen suzgeci ve Turkce harf duyarsiz arama. Detay `GET /sorular/:id`. */
+        get: {
+            parameters: {
+                query?: {
+                    brans_kodu?: string;
+                    durum?: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                    imlec?: string;
+                    limit?: number;
+                    ogrenci_id?: string;
+                    /** @description Yönlendirilen, üstlenen ya da ilk cevaplayan öğretmen. */
+                    ogretmen_id?: string;
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sonraki_imlec: string | null;
+                            sorular: {
+                                /** Format: uuid */
+                                atanan_ogretmen_id: string | null;
+                                baslik: string | null;
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                cozuldu_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "cevaplandi" | "takip_bekliyor" | "cozuldu" | "kapandi";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                ilk_cevap_at: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                masa_id: string | null;
+                                mesaj_sayisi: number;
+                                metin_onizleme: string | null;
+                                ogrenci_adi: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                son_hareket_at: string;
+                                /** Format: uuid */
+                                ustlenen_id: string | null;
+                                /** @enum {string} */
+                                yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
                             }[];
                         };
                     };
