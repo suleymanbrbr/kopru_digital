@@ -41,6 +41,13 @@ export const envSchema = base.safeExtend({
    * Modul bunu `process.env`den okur (`API_KAYNAK_PAROLA_ANAHTARI` ya da `KAYNAK_PAROLA_ANAHTARI`).
    */
   KAYNAK_PAROLA_ANAHTARI: z.string().min(1).optional(),
+  /**
+   * `medya` servisinin taban adresi (ic uc `POST /ic/okuma-adresleri`, servis JWT'si). Tanimli degilse soru
+   * ve mesaj ekleri adressiz doner (`adres_alinamadi: true`).
+   */
+  MEDYA_URL: z.url().optional(),
+  /** `medya` ic cagrisinin zaman asimi (ms); asilirsa soru yine doner, ek adresleri `null` olur. */
+  MEDYA_ZAMAN_ASIMI_MS: z.coerce.number().int().min(100).max(30_000).default(2000),
 });
 
 export type Env = z.output<typeof envSchema>;
