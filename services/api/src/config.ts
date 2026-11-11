@@ -35,6 +35,12 @@ export const envSchema = base.safeExtend({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   APPLE_CLIENT_ID: z.string().min(1).optional(),
   APPLE_CLIENT_SECRET: z.string().min(1).optional(),
+  /**
+   * Ders kaydi parolalarini AES-256-GCM ile sifreleyen anahtar: 32 bayt, base64
+   * (`openssl rand -base64 32`). Yoksa api acilir, parola yazilirken/okunurken 503 doner.
+   * Modul bunu `process.env`den okur (`API_KAYNAK_PAROLA_ANAHTARI` ya da `KAYNAK_PAROLA_ANAHTARI`).
+   */
+  KAYNAK_PAROLA_ANAHTARI: z.string().min(1).optional(),
 });
 
 export type Env = z.output<typeof envSchema>;
@@ -48,6 +54,12 @@ export function loadServiceEnv(source?: Record<string, string | undefined>): Env
   });
   if (env.NODE_ENV === 'production' && env.BETTER_AUTH_SECRET === devSecret) {
     throw new Error('Üretimde BETTER_AUTH_SECRET tanımlanmalı.');
+  }
+  if (
+    env.KAYNAK_PAROLA_ANAHTARI &&
+    Buffer.from(env.KAYNAK_PAROLA_ANAHTARI, 'base64').length !== 32
+  ) {
+    throw new Error('KAYNAK_PAROLA_ANAHTARI 32 bayt olmalı (base64: openssl rand -base64 32).');
   }
   if (env.EPOSTA_SAGLAYICI === 'smtp' && !env.SMTP_HOST) {
     throw new Error('EPOSTA_SAGLAYICI=smtp iken SMTP_HOST tanımlanmalı.');

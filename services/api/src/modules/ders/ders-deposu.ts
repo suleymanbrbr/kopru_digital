@@ -365,7 +365,7 @@ export async function dersDenetimiYaz(
   y: YetkiBaglami,
   ip: string,
   eylem: string,
-  hedefTuru: 'ders' | 'ders_serisi',
+  hedefTuru: 'ders' | 'ders_serisi' | 'ders_kaynagi',
   hedefId: string,
   once: Record<string, unknown> | null,
   sonra: Record<string, unknown>,
