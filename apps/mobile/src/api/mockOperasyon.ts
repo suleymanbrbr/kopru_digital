@@ -48,10 +48,19 @@ export interface MockOperasyonSecenekleri {
 
 const DAKIKA = 60_000;
 
+/** Mock kayit/geri bildirim adaptorunun ders ve yoklama verisini okumasi icin dar arayuz. */
+export interface MockOperasyonOkuma {
+  dersler: () => (Ders & { katilimcilar: string[] })[];
+  yoklama: (dersId: string, ogrenciId: string) => YoklamaDurumu | undefined;
+  ogrenciAdi: (ogrenciId: string) => string;
+  grupUyeleri: (grupId: string) => string[];
+}
+
 /** Backend olmadan calisan ders, yoklama ve finans adaptorleri. */
 export function mockOperasyon(sec: MockOperasyonSecenekleri): {
   ders: DersAdapter;
   finans: FinansAdapter;
+  okuma: MockOperasyonOkuma;
 } {
   const simdi = sec.simdi ?? (() => Date.now());
   const tz = MOCK_SAAT_DILIMI;
@@ -602,5 +611,12 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
     },
   };
 
-  return { ders, finans };
+  const okuma: MockOperasyonOkuma = {
+    dersler: () => dersler,
+    yoklama: (dersId, ogrenciId) => yoklamalar.get(`${dersId}:${ogrenciId}`),
+    ogrenciAdi,
+    grupUyeleri: (grupId) => grupUyeleri[grupId] ?? [],
+  };
+
+  return { ders, finans, okuma };
 }

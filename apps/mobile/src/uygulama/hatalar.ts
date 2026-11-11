@@ -38,6 +38,15 @@ const AYRINTI_MESAJLARI: Record<string, MessageKey> = {
   deneme_zaten_var: 'mobil.hata.denemeZatenVar',
   deneme_bolum_gecersiz: 'mobil.hata.denemeBolumGecersiz',
   deneme_onay_durumu_gecersiz: 'mobil.hata.denemeOnayDurumuGecersiz',
+  // Ders kayitlari ve geri bildirim
+  kaynak_sorun_zaten_acik: 'mobil.kayit.hata.sorunZatenAcik',
+  kaynak_url_gecersiz: 'mobil.kayit.hata.urlGecersiz',
+  kaynak_suresi_gecmis: 'mobil.kayit.hata.suresiGecmis',
+  kaynak_sifreleme_yapilandirilmamis: 'mobil.kayit.hata.sifrelemeYok',
+  kaynak_ders_iptal: 'mobil.kayit.hata.dersIptal',
+  geri_bildirim_ders_bitmedi: 'mobil.kayit.hata.dersBitmedi',
+  geri_bildirim_yoklama_uygun_degil: 'mobil.kayit.hata.yoklamaUygunDegil',
+  geri_bildirim_guncelleme_suresi_doldu: 'mobil.kayit.hata.guncellemeSuresiDoldu',
 };
 
 /** Kuyrukta basarisiz olan isin hata kodunu (api `ayrinti` ya da adaptor kodu) mesaja cevirir. */

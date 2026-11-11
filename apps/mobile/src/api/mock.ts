@@ -1,5 +1,6 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { mockKayit } from './mockKayit';
 import { mockOgrenme } from './mockOgrenme';
 import { mockOperasyon } from './mockOperasyon';
 import {
@@ -164,6 +165,9 @@ function moduller(rol: MobilRol | Rol, kurum: 'a' | 'b') {
     soru_sor: kurum === 'a',
     oyunlastirma: rol === 'ogrenci',
     duyuru: true,
+    // b kurumunda ders kayitlari ve geri bildirim kapali: giris noktalarinin gizlenmesini gostermek icin.
+    kayitlar: kurum === 'a',
+    geri_bildirim: kurum === 'a',
   };
 }
 
@@ -244,10 +248,13 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   };
   const operasyon = mockOperasyon(operasyonSecenekleri);
   const ogrenme = mockOgrenme(operasyonSecenekleri);
+  const kayit = mockKayit(operasyonSecenekleri, operasyon.okuma);
 
   return {
-    ...operasyon,
+    ders: operasyon.ders,
+    finans: operasyon.finans,
     ogrenme,
+    kayit,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);

@@ -68,6 +68,18 @@ function baglanmamisAdaptorler(): Adaptorler {
       denemeReddet: hata,
       denemeGelisim: hata,
     },
+    kayit: {
+      kayitlarim: hata,
+      kayit: hata,
+      izledim: hata,
+      sorunBildir: hata,
+      kaynaklar: hata,
+      kaynakIzlemeleri: hata,
+      kaynakEkle: hata,
+      geriBildirimBekleyen: hata,
+      geriBildirimVer: hata,
+      dersGeriBildirimleri: hata,
+    },
     hesap: {
       sinifKoduKatil: hata,
       sinifKoduIsteklerim: hata,
