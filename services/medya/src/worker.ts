@@ -2,8 +2,8 @@ import { createDb, runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
 import { depolamaOlustur } from './depolama.js';
-import { bakimTuru, gunlukTemizlik, kotaDenetimi } from './isler.js';
 import { kuyrugunuIsle, type IslemeLogu } from './isleme/isle.js';
+import { bakimTuru, gunlukTemizlik, kotaDenetimi } from './isler.js';
 import { tuketicileriBaslat } from './tuketiciler.js';
 import { periyodikIs, istanbulSaati } from './zamanlayici.js';
 

@@ -1,8 +1,4 @@
-import {
-  hesapKurumDegistiV1,
-  ortakDosyaBaglandiV1,
-  ortakDosyaBirakildiV1,
-} from '@kopru/contracts';
+import { hesapKurumDegistiV1, ortakDosyaBaglandiV1, ortakDosyaBirakildiV1 } from '@kopru/contracts';
 import {
   KaliciHata,
   startConsumer,
@@ -84,7 +80,8 @@ async function kurumDegisti(
   olay: ReturnType<typeof hesapKurumDegistiV1.parse>,
 ): Promise<void> {
   const { durum } = olay.data;
-  if (olay.data.kurum_id !== olay.kurumId) throw new KaliciHata('kurum_id zarftaki kurumla uyuşmuyor');
+  if (olay.data.kurum_id !== olay.kurumId)
+    throw new KaliciHata('kurum_id zarftaki kurumla uyuşmuyor');
   const yazilan = await tx.execute(sql`
     insert into medya.kurum_kopyalari (kurum_id, durum, son_olay_at)
     values (${olay.kurumId}, ${durum}, ${olay.occurredAt}::timestamptz)

@@ -27,7 +27,8 @@ export const dbYok = () => {
 };
 export const s3Yok = () => {
   const yok = testDb() === null || testS3() === null;
-  if (yok) console.warn('[medya testleri] S3_ENDPOINT/anahtarlar tanımlı değil: S3 testleri atlanıyor.');
+  if (yok)
+    console.warn('[medya testleri] S3_ENDPOINT/anahtarlar tanımlı değil: S3 testleri atlanıyor.');
   return yok;
 };
 export const natsYok = () => {
@@ -40,7 +41,7 @@ export const sha256 = (b: Buffer) => createHash('sha256').update(b).digest('hex'
 
 // --- JWT -------------------------------------------------------------------------------------
 const anahtar = await generateKeyPair('EdDSA');
-const keySet = async () => anahtar.publicKey;
+const keySet = () => Promise.resolve(anahtar.publicKey);
 export const kullaniciDogrulayici = createJwtVerifier({ keySet });
 export const servisDogrulayici = createServisJwtVerifier({ keySet, audience: 'medya' });
 
@@ -218,3 +219,34 @@ export async function hataMetni(p: Promise<unknown>): Promise<string> {
   }
   throw new Error('Hata bekleniyordu ama istek basarili oldu');
 }
+
+/** Yanit govdelerinin testlerde kullanilan alanlari (`inject().json()` `any` dondurur). */
+export interface YanitGovdesi {
+  dosya: { id: string };
+  yukleme: { url: string; basliklar: Record<string, string> };
+  id: string;
+  durum: string;
+  mime_tipi: string;
+  boyut_bayt: number;
+  genislik: number;
+  sure_sn: number;
+  hata_kodu: string | null;
+  adresler: { asil_url: string; kucuk_url: string; orta_url: string };
+  error: { code: string };
+}
+
+export const j = (r: { body: string }): YanitGovdesi => JSON.parse(r.body) as YanitGovdesi;
+
+export interface IcYanit {
+  adresler: {
+    dosya_id: string;
+    mime_tipi: string;
+    asil_url: string;
+    kucuk_url: string;
+    orta_url: string;
+    genislik: number;
+    gecerlilik_bitis_at: string;
+  }[];
+}
+
+export const jIc = (r: { body: string }): IcYanit => JSON.parse(r.body) as IcYanit;

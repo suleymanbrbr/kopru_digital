@@ -6,9 +6,13 @@ import { parseBuffer } from 'music-metadata';
  * Cozumlenemeyen/bozuk icerik firlatir.
  */
 export async function sesSuresiSn(govde: Buffer, mime: string): Promise<number | null> {
-  const meta = await parseBuffer(new Uint8Array(govde), { mimeType: mime, size: govde.length }, {
-    duration: true,
-  });
+  const meta = await parseBuffer(
+    new Uint8Array(govde),
+    { mimeType: mime, size: govde.length },
+    {
+      duration: true,
+    },
+  );
   let sure = meta.format.duration;
   if ((sure === undefined || !Number.isFinite(sure)) && meta.format.bitrate) {
     sure = (govde.length * 8) / meta.format.bitrate;

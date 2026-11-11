@@ -123,7 +123,10 @@ async function hazirla(
   politika: Politika,
 ): Promise<HazirSonuc> {
   const kural = MEDYA_TUR_KURALLARI[satir.tur];
-  const girdi = await d.depolama.oku(yuklemeAnahtari(satir.depolama_anahtari), kural.azami_boyut_bayt);
+  const girdi = await d.depolama.oku(
+    yuklemeAnahtari(satir.depolama_anahtari),
+    kural.azami_boyut_bayt,
+  );
   if (girdi.length !== satir.boyut_bayt) {
     throw new IslemeReddi('boyut_uyusmazligi', 'Nesne boyutu doğrulanan boyutla uyuşmuyor');
   }
@@ -175,7 +178,8 @@ async function hazirla(
     }
     if (sure === null) throw new IslemeReddi('bozuk_dosya', 'Ses süresi doğrulanamadı');
     const azami = MEDYA_SES_AZAMI_SURE_SN;
-    if (sure > azami) throw new IslemeReddi('sure_asimi', `Ses ${String(azami)} sn sınırını aşıyor`);
+    if (sure > azami)
+      throw new IslemeReddi('sure_asimi', `Ses ${String(azami)} sn sınırını aşıyor`);
     return { ...temel, mime: satir.mime_tipi, govde: girdi, boyutBayt: girdi.length, sureSn: sure };
   }
 

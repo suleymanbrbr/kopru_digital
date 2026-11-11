@@ -1,5 +1,4 @@
 import { createDb, type Database } from '@kopru/service-kit';
-import { sql } from 'drizzle-orm';
 import postgres from 'postgres';
 import sharp from 'sharp';
 import { uuidv7 } from 'uuidv7';
@@ -7,6 +6,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { kuyrugunuIsle, type IslemeBagimliliklari } from './isleme/isle.js';
 import {
+  j,
+  jIc,
   jpegExifli,
   kullaniciTokeni,
   mp3,
@@ -64,8 +65,10 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
     });
 
   const durumOku = async (id: string) =>
-    (await sistem<{ durum: string; hata_kodu: string | null; silinecek_at: Date | null }[]>`
-      select durum, hata_kodu, silinecek_at from medya.dosyalar where id = ${id}`)[0];
+    (
+      await sistem<{ durum: string; hata_kodu: string | null; silinecek_at: Date | null }[]>`
+      select durum, hata_kodu, silinecek_at from medya.dosyalar where id = ${id}`
+    )[0];
 
   const outbox = (kurumId: string, konu: string) =>
     sistem<{ id: string; payload: Record<string, unknown> }[]>`
@@ -102,14 +105,12 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
     it.each(beklenen)('%s -> %s: %i', async (rol, tur, kod) => {
       const r = await izinIste(yeniKimlik(rol, kurum), { tur });
       expect(r.statusCode, r.body).toBe(kod);
-      if (kod === 403) expect(r.json().error.code).toBe('dosya_turu_yetkisi_yok');
+      if (kod === 403) expect(j(r).error.code).toBe('dosya_turu_yetkisi_yok');
     });
 
     it('ses turu yalniz personel, ses MIME turleri; gorsel turune ses MIME 415', async () => {
       const k = yeniKimlik('ogretmen', kurum);
-      expect(
-        (await izinIste(k, { tur: 'soru_ses', mime_tipi: 'audio/mp4' })).statusCode,
-      ).toBe(201);
+      expect((await izinIste(k, { tur: 'soru_ses', mime_tipi: 'audio/mp4' })).statusCode).toBe(201);
       expect(
         (await izinIste(yeniKimlik('ogrenci', kurum), { tur: 'soru_ses', mime_tipi: 'audio/mp4' }))
           .statusCode,
@@ -122,14 +123,14 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       for (const mime of ['image/heic', 'image/heif', 'image/svg+xml', 'text/plain']) {
         const r = await izinIste(yeniKimlik('ogrenci', kurum), { mime_tipi: mime });
         expect(r.statusCode, mime).toBe(415);
-        expect(r.json().error.code).toBe('mime_desteklenmiyor');
+        expect(j(r).error.code).toBe('mime_desteklenmiyor');
       }
     });
 
     it('azami boyut asilirsa 413 dosya_cok_buyuk; ses 5 MB siniri', async () => {
       const r = await izinIste(yeniKimlik('ogrenci', kurum), { boyut_bayt: 10 * 1024 * 1024 + 1 });
       expect(r.statusCode).toBe(413);
-      expect(r.json().error.code).toBe('dosya_cok_buyuk');
+      expect(j(r).error.code).toBe('dosya_cok_buyuk');
       const ses = await izinIste(yeniKimlik('ogretmen', kurum), {
         tur: 'soru_ses',
         mime_tipi: 'audio/mp4',
@@ -152,9 +153,9 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       expect(ilk.statusCode).toBe(201);
       const ikinci = await izinIste(k, { istemci_anahtari: anahtar });
       expect(ikinci.statusCode).toBe(200);
-      expect(ikinci.json().dosya.id).toBe(ilk.json().dosya.id);
-      expect(ikinci.json().yukleme.url).toContain(ilk.json().dosya.id);
-      expect(ikinci.json().yukleme.basliklar['Content-Type']).toBe('image/jpeg');
+      expect(j(ikinci).dosya.id).toBe(j(ilk).dosya.id);
+      expect(j(ikinci).yukleme.url).toContain(j(ilk).dosya.id);
+      expect(j(ikinci).yukleme.basliklar['Content-Type']).toBe('image/jpeg');
       // kota tek kez ayrildi
       const [kota] = await sistem<{ dosya_sayisi: number; kullanilan_bayt: string }[]>`
         select dosya_sayisi, kullanilan_bayt from medya.kurum_kotalari where kurum_id = ${k.kurumId}`;
@@ -163,7 +164,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
 
       const cakisma = await izinIste(k, { istemci_anahtari: anahtar, sha256: 'b'.repeat(64) });
       expect(cakisma.statusCode).toBe(409);
-      expect(cakisma.json().error.code).toBe('istemci_anahtari_cakisti');
+      expect(j(cakisma).error.code).toBe('istemci_anahtari_cakisti');
     });
 
     it('baska kullanicinin ayni anahtari ayri kayittir; suresi dolan yukleme 409 yukleme_suresi_doldu', async () => {
@@ -172,12 +173,12 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const a = await izinIste(yeniKimlik('ogrenci', kurum), { istemci_anahtari: anahtar });
       const kb = yeniKimlik('ogrenci', kurum);
       const b = await izinIste(kb, { istemci_anahtari: anahtar });
-      expect(a.json().dosya.id).not.toBe(b.json().dosya.id);
+      expect(j(a).dosya.id).not.toBe(j(b).dosya.id);
 
-      await sistem`update medya.dosyalar set yukleme_son_at = now() - interval '1 minute' where id = ${b.json().dosya.id}`;
+      await sistem`update medya.dosyalar set yukleme_son_at = now() - interval '1 minute' where id = ${j(b).dosya.id}`;
       const dolan = await izinIste(kb, { istemci_anahtari: anahtar });
       expect(dolan.statusCode).toBe(409);
-      expect(dolan.json().error.code).toBe('yukleme_suresi_doldu');
+      expect(j(dolan).error.code).toBe('yukleme_suresi_doldu');
     });
 
     it('eszamanli ayni anahtar tek kayit ve tek kota ayirir', async () => {
@@ -186,7 +187,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const yanitlar = await Promise.all(
         Array.from({ length: 6 }, () => izinIste(k, { istemci_anahtari: anahtar })),
       );
-      expect(new Set(yanitlar.map((y) => y.json().dosya.id)).size).toBe(1);
+      expect(new Set(yanitlar.map((y) => j(y).dosya.id)).size).toBe(1);
       expect(yanitlar.filter((y) => y.statusCode === 201)).toHaveLength(1);
       const [kota] = await sistem<{ dosya_sayisi: number }[]>`
         select dosya_sayisi from medya.kurum_kotalari where kurum_id = ${k.kurumId}`;
@@ -202,7 +203,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       expect((await izinIste(k, { boyut_bayt: 1000 })).statusCode).toBe(201);
       const r = await izinIste(k, { boyut_bayt: 1000 });
       expect(r.statusCode).toBe(413);
-      expect(r.json().error.code).toBe('kota_asildi');
+      expect(j(r).error.code).toBe('kota_asildi');
       // basarisiz istek kayit birakmaz
       const [n] = await sistem<{ n: number }[]>`
         select count(*)::int n from medya.dosyalar where kurum_id = ${k.kurumId}`;
@@ -215,13 +216,13 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
         await sistem`insert into medya.kurum_kopyalari (kurum_id, durum) values (${k.kurumId}, ${durum})`;
         const r = await izinIste(k, {});
         expect(r.statusCode, durum).toBe(403);
-        expect(r.json().error.code).toBe('kurum_askida');
+        expect(j(r).error.code).toBe('kurum_askida');
       }
     });
   });
 
   describe('presigned PUT -> tamam -> isleme -> hazir', () => {
-    it('gercek JPEG: EXIF silinir, kucuk resimler olusur, hazir olayi outbox\'a yazilir', async () => {
+    it("gercek JPEG: EXIF silinir, kucuk resimler olusur, hazir olayi outbox'a yazilir", async () => {
       const k = yeniKimlik('ogrenci');
       const token = await kullaniciTokeni(k);
       const govde = await jpegExifli(3000, 2000);
@@ -246,7 +247,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
         headers: yetki(token),
       });
       expect(get.statusCode).toBe(200);
-      const d = get.json();
+      const d = j(get);
       expect(d.durum).toBe('hazir');
       expect(d.mime_tipi).toBe('image/jpeg');
       expect(d.adresler.kucuk_url).toBeTruthy();
@@ -256,26 +257,32 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const meta = await sharp(asil).metadata();
       expect(meta.exif).toBeUndefined();
       expect(asil.includes(Buffer.from('gizli-sahip'))).toBe(false);
-      expect(Math.max(meta.width ?? 0, meta.height ?? 0)).toBe(2000);
+      expect(Math.max(meta.width, meta.height)).toBe(2000);
       expect(d.boyut_bayt).toBe(asil.length);
       expect(d.genislik).toBe(meta.width);
 
       const kucuk = Buffer.from(await (await fetch(d.adresler.kucuk_url)).arrayBuffer());
       const km = await sharp(kucuk).metadata();
       expect(km.format).toBe('webp');
-      expect(Math.max(km.width ?? 0, km.height ?? 0)).toBe(256);
+      expect(Math.max(km.width, km.height)).toBe(256);
       const orta = await sharp(
         Buffer.from(await (await fetch(d.adresler.orta_url)).arrayBuffer()),
       ).metadata();
-      expect(Math.max(orta.width ?? 0, orta.height ?? 0)).toBe(1024);
+      expect(Math.max(orta.width, orta.height)).toBe(1024);
 
       // ham yukleme nesnesi silindi, islenmis cikti var
-      const [satir] = await sistem<{ depolama_anahtari: string; sha256: Buffer; kota_bayt: string }[]>`
+      const [satir] = await sistem<
+        { depolama_anahtari: string; sha256: Buffer; kota_bayt: string }[]
+      >`
         select depolama_anahtari, sha256, kota_bayt from medya.dosyalar where id = ${sonuc.id}`;
       expect(satir?.sha256.toString('hex')).toBe(sha256(govde));
       expect(await s.depolama?.bilgi(`${satir?.depolama_anahtari ?? ''}.yukleme`)).toBeNull();
       expect(await s.depolama?.bilgi(satir?.depolama_anahtari ?? '')).not.toBeNull();
-      expect(Number(satir?.kota_bayt)).toBe(asil.length + kucuk.length + (await (await fetch(d.adresler.orta_url)).arrayBuffer()).byteLength);
+      expect(Number(satir?.kota_bayt)).toBe(
+        asil.length +
+          kucuk.length +
+          (await (await fetch(d.adresler.orta_url)).arrayBuffer()).byteLength,
+      );
 
       const olaylar = await outbox(k.kurumId, 'evt.medya.dosya.hazir.v1');
       expect(olaylar).toHaveLength(1);
@@ -302,11 +309,11 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const izin = await izinIste(k, {});
       const r = await s.service.app.inject({
         method: 'POST',
-        url: `/v1/dosyalar/${izin.json().dosya.id}/tamam`,
+        url: `/v1/dosyalar/${j(izin).dosya.id}/tamam`,
         headers: yetki(token),
       });
       expect(r.statusCode).toBe(409);
-      expect(r.json().error.code).toBe('yukleme_bulunamadi');
+      expect(j(r).error.code).toBe('yukleme_bulunamadi');
     });
 
     it('imzadaki Content-Type ile uyusmayan PUT reddedilir', async () => {
@@ -317,7 +324,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
         boyut_bayt: govde.length,
         sha256: sha256(govde),
       });
-      const put = await fetch(izin.json().yukleme.url, {
+      const put = await fetch(j(izin).yukleme.url, {
         method: 'PUT',
         headers: { 'Content-Type': 'text/html' },
         body: new Uint8Array(govde),
@@ -346,11 +353,17 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
           url: `/v1/dosyalar/${id}`,
           headers: yetki(token),
         });
-        expect(get.json()).toMatchObject({ durum: 'islenemedi', hata_kodu: 'mime_uyusmazligi', adresler: null });
+        expect(j(get)).toMatchObject({
+          durum: 'islenemedi',
+          hata_kodu: 'mime_uyusmazligi',
+          adresler: null,
+        });
       }
       const olaylar = await outbox(k.kurumId, 'evt.medya.dosya.islenemedi.v1');
       expect(olaylar).toHaveLength(2);
-      expect((olaylar[0]?.payload as { data: { hata_kodu: string } }).data.hata_kodu).toBe('mime_uyusmazligi');
+      expect((olaylar[0]?.payload as { data: { hata_kodu: string } }).data.hata_kodu).toBe(
+        'mime_uyusmazligi',
+      );
     });
 
     it('SHA-256 uyusmazligi ve bozuk gorsel: bozuk_dosya', async () => {
@@ -362,9 +375,13 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
         boyut_bayt: govde.length,
         sha256: 'f'.repeat(64),
       });
-      const { url, basliklar } = izin.json().yukleme;
+      const { url, basliklar } = j(izin).yukleme;
       await fetch(url, { method: 'PUT', headers: basliklar, body: new Uint8Array(govde) });
-      await s.service.app.inject({ method: 'POST', url: `/v1/dosyalar/${izin.json().dosya.id}/tamam`, headers: yetki(token) });
+      await s.service.app.inject({
+        method: 'POST',
+        url: `/v1/dosyalar/${j(izin).dosya.id}/tamam`,
+        headers: yetki(token),
+      });
 
       // bayt imzasi PNG ama icerigi kesik: sharp cozemez
       const kesik = govde.subarray(0, 40);
@@ -372,7 +389,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       expect(r2.tamam.statusCode).toBe(202);
 
       await kuyrugunuIsle(isleme, 4);
-      expect((await durumOku(izin.json().dosya.id))?.hata_kodu).toBe('bozuk_dosya');
+      expect((await durumOku(j(izin).dosya.id))?.hata_kodu).toBe('bozuk_dosya');
       expect((await durumOku(r2.id))?.hata_kodu).toBe('bozuk_dosya');
     });
 
@@ -380,14 +397,22 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const k = yeniKimlik('ogrenci');
       const token = await kullaniciTokeni(k);
       const govde = await png();
-      const izin = await izinIste(k, { mime_tipi: 'image/png', boyut_bayt: govde.length, sha256: sha256(govde) });
-      const { url, basliklar } = izin.json().yukleme;
+      const izin = await izinIste(k, {
+        mime_tipi: 'image/png',
+        boyut_bayt: govde.length,
+        sha256: sha256(govde),
+      });
+      const { url, basliklar } = j(izin).yukleme;
       await fetch(url, { method: 'PUT', headers: basliklar, body: new Uint8Array(govde) });
-      await sistem`update medya.dosyalar set bildirilen_boyut_bayt = ${govde.length + 7} where id = ${izin.json().dosya.id}`;
-      const r = await s.service.app.inject({ method: 'POST', url: `/v1/dosyalar/${izin.json().dosya.id}/tamam`, headers: yetki(token) });
+      await sistem`update medya.dosyalar set bildirilen_boyut_bayt = ${govde.length + 7} where id = ${j(izin).dosya.id}`;
+      const r = await s.service.app.inject({
+        method: 'POST',
+        url: `/v1/dosyalar/${j(izin).dosya.id}/tamam`,
+        headers: yetki(token),
+      });
       expect(r.statusCode).toBe(422);
-      expect(r.json().error.code).toBe('boyut_uyusmazligi');
-      expect((await durumOku(izin.json().dosya.id))?.hata_kodu).toBe('boyut_uyusmazligi');
+      expect(j(r).error.code).toBe('boyut_uyusmazligi');
+      expect((await durumOku(j(izin).dosya.id))?.hata_kodu).toBe('boyut_uyusmazligi');
     });
 
     it('ses: sure cikarilir; 180 sn ustu reddedilir (olayda bozuk_dosya)', async () => {
@@ -396,14 +421,20 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const kisa = await yukle(s, token, { tur: 'soru_ses', mime: 'audio/mpeg', govde: mp3(12) });
       const uzun = await yukle(s, token, { tur: 'soru_ses', mime: 'audio/mpeg', govde: mp3(200) });
       await kuyrugunuIsle(isleme, 4);
-      const g = await s.service.app.inject({ method: 'GET', url: `/v1/dosyalar/${kisa.id}`, headers: yetki(token) });
-      expect(g.json().durum).toBe('hazir');
-      expect(g.json().sure_sn).toBeGreaterThanOrEqual(11);
-      expect(g.json().sure_sn).toBeLessThanOrEqual(13);
-      expect(g.json().adresler.kucuk_url).toBeNull();
+      const g = await s.service.app.inject({
+        method: 'GET',
+        url: `/v1/dosyalar/${kisa.id}`,
+        headers: yetki(token),
+      });
+      expect(j(g).durum).toBe('hazir');
+      expect(j(g).sure_sn).toBeGreaterThanOrEqual(11);
+      expect(j(g).sure_sn).toBeLessThanOrEqual(13);
+      expect(j(g).adresler.kucuk_url).toBeNull();
       expect((await durumOku(uzun.id))?.hata_kodu).toBe('sure_asimi');
       const ev = await outbox(k.kurumId, 'evt.medya.dosya.islenemedi.v1');
-      expect((ev[0]?.payload as { data: { hata_kodu: string } }).data.hata_kodu).toBe('bozuk_dosya');
+      expect((ev[0]?.payload as { data: { hata_kodu: string } }).data.hata_kodu).toBe(
+        'bozuk_dosya',
+      );
     });
 
     it('baskasinin dosyasi GET/tamam icin 404 (yalniz sahip)', async () => {
@@ -413,9 +444,17 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const baska = await kullaniciTokeni(yeniKimlik('ogrenci', kurum));
       const digerKurum = await kullaniciTokeni(yeniKimlik('ogrenci'));
       for (const t of [baska, digerKurum]) {
-        const g = await s.service.app.inject({ method: 'GET', url: `/v1/dosyalar/${izin.json().dosya.id}`, headers: yetki(t) });
+        const g = await s.service.app.inject({
+          method: 'GET',
+          url: `/v1/dosyalar/${j(izin).dosya.id}`,
+          headers: yetki(t),
+        });
         expect(g.statusCode).toBe(404);
-        const tm = await s.service.app.inject({ method: 'POST', url: `/v1/dosyalar/${izin.json().dosya.id}/tamam`, headers: yetki(t) });
+        const tm = await s.service.app.inject({
+          method: 'POST',
+          url: `/v1/dosyalar/${j(izin).dosya.id}/tamam`,
+          headers: yetki(t),
+        });
         expect(tm.statusCode).toBe(404);
       }
     });
@@ -425,14 +464,21 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const token = await kullaniciTokeni(k);
       const idler: string[] = [];
       for (let i = 0; i < 6; i++) {
-        const r = await yukle(s, token, { tur: 'avatar', mime: 'image/png', govde: await png(100 + i, 100) });
+        const r = await yukle(s, token, {
+          tur: 'avatar',
+          mime: 'image/png',
+          govde: await png(100 + i, 100),
+        });
         idler.push(r.id);
       }
       const sayilar = await Promise.all([1, 2, 3].map(() => kuyrugunuIsle(isleme, 3)));
       expect(sayilar.reduce((t, n) => t + n, 0)).toBeGreaterThanOrEqual(6);
       const olaylar = await outbox(k.kurumId, 'evt.medya.dosya.hazir.v1');
       expect(olaylar).toHaveLength(6);
-      expect(new Set(olaylar.map((o) => (o.payload as { data: { dosya_id: string } }).data.dosya_id)).size).toBe(6);
+      expect(
+        new Set(olaylar.map((o) => (o.payload as { data: { dosya_id: string } }).data.dosya_id))
+          .size,
+      ).toBe(6);
     });
   });
 
@@ -449,10 +495,22 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const b = yeniKimlik('ogrenci', kurumB);
       const ta = await kullaniciTokeni(a);
       const tb = await kullaniciTokeni(b);
-      hazirA = (await yukle(s, ta, { tur: 'soru_fotografi', mime: 'image/jpeg', govde: await jpegExifli(800, 600) })).id;
-      hazirB = (await yukle(s, tb, { tur: 'soru_fotografi', mime: 'image/jpeg', govde: await jpegExifli(800, 600) })).id;
+      hazirA = (
+        await yukle(s, ta, {
+          tur: 'soru_fotografi',
+          mime: 'image/jpeg',
+          govde: await jpegExifli(800, 600),
+        })
+      ).id;
+      hazirB = (
+        await yukle(s, tb, {
+          tur: 'soru_fotografi',
+          mime: 'image/jpeg',
+          govde: await jpegExifli(800, 600),
+        })
+      ).id;
       silinenA = (await yukle(s, ta, { tur: 'avatar', mime: 'image/png', govde: await png() })).id;
-      bekleyenA = (await izinIste(a, {})).json().dosya.id;
+      bekleyenA = j(await izinIste(a, {})).dosya.id;
       await kuyrugunuIsle(isleme, 10);
       await sistem`update medya.dosyalar set durum = 'silindi', silindi_at = now(), depolama_anahtari = null where id = ${silinenA}`;
     });
@@ -471,10 +529,11 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
         await servisTokeni(),
       );
       expect(r.statusCode, r.body).toBe(200);
-      const { adresler } = r.json() as { adresler: Record<string, unknown>[] };
+      const { adresler } = jIc(r);
       expect(adresler).toHaveLength(1);
       expect(adresler[0]).toMatchObject({ dosya_id: hazirA, mime_tipi: 'image/jpeg' });
-      const a = adresler[0] as { asil_url: string; kucuk_url: string; orta_url: string; genislik: number; gecerlilik_bitis_at: string };
+      const a = adresler[0];
+      if (!a) throw new Error('adres yok');
       expect((await fetch(a.asil_url)).status).toBe(200);
       expect((await fetch(a.kucuk_url)).status).toBe(200);
       expect((await fetch(a.orta_url)).status).toBe(200);
@@ -489,21 +548,33 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       const kt = await kullaniciTokeni(yeniKimlik('sahip', kurumA));
       expect((await cagir(govde, kt)).statusCode).toBe(401);
       expect((await cagir(govde)).statusCode).toBe(401);
-      expect((await cagir(govde, await servisTokeni({ scope: 'iletisim.oku' }))).statusCode).toBe(403);
-      expect((await cagir(govde, await servisTokeni({ audience: 'bildirim' }))).statusCode).toBe(401);
+      expect((await cagir(govde, await servisTokeni({ scope: 'iletisim.oku' }))).statusCode).toBe(
+        403,
+      );
+      expect((await cagir(govde, await servisTokeni({ audience: 'bildirim' }))).statusCode).toBe(
+        401,
+      );
     });
 
     it('gecersiz govde 400 (bos liste, 50 ustu)', async () => {
       const t = await servisTokeni();
       expect((await cagir({ kurum_id: kurumA, dosya_idleri: [] }, t)).statusCode).toBe(400);
       expect(
-        (await cagir({ kurum_id: kurumA, dosya_idleri: Array.from({ length: 51 }, () => uuidv7()) }, t)).statusCode,
+        (
+          await cagir(
+            { kurum_id: kurumA, dosya_idleri: Array.from({ length: 51 }, () => uuidv7()) },
+            t,
+          )
+        ).statusCode,
       ).toBe(400);
     });
 
     it('baska kurumun kimligi istenirse yalniz o kurumun dosyalari doner', async () => {
-      const r = await cagir({ kurum_id: kurumB, dosya_idleri: [hazirA, hazirB] }, await servisTokeni());
-      expect((r.json() as { adresler: { dosya_id: string }[] }).adresler.map((x) => x.dosya_id)).toEqual([hazirB]);
+      const r = await cagir(
+        { kurum_id: kurumB, dosya_idleri: [hazirA, hazirB] },
+        await servisTokeni(),
+      );
+      expect(jIc(r).adresler.map((x) => x.dosya_id)).toEqual([hazirB]);
     });
   });
 });

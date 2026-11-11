@@ -134,11 +134,11 @@ export async function yetimKurali(db: Pick<Database, 'orm'>): Promise<number> {
   return satirlar.length;
 }
 
-export type KotaUyusmazligi = {
+export interface KotaUyusmazligi extends Record<string, unknown> {
   kurum_id: string;
   kayitli_bayt: number;
   gercek_bayt: number;
-};
+}
 
 /**
  * Gece denetimi: `kurum_kotalari` ile dosyalarin `kota_bayt` toplamini karsilastirir, farki loglar ve
@@ -178,7 +178,8 @@ export async function bakimTuru(d: IsBagimliliklari): Promise<void> {
   const takilan = await takilanlariGeriAl(d.db);
   if (takilan > 0) d.log.warn({ adet: takilan }, 'takılan işlemeler kuyruğa geri alındı');
   const asimi = await yuklemeZamanAsimi(d.db);
-  if (asimi > 0) d.log.info({ adet: asimi }, 'yükleme zaman aşımına uğrayanlar silinmek üzere işaretlendi');
+  if (asimi > 0)
+    d.log.info({ adet: asimi }, 'yükleme zaman aşımına uğrayanlar silinmek üzere işaretlendi');
   const yetim = await yetimKurali(d.db);
   if (yetim > 0) d.log.info({ adet: yetim }, 'yetim dosyalara silme süresi atandı');
   let tur = await silmeIsi(d);

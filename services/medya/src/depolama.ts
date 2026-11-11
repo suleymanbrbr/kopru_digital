@@ -55,7 +55,9 @@ export class DepolamaHatasi extends Error {
 
 function bulunamadi(err: unknown): boolean {
   if (err instanceof S3ServiceException) {
-    return err.$metadata.httpStatusCode === 404 || err.name === 'NotFound' || err.name === 'NoSuchKey';
+    return (
+      err.$metadata.httpStatusCode === 404 || err.name === 'NotFound' || err.name === 'NoSuchKey'
+    );
   }
   return false;
 }

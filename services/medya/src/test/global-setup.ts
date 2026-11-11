@@ -83,7 +83,8 @@ export default async function setup(project: TestProject) {
 
   const endpoint = process.env.S3_ENDPOINT ?? process.env.MEDYA_S3_ENDPOINT;
   const accessKeyId = process.env.S3_ACCESS_KEY_ID ?? process.env.MEDYA_S3_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY ?? process.env.MEDYA_S3_SECRET_ACCESS_KEY;
+  const secretAccessKey =
+    process.env.S3_SECRET_ACCESS_KEY ?? process.env.MEDYA_S3_SECRET_ACCESS_KEY;
   if (endpoint && accessKeyId && secretAccessKey) {
     const bucket = `medya-test-${sonek.replaceAll('_', '-')}`;
     const s3 = new S3Client({

@@ -85,7 +85,12 @@ describe.skipIf(dbYok())('medya veritabani: roller, sema ve RLS (medya_app)', ()
 
   it('saklama politikasi tohumu contracts MEDYA_TUR_KURALLARI ile birebir ayni', async () => {
     const satirlar = await owner<
-      { tur: string; izinli_mime: string[]; azami_boyut_bayt: string; azami_sure_sn: number | null }[]
+      {
+        tur: string;
+        izinli_mime: string[];
+        azami_boyut_bayt: string;
+        azami_sure_sn: number | null;
+      }[]
     >`select tur, izinli_mime, azami_boyut_bayt, azami_sure_sn from medya.saklama_politikalari order by tur`;
     expect(satirlar.map((s) => s.tur)).toEqual([...MEDYA_DOSYA_TURLERI].sort());
     for (const s of satirlar) {
@@ -125,12 +130,16 @@ describe.skipIf(dbYok())('medya veritabani: roller, sema ve RLS (medya_app)', ()
     expect(
       await hataMetni(
         withTenant(app, ctx(kurumA), (tx) =>
-          tx.execute(sql`insert into medya.kurum_kotalari (id, kurum_id) values (${uuidv7()}, ${kurumB})`),
+          tx.execute(
+            sql`insert into medya.kurum_kotalari (id, kurum_id) values (${uuidv7()}, ${kurumB})`,
+          ),
         ),
       ),
     ).toMatch(/row-level security/i);
     const guncel = await withTenant(app, ctx(kurumA), (tx) =>
-      tx.execute(sql`update medya.dosyalar set hata_kodu = 'bozuk_dosya' where id = ${dosyaB} returning id`),
+      tx.execute(
+        sql`update medya.dosyalar set hata_kodu = 'bozuk_dosya' where id = ${dosyaB} returning id`,
+      ),
     );
     expect(guncel).toHaveLength(0);
     const silinen = await withTenant(app, ctx(kurumA), (tx) =>

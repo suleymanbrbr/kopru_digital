@@ -13,6 +13,7 @@ import {
   medyaYuklemeIstegiSema,
   medyaYuklemeYanitiSema,
   type MedyaDosyaDurumu,
+  type MedyaDosyaDurumYaniti,
   type MedyaDosyaTuru,
 } from '@kopru/contracts';
 import {
@@ -27,12 +28,7 @@ import { sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
 import type { Depolama } from './depolama.js';
-import {
-  dosyayiBasarisizYap,
-  depolamaAnahtari,
-  iso,
-  yuklemeAnahtari,
-} from './dosya-deposu.js';
+import { dosyayiBasarisizYap, depolamaAnahtari, iso, yuklemeAnahtari } from './dosya-deposu.js';
 
 interface DosyaSatiri extends Record<string, unknown> {
   id: string;
@@ -117,9 +113,9 @@ export function yollariOlustur(secenek: YolSecenekleri): ServicePlugin {
     return { yontem: 'PUT' as const, url, basliklar, gecerlilik_bitis_at: bitis.toISOString() };
   }
 
-  return async (app) => {
+  return (app) => {
     const { db } = app;
-    if (!db) return;
+    if (!db) return Promise.resolve();
 
     app.post(
       '/v1/dosyalar',
@@ -290,7 +286,9 @@ export function yollariOlustur(secenek: YolSecenekleri): ServicePlugin {
                  set durum = 'yuklendi', tamamlandi_at = now(), boyut_bayt = ${bilgi.boyutBayt}
                where id = ${id} and durum = 'yukleme_bekliyor'`);
           }
-          const [d] = await tx.execute<DosyaSatiri>(sql`select ${SECIM} from medya.dosyalar where id = ${id}`);
+          const [d] = await tx.execute<DosyaSatiri>(
+            sql`select ${SECIM} from medya.dosyalar where id = ${id}`,
+          );
           return d ?? satir;
         });
         if (!boyutOk || !mimeOk) {
@@ -384,6 +382,7 @@ export function yollariOlustur(secenek: YolSecenekleri): ServicePlugin {
         return { adresler };
       },
     );
+    return Promise.resolve();
   };
 }
 
@@ -425,7 +424,7 @@ async function durumYaniti(
     genislik: d.genislik,
     yukseklik: d.yukseklik,
     sure_sn: d.sure_sn,
-    hata_kodu: (d.hata_kodu as never) ?? null,
+    hata_kodu: d.hata_kodu as MedyaDosyaDurumYaniti['hata_kodu'],
     adresler,
   };
 }

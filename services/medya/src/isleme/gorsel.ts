@@ -77,7 +77,14 @@ export async function gorselYenidenKodla(
       withoutEnlargement: true,
     });
 
-  const cikti = profil.cikti === 'ayni' ? (tespitMime === 'image/png' ? 'png' : tespitMime === 'image/webp' ? 'webp' : 'jpeg') : profil.cikti;
+  const cikti =
+    profil.cikti === 'ayni'
+      ? tespitMime === 'image/png'
+        ? 'png'
+        : tespitMime === 'image/webp'
+          ? 'webp'
+          : 'jpeg'
+      : profil.cikti;
   let mime: string;
   if (cikti === 'jpeg') {
     // Saydamlik JPEG'de yok: beyaza yassilastir (cizim/fotograf).

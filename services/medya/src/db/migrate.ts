@@ -38,7 +38,9 @@ async function bootstrap(sql: Sql, options: MigrateOptions) {
   await ensureRole(sql, 'medya_app', 'login nosuperuser nobypassrls');
   await ensureRole(sql, 'medya_sistem', 'login nosuperuser bypassrls');
   if (options.appPassword) {
-    await sql.unsafe(`alter role medya_app password '${options.appPassword.replaceAll("'", "''")}'`);
+    await sql.unsafe(
+      `alter role medya_app password '${options.appPassword.replaceAll("'", "''")}'`,
+    );
   }
   if (options.sistemPassword) {
     await sql.unsafe(

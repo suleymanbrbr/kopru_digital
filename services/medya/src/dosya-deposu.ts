@@ -28,7 +28,7 @@ export function depolamaAnahtari(
  */
 export const yuklemeAnahtari = (asilAnahtar: string) => `${asilAnahtar}.yukleme`;
 
-export const kucukResimAnahtari =(asilAnahtar: string, varyant: 'kucuk' | 'orta') =>
+export const kucukResimAnahtari = (asilAnahtar: string, varyant: 'kucuk' | 'orta') =>
   `${asilAnahtar}.${varyant}.webp`;
 
 export type IslemeHatasi = 'mime_uyusmazligi' | 'boyut_uyusmazligi' | 'bozuk_dosya' | 'sure_asimi';
