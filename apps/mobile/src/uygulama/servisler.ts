@@ -79,11 +79,12 @@ export function servisleriKur(): Servisler {
     adaptorler,
     temizle: () => {
       queryClient.clear();
-      geriBildirimDeposu.temizle();
     },
     // Paylasilan cihazda baska biri giris yapinca onceki kullanicinin daveti kabul edilmesin.
     kullaniciCikisi: () => {
       void davetRef.current?.unut();
+      // Yerel "verdim" kaydi uyelik kapsamlidir (kurum degisiminde karismaz); yalniz cikista silinir.
+      geriBildirimDeposu.temizle();
     },
   });
   oturumRef.current = oturum;

@@ -85,6 +85,7 @@ export function OgrenciBugun() {
       {d ? (
         <>
           <GeriBildirimKartlari />
+          <KayitlarimGirisi />
           {oyun ? (
             <Kart className="items-center gap-3">
               <Companion
@@ -160,7 +161,6 @@ export function OgrenciBugun() {
               ))}
             </>
           ) : null}
-          <KayitlarimGirisi />
           <OgrenciBugunOgrenme />
         </>
       ) : null}

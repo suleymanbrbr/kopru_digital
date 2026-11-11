@@ -108,6 +108,9 @@ function LinkBlogu({
         }}
         hata={hata}
         keyboardType="url"
+        multiline={false}
+        numberOfLines={1}
+        scrollEnabled
         autoCapitalize="none"
         autoCorrect={false}
         placeholder="https://"
@@ -270,7 +273,7 @@ export function KayitEkleEkrani({ dersId, baslik, baslangic }: Props) {
           accessibilityLiveRegion="polite"
         >
           <Ikon ad="checkmark-circle" boyut={40} />
-          <Metin varyant="baslik" className="text-center">
+          <Metin varyant="altBaslik" className="text-center">
             {t('mobil.kayit.ekle.kaydedildi')}
           </Metin>
         </Kart>

@@ -16,8 +16,11 @@ export function KayitlarimGirisi() {
   const acik = useKayitlarimAcik();
   const sorgu = useKayitlarim({});
   if (!acik) return null;
-  const yeni = sorgu.data?.pages[0]?.kayitlar.filter((k) => !k.izlendi).length ?? 0;
-  const ozet = yeni > 0 ? t('mobil.kayit.girisYeni', { n: yeni }) : t('mobil.kayit.girisOzet');
+  const ilk = sorgu.data?.pages[0];
+  const yeni = ilk?.kayitlar.filter((k) => !k.izlendi).length ?? 0;
+  // Ilk sayfa doluysa gercek sayi daha fazla olabilir: "30+".
+  const sayi = ilk?.sonrakiImlec ? `${String(yeni)}+` : String(yeni);
+  const ozet = yeni > 0 ? t('mobil.kayit.girisYeni', { n: sayi }) : t('mobil.kayit.girisOzet');
   return (
     <Pressable
       accessibilityRole="button"
