@@ -4,16 +4,18 @@ import Constants from 'expo-constants';
 
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
+import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { cevrimiciKorumaliOperasyon } from '../api/cevrimiciOperasyon';
 import { apiHatasiMi } from '../api/tipler';
 import { davetYoneticisiOlustur, type DavetYoneticisi } from '../davet/yonetici';
 import { guvenliBelirtecDeposu } from '../depo/belirtecDeposu';
 import { guvenliDavetDeposu } from '../depo/davetDeposu';
-import { kv, webDeposuOlarak } from '../depo/kv';
+import { kv, webDeposuOlarak, type KvDepo } from '../depo/kv';
 import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
 import { netInfoGozlemcisi } from '../offline/ag';
 import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
+import { planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
 
@@ -29,6 +31,8 @@ export interface Servisler {
   persister: ReturnType<typeof createAsyncStoragePersister>;
   cacheBuster: string;
   kuyruk: OfflineKuyruk;
+  /** Yerel tercih deposu (ornegin son kullanilan konular). */
+  yerelDepo: KvDepo;
   agGozlemcisi: ReturnType<typeof netInfoGozlemcisi>;
 }
 
@@ -45,6 +49,7 @@ export function servisleriKur(): Servisler {
     hesap: cevrimiciKorumali(ham.hesap, () => agGozlemcisi.cevrimiciMi()),
     ders: operasyon.ders,
     finans: operasyon.finans,
+    ogrenme: cevrimiciKorumaliOgrenme(ham.ogrenme, () => agGozlemcisi.cevrimiciMi()),
   };
 
   const oturumRef: { current: OturumYoneticisi | null } = { current: null };
@@ -105,6 +110,14 @@ export function servisleriKur(): Servisler {
     },
   );
 
+  planIsleyicisiKaydet(
+    kuyruk,
+    () => adaptorler.ogrenme,
+    () => {
+      void queryClient.invalidateQueries({ queryKey: ['plan'] });
+    },
+  );
+
   return {
     adaptorler,
     oturum,
@@ -117,6 +130,7 @@ export function servisleriKur(): Servisler {
     }),
     cacheBuster: `${Constants.expoConfig?.version ?? '0'}-${CACHE_SURUMU}`,
     kuyruk,
+    yerelDepo: kv(),
     agGozlemcisi,
   };
 }

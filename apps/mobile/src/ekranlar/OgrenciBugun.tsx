@@ -26,6 +26,7 @@ import {
 import { useOgrenciBugun } from '../uygulama/sorgular';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
+import { OgrenciBugunOgrenme } from './OgrenciBugunOgrenme';
 
 /** Ogretmenin "ogrenciye gorunsun" notu (api `ogretmene_ozel` notlari ogrenciye hic donmez). */
 function OgretmenNotu({ ders, tz }: { ders: Ders; tz: string }) {
@@ -156,19 +157,7 @@ export function OgrenciBugun() {
               ))}
             </>
           ) : null}
-          <Kart className="gap-2">
-            <Metin varyant="altBaslik" accessibilityRole="header">
-              {t('mobil.bugun.ogrenci.bugunkuGorevler')}
-            </Metin>
-            {d.gorevler.length === 0 ? (
-              <BosDurum
-                ikon="checkmark-circle-outline"
-                mesaj={t('mobil.bugun.ogrenci.bugunkuGorevlerBos')}
-              />
-            ) : (
-              d.gorevler.map((g) => <Metin key={g.id}>{g.baslik}</Metin>)
-            )}
-          </Kart>
+          <OgrenciBugunOgrenme />
         </>
       ) : null}
       <Dugme

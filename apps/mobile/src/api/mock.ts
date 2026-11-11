@@ -1,5 +1,6 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { mockOgrenme } from './mockOgrenme';
 import { mockOperasyon } from './mockOperasyon';
 import {
   ApiHata,
@@ -156,6 +157,9 @@ function moduller(rol: MobilRol | Rol, kurum: 'a' | 'b') {
     takvim: true,
     yoklama: true,
     odev: true,
+    // b kurumunda haftalik plan ve deneme kapali: kart/sekme gizlenmesini gostermek icin.
+    haftalik_plan: kurum === 'a',
+    deneme: kurum === 'a',
     finans: kurum === 'a',
     soru_sor: kurum === 'a',
     oyunlastirma: rol === 'ogrenci',
@@ -232,15 +236,18 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
     if (!(await depo.oku())) throw new ApiHata('yetkisiz', undefined, { durum: 401 });
   }
 
-  const operasyon = mockOperasyon({
+  const operasyonSecenekleri = {
     bekle,
     gecikmeMs,
     oturumGerekli,
     aktifUyelikId: () => aktifUyelikId,
-  });
+  };
+  const operasyon = mockOperasyon(operasyonSecenekleri);
+  const ogrenme = mockOgrenme(operasyonSecenekleri);
 
   return {
     ...operasyon,
+    ogrenme,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);

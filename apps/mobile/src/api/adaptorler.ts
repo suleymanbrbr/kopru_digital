@@ -1,3 +1,4 @@
+import type { OgrenmeAdapter } from './ogrenmeTipleri';
 import type { DersAdapter, FinansAdapter } from './operasyonTipleri';
 import type {
   DavetSonucu,
@@ -78,4 +79,5 @@ export interface Adaptorler {
   hesap: HesapAdapter;
   ders: DersAdapter;
   finans: FinansAdapter;
+  ogrenme: OgrenmeAdapter;
 }

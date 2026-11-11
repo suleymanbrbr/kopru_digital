@@ -300,3 +300,31 @@ export const SablonGuncelleGirdiSema = z.object({
 });
 
 export const SablonListeYanitSema = z.object({ sablonlar: z.array(OdevSablonuSema) });
+
+/** Ogretmen/yonetici: incelenecek (ya da baska durumdaki) teslimler, ogrenci odev satiri duzeyinde. */
+export const TeslimListeSorguSema = z.object({
+  durum: OgrenciOdevDurumSema.default('teslim_edildi'),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  imlec: z.string().max(300).optional().describe('Önceki sayfanın `sonraki_imlec` değeri.'),
+});
+export const TeslimSatiriSema = z.object({
+  ogrenci_odev_id: z.uuid(),
+  odev_id: z.uuid(),
+  odev_baslik: z.string(),
+  brans_kodu: z.string(),
+  ogrenci_id: z.uuid(),
+  gorunen_ad: z.string().nullable(),
+  durum: OgrenciOdevDurumSema,
+  teslim_at: zaman.nullable(),
+  son_teslim_at: zaman.nullable(),
+  gec_teslim: z.boolean(),
+  yapilan_soru_sayisi: z.number().int().nullable(),
+  dogru_sayisi: z.number().int().nullable(),
+  yanlis_sayisi: z.number().int().nullable(),
+  bos_sayisi: z.number().int().nullable(),
+  dogru_orani: z.number().nullable(),
+});
+export const TeslimListeYanitSema = z.object({
+  teslimler: z.array(TeslimSatiriSema),
+  sonraki_imlec: z.string().nullable(),
+});

@@ -19,6 +19,7 @@ import { useOgretmenBugun } from '../uygulama/sorgular';
 import { BekleyenYoklamaKartlari } from './BekleyenYoklamaKartlari';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
+import { OgretmenOgrenmeKartlari } from './OgretmenOgrenmeKartlari';
 
 function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
   return (
@@ -50,6 +51,7 @@ export function OgretmenBugun() {
         <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
       </View>
       {yoklama ? <BekleyenYoklamaKartlari /> : null}
+      <OgretmenOgrenmeKartlari />
       {takvim ? (
         <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
           {bugun.isPending ? <Yukleniyor /> : null}

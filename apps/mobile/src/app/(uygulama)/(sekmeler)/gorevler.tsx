@@ -1,5 +1,5 @@
-import { BosSekme } from '../../../ekranlar/BosSekme';
+import { OgrenciGorevler } from '../../../ekranlar/OgrenciGorevler';
 
 export default function Gorevler() {
-  return <BosSekme anahtar="gorevler" ikon="checkmark-circle-outline" />;
+  return <OgrenciGorevler />;
 }
