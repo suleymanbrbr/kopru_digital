@@ -10,8 +10,10 @@ import type { z } from 'zod';
 import type { TelafiKaynagi } from './ders-formu';
 import { cakisanlariOku, useDersDetayi, useDersYenile, type CakisanDers } from './ders-verisi';
 
+import { DersGeriBildirimi } from '@/components/geri-bildirim/ders-geri-bildirimi';
 import { HataDurumu } from '@/components/hata-durumu';
 import { basari, type Bildirim } from '@/components/hesap/ortak';
+import { DersKayitlari } from '@/components/kayit/ders-kayitlari';
 import { Alan, KapsamSecimi, Satir, type Kapsam } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
@@ -20,6 +22,7 @@ import { Pencere } from '@/components/ui/pencere';
 import { Rozet } from '@/components/ui/rozet';
 import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
+import { useKurum } from '@/kurum/baglam';
 import { hataMesaji, UygulamaHatasi } from '@/lib/api';
 import { bransAdi } from '@/lib/bransler';
 import { dersIstek } from '@/lib/hesap-istek';
@@ -159,6 +162,7 @@ function Icerik({
 
 function Ozet({
   ders,
+  kurumId,
   saatDilimi,
   grupAdlari,
   ogretmenAdlari,
@@ -173,6 +177,9 @@ function Ozet({
   yoklamaAl: () => void;
   telafiEkle: () => void;
 }) {
+  const { rol, acikModuller } = useKurum();
+  const [simdi] = useState(() => Date.now());
+  const personel = rol !== 'ogrenci';
   const gun = yerelTarih(ders.baslangic_at, saatDilimi);
   const baglanti = guvenliBaglanti(ders.online_baglanti);
   const grup = grupAdlari.get(ders.grup_id);
@@ -292,6 +299,21 @@ function Ozet({
             </Dugme>
           )}
         </div>
+      ) : null}
+      {personel && acikModuller.includes('kayitlar') ? (
+        <DersKayitlari
+          kurumId={kurumId}
+          dersId={ders.id}
+          brans={ders.brans_kodu}
+          katilimcilar={ders.katilimcilar}
+          iptal={ders.durum === 'iptal'}
+        />
+      ) : null}
+      {personel &&
+      acikModuller.includes('geri_bildirim') &&
+      ders.durum !== 'iptal' &&
+      Date.parse(ders.bitis_at) <= simdi ? (
+        <DersGeriBildirimi kurumId={kurumId} dersId={ders.id} />
       ) : null}
     </div>
   );

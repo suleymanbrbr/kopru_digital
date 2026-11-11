@@ -8,6 +8,7 @@ import { BolumKarti } from './bolum-karti';
 import { BugunDersleriKarti } from './bugun-dersleri';
 
 import { BosDurum } from '@/components/bos-durum';
+import { BugunGeriBildirimKarti } from '@/components/geri-bildirim/bugun-karti';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { Karakter, karakterAdi } from '@/components/karakter';
 import {
@@ -117,6 +118,7 @@ function OgrenciBugun() {
     <>
       <BugunBasligi aciklama={t('bugun.ogrenciAciklama')} />
       <div className="grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+        {acikModuller.includes('geri_bildirim') ? <BugunGeriBildirimKarti /> : null}
         <BugunDersleriKarti />
         {acikModuller.includes('haftalik_plan') ? (
           <BugunPlanKarti />
