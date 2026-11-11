@@ -2,13 +2,14 @@ import { runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
 import { geceIsiZamanla } from './modules/finans/index.js';
+import { kaynakSuresiniDoldur } from './sistem/ders-kaynak-sure-sonu.js';
 import { dersSaatlikIs } from './sistem/ders-seri-uret.js';
 
 const env = loadServiceEnv();
 const telemetry = startTelemetry(`${serviceName}-worker`, env.OTEL_EXPORTER_OTLP_ENDPOINT);
 
 /**
- * Ders saatlik isi (seri uzatma, katilimci esitleme, eski yoklama istegi temizligi): acilista ve sonra saatte bir denenir. Is idempotenttir ve yapilacak is yoksa hicbir
+ * Ders saatlik isi (seri uzatma, katilimci esitleme, eski yoklama istegi temizligi, kaynak sure sonu): acilista ve sonra saatte bir denenir. Is idempotenttir ve yapilacak is yoksa hicbir
  * sey yazmaz (bkz. `dersSerileriniUret`); boylece her seri gunde bir kez uzar, worker yeniden basladiysa ya da
  * bir calisma basarisiz olduysa bir saat icinde toparlanir. Zamanlayici (pg-boss) geldiginde bu cagri onun
  * gunluk isine tasinir.
@@ -41,6 +42,9 @@ await runWorker({
         if (ozet.silinenYoklamaIstegi > 0) {
           log.info({ silinen: ozet.silinenYoklamaIstegi }, 'eski yoklama istekleri silindi');
         }
+        // Ders kaydi/materyal son erisim tarihi gecenleri `suresi_doldu` yapar (idempotent, coklu worker guvenli).
+        const sure = await kaynakSuresiniDoldur(db, { log });
+        if (sure.kaynak > 0 || sure.hata > 0) log.info(sure, 'ders kaynaklarının süresi doldu');
       } catch (err) {
         log.error({ err }, 'ders saatlik işi başarısız');
       } finally {

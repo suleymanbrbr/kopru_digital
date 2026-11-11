@@ -40,6 +40,10 @@ describe('ders olaylari', () => {
     expect(tanimlar.map((t) => t.subject)).toEqual([
       'evt.ders.ders.degisti.v1',
       'evt.ders.yoklama.kaydedildi.v1',
+      'evt.ders.geri_bildirim.verildi.v1',
+      'evt.ders.kaynak.eklendi.v1',
+      'evt.ders.kaynak.izlendi.v1',
+      'evt.ders.kaynak.sorun_bildirildi.v1',
     ]);
   });
 

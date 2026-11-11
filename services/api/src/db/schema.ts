@@ -443,6 +443,7 @@ export const denetimKayitlari = hesap.table('denetim_kayitlari', {
 export * from './schema-deneme.js';
 export * from './schema-ders.js';
 export * from './schema-finans.js';
+export * from './schema-kaynak.js';
 export * from './schema-mufredat.js';
 export * from './schema-odev.js';
 export * from './schema-plan.js';

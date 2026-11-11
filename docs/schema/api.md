@@ -742,6 +742,8 @@ Profil: `K`. RLS: evet.
 
 Kısıtlar: `UNIQUE (ders_id, ogrenci_id)`. Güncelleme dersten sonra 24 saat içinde izinli. Yalnızca `yoklamalar.durum IN ('geldi','gec')` olan öğrenci verebilir (uygulama). İndeks: `(kurum_id, ders_id)`, `(kurum_id, ogrenci_id, created_at DESC)`. Olaylar: `ders.geri_bildirim.verildi.v1`.
 
+Uygulama (migration `0013`): `PUT .../dersler/{id}/geri-bildirim` (ilk veriş ya da güncelleme; `geri_bildirim` modülü grup düzeyinde dahil açık olmalı, ders bitmiş ve iptal değil, yoklama `geldi`/`gec`). Hata kodları: `422 geri_bildirim_ders_bitmedi`, `422 geri_bildirim_yoklama_uygun_degil`, `422 geri_bildirim_guncelleme_suresi_doldu` (güncelleme dersin bitişinden sonra 24 saat içinde serbest), `409 ders_iptal_edildi`. **İlk veriş süreye bağlı değildir** (şema yalnız güncelleme penceresini tanımlar); olay yalnız ilk verişte, outbox ile aynı işlemde yazılır. Okuma izni `geri_bildirim.oku` (öğretmen `grup`, sahip/yönetici `kurum`; izin sözlüğü sürümü 6); öğrenci kendi verdiğini `geri_bildirim.ver` ile okur. Bekleyenler: son 24 saatte biten, `geldi`/`gec` olunan, geri bildirimi verilmemiş dersler (`GET .../geri-bildirim/bekleyen`, push yok). Oranlar: `GET .../geri-bildirim/ozet?baslangic&bitis` (ders bitiş günü, kurum yerel saati; en çok 366 gün; sahip/yönetici).
+
 ### `ders.ders_kaynaklari`
 
 Ders kayıtları ve materyaller. Dosya yüklemesi değil, **harici bağlantıdır**.
@@ -776,6 +778,16 @@ Parola yalnızca 1-5 kurallarına uyan öğrenciye ve ekleyene döner.
 Süre sonu işi: saatlik, `durum='aktif'` ve `gecerlilik_bitis_at <= now()` olanları `suresi_doldu` yapar.
 Kısıtlar: `CHECK (url ~ '^https://')`, `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, grup_id, created_at DESC) WHERE silindi_at IS NULL`, `(kurum_id, ders_id)`, `(kurum_id, durum, gecerlilik_bitis_at)`.
 Olaylar: `ders.kaynak.eklendi.v1`.
+
+Uygulama (migration `0013`, şemadan farklar):
+- Ek `CHECK (tur <> 'kayit' OR ders_id IS NOT NULL)`: kayıt her zaman bir derse bağlıdır; materyal dersten bağımsız (`ders_id` boş) ya da derse bağlı olabilir. `grup_id` ve `ekleyen_id` için bileşik FK'ler (`gruplar`, `uyelikler`) eklendi; `UNIQUE (kurum_id, id)` alıcı/izleme/sorun tablolarının bileşik FK'si içindir.
+- Ek kısmi indeks `ders_kaynaklari_sure_sonu_idx (gecerlilik_bitis_at) WHERE durum='aktif' AND silindi_at IS NULL AND gecerlilik_bitis_at IS NOT NULL`: süre sonu işi kurum bağlamı olmadan tüm kiracıları taradığı için `kurum_id` ile başlayan şema indeksi yetmez.
+- Not alanı şemada yoktur ve eklenmedi. Parola anahtarı ortam değişkeni `KAYNAK_PAROLA_ANAHTARI` (`API_` önekiyle de okunur; 32 bayt base64). Saklama biçimi `iv(12) || GCM etiketi(16) || şifreli metin`. Anahtar yoksa api açılır; parola yazılırken/okunurken `503 kaynak_sifreleme_yapilandirilmamis`.
+- Görünürlük kuralı 6 (modül) grup düzeyinde çözülür: aday gruplar için `hesap.modul_acik_mi` birer kez çağrılır, kapalı grupların kaynakları listeden elenir (satır başına fonksiyon çağrısı yok).
+- Süre sonu işi worker'ın saatlik ders işine bağlıdır (`services/api/src/sistem/ders-kaynak-sure-sonu.ts`): kurumları yalnız okuyan sorguyla bulur, her kurum için `withSistem` denetimi yazar, satırları `FOR UPDATE SKIP LOCKED` ile seçer (çoklu worker güvenli, idempotent; iş yoksa yazı yok).
+- `bozuk` kaynak öğretmen tarafından güncellenince (herhangi bir PATCH) ya da tüm açık bildirimler çözülünce `aktif` olur; `suresi_doldu` kaynak son erişim tarihi uzatılınca `aktif` olur. `gizli` durumu yalnız öğretmen/yönetici değiştirir.
+- Uçlar: öğrenci `GET /kayitlarim`, `GET /kayitlarim/{id}`, `POST /kayitlarim/{id}/izledim`, `POST /kayitlarim/{id}/sorunlar`; personel `POST /dersler/{id}/kaynaklar`, `POST /gruplar/{id}/materyaller`, `GET /kaynaklar`, `GET|PATCH|DELETE /kaynaklar/{id}`, `GET /kaynaklar/{id}/izlemeler`, `GET /kaynaklar/{id}/sorunlar`, `POST /kaynaklar/{id}/sorunlar/coz`. Hata kodları: `422 kaynak_url_gecersiz`, `422 kaynak_alici_gecersiz`, `422 kaynak_suresi_gecmis`, `409 kaynak_ders_iptal`, `409 kaynak_sorun_zaten_acik`, `503 kaynak_sifreleme_yapilandirilmamis`.
+- `ders.kaynak.eklendi.v1` şemadan sapar: `baslik` olay yükünde yoktur (serbest metin), `brans_kodu` vardır; `ogrenci_idleri` her zaman çözümlenmiş alıcılardır (bkz. `olaylar.md`).
 
 ### `ders.ders_kaynagi_alicilari`
 

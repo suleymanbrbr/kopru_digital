@@ -878,6 +878,186 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/geri-bildirim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin bu derse verdigi geri bildirim (yoksa `geri_bildirim: null`). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            geri_bildirim: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                deger: "anladim" | "kismen" | "anlamadim";
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** Ders sonu geri bildirimi ver/guncelle (ogrenci). Kosullar: `geri_bildirim` modulu (grup duzeyi dahil) acik, ders bitmis ve iptal degil, ogrencinin yoklamasi `geldi`/`gec`. Ikinci gonderim gunceller (dersin bitisinden sonra 24 saat icinde; sonra 422). `ders.geri_bildirim.verildi.v1` yalniz ilk verista yayimlanir. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        deger: "anladim" | "kismen" | "anlamadim";
+                        /**
+                         * Format: uuid
+                         * @description Zorlanılan müfredat konusu (isteğe bağlı).
+                         */
+                        konu_id?: string | null;
+                        not?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            geri_bildirim: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                deger: "anladim" | "kismen" | "anlamadim";
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                            };
+                            /** @description `true`: ilk veriş (olay yayımlandı). `false`: güncelleme. */
+                            yeni: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/geri-bildirimler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dersin geri bildirimleri (ders karti): ogrenci, deger, konu, not ve sayilar. Ogretmen yalniz kendi dersini/atandigi grubu, sahip ve yonetici kapsamindakileri gorur. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            ders_id: string;
+                            geri_bildirimler: {
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                deger: "anladim" | "kismen" | "anlamadim";
+                                /** Format: uuid */
+                                ders_id: string;
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                            }[];
+                            katilimci_sayisi: number;
+                            ozet: {
+                                anladim: number;
+                                anlamadim: number;
+                                kismen: number;
+                                toplam: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/iptal": {
         parameters: {
             query?: never;
@@ -1224,6 +1404,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/kaynaklar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Derse bir ya da birden cok kayit/materyal baglantisi ekle (tek istek, tek islem). Saglayici alan adindan taninir; yalniz https; Zoom parolasi AES-256-GCM ile sifrelenir. Gorunurluk ogrencilere aciksa `ders.kaynak.eklendi.v1` yayimlanir. Ogretmen yalniz kendi dersine ekler; iptal derse 409. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default grup
+                         * @enum {string}
+                         */
+                        gorunurluk?: "ogretmen" | "grup" | "secili_ogrenciler";
+                        /** @description Bir ya da birden çok bağlantı (tek istek, tek işlem). */
+                        linkler: {
+                            baslik: string;
+                            /**
+                             * Format: date-time
+                             * @description Son erişim tarihi (gelecekte olmalı).
+                             */
+                            gecerlilik_bitis_at?: string | null;
+                            /**
+                             * Format: uuid
+                             * @description Müfredat konusu.
+                             */
+                            konu_id?: string | null;
+                            /** @description Zoom kayıt parolası; şifreli saklanır. */
+                            parola?: string | null;
+                            /** @description `https://` ile başlamalı; sağlayıcı alan adından sunucuda tanınır. */
+                            url: string;
+                        }[];
+                        /** @description `secili_ogrenciler` için zorunlu; dersin katılımcısı / grubun etkin üyesi olmalı. */
+                        ogrenci_idleri?: string[];
+                        /**
+                         * @default kayit
+                         * @enum {string}
+                         */
+                        tur?: "kayit" | "materyal";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kaynaklar: {
+                                acik_sorun_sayisi: number;
+                                baslik: string;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                ders_baslangic_at: string | null;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** @enum {string} */
+                                durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                                /** Format: uuid */
+                                ekleyen_id: string;
+                                /** Format: date-time */
+                                gecerlilik_bitis_at: string | null;
+                                /** @enum {string} */
+                                gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                izleyen_sayisi: number;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** @description `secili_ogrenciler` alıcıları (yalnız personel); aksi `null`. */
+                                ogrenci_idleri: string[] | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                                 */
+                                ogretmen_id: string | null;
+                                /** @description Yalnız görünürlük kurallarını sağlayan öğrenciye ve yetkili öğretmene düz metin. */
+                                parola: string | null;
+                                parola_var: boolean;
+                                /** @enum {string} */
+                                saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                                /** @enum {string} */
+                                tur: "kayit" | "materyal";
+                                /** Format: date-time */
+                                updated_at: string;
+                                url: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ders/kurumlar/{kurum_id}/dersler/{id}/tasi": {
         parameters: {
             query?: never;
@@ -1526,6 +1824,1068 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/geri-bildirim/bekleyen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bekleyen geri bildirimler (ogrenci): son 24 saatte biten, iptal olmayan, ogrencinin `geldi`/`gec` oldugu ve henuz geri bildirim vermedigi dersler (grubunda modul kapali olanlar haric). Istemciler Bugun ekraninda kart olarak gosterir; push henuz yok. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dersler: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string | null;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                brans_kodu: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                /**
+                                 * Format: date-time
+                                 * @description Bu zamandan sonra geri bildirim güncellenemez (bitiş + 24 saat).
+                                 */
+                                son_verme_at: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/geri-bildirim/ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tarih araliginda (ders bitis gunu, kurum yerel saati) geri bildirim oranlari: toplam ve ogretmen/brans kirilimi. Yalniz sahip/yonetici (kapsamindaki dersler). */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Kurum yerel tarihi (dahil). */
+                    baslangic: string;
+                    /** @description Kurum yerel tarihi (dahil). */
+                    bitis: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date */
+                            baslangic: string;
+                            /** Format: date */
+                            bitis: string;
+                            branslar: {
+                                anladim: number;
+                                anlamadim: number;
+                                brans_kodu: string;
+                                kismen: number;
+                                /** @description Toplama bölünmüş oranlar (0-1, 4 hane). Toplam 0 ise hepsi 0. */
+                                oran: {
+                                    anladim: number;
+                                    anlamadim: number;
+                                    kismen: number;
+                                };
+                                toplam: number;
+                            }[];
+                            ogretmenler: {
+                                anladim: number;
+                                anlamadim: number;
+                                gorunen_ad: string | null;
+                                kismen: number;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                /** @description Toplama bölünmüş oranlar (0-1, 4 hane). Toplam 0 ise hepsi 0. */
+                                oran: {
+                                    anladim: number;
+                                    anlamadim: number;
+                                    kismen: number;
+                                };
+                                toplam: number;
+                            }[];
+                            toplam: {
+                                anladim: number;
+                                anlamadim: number;
+                                kismen: number;
+                                /** @description Toplama bölünmüş oranlar (0-1, 4 hane). Toplam 0 ise hepsi 0. */
+                                oran: {
+                                    anladim: number;
+                                    anlamadim: number;
+                                    kismen: number;
+                                };
+                                toplam: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/gruplar/{grup_id}/materyaller": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gruba dersten bagimsiz materyal baglantisi ekle (PDF, Drive klasoru, konu anlatim videosu). Ogretmen yalniz atandigi gruba ekler (kapsam disi 404). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default grup
+                         * @enum {string}
+                         */
+                        gorunurluk?: "ogretmen" | "grup" | "secili_ogrenciler";
+                        /** @description Bir ya da birden çok bağlantı (tek istek, tek işlem). */
+                        linkler: {
+                            baslik: string;
+                            /**
+                             * Format: date-time
+                             * @description Son erişim tarihi (gelecekte olmalı).
+                             */
+                            gecerlilik_bitis_at?: string | null;
+                            /**
+                             * Format: uuid
+                             * @description Müfredat konusu.
+                             */
+                            konu_id?: string | null;
+                            /** @description Zoom kayıt parolası; şifreli saklanır. */
+                            parola?: string | null;
+                            /** @description `https://` ile başlamalı; sağlayıcı alan adından sunucuda tanınır. */
+                            url: string;
+                        }[];
+                        /** @description `secili_ogrenciler` için zorunlu; dersin katılımcısı / grubun etkin üyesi olmalı. */
+                        ogrenci_idleri?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kaynaklar: {
+                                acik_sorun_sayisi: number;
+                                baslik: string;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                ders_baslangic_at: string | null;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** @enum {string} */
+                                durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                                /** Format: uuid */
+                                ekleyen_id: string;
+                                /** Format: date-time */
+                                gecerlilik_bitis_at: string | null;
+                                /** @enum {string} */
+                                gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                izleyen_sayisi: number;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /** @description `secili_ogrenciler` alıcıları (yalnız personel); aksi `null`. */
+                                ogrenci_idleri: string[] | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                                 */
+                                ogretmen_id: string | null;
+                                /** @description Yalnız görünürlük kurallarını sağlayan öğrenciye ve yetkili öğretmene düz metin. */
+                                parola: string | null;
+                                parola_var: boolean;
+                                /** @enum {string} */
+                                saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                                /** @enum {string} */
+                                tur: "kayit" | "materyal";
+                                /** Format: date-time */
+                                updated_at: string;
+                                url: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kayitlarim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** "Kayitlarim" (ogrenci): gorunurluk kurallarina uyan kayit ve materyaller. Izlenmemisler once, sonra yeni->eski; imlecli sayfalama. Suzgecler: tur, grup, brans, ders, konu, tarih araligi (ders tarihi; materyalde eklenme tarihi). Parola listede donmez (tekil okumada doner). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Ders tarihi (yoksa eklenme tarihi), kurum yerel günü, dahil. */
+                    baslangic?: string;
+                    bitis?: string;
+                    brans_kodu?: string;
+                    ders_id?: string;
+                    grup_id?: string;
+                    imlec?: string;
+                    konu_id?: string;
+                    limit?: number;
+                    tur?: "kayit" | "materyal";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kayitlar: {
+                                baslik: string;
+                                bozuk: boolean;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                ders_baslangic_at: string | null;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** @enum {string} */
+                                durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                                /** Format: uuid */
+                                ekleyen_id: string;
+                                /** Format: date-time */
+                                gecerlilik_bitis_at: string | null;
+                                /** @enum {string} */
+                                gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                izledi_at: string | null;
+                                izlendi: boolean;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                                 */
+                                ogretmen_id: string | null;
+                                parola_var: boolean;
+                                /** @enum {string} */
+                                saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                                /** @enum {string} */
+                                tur: "kayit" | "materyal";
+                                /** Format: date-time */
+                                updated_at: string;
+                                url: string;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kayitlarim/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tekil kayit (ogrenci). Parola yalniz gorunurluk kurallarini saglayan ogrenciye duz metin doner; gorunmeyen kaynak 404 (varligi ifsa edilmez). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Bu öğrencinin bu kaynak için açık bildirimi var mı. */
+                            acik_sorun_var: boolean;
+                            baslik: string;
+                            bozuk: boolean;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            ders_baslangic_at: string | null;
+                            /** Format: uuid */
+                            ders_id: string | null;
+                            /** @enum {string} */
+                            durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                            /** Format: uuid */
+                            ekleyen_id: string;
+                            /** Format: date-time */
+                            gecerlilik_bitis_at: string | null;
+                            /** @enum {string} */
+                            gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            izledi_at: string | null;
+                            izlendi: boolean;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /**
+                             * Format: uuid
+                             * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                             */
+                            ogretmen_id: string | null;
+                            parola: string | null;
+                            parola_var: boolean;
+                            /** @enum {string} */
+                            saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                            /** @enum {string} */
+                            tur: "kayit" | "materyal";
+                            /** Format: date-time */
+                            updated_at: string;
+                            url: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kayitlarim/{id}/izledim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Izledim" isareti (idempotent): ikinci cagri ayni `izledi_at` ile `ilk: false` doner. `ders.kaynak.izlendi.v1` yalniz ilk eklemede yayimlanir. Geri alinmaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description `true`: ilk işaret (olay yayımlandı); `false`: zaten işaretliydi. */
+                            ilk: boolean;
+                            /** Format: date-time */
+                            izledi_at: string;
+                            /** Format: uuid */
+                            kaynak_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kayitlarim/{id}/sorunlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Acilmiyor" bildirimi (neden + aciklama). Ayni ogrencinin ayni kaynak icin tek acik bildirimi olur (ikincisi 409 `kaynak_sorun_zaten_acik`). Ilk acik bildirim kaynagi `bozuk` yapar; `ders.kaynak.sorun_bildirildi.v1` yayimlanir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string | null;
+                        /** @enum {string} */
+                        neden: "acilmiyor" | "parola_yanlis" | "suresi_doldu" | "diger";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kaynak_durumu: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                            sorun: {
+                                aciklama: string | null;
+                                /** Format: uuid */
+                                bildiren_id: string;
+                                /** Format: uuid */
+                                cozen_id: string | null;
+                                /** Format: date-time */
+                                cozuldu_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "cozuldu";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kaynak_id: string;
+                                /** @enum {string} */
+                                neden: "acilmiyor" | "parola_yanlis" | "suresi_doldu" | "diger";
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kaynaklar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personel kaynak listesi (yeniden eskiye, imlecli). Ogretmen atandigi gruplarin ve kendi ekledigi kaynaklari, sahip/yonetici kapsamindakilerin hepsini gorur. Suzgecler: tur, grup, brans, ders, konu, durum, tarih. Parola donmez; `izleyen_sayisi` ve `acik_sorun_sayisi` satirdadir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Ders tarihi (yoksa eklenme tarihi), kurum yerel günü, dahil. */
+                    baslangic?: string;
+                    bitis?: string;
+                    brans_kodu?: string;
+                    ders_id?: string;
+                    durum?: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                    grup_id?: string;
+                    imlec?: string;
+                    konu_id?: string;
+                    limit?: number;
+                    tur?: "kayit" | "materyal";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kaynaklar: {
+                                acik_sorun_sayisi: number;
+                                baslik: string;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                ders_baslangic_at: string | null;
+                                /** Format: uuid */
+                                ders_id: string | null;
+                                /** @enum {string} */
+                                durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                                /** Format: uuid */
+                                ekleyen_id: string;
+                                /** Format: date-time */
+                                gecerlilik_bitis_at: string | null;
+                                /** @enum {string} */
+                                gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                izleyen_sayisi: number;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                                 */
+                                ogretmen_id: string | null;
+                                parola_var: boolean;
+                                /** @enum {string} */
+                                saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                                /** @enum {string} */
+                                tur: "kayit" | "materyal";
+                                /** Format: date-time */
+                                updated_at: string;
+                                url: string;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kaynaklar/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tekil kaynak (personel). Parola yetkili personele (ekleyen/atanmis ogretmen, sahip, yonetici) duz metin doner; alicilar `secili_ogrenciler`de listelenir. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            acik_sorun_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            ders_baslangic_at: string | null;
+                            /** Format: uuid */
+                            ders_id: string | null;
+                            /** @enum {string} */
+                            durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                            /** Format: uuid */
+                            ekleyen_id: string;
+                            /** Format: date-time */
+                            gecerlilik_bitis_at: string | null;
+                            /** @enum {string} */
+                            gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            izleyen_sayisi: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** @description `secili_ogrenciler` alıcıları (yalnız personel); aksi `null`. */
+                            ogrenci_idleri: string[] | null;
+                            /**
+                             * Format: uuid
+                             * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                             */
+                            ogretmen_id: string | null;
+                            /** @description Yalnız görünürlük kurallarını sağlayan öğrenciye ve yetkili öğretmene düz metin. */
+                            parola: string | null;
+                            parola_var: boolean;
+                            /** @enum {string} */
+                            saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                            /** @enum {string} */
+                            tur: "kayit" | "materyal";
+                            /** Format: date-time */
+                            updated_at: string;
+                            url: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Kaynagi yumusak sil (`silindi_at`). Ogrenciye hemen gorunmez olur; kayit korunur (izleme ve bildirimler). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {boolean} */
+                            silindi: true;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Kaynagi duzenle ya da gizle (`durum: gizli`). `bozuk` bir kaynak guncellenince `aktif`e doner ve acik bildirimler cozulur; `suresi_doldu` kaynagin son erisim tarihi uzatilinca `aktif`e doner. Yalniz ekleyen / grubuna atanmis ogretmen ya da sahip/yonetici. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik?: string;
+                        /**
+                         * @description `gizli`: öğrenciden gizler. `aktif`: yeniden açar.
+                         * @enum {string}
+                         */
+                        durum?: "aktif" | "gizli";
+                        /** Format: date-time */
+                        gecerlilik_bitis_at?: string | null;
+                        /** @enum {string} */
+                        gorunurluk?: "ogretmen" | "grup" | "secili_ogrenciler";
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        ogrenci_idleri?: string[];
+                        /** @description `null`: parolayı kaldır. */
+                        parola?: string | null;
+                        url?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            acik_sorun_sayisi: number;
+                            baslik: string;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            ders_baslangic_at: string | null;
+                            /** Format: uuid */
+                            ders_id: string | null;
+                            /** @enum {string} */
+                            durum: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                            /** Format: uuid */
+                            ekleyen_id: string;
+                            /** Format: date-time */
+                            gecerlilik_bitis_at: string | null;
+                            /** @enum {string} */
+                            gorunurluk: "ogretmen" | "grup" | "secili_ogrenciler";
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            izleyen_sayisi: number;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            /** @description `secili_ogrenciler` alıcıları (yalnız personel); aksi `null`. */
+                            ogrenci_idleri: string[] | null;
+                            /**
+                             * Format: uuid
+                             * @description Derse bağlıysa dersin öğretmeni, değilse ekleyen.
+                             */
+                            ogretmen_id: string | null;
+                            /** @description Yalnız görünürlük kurallarını sağlayan öğrenciye ve yetkili öğretmene düz metin. */
+                            parola: string | null;
+                            parola_var: boolean;
+                            /** @enum {string} */
+                            saglayici: "zoom" | "drive" | "youtube" | "onedrive" | "diger";
+                            /** @enum {string} */
+                            tur: "kayit" | "materyal";
+                            /** Format: date-time */
+                            updated_at: string;
+                            url: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kaynaklar/{id}/izlemeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kaynagi kimin izledigi: izleyenler (zamaniyla) ve izlemeyenler (hedef kitleden). Hedef: ders katilimcilari / grubun etkin uyeleri / secili alicilar; `ogretmen` gorunurlugunde hedef yoktur. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            hedef_sayisi: number;
+                            izlemeyenler: {
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                            }[];
+                            izleyenler: {
+                                gorunen_ad: string | null;
+                                /** Format: date-time */
+                                izledi_at: string;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                            }[];
+                            /** Format: uuid */
+                            kaynak_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kaynaklar/{id}/sorunlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** "Acilmiyor" bildirimleri (acik olanlar once, yeniden eskiye). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sorunlar: {
+                                aciklama: string | null;
+                                bildiren_ad: string | null;
+                                /** Format: uuid */
+                                bildiren_id: string;
+                                /** Format: uuid */
+                                cozen_id: string | null;
+                                /** Format: date-time */
+                                cozuldu_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "acik" | "cozuldu";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                kaynak_id: string;
+                                /** @enum {string} */
+                                neden: "acilmiyor" | "parola_yanlis" | "suresi_doldu" | "diger";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/kaynaklar/{id}/sorunlar/coz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kaynagin tum acik "acilmiyor" bildirimlerini coz; `bozuk` kaynak `aktif`e doner. Acik bildirim yoksa `cozulen_sayisi: 0`. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            cozulen_sayisi: number;
+                            /** @enum {string} */
+                            kaynak_durumu: "aktif" | "suresi_doldu" | "bozuk" | "gizli";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/geri-bildirimler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin son geri bildirimleri (ogrenci profili); yeniden eskiye, imlecle sayfali. Ogretmen yalniz kendi derslerindeki / atandigi gruplardaki geri bildirimleri gorur. */
+        get: {
+            parameters: {
+                query?: {
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            geri_bildirimler: {
+                                brans_kodu: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                deger: "anladim" | "kismen" | "anlamadim";
+                                /** Format: date-time */
+                                ders_baslangic_at: string;
+                                /** Format: date-time */
+                                ders_bitis_at: string;
+                                /** Format: uuid */
+                                ders_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;

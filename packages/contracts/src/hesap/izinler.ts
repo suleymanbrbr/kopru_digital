@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 5;
+export const IZIN_SOZLUGU_SURUMU = 6;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -41,6 +41,10 @@ export const IZINLER = {
   'yoklama.oku': { modul: 'yoklama', aciklama: 'Yoklamayı görme' },
   'yoklama.yaz': { modul: 'yoklama', aciklama: 'Yoklama alma' },
   'geri_bildirim.ver': { modul: 'geri_bildirim', aciklama: 'Derse geri bildirim verme' },
+  'geri_bildirim.oku': {
+    modul: 'geri_bildirim',
+    aciklama: 'Ders sonu geri bildirimlerini ve oranlarını görme',
+  },
   'kayit.oku': { modul: 'kayitlar', aciklama: 'Ders kayıt ve materyallerini görme' },
   'kayit.yaz': { modul: 'kayitlar', aciklama: 'Ders kayıt ve materyali ekleme' },
   'finans.oku': { modul: 'finans', aciklama: 'Kredi ve bakiye bilgisini görme' },
@@ -103,6 +107,7 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'takvim.yaz': 'grup',
     'yoklama.oku': 'grup',
     'yoklama.yaz': 'grup',
+    'geri_bildirim.oku': 'grup',
     'kayit.oku': 'grup',
     'kayit.yaz': 'grup',
     // Ogretmen kendi ogrencilerinde paket satar ve tahsilat alir; sablon/tarife/politika yonetemez.
