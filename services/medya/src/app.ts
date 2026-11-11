@@ -1,4 +1,9 @@
-import { createService, type Service } from '@kopru/service-kit';
+import {
+  createService,
+  type Service,
+  type VerifyJwt,
+  type VerifyServisJwt,
+} from '@kopru/service-kit';
 
 import { serviceName, type Env } from './config.js';
 import { depolamaOlustur, type Depolama } from './depolama.js';
@@ -9,6 +14,9 @@ export interface BuildOptions {
   /** Testler icin; verilmezse ortamdan olusturulur (S3_ENDPOINT yoksa yukleme uclari 503 doner). */
   depolama?: Depolama | null;
   simdi?: () => Date;
+  /** Testler icin JWKS yerine yerel dogrulayicilar. */
+  verifyJwt?: VerifyJwt;
+  verifyServisJwt?: VerifyServisJwt;
 }
 
 export function buildService(env: Env, options: BuildOptions = {}): Service {
@@ -17,6 +25,8 @@ export function buildService(env: Env, options: BuildOptions = {}): Service {
     name: serviceName,
     port: env.PORT,
     env,
+    ...(options.verifyJwt ? { verifyJwt: options.verifyJwt } : {}),
+    ...(options.verifyServisJwt ? { verifyServisJwt: options.verifyServisJwt } : {}),
     plugins: [
       yollariOlustur({
         depolama,
