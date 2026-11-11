@@ -22,6 +22,7 @@ export function buildService(env: Env, options: BuildOptions = {}): Service {
     port: env.PORT,
     env,
     verifyJwt: kimlik.verifyJwt,
+    verifyServisJwt: kimlik.verifyServisJwt,
     plugins: [kimlik.plugin, modulesPlugin],
     ...(options.onClose ? { onClose: options.onClose } : {}),
   });

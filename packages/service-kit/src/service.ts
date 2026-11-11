@@ -25,6 +25,7 @@ import type { BaseEnv } from './env.js';
 import { errorHandler, notFoundHandler } from './errors.js';
 import { BellekIptalDeposu, NatsIptalDeposu, type IptalDeposu } from './iptal.js';
 import { createLogger } from './logger.js';
+import { createServisJwtVerifier, installServisAuth, type VerifyServisJwt } from './servis-auth.js';
 import { installShutdownHandlers } from './shutdown.js';
 
 export type ServiceApp = FastifyInstance<
@@ -64,6 +65,11 @@ export interface CreateServiceOptions {
   readinessChecks?: Record<string, ReadinessCheck>;
   /** Auth dogrulayici; verilmezse `JWKS_URL` kullanilir. */
   verifyJwt?: VerifyJwt;
+  /**
+   * `/ic/*` (`config.servisScope`) rotalari icin servis JWT dogrulayici; verilmezse `JWKS_URL` ve
+   * `aud = name` ile olusturulur. api kendi anahtarlariyla yerinde dogrulama icin verir.
+   */
+  verifyServisJwt?: VerifyServisJwt;
   /** Iptal listesi; verilmezse `NATS_URL` varsa NATS KV, yoksa surec ici depo. */
   iptalDeposu?: IptalDeposu;
   /** Kapanista (db/nats kapandiktan sonra) calisir; ornek: telemetry.shutdown */
@@ -174,6 +180,19 @@ export function createService(options: CreateServiceOptions): Service {
             ...(env.JWKS_URL ? { jwksUrl: env.JWKS_URL } : {}),
             ...(env.JWT_ISSUER ? { issuer: env.JWT_ISSUER } : {}),
             ...(env.JWT_AUDIENCE ? { audience: env.JWT_AUDIENCE } : {}),
+          })
+        : undefined),
+  });
+
+  installServisAuth(app, {
+    enabled: env.AUTH_ENABLED,
+    verify:
+      options.verifyServisJwt ??
+      (env.AUTH_ENABLED
+        ? createServisJwtVerifier({
+            ...(env.JWKS_URL ? { jwksUrl: env.JWKS_URL } : {}),
+            ...(env.JWT_ISSUER ? { issuer: env.JWT_ISSUER } : {}),
+            audience: name,
           })
         : undefined),
   });
