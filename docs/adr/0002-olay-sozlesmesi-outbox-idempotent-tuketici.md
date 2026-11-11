@@ -80,6 +80,19 @@ Her tüketici servis veritabanında `ortak.processed_events (tuketici, olay_id)`
 
 Senkron iç çağrı yalnızca üç durumda kullanılır ve [0001](0001-pragmatik-mikroservis.md) maddesi 3'te listelenmiştir: gizli SMS gönderimi, dosya okuma adresi ve `GET /ic/kullanicilar/:id/iletisim`. İç çağrılar servis JWT'si (`aud=bildirim` / `aud=medya`) ile yetkilendirilir.
 
+## Uygulama notu (2026-11-11): `startConsumer` ve kiracı bağlamı
+
+Tüketici çatısı `@kopru/service-kit` içindedir (`startConsumer`, `YenidenDene`, `KaliciHata`, `ensureDlqStream`, `islenmisOlaylariTemizle`). Servisler bunu `runWorker`'ın `setup` fonksiyonunda başlatır ve dönen `stop()`'u temizleyici olarak verir. Karar ayrıntıları:
+
+- **Mevcut kodla uyum.** Kod bugün tek `EVENTS` stream'i (`evt.>`) ve `evt.{tur}.v{surum}` konularını kullanır; zarf alanları `defineEvent` ile tanımlıdır (`kurumId`, `type`, `version`...). Tüketici bunlara uyar (stream adı `stream` seçeneğiyle değiştirilebilir). Üretici başına ayrı stream'e geçiş (yukarıdaki "Zarf" bölümü) ayrı bir iştir; tüketici arayüzü bundan etkilenmez.
+- **Consumer.** Durable pull consumer; adı `tuketici` değerinin noktasız hâli (`medya.baglama` -> `medya_baglama`). `ack_policy=explicit`, `ack_wait=30s`, `max_deliver=8`, `backoff=[1s, 5s, 30s, 2m, 10m, 30m, 1h]`. Sunucu `backoff` tanımlıyken `ack_wait` yerine `backoff[0]`'ı kullandığından (ilk teslimden 1s sonra ack gelmediyse yeniden teslim), tüketici işlem sürerken `msg.working()` ile sayacı sıfırlar; uzun işleyici ikinci kez teslim edilmez. NATS, `max_deliver` değerinin `backoff` uzunluğundan büyük olmasını şart koşar; `startConsumer` bunu başta denetler.
+- **Filtre.** Her olay türü için `evt.{tur}.*` (tüm sürümler). Bilinmeyen sürüm tüketiciye ulaşır ve sessiz atlanmaz: `term` + DLQ (`bilinmeyen_konu_veya_surum`).
+- **Hata sınıfları.** Zod/JSON hatası -> DLQ + `term` (`gecersiz_yuk`, `gecersiz_json`). `KaliciHata` -> işlem geri alınır, DLQ + `term`. `YenidenDene` -> işlem geri alınır, gecikmeli `nak` (varsayılan 5s, 30s, 2m, 10m; `gecikmeMs` ile ezilebilir). Diğer hatalar -> işlem geri alınır, `nak` (backoff listesi). Her durumda son teslimde (`teslimSayisi >= max_deliver`) DLQ + `term` (`teslim_siniri_asildi`). DLQ yazımı başarısız olursa mesaj kaybolmaz, `nak` edilir.
+- **DLQ.** Ayrı `DLQ` stream'i (`dlq.>`, `max_age=30d`, file). Konu `dlq.{tuketici}.{özgün konu}`; gövde özgün mesajdır, başlıklar `Kopru-Tuketici`, `Kopru-Konu`, `Kopru-Neden`, `Kopru-Teslim-Sayisi`, `Kopru-Stream-Sirasi`, `Kopru-Hata`. "Max deliveries" tavsiye olayını dinleyen ayrı izleyici **yoktur**: son teslimi tüketici kendisi DLQ'ya yazar. Sınır: işlem son teslimde süreç çökmesiyle kesilirse mesaj DLQ'ya düşmez (stream'de 7 gün durur); bunun için tavsiye izleyicisi ya da DLQ alarmı ileride eklenebilir.
+- **Kiracı bağlamı.** `tx`, `processed_events` satırı eklendikten sonra (tablo RLS'sizdir) varsayılan olarak olaydaki `kurumId` ile `app.kurum_id` ayarlanmış açılır (`withTenant` ile aynı `kiraciBaglaminiAyarla`). Böylece işleyici tek bir kurumun verisine RLS altında yazar; `db` uygulama rolüyle (`*_app`) bağlanmalıdır ve rol RLS'i atlayamaz. Kiracıya bağlı olmayan ya da kurumlar arası işler için `kiraci: 'yok'` verilir: bağlam ayarlanmaz ve çağıran, yalnızca gereken yetkiye sahip (gerekirse sistem rollü) bir `db` verir. api'de `withSistem` yalnız `src/sistem/**` içinde kalır; tüketici `withSistem`'i çağırmaz, `db` seçimi worker kurulumundadır. `actor` bilgisi `app.kullanici_id`'ye yazılmaz.
+- **Eşzamanlılık ve kapanış.** Aynı anda en çok `esZamanli` (varsayılan 8) mesaj işlenir; sıra garantisi yoktur (yukarıdaki "Sıra varsayımları"). `stop()` yeni mesaj almayı bırakır ve çalışan işlerin commit + ack ile bitmesini bekler.
+- **Temizlik.** `islenmisOlaylariTemizle(db)` 30 günden eski `processed_events` satırlarını siler (günlük bir işe bağlanır; zamanlayıcı servisin işidir).
+
 ## Sonuçlar
 
 Olumlu:

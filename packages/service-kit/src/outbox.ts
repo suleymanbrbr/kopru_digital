@@ -6,24 +6,12 @@ import {
   eventSubject,
   type AnyEventEnvelope,
 } from '@kopru/contracts';
-import { sql, type SQL } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import type { FastifyBaseLogger } from 'fastify';
 import type { NatsConnection } from 'nats';
 
 import type { Database, Orm } from './db.js';
-
-const identifier = /^[a-z_][a-z0-9_]*$/i;
-
-function tableRef(table: string): SQL {
-  const parts = table.split('.');
-  if (parts.length > 2 || !parts.every((part) => identifier.test(part))) {
-    throw new Error(`Geçersiz outbox tablo adı: ${table}`);
-  }
-  return sql.join(
-    parts.map((part) => sql.identifier(part)),
-    sql.raw('.'),
-  );
-}
+import { identifier, tableRef } from './sql-adi.js';
 
 /** outbox tablosu icin SQL migration sablonunu verilen sema ile doldurur. */
 export async function renderOutboxMigration(schema = 'public'): Promise<string> {
