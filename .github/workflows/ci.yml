@@ -86,8 +86,17 @@ jobs:
         env:
           NEXT_PUBLIC_API_MOCK: '1'
 
+      # Calistiricida Chrome hazir kurulu: once onu kullan (apt/ag bagimliligi yok, yerelde de
+      # PLAYWRIGHT_CHROME_PATH ile Chrome kullaniliyor). Chrome yoksa Playwright Chromium'u kurulur.
       - name: Playwright tarayıcısı
-        run: pnpm --filter @kopru/web exec playwright install --with-deps chromium
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || true)"
+          if [ -n "$CHROME" ]; then
+            echo "Hazir Chrome kullaniliyor: $CHROME ($("$CHROME" --version))"
+            echo "PLAYWRIGHT_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          else
+            pnpm --filter @kopru/web exec playwright install --with-deps chromium
+          fi
 
       - name: Playwright e2e (masaüstü + mobil)
         run: pnpm --filter @kopru/web e2e
