@@ -34,6 +34,10 @@ describe('kaynakUrlCoz: saglayici tanima', () => {
     expect(kaynakUrlCoz(url).saglayici).toBe('diger');
   });
 
+  it('buyuk harfli sema veritabani CHECK icin kucuge cevrilir, yol korunur', () => {
+    expect(kaynakUrlCoz('  HTTPS://ZOOM.US/rec/AbC ').url).toBe('https://ZOOM.US/rec/AbC');
+  });
+
   it('kullanici bilgisiyle alan adi gizleme (zoom.us@evil.com) reddedilir', () => {
     expect(() => kaynakUrlCoz('https://zoom.us@evil.com/x')).toThrow(AppError);
   });

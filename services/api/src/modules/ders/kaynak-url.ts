@@ -19,9 +19,12 @@ const urlHatasi = (mesaj: string) =>
  * olmayan, en cok 2000 karakter. Dondurulen `url` normallestirilmis (`URL.href`) degil, kirpilmis girdidir.
  */
 export function kaynakUrlCoz(girdi: string): { url: string; saglayici: KaynakSaglayici } {
-  const url = girdi.trim();
-  if (url.length > KAYNAK_URL_MAKS) throw urlHatasi('Bağlantı en çok 2000 karakter olabilir.');
-  if (!/^https:\/\//i.test(url)) throw urlHatasi('Bağlantı https:// ile başlamalı.');
+  const kirpilmis = girdi.trim();
+  if (kirpilmis.length > KAYNAK_URL_MAKS)
+    throw urlHatasi('Bağlantı en çok 2000 karakter olabilir.');
+  if (!/^https:\/\//i.test(kirpilmis)) throw urlHatasi('Bağlantı https:// ile başlamalı.');
+  // Sema harfi kucuge cevrilir: veritabani CHECK'i (`url ~ '^https://'`) buyuk/kucuk harf duyarlidir.
+  const url = `https://${kirpilmis.slice('https://'.length)}`;
   let ayrisan: URL;
   try {
     ayrisan = new URL(url);
