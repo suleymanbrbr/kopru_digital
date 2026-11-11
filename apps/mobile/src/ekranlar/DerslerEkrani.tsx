@@ -1,7 +1,7 @@
 import { t } from '@kopru/i18n';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FlatList, Linking, Pressable, View } from 'react-native';
 
 import type { Ders } from '../api/operasyonTipleri';
@@ -13,6 +13,7 @@ import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { hataMesaji } from '../uygulama/hatalar';
+import { useGunKaynaklari } from '../uygulama/kayit';
 import {
   dersAdi,
   useGruplar,
@@ -22,6 +23,7 @@ import {
 } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersIslemleri } from './DersIslemleri';
+import { DersKayitPaneli } from './DersKayitPaneli';
 
 /** http(s) bagi mi (baska semalar acilmaz). */
 export function guvenliBaglantiMi(url: string | null): url is string {
@@ -35,12 +37,15 @@ export function DersSatiri({
   tz,
   onUzunBas,
   baglantiGoster = true,
+  alt,
 }: {
   ders: Ders;
   ad: string;
   tz: string;
   onUzunBas?: () => void;
   baglantiGoster?: boolean;
+  /** Kartin altinda (ayni cerceve icinde) gosterilecek ek bolum (ornegin kayit paneli). */
+  alt?: ReactNode;
 }) {
   const iptal = ders.durum === 'iptal';
   const saat = saatAraligi(ders.baslangic, ders.bitis, tz);
@@ -119,6 +124,7 @@ export function DersSatiri({
           }}
         />
       ) : null}
+      {alt}
     </View>
   );
 }
@@ -144,6 +150,7 @@ export function DerslerEkrani() {
   const bas = seritBasi ?? tarihEkle(gun, -1);
   const sorgu = useGunDersleri(gun);
   const gruplar = useGruplar();
+  const kaynaklar = useGunKaynaklari(gun);
 
   useEffect(() => {
     if (!bildirim) return;
@@ -272,6 +279,13 @@ export function DerslerEkrani() {
                 ders={item}
                 ad={dersAdi(item, gruplar.data)}
                 tz={tz}
+                alt={
+                  <DersKayitPaneli
+                    ders={item}
+                    ad={dersAdi(item, gruplar.data)}
+                    kaynaklar={kaynaklar.data ?? []}
+                  />
+                }
                 onUzunBas={
                   item.durum === 'planli'
                     ? () => {

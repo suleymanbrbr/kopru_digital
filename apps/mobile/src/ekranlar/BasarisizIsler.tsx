@@ -1,7 +1,9 @@
 import { t } from '@kopru/i18n';
 import { Alert, View } from 'react-native';
 
+import { geriBildirimAdi } from '../kayit/kurallar';
 import { kisaZaman } from '../lib/saat';
+import { GERI_BILDIRIM_TURU, type GeriBildirimYuku } from '../offline/geriBildirim';
 import type { KuyrukIsi } from '../offline/kuyruk';
 import { PLAN_GERCEKLESEN_TURU, type PlanGerceklesenYuku } from '../offline/plan';
 import { YOKLAMA_TURU, type YoklamaYuku } from '../offline/yoklama';
@@ -27,6 +29,8 @@ function IsKarti({ is, tz }: { is: KuyrukIsi; tz: string }) {
       ? kisaZaman(yuk.dersBaslangic, tz)
       : '';
   const neden = kuyrukHataMesaji(is.sonHataKodu);
+  const geriBildirimDegeri =
+    is.tur === GERI_BILDIRIM_TURU ? geriBildirimAdi((is.yuk as GeriBildirimYuku).deger) : null;
 
   function vazgec() {
     Alert.alert(t('mobil.senkron.vazgecOnay'), t('mobil.senkron.vazgecOnayMesaj'), [
@@ -61,6 +65,11 @@ function IsKarti({ is, tz }: { is: KuyrukIsi; tz: string }) {
         ) : null}
         {plan ? (
           <Metin varyant="kucuk">{t('mobil.senkron.gerceklesen', { n: plan.miktar })}</Metin>
+        ) : null}
+        {is.tur === GERI_BILDIRIM_TURU && geriBildirimDegeri ? (
+          <Metin varyant="kucuk">
+            {t('mobil.geriBildirim.tesekkur', { deger: geriBildirimDegeri })}
+          </Metin>
         ) : null}
         <Metin varyant="ikincil" className="text-hata">
           {t('mobil.senkron.neden', { neden })}
