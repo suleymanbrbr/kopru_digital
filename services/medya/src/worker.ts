@@ -48,8 +48,8 @@ await runWorker({
           }
         }),
       );
-      // Silme, yukleme zaman asimi, yetim kurali, takilan isleme: 5 dakikada bir.
-      temizleyiciler.push(periyodikIs('bakim', 5 * DAKIKA, log, () => bakimTuru(d)));
+      // Silme, yukleme zaman asimi, yetim kurali, takilan isleme: varsayilan 5 dakikada bir.
+      temizleyiciler.push(periyodikIs('bakim', env.BAKIM_ARALIK_MS, log, () => bakimTuru(d)));
       // Gece kota denetimi: Istanbul 03:00 saatinde (yarim saatlik kontrol, gunde bir kez).
       let sonGun = '';
       temizleyiciler.push(

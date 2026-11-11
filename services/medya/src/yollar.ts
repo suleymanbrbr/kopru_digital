@@ -117,6 +117,23 @@ export function yollariOlustur(secenek: YolSecenekleri): ServicePlugin {
     const { db } = app;
     if (!db) return Promise.resolve();
 
+    // `POST /tamam` govdesizdir; istemciler `content-type: application/json` ile bos govde gonderebilir
+    // (varsayilan ayristirici 400 verir). Bos govde `undefined` sayilir; gecersiz JSON yine 400 olur.
+    app.addContentTypeParser('application/json', { parseAs: 'string' }, (_request, govde, done) => {
+      if (govde === '') {
+        done(null, undefined);
+        return;
+      }
+      try {
+        done(null, JSON.parse(govde as string));
+      } catch {
+        done(
+          new AppError(400, errorCodes.validation, 'İstek gövdesi geçerli JSON değil.'),
+          undefined,
+        );
+      }
+    });
+
     app.post(
       '/v1/dosyalar',
       {

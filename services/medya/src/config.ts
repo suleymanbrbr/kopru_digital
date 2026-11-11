@@ -41,6 +41,12 @@ export const envSchema = base.safeExtend({
   ISLEME_ESZAMANLILIK: z.coerce.number().int().min(1).max(16).default(2),
   /** Isleme kuyrugu bos iken yoklama araligi (ms). */
   ISLEME_ARALIK_MS: z.coerce.number().int().min(50).default(1000),
+  /** Bakim turu (silme, yukleme zaman asimi, yetim kurali) araligi (ms); varsayilan 5 dakika. */
+  BAKIM_ARALIK_MS: z.coerce
+    .number()
+    .int()
+    .min(500)
+    .default(5 * 60_000),
 });
 
 export type Env = z.output<typeof envSchema>;

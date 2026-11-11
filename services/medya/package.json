@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
+    "olc:gorsel": "tsx scripts/gorsel-olc.ts",
     "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate-cli.ts migrate",
     "db:generate": "tsx src/db/migrate-cli.ts generate"
   },

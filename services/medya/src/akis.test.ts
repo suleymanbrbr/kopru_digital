@@ -314,6 +314,13 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       });
       expect(r.statusCode).toBe(409);
       expect(j(r).error.code).toBe('yukleme_bulunamadi');
+      // govdesiz POST + content-type: application/json (istemci kitapliklari boyle gonderebilir) 400 olmaz
+      const jsonBos = await s.service.app.inject({
+        method: 'POST',
+        url: `/v1/dosyalar/${j(izin).dosya.id}/tamam`,
+        headers: yetki(token, { 'content-type': 'application/json' }),
+      });
+      expect(jsonBos.statusCode).toBe(409);
     });
 
     it('imzadaki Content-Type ile uyusmayan PUT reddedilir', async () => {
