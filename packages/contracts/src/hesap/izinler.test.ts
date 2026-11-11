@@ -44,7 +44,7 @@ describe('izin sozlugu', () => {
   });
 
   it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
-    expect(IZIN_SOZLUGU_SURUMU).toBe(5);
+    expect(IZIN_SOZLUGU_SURUMU).toBe(6);
     expect(izinKapsami('ogretmen', 'finans.oku')).toBe('grup');
     expect(izinKapsami('ogretmen', 'finans.tahsilat.yaz')).toBe('grup');
     expect(izinKapsami('ogretmen', 'finans.paket.yaz')).toBeNull();
@@ -68,5 +68,16 @@ describe('izin sozlugu', () => {
     }
     expect(izinKapsami('ogrenci', 'plan.oku')).toBe('kendi');
     expect(izinModulu('plan.gerceklesen.yaz')).toBe('haftalik_plan');
+  });
+
+  it('geri bildirim: ogrenci verir, ogretmen grup kapsaminda okur, sahip/yonetici kurum', () => {
+    expect(izinKapsami('ogrenci', 'geri_bildirim.ver')).toBe('kendi');
+    expect(izinKapsami('ogrenci', 'geri_bildirim.oku')).toBeNull();
+    expect(izinKapsami('ogretmen', 'geri_bildirim.ver')).toBeNull();
+    expect(izinKapsami('ogretmen', 'geri_bildirim.oku')).toBe('grup');
+    expect(izinKapsami('sahip', 'geri_bildirim.oku')).toBe('kurum');
+    expect(izinKapsami('yonetici', 'geri_bildirim.oku')).toBe('kurum');
+    expect(izinKapsami('veli', 'geri_bildirim.oku')).toBeNull();
+    expect(izinModulu('geri_bildirim.oku')).toBe('geri_bildirim');
   });
 });
