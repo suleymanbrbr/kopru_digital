@@ -40,6 +40,10 @@ export default function UygulamaDuzeni() {
       <Stack.Screen name="denemelerim" options={{ title: t('mobil.ogrenme.deneme.denemelerim') }} />
       <Stack.Screen name="deneme-gir" options={{ title: t('mobil.ogrenme.deneme.girisBaslik') }} />
       <Stack.Screen name="deneme-onay" options={{ title: t('mobil.ogrenme.deneme.onayKuyrugu') }} />
+      <Stack.Screen name="soru-yeni" options={{ title: t('mobil.soru.ogrenci.yeniBaslik') }} />
+      <Stack.Screen name="sorularim" options={{ title: t('mobil.soru.ogrenci.sorularim') }} />
+      <Stack.Screen name="soru/[id]" options={{ title: t('mobil.soru.detay.baslik') }} />
+      <Stack.Screen name="soru-cevap/[id]" options={{ title: t('mobil.soru.cevap.baslik') }} />
       <Stack.Protected guard={ortam.gelistirici}>
         <Stack.Screen name="bilesenler" options={{ title: t('mobil.bilesenler.baslik') }} />
       </Stack.Protected>

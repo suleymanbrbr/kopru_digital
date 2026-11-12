@@ -20,6 +20,8 @@ export function apiUrlCoz(url: string, platform: string = Platform.OS): string {
 export const ortam = {
   apiMock: (process.env.EXPO_PUBLIC_API_MOCK as string | undefined) === '1',
   apiUrl: apiUrlCoz((process.env.EXPO_PUBLIC_API_URL as string | undefined) ?? ''),
+  /** Medya servisi adresi (bos: api ile ayni alan adi). */
+  medyaUrl: apiUrlCoz((process.env.EXPO_PUBLIC_MEDYA_URL as string | undefined) ?? ''),
   /** Gelistirici ekranlari (Bilesenler) yalnizca gelistirme derlemesinde acilir. */
   gelistirici: __DEV__,
 } as const;

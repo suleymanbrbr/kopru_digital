@@ -7,6 +7,7 @@ import type { Ders } from '../api/operasyonTipleri';
 import { Companion } from '../karakter/Companion';
 import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import { modulAcikMi } from '../nav/yapilandirma';
+import { CevaplananSorularKarti } from '../soru/BugunKartlari';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
@@ -172,13 +173,14 @@ export function OgrenciBugun() {
           router.push('/odaklan');
         }}
       />
+      {soru ? <CevaplananSorularKarti /> : null}
       {soru ? (
         <Dugme
           etiket={t('mobil.bugun.ogrenci.soruSor')}
           varyant="vurgu"
           buyuk
           onPress={() => {
-            router.navigate('/soru-sor');
+            router.push('/(uygulama)/soru-yeni');
           }}
         />
       ) : null}

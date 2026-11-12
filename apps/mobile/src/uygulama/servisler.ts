@@ -20,6 +20,9 @@ import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
 import { planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
+import { GonderimYoneticisi } from '../yukleme/gonderim';
+import { YuklemeKuyrugu } from '../yukleme/kuyruk';
+import { kaliciYap, yerelSil } from '../yukleme/yerelDosya';
 
 const SAAT = 60 * 60 * 1000;
 /** Cache sema degisince artirilir; eski kalici cache atilir. */
@@ -38,6 +41,10 @@ export interface Servisler {
   agGozlemcisi: ReturnType<typeof netInfoGozlemcisi>;
   /** Verilen geri bildirimlerin yerel kaydi (kartin "degistir" durumu icin). */
   geriBildirimDeposu: GeriBildirimDeposu;
+  /** Kalici dosya yukleme kuyrugu (soru/cevap fotograf ve ses ekleri). */
+  yukleme: YuklemeKuyrugu;
+  /** Soru, cevap ve takip gonderimleri ("Gonderiliyor..." / "Gonderildi"). */
+  gonderim: GonderimYoneticisi;
 }
 
 /** Uygulama omru boyunca tek kez kurulan servisler. */
@@ -61,6 +68,8 @@ export function servisleriKur(): Servisler {
   const oturumRef: { current: OturumYoneticisi | null } = { current: null };
   const hataIsle = (e: unknown) => oturumRef.current?.hataIsle(e);
   const davetRef: { current: DavetYoneticisi | null } = { current: null };
+  const yuklemeRef: { current: YuklemeKuyrugu | null } = { current: null };
+  const gonderimRef: { current: GonderimYoneticisi | null } = { current: null };
 
   const queryClient = new QueryClient({
     queryCache: new QueryCache({ onError: hataIsle }),
@@ -85,6 +94,8 @@ export function servisleriKur(): Servisler {
       void davetRef.current?.unut();
       // Yerel "verdim" kaydi uyelik kapsamlidir (kurum degisiminde karismaz); yalniz cikista silinir.
       geriBildirimDeposu.temizle();
+      void yuklemeRef.current?.temizle();
+      gonderimRef.current?.hepsiniSil();
     },
   });
   oturumRef.current = oturum;
@@ -138,6 +149,34 @@ export function servisleriKur(): Servisler {
     },
   });
 
+  const yukleme = new YuklemeKuyrugu({
+    depo: kv(),
+    yeniId: yeniIstekId,
+    kapsam: () => {
+      const d = oturum.depo.al();
+      return d.asama === 'giris' ? (d.aktif?.uyelik.uyelikId ?? null) : null;
+    },
+    medya: () => adaptorler.medya,
+    yerel: { kalici: kaliciYap, sil: yerelSil },
+    cevrimiciMi: () => agGozlemcisi.cevrimiciMi(),
+  });
+  yuklemeRef.current = yukleme;
+  const gonderim = new GonderimYoneticisi({
+    depo: kv(),
+    yeniId: yeniIstekId,
+    kapsam: () => {
+      const d = oturum.depo.al();
+      return d.asama === 'giris' ? (d.aktif?.uyelik.uyelikId ?? null) : null;
+    },
+    yukleme,
+    kuyruk,
+    soru: () => adaptorler.soru,
+    gonderildi: () => {
+      void queryClient.invalidateQueries({ queryKey: ['soru'] });
+    },
+  });
+  gonderimRef.current = gonderim;
+
   return {
     adaptorler,
     oturum,
@@ -153,5 +192,7 @@ export function servisleriKur(): Servisler {
     yerelDepo: kv(),
     agGozlemcisi,
     geriBildirimDeposu,
+    yukleme,
+    gonderim,
   };
 }

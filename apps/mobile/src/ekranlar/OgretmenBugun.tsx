@@ -2,6 +2,7 @@ import { t } from '@kopru/i18n';
 import { View } from 'react-native';
 
 import { bugunTarihi } from '../lib/saat';
+import { BekleyenSorularKarti } from '../soru/BugunKartlari';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
 import { Kart } from '../ui/Kart';
@@ -69,20 +70,7 @@ export function OgretmenBugun() {
       ) : null}
       {sorgu.data ? (
         <>
-          <Bolum baslik={t('mobil.bugun.ogretmen.bekleyenSorular')}>
-            {sorgu.data.bekleyenSorular.length === 0 ? (
-              <BosDurum
-                ikon="chatbubbles-outline"
-                mesaj={t('mobil.bugun.ogretmen.bekleyenSorularBos')}
-              />
-            ) : (
-              sorgu.data.bekleyenSorular.map((s) => (
-                <Metin key={s.id}>
-                  {s.ogrenciAd}: {s.konu}
-                </Metin>
-              ))
-            )}
-          </Bolum>
+          <BekleyenSorularKarti />
         </>
       ) : null}
     </Ekran>
