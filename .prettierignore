@@ -21,3 +21,4 @@ apps/mobile/android
 apps/mobile/.expo
 apps/mobile/src/karakter/gorseller.generated.ts
 apps/mobile/expo-env.d.ts
+.claude

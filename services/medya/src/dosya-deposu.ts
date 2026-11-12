@@ -33,10 +33,6 @@ export const kucukResimAnahtari = (asilAnahtar: string, varyant: 'kucuk' | 'orta
 
 export type IslemeHatasi = 'mime_uyusmazligi' | 'boyut_uyusmazligi' | 'bozuk_dosya' | 'sure_asimi';
 
-/** `sure_asimi` olay sozlesmesinde yok (dar enum); olayda `bozuk_dosya` olarak yayimlanir. */
-export const olayHataKodu = (hata: IslemeHatasi) =>
-  hata === 'sure_asimi' ? ('bozuk_dosya' as const) : hata;
-
 export interface BasarisizDosya {
   id: string;
   kurum_id: string;
@@ -71,7 +67,7 @@ export async function dosyayiBasarisizYap(
         dosya_id: dosya.id,
         sahip_kullanici_id: dosya.sahip_kullanici_id,
         tur: dosya.tur,
-        hata_kodu: olayHataKodu(hata),
+        hata_kodu: hata,
       },
     }),
     { table: OUTBOX_TABLOSU },

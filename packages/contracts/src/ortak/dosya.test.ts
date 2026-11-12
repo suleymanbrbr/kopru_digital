@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { z } from 'zod';
 
+import * as medyaApi from '../medya/api.js';
 import * as medya from '../medya/olaylar.js';
 import * as dosya from './dosya.js';
 
@@ -118,6 +119,19 @@ describe('dosya olaylari', () => {
         data: { ...hazir.data, tur: 'bilinmeyen' as never },
       }),
     ).toThrow();
+    // `sure_asimi` bozuk_dosya'ya cevrilmeden yayimlanir; medya.md hata kodlariyla ayni kume.
+    expect(
+      medya.medyaDosyaIslenemediV1.create({
+        ...ortak,
+        data: {
+          dosya_id: uuid,
+          sahip_kullanici_id: uuid,
+          tur: 'soru_ses',
+          hata_kodu: 'sure_asimi',
+        },
+      }).data.hata_kodu,
+    ).toBe('sure_asimi');
+    expect(medya.medyaIslemeHataKoduSema.options).toEqual(medyaApi.MEDYA_HATA_KODLARI);
     expect(() =>
       dosya.ortakDosyaBaglandiV1.create({
         ...ortak,

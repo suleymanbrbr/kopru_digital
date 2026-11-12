@@ -1,4 +1,10 @@
-import { hesapKurumDegistiV1, ortakDosyaBaglandiV1, ortakDosyaBirakildiV1 } from '@kopru/contracts';
+import {
+  hesapKurumDegistiV1,
+  ogrenmeSoruCozulduV1,
+  ogrenmeSoruYenidenAcildiV1,
+  ortakDosyaBaglandiV1,
+  ortakDosyaBirakildiV1,
+} from '@kopru/contracts';
 import {
   KaliciHata,
   startConsumer,
@@ -106,11 +112,55 @@ async function kurumDegisti(
 }
 
 /**
- * Tuketicileri baslatir (`medya.baglama`, `medya.kopya`).
+ * Soru saklama kurali (docs/schema/medya.md kural 3-4). Sira bagimsizligi: dosyanin `saklama_olay_at`i son
+ * uygulanan saklama olayinin `occurredAt`idir; daha eski bir olay (yeniden teslim, ters sira) durumu ezmez.
+ * Silinmis dosyalara dokunulmaz. Daha guclu planlar (`kullanici_silindi`, `kurum_kapandi`, `birakildi`,
+ * `yukleme_zaman_asimi`) korunur. Ayni olay iki kez gelirse sonuc ayni (`processed_events` + esit zaman).
+ */
+const GUCLU_PLANLAR = sql`('kullanici_silindi', 'kurum_kapandi', 'birakildi', 'yukleme_zaman_asimi')`;
+
+async function soruCozuldu(
+  tx: Tx,
+  olay: ReturnType<typeof ogrenmeSoruCozulduV1.parse>,
+): Promise<void> {
+  const { dosya_idleri, silinecek_at } = olay.data;
+  if (dosya_idleri.length === 0) return;
+  await tx.execute(sql`
+    update medya.dosyalar
+       set silinecek_at = ${silinecek_at}::timestamptz, silme_nedeni = 'soru_cozuldu',
+           saklama_olay_at = ${olay.occurredAt}::timestamptz
+     where id in (${sql.join(
+       dosya_idleri.map((d) => sql`${d}::uuid`),
+       sql`, `,
+     )}) and durum <> 'silindi'
+       and (silme_nedeni is null or silme_nedeni not in ${GUCLU_PLANLAR})
+       and (saklama_olay_at is null or saklama_olay_at <= ${olay.occurredAt}::timestamptz)`);
+}
+
+async function soruYenidenAcildi(
+  tx: Tx,
+  olay: ReturnType<typeof ogrenmeSoruYenidenAcildiV1.parse>,
+): Promise<void> {
+  const { dosya_idleri } = olay.data;
+  if (dosya_idleri.length === 0) return;
+  // Plan yalniz soru cozulmesinden geldiyse geri alinir; baska nedenli plana dokunulmaz.
+  await tx.execute(sql`
+    update medya.dosyalar
+       set silinecek_at = case when silme_nedeni = 'soru_cozuldu' then null else silinecek_at end,
+           silme_nedeni = case when silme_nedeni = 'soru_cozuldu' then null else silme_nedeni end,
+           saklama_olay_at = ${olay.occurredAt}::timestamptz
+     where id in (${sql.join(
+       dosya_idleri.map((d) => sql`${d}::uuid`),
+       sql`, `,
+     )}) and durum <> 'silindi'
+       and (saklama_olay_at is null or saklama_olay_at <= ${olay.occurredAt}::timestamptz)`);
+}
+
+/**
+ * Tuketicileri baslatir (`medya.baglama`, `medya.saklama`, `medya.kopya`).
  *
- * TODO(medya.saklama): `ogrenme.soru.cozuldu.v1` / `ogrenme.soru.yeniden_acildi.v1` (silinecek_at =
- * cozuldu_at + 30 gun / NULL) ve `hesap.kullanici.silindi.v1` (kullanici dosyalari `now()`) sozlesmeleri
- * `@kopru/contracts`ta olmadigi icin baglanmadi; sozlesmeler gelince `medya.saklama` tuketicisi eklenir.
+ * TODO(medya.saklama): `hesap.kullanici.silindi.v1` (kullanici dosyalari `now()`) sozlesmesi
+ * `@kopru/contracts`ta hala yok (olay kullanici duzeyinde, zarf `kurumId` zorunlu); gelince ayni tuketiciye eklenir.
  * `abonelik.abonelik.degisti.v1` de henuz yok (kota `VARSAYILAN_KOTA_BAYT`).
  */
 export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuketici[]> {
@@ -125,11 +175,20 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
       else await birakildi(tx, olay);
     },
   });
+  const saklama = await startConsumer({
+    ...ortak,
+    tuketici: `medya.saklama${ek}`,
+    olaylar: [ogrenmeSoruCozulduV1, ogrenmeSoruYenidenAcildiV1] as const,
+    isle: async (tx, olay) => {
+      if (olay.type === 'ogrenme.soru.cozuldu') await soruCozuldu(tx, olay);
+      else await soruYenidenAcildi(tx, olay);
+    },
+  });
   const kopya = await startConsumer({
     ...ortak,
     tuketici: `medya.kopya${ek}`,
     olaylar: [hesapKurumDegistiV1] as const,
     isle: (tx, olay) => kurumDegisti(tx, olay),
   });
-  return [baglama, kopya];
+  return [baglama, saklama, kopya];
 }

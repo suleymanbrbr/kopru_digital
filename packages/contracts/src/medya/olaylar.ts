@@ -12,6 +12,7 @@ export const medyaIslemeHataKoduSema = z.enum([
   'mime_uyusmazligi',
   'boyut_uyusmazligi',
   'bozuk_dosya',
+  'sure_asimi',
   'yukleme_zaman_asimi',
 ]);
 
