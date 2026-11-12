@@ -20,6 +20,7 @@ import { BekleyenYoklamaKartlari } from './BekleyenYoklamaKartlari';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { OgretmenOgrenmeKartlari } from './OgretmenOgrenmeKartlari';
+import { BekleyenSorularKarti } from '../soru/BugunKartlari';
 
 function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
   return (
@@ -69,20 +70,7 @@ export function OgretmenBugun() {
       ) : null}
       {sorgu.data ? (
         <>
-          <Bolum baslik={t('mobil.bugun.ogretmen.bekleyenSorular')}>
-            {sorgu.data.bekleyenSorular.length === 0 ? (
-              <BosDurum
-                ikon="chatbubbles-outline"
-                mesaj={t('mobil.bugun.ogretmen.bekleyenSorularBos')}
-              />
-            ) : (
-              sorgu.data.bekleyenSorular.map((s) => (
-                <Metin key={s.id}>
-                  {s.ogrenciAd}: {s.konu}
-                </Metin>
-              ))
-            )}
-          </Bolum>
+          <BekleyenSorularKarti />
         </>
       ) : null}
     </Ekran>

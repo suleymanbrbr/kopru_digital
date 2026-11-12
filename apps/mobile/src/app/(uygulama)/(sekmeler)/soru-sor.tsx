@@ -1,5 +1,5 @@
-import { BosSekme } from '../../../ekranlar/BosSekme';
+import { SoruSorSekmesi } from '../../../ekranlar/soru/SoruSorSekmesi';
 
 export default function SoruSor() {
-  return <BosSekme anahtar="soruSor" ikon="chatbubbles-outline" />;
+  return <SoruSorSekmesi />;
 }

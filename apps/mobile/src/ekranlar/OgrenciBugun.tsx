@@ -24,6 +24,7 @@ import {
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
 import { useOgrenciBugun } from '../uygulama/sorgular';
+import { CevaplananSorularKarti } from '../soru/BugunKartlari';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
@@ -172,13 +173,14 @@ export function OgrenciBugun() {
           router.push('/odaklan');
         }}
       />
+      {soru ? <CevaplananSorularKarti /> : null}
       {soru ? (
         <Dugme
           etiket={t('mobil.bugun.ogrenci.soruSor')}
           varyant="vurgu"
           buyuk
           onPress={() => {
-            router.navigate('/soru-sor');
+            router.push('/(uygulama)/soru-yeni');
           }}
         />
       ) : null}
