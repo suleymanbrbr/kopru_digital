@@ -123,6 +123,22 @@ const kayitKodlari = new Set([
   'geri_bildirim_guncelleme_suresi_doldu',
 ]);
 
+const soruKodlari = new Set([
+  'kota_asildi',
+  'dosya_hazir_degil',
+  'dosya_gecersiz',
+  'dosya_islenemedi',
+  'dosya_zaten_bagli',
+  'kaynak_dosya_gecersiz',
+  'konu_gecersiz',
+  'soru_durumu_gecersiz',
+  'takip_limiti_asildi',
+  'masa_ustlenildi',
+  'cevap_bos',
+  'ses_cok_uzun',
+  'masa_var',
+]);
+
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
   if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
@@ -131,6 +147,9 @@ export function hataMesaji(hata: unknown): string {
   }
   if (hata instanceof UygulamaHatasi && kayitKodlari.has(hata.kod)) {
     return t(`kayitGeriBildirim.hata.${hata.kod}` as MessageKey);
+  }
+  if (hata instanceof UygulamaHatasi && soruKodlari.has(hata.kod)) {
+    return t(`soruSor.hata.${hata.kod}` as MessageKey);
   }
   if (hata instanceof UygulamaHatasi && ogrenmeKodlari.has(hata.kod)) {
     return t(`ogrenme.hata.${hata.kod}` as MessageKey);
