@@ -860,6 +860,8 @@ export interface paths {
                     content: {
                         "application/json": {
                             kazanim: {
+                                dogrulanmamis_sayilan_sn: number;
+                                dogrulanmamis_sayilmayan_sn: number;
                                 seviye_atladi: boolean;
                                 xp: number;
                                 yeni_rozetler: string[];

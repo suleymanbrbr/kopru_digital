@@ -19,6 +19,7 @@ import {
 } from './ortak.js';
 import {
   aktiviteArtir,
+  ayarOku,
   kuralGetir,
   rozetleriDegerlendir,
   sayacArtir,
@@ -42,11 +43,14 @@ interface OturumSatiri extends Record<string, unknown> {
   brans_kodu: string | null;
   plan_gorev_id: string | null;
   cihaz: string | null;
+  dogrulanmamis_sayilan_sn: number;
+  dogrulanmamis_sayilmayan_sn: number;
 }
 
 const KOLONLAR = sql`
   id, istemci_id, ${iso('baslangic_at')} as baslangic_at, ${iso('bitis_at')} as bitis_at,
-  planlanan_dk::int as planlanan_dk, gerceklesen_sn, durum, brans_kodu, plan_gorev_id, cihaz`;
+  planlanan_dk::int as planlanan_dk, gerceklesen_sn, durum, brans_kodu, plan_gorev_id, cihaz,
+  dogrulanmamis_sayilan_sn, dogrulanmamis_sayilmayan_sn`;
 
 const oturum = (s: OturumSatiri): OdakOturumu => ({
   id: s.id,
@@ -134,10 +138,10 @@ export async function odakBaslat(
   const [yeni] = await tx.execute<OturumSatiri>(sql`
     insert into motivasyon.odak_oturumlari
       (id, kurum_id, created_by, ogrenci_id, istemci_id, baslangic_at, planlanan_dk, brans_kodu,
-       plan_gorev_id, cihaz)
+       plan_gorev_id, cihaz, sunucu_gordu_at)
     values (${yeniId()}, ${k.kurumId}, ${k.kullaniciId}, ${k.uyelikId}, ${istek.istemci_id},
             ${baslangic.toISOString()}::timestamptz, ${planlananDk(istek)}, ${istek.brans_kodu ?? null},
-            ${istek.plan_gorev_id ?? null}, ${istek.cihaz ?? null})
+            ${istek.plan_gorev_id ?? null}, ${istek.cihaz ?? null}, ${an.toISOString()}::timestamptz)
     returning ${KOLONLAR}`);
   if (!yeni) throw new Error('odak oturumu yazilamadi');
   return { oturum: oturum(yeni), yeni: true };
@@ -147,8 +151,15 @@ export interface OdakKazanimi {
   xp: number;
   seviye_atladi: boolean;
   yeni_rozetler: string[];
+  /** Geriye donuk (dogrulanmamis) sureden XP/aktiviteye sayilan saniye. */
+  dogrulanmamis_sayilan_sn: number;
+  /** Gunluk paya takilip sayilmayan saniye (oturumda gorunur, XP/aktivite/rozete girmez). */
+  dogrulanmamis_sayilmayan_sn: number;
 }
 
+/** Baslangic saat kaymasi payi: sunucunun gordugu andan onceki bu kadar sure dogrulanmis sayilir. */
+const SAAT_KAYMASI_SN = 120;
+const VARSAYILAN_DOGRULANMAMIS_DK = 30;
 export async function odakBitir(
   tx: Tx,
   k: Kimlik,
@@ -171,7 +182,13 @@ export async function odakBitir(
          and kaynak_olay_id = ${odakOlayId(mevcut.id)} and kural_kodu = 'odak_oturumu'`);
     return {
       oturum: oturum(mevcut),
-      kazanim: { xp: Math.max(t?.xp ?? 0, 0), seviye_atladi: false, yeni_rozetler: [] },
+      kazanim: {
+        xp: Math.max(t?.xp ?? 0, 0),
+        seviye_atladi: false,
+        yeni_rozetler: [],
+        dogrulanmamis_sayilan_sn: mevcut.dogrulanmamis_sayilan_sn,
+        dogrulanmamis_sayilmayan_sn: mevcut.dogrulanmamis_sayilmayan_sn,
+      },
     };
   }
 
@@ -189,11 +206,49 @@ export async function odakBitir(
     returning ${KOLONLAR}`);
   if (!g?.bitis_at) throw new Error('odak oturumu kapatilamadi');
 
+  // Dogrulanmamis sure: baslangic_at ile sunucunun oturumu ilk gordugu an arasi (2 dk saat kaymasi payi
+  // dusulur). Cap (planlanan*60+60, 3 saat) once dogrulanmamis kisimdan keser. Gunluk pay ogrenci kilidi
+  // altinda, bitis gunundeki onceki sayilan dogrulanmamis sureden dusulur.
+  const bitisGun = await zamanBilgisi(tx, k.kurumId, new Date(g.bitis_at));
+  const [o] = await tx.execute<{ ham_sn: number; once_sn: number }>(sql`
+    select greatest(0, floor(extract(epoch from (bitis_at - baslangic_at))))::int as ham_sn,
+           greatest(0, floor(extract(epoch from (least(bitis_at, sunucu_gordu_at) - baslangic_at))))::int as once_sn
+      from motivasyon.odak_oturumlari where id = ${g.id}`);
+  const ham = o?.ham_sn ?? 0;
+  const dogrulanmamis = Math.max(0, (o?.once_sn ?? 0) - SAAT_KAYMASI_SN);
+  const dogrulanmisHam = ham - dogrulanmamis;
+  const dogrulanmamisKirpilmis = Math.min(
+    dogrulanmamis,
+    Math.max(0, g.gerceklesen_sn - dogrulanmisHam),
+  );
+  const dogrulanmis = g.gerceklesen_sn - dogrulanmamisKirpilmis;
+  const pay =
+    (await ayarOku<number>(tx, 'odak.dogrulanmamis_gunluk_azami_dk', VARSAYILAN_DOGRULANMAMIS_DK)) *
+    60;
+  const [kul] = await tx.execute<{ sn: number }>(sql`
+    select coalesce(sum(dogrulanmamis_sayilan_sn), 0)::int as sn from motivasyon.odak_oturumlari
+     where kurum_id = ${k.kurumId} and ogrenci_id = ${k.uyelikId} and dogrulanmamis_gun = ${bitisGun.gun}::date`);
+  const sayilan = Math.min(dogrulanmamisKirpilmis, Math.max(0, pay - (kul?.sn ?? 0)));
+  const sayilmayan = dogrulanmamisKirpilmis - sayilan;
+  await tx.execute(sql`
+    update motivasyon.odak_oturumlari
+       set dogrulanmamis_sayilan_sn = ${sayilan}, dogrulanmamis_sayilmayan_sn = ${sayilmayan},
+           dogrulanmamis_gun = ${sayilan > 0 ? bitisGun.gun : null}::date
+     where id = ${g.id}`);
+  g.dogrulanmamis_sayilan_sn = sayilan;
+  g.dogrulanmamis_sayilmayan_sn = sayilmayan;
+
+  const sayilanToplam = dogrulanmis + sayilan; // XP ve aktiviteye giren sure
   const uygun = g.durum === 'tamam' || g.gerceklesen_sn >= 60;
-  const dakika = Math.floor(g.gerceklesen_sn / 60);
-  const kazanim: OdakKazanimi = { xp: 0, seviye_atladi: false, yeni_rozetler: [] };
+  const dakika = Math.floor(sayilanToplam / 60);
+  const kazanim: OdakKazanimi = {
+    xp: 0,
+    seviye_atladi: false,
+    yeni_rozetler: [],
+    dogrulanmamis_sayilan_sn: sayilan,
+    dogrulanmamis_sayilmayan_sn: sayilmayan,
+  };
   if (uygun && dakika > 0) {
-    const bitisGun = await zamanBilgisi(tx, k.kurumId, new Date(g.bitis_at));
     const b: IsBaglami = {
       kurumId: k.kurumId,
       ogrenciId: k.uyelikId,
@@ -206,8 +261,8 @@ export async function odakBitir(
     const kural = await kuralGetir(tx, 'odak_oturumu');
     if (!kural) throw new Error('xp kurali yok: odak_oturumu');
     const s = await xpKazan(tx, b, { kural, miktar: dakika, bransKodu: g.brans_kodu });
-    // Seri kosulu icin gunluk aktivite ve rozet sayaci tavandan bagimsiz artar.
-    await aktiviteArtir(tx, b, b.gun, 'odak_sn', g.gerceklesen_sn);
+    // Seri kosulu icin gunluk aktivite ve rozet sayaci tavandan bagimsiz artar (yalniz sayilan sureyle).
+    await aktiviteArtir(tx, b, b.gun, 'odak_sn', sayilanToplam);
     await sayacArtir(tx, b, 'toplam_odak_dk', dakika);
     kazanim.yeni_rozetler = await rozetleriDegerlendir(tx, b, ['toplam_odak_dk']);
     kazanim.xp = s.verilen;

@@ -385,6 +385,147 @@ describe.skipIf(dbYok())('odak oturumlari (kullanici JWT, motivasyon_app)', () =
     }
   });
 
+  describe('dogrulanmamis sure (geriye donuk baslangic hile korumasi)', () => {
+    const geri = (ogr: Kimlik, dkOnce: number, ek: Record<string, unknown> = {}) =>
+      baslat(ogr, { baslangic_at: dk(an, -dkOnce).toISOString(), ...ek });
+    const sonuc = (r: { json: () => unknown }) => OdakBitirYanitiSema.parse(r.json());
+    const aktivite = async (ogr: Kimlik) =>
+      (
+        await o.sistem<{ n: number }[]>`
+          select coalesce(sum(odak_sn), 0)::int as n from motivasyon.ogrenci_gunluk_aktivite where ogrenci_id = ${ogr.uyelikId}`
+      )[0]?.n;
+
+    it('aninda 3 saat geriye: en cok 30 dk (+2 dk kayma payi) XP ve aktivite', async () => {
+      an = T0;
+      const ogr = yeniOgrenci();
+      await geri(ogr, 180, { mod: 'serbest', planlanan_dk: 180 });
+      const ist = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      expect(ist.oturum.istemci_id).toBeTruthy();
+      const b = sonuc(await bitir(ogr, ist.oturum.istemci_id));
+      expect(b.oturum.gerceklesen_sn).toBe(10800); // oturumda gorunur
+      expect(b.kazanim).toMatchObject({
+        xp: 32,
+        dogrulanmamis_sayilan_sn: 1800,
+        dogrulanmamis_sayilmayan_sn: 10680 - 1800,
+      });
+      expect(await aktivite(ogr)).toBe(1920);
+      const [say] = await o.sistem<{ deger: number }[]>`
+        select deger::int from motivasyon.ogrenci_sayaclari where ogrenci_id = ${ogr.uyelikId} and sayac_kodu = 'toplam_odak_dk'`;
+      expect(say?.deger).toBe(32);
+    });
+
+    it('ayni gun ikinci geriye donuk oturum: kalan pay', async () => {
+      an = T0;
+      const ogr = yeniOgrenci();
+      await geri(ogr, 20, { mod: 'serbest', planlanan_dk: 60 });
+      const acik1 = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      const b1 = sonuc(await bitir(ogr, acik1.oturum.istemci_id));
+      expect(b1.kazanim).toMatchObject({
+        dogrulanmamis_sayilan_sn: 1080,
+        dogrulanmamis_sayilmayan_sn: 0,
+        xp: 20,
+      });
+      await geri(ogr, 60, { mod: 'serbest', planlanan_dk: 90 });
+      const acik2 = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      const b2 = sonuc(await bitir(ogr, acik2.oturum.istemci_id));
+      // kalan pay 1800 - 1080 = 720; + 120 sn kayma payi
+      expect(b2.kazanim).toMatchObject({
+        dogrulanmamis_sayilan_sn: 720,
+        dogrulanmamis_sayilmayan_sn: 3480 - 720,
+        xp: 14,
+      });
+      expect((await benim(ogr)).toplam_xp).toBe(34);
+      // pay bitti: ucuncu geriye donuk oturum yalniz kayma payi kadar sayilir
+      await geri(ogr, 40, { mod: 'serbest', planlanan_dk: 60 });
+      const acik3 = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      const b3 = sonuc(await bitir(ogr, acik3.oturum.istemci_id));
+      expect(b3.kazanim).toMatchObject({ dogrulanmamis_sayilan_sn: 0, xp: 2 });
+    });
+
+    it('cevrimici baslatilip 50 dk suren oturum tam 50; karisik (10 dk geriye + 40 dk dogrulanmis) 50', async () => {
+      an = T0;
+      const ogr = yeniOgrenci();
+      const id = uuidv7();
+      await baslat(ogr, { mod: '50_10' }, id);
+      an = dk(T0, 50);
+      const b = sonuc(await bitir(ogr, id));
+      expect(b.oturum.gerceklesen_sn).toBe(3000);
+      expect(b.kazanim).toMatchObject({
+        xp: 50,
+        dogrulanmamis_sayilan_sn: 0,
+        dogrulanmamis_sayilmayan_sn: 0,
+      });
+
+      an = dk(T0, 100);
+      const ogr2 = yeniOgrenci();
+      const id2 = uuidv7();
+      await baslat(ogr2, { mod: '50_10', baslangic_at: dk(an, -10).toISOString() }, id2);
+      an = dk(an, 40);
+      const m = sonuc(await bitir(ogr2, id2));
+      expect(m.oturum.gerceklesen_sn).toBe(3000);
+      expect(m.kazanim).toMatchObject({
+        xp: 50,
+        dogrulanmamis_sayilan_sn: 480,
+        dogrulanmamis_sayilmayan_sn: 0,
+      });
+    });
+
+    it('eszamanli iki bitirme payi asmaz', async () => {
+      an = T0;
+      const ogr = yeniOgrenci();
+      await geri(ogr, 120, { mod: 'serbest', planlanan_dk: 180 });
+      const acik = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      const iki = await Promise.all([
+        bitir(ogr, acik.oturum.istemci_id),
+        bitir(ogr, acik.oturum.istemci_id),
+      ]);
+      expect(iki.map((r) => r.statusCode)).toEqual([200, 200]);
+      const [t] = await o.sistem<{ s: number; n: number }[]>`
+        select sum(dogrulanmamis_sayilan_sn)::int as s, count(*)::int as n from motivasyon.odak_oturumlari where ogrenci_id = ${ogr.uyelikId}`;
+      expect(t).toEqual({ s: 1800, n: 1 });
+      expect((await benim(ogr)).toplam_xp).toBe(32);
+      expect(await aktivite(ogr)).toBe(1920);
+    });
+
+    it('ertesi gun (04:00) pay yenilenir', async () => {
+      an = T0;
+      const ogr = yeniOgrenci();
+      await geri(ogr, 180, { mod: 'serbest', planlanan_dk: 180 });
+      const a1 = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      expect(sonuc(await bitir(ogr, a1.oturum.istemci_id)).kazanim.dogrulanmamis_sayilan_sn).toBe(
+        1800,
+      );
+      an = new Date('2026-11-11T00:30:00.000Z'); // 03:30 Istanbul: hala ayni oyunlastirma gunu
+      await geri(ogr, 180, { mod: 'serbest', planlanan_dk: 180 });
+      const a2 = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      expect(sonuc(await bitir(ogr, a2.oturum.istemci_id)).kazanim.dogrulanmamis_sayilan_sn).toBe(
+        0,
+      );
+      an = new Date('2026-11-11T01:30:00.000Z'); // 04:30 Istanbul: yeni gun
+      await geri(ogr, 180, { mod: 'serbest', planlanan_dk: 180 });
+      const a3 = (await istek(ogr, 'GET', '/odak-oturumlari/acik')).json<{
+        oturum: { istemci_id: string };
+      }>();
+      expect(sonuc(await bitir(ogr, a3.oturum.istemci_id)).kazanim.dogrulanmamis_sayilan_sn).toBe(
+        1800,
+      );
+    });
+  });
+
   it('RLS: baska kurumun oturumlari motivasyon_app ile gorunmez', async () => {
     const ogr = yeniOgrenci();
     await baslat(ogr);

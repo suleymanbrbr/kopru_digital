@@ -101,6 +101,13 @@ export const OdakKazanimiSema = z.object({
   /** Yalniz ilk bitirmede dogru olabilir. */
   seviye_atladi: z.boolean(),
   yeni_rozetler: z.array(z.string()),
+  /**
+   * Geriye donuk bildirilen (baslangic_at ile sunucunun oturumu gordugu an arasi, 2 dk kayma payi dusulmus)
+   * sureden XP/aktivite/rozet sayacina sayilan saniye. Gunluk pay `odak.dogrulanmamis_gunluk_azami_dk` (30).
+   */
+  dogrulanmamis_sayilan_sn: z.number().int().min(0),
+  /** Gunluk paya takilip sayilmayan saniye (oturumda gorunur, XP/aktivite/rozete girmez). */
+  dogrulanmamis_sayilmayan_sn: z.number().int().min(0),
 });
 
 export const OdakBitirYanitiSema = z.object({

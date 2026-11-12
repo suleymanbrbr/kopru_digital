@@ -2219,6 +2219,16 @@
                     "kazanim": {
                       "additionalProperties": false,
                       "properties": {
+                        "dogrulanmamis_sayilan_sn": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "dogrulanmamis_sayilmayan_sn": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
                         "seviye_atladi": {
                           "type": "boolean"
                         },
@@ -2237,7 +2247,9 @@
                       "required": [
                         "xp",
                         "seviye_atladi",
-                        "yeni_rozetler"
+                        "yeni_rozetler",
+                        "dogrulanmamis_sayilan_sn",
+                        "dogrulanmamis_sayilmayan_sn"
                       ],
                       "type": "object"
                     },
