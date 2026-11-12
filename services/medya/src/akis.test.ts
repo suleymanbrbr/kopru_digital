@@ -10,7 +10,10 @@ import {
   jIc,
   jpegExifli,
   kullaniciTokeni,
+  chromeM4a,
+  chromeWebm,
   mp3,
+  webmUzat,
   png,
   s3Yok,
   servisTokeni,
@@ -422,7 +425,7 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       expect((await durumOku(j(izin).dosya.id))?.hata_kodu).toBe('boyut_uyusmazligi');
     });
 
-    it('ses: sure cikarilir; 180 sn ustu reddedilir (olayda bozuk_dosya)', async () => {
+    it('ses: sure cikarilir; 180 sn ustu reddedilir (olayda sure_asimi)', async () => {
       const k = yeniKimlik('ogretmen');
       const token = await kullaniciTokeni(k);
       const kisa = await yukle(s, token, { tur: 'soru_ses', mime: 'audio/mpeg', govde: mp3(12) });
@@ -439,9 +442,35 @@ describe.skipIf(s3Yok())('yukleme akisi (gercek PostgreSQL + S3)', () => {
       expect(j(g).adresler.kucuk_url).toBeNull();
       expect((await durumOku(uzun.id))?.hata_kodu).toBe('sure_asimi');
       const ev = await outbox(k.kurumId, 'evt.medya.dosya.islenemedi.v1');
-      expect((ev[0]?.payload as { data: { hata_kodu: string } }).data.hata_kodu).toBe(
-        'bozuk_dosya',
-      );
+      expect((ev[0]?.payload as { data: { hata_kodu: string } }).data.hata_kodu).toBe('sure_asimi');
+    });
+
+    it('ses: Chrome MediaRecorder webm (basliksiz sure) hazir olur; 180 sn ustu webm sure_asimi; Safari tipi mp4 hazir', async () => {
+      const k = yeniKimlik('ogretmen');
+      const token = await kullaniciTokeni(k);
+      const webm = await yukle(s, token, {
+        tur: 'soru_ses',
+        mime: 'audio/webm',
+        govde: chromeWebm(),
+      });
+      const uzun = await yukle(s, token, {
+        tur: 'soru_ses',
+        mime: 'audio/webm',
+        govde: webmUzat(200_000),
+      });
+      const m4a = await yukle(s, token, { tur: 'soru_ses', mime: 'audio/mp4', govde: chromeM4a() });
+      await kuyrugunuIsle(isleme, 6);
+      const sure = async (id: string) => {
+        const g = await s.service.app.inject({
+          method: 'GET',
+          url: `/v1/dosyalar/${id}`,
+          headers: yetki(token),
+        });
+        return { durum: j(g).durum, sure: j(g).sure_sn };
+      };
+      expect(await sure(webm.id)).toEqual({ durum: 'hazir', sure: 5 });
+      expect(await sure(m4a.id)).toEqual({ durum: 'hazir', sure: 3 });
+      expect((await durumOku(uzun.id))?.hata_kodu).toBe('sure_asimi');
     });
 
     it('baskasinin dosyasi GET/tamam icin 404 (yalniz sahip)', async () => {
