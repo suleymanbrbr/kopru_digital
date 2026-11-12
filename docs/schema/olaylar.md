@@ -101,7 +101,7 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
 | `motivasyon.seviye.atladi.v1` | K | Toplam XP seviye eşiğini geçince. | `ogrenci_id`, `eski_seviye`, `yeni_seviye`, `toplam_xp` | `bildirim` |
-| `motivasyon.seri.risk.v1` | K | 21:00 yerel iş: bugün (04:00 kuralı) henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler. | `ogrenci_id`, `mevcut_seri`, `gun_bitis_at` (ertesi gün 04:00'ün UTC karşılığı), `dondurma_stogu` | `bildirim` |
+| `motivasyon.seri.risk.v1` | K | 20:00 yerel iş (`seri.risk_saati`, şartname): bugün (04:00 kuralı) henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler. | `ogrenci_id`, `mevcut_seri`, `gun_bitis_at` (ertesi gün 04:00'ün UTC karşılığı), `dondurma_stogu` | `bildirim` |
 | `motivasyon.seri.bozuldu.v1` | K | Gece değerlendirmesinde seri bozulunca. | `ogrenci_id`, `onceki_seri`, `onarilabilir` (bool), `onarim_son_gun` | `bildirim` |
 | `motivasyon.seri.kilometre_tasi.v1` | K | Seri 3, 7, 14, 30, 60, 100, 365'e ulaşınca. | `ogrenci_id`, `seri` | `bildirim` |
 | `motivasyon.rozet.kazanildi.v1` | K | Yeni rozet kazanılınca (ilk eklemede). | `ogrenci_id`, `rozet_kodu`, `kazanildi_at` | `bildirim` |

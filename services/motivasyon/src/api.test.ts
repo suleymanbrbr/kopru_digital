@@ -77,10 +77,11 @@ describe.skipIf(dbYok())('okuma uclari (kullanici JWT, motivasyon_app)', () => {
       sonraki_seviyeye_kalan: 25,
       bu_hafta_xp: 35,
       karakter: null,
+      // Odev teslimi (1 odev) gunu aktif yapar: seri 1.
       seri: {
-        mevcut_seri: 0,
-        en_uzun_seri: 0,
-        son_aktif_gun: null,
+        mevcut_seri: 1,
+        en_uzun_seri: 1,
+        son_aktif_gun: '2026-11-10',
         dondurma_stogu: 0,
         onarim_hakki: 1,
       },

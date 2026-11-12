@@ -230,7 +230,7 @@ Kurallar:
 - **Öğretmen duraklatması (grup bazlı):** bir grup için duraklatma aralığı varsa, o aralıktaki günlerde grubun etkin üyeleri için `duraklatma` yazılır; seri bozulmaz, dondurma harcanmaz.
 - Kilometre taşları: 3, 7, 14, 30, 60, 100, 365.
 Kısıtlar: `CHECK (mevcut_seri >= 0 AND en_uzun_seri >= mevcut_seri)`. İndeks: `UNIQUE (kurum_id, ogrenci_id)`, `(son_aktif_gun)` (gece işi taraması, `_sistem`).
-Olaylar: `motivasyon.seri.bozuldu.v1`, `motivasyon.seri.kilometre_tasi.v1`, `motivasyon.seri.risk.v1` (21:00 yerel, bugün henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler).
+Olaylar: `motivasyon.seri.bozuldu.v1`, `motivasyon.seri.kilometre_tasi.v1`, `motivasyon.seri.risk.v1` (20:00 yerel, `seri.risk_saati` ile değişir; bugün henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler).
 
 ### `motivasyon.seri_gunleri`
 
@@ -439,3 +439,75 @@ Ek sayaçlar: `toplam_yoklama` (rozeti yok; yoklama etkin duruma göre artar/aza
 ### Okuma uçları
 
 `GET /v1/motivasyon/kurumlar/{kurum_id}/benim` (rol `ogrenci`) ve `GET .../ogrenciler/{ogrenci_id}/ozet` (aynı gövde; öğrenci kendini, `sahip`/`yonetici` kurumdakini, `ogretmen` atama + grup üyeliği kopyalarıyla atandığı gruptakini görür, kapsam dışı 404; veli 403). Kurum yolu JWT'deki kurumla uyuşmazsa 403. Modül kapalıysa `403 modul_kapali`. Gizli rozetler kazanılana kadar yok. Şema: `packages/contracts/src/motivasyon/api.ts`.
+
+## Uygulama notları (paket M2, seri)
+
+Kod: `services/motivasyon/src/{seri,seri-isleri,seri-yollari,seri-komut}.ts`; API şemaları `packages/contracts/src/motivasyon/seri.ts`. Migration eklenmedi.
+
+### Algoritma
+
+- **Aktif gün:** aktivite sayacı artan olay (plan görevi tamam, ödev teslimi, "anladım"; odak paketi de `seriDegerlendir`'i çağırmalı) aynı işlemde `seriDegerlendir(tx, b)` çağırır. Gün (olayın `occurredAt`'inden, kurum saatiyle 04:00 kuralı) eşiklerden birini sağlıyorsa `seri_gunleri`ne `aktif` yazılır (`ON CONFLICT`: yalnız `kacirildi` yükselir), `toplam_aktif_gun` +1, seri yeniden türetilir. Geç eşlenen geçmiş gün doğru güne yazılır. Seri satırı ilk aktif günde açılır (`dondurma_son_hafta`/`onarim_son_ay` o dönemdir: ilk dondurma sonraki Pazartesi gelir).
+- **Türetme** (`zincirOlc`): kaydı olan günlerde `kacirildi` dışındakilerin ardışık adası; en son kayıtlı günde biten ada sayılır (`aktif`/`onarim` sayılır, `dondurma`/`duraklatma` zinciri korur). Kaydı olmayan gün zinciri kırar; değerlendirilmemiş son günler kırmaz. `en_uzun_seri` azalmaz. Bozulma bilgisi (`bozulan_*`, `onarim_bitis_at`) kaçırılan gün artık `kacirildi` değilse temizlenir.
+- **Kilometre taşı:** ulaşılan en yüksek taş `ogrenci_sayaclari['seri_kilometre_tasi']`'nda; yalnız ondan büyük yeni taşlar için olay (seri bozulup yeniden 3 olsa da tekrar yok). `en_uzun_seri` rozet sayacı ve kozmetikler güncellenir.
+- **Gece işi** (`seriGeceIsi`, worker 5 dakikada bir; kurum saatiyle 04:10'dan sonra): `seri > 0` olan öğrencinin kaydı olmayan günlerini (son 60 gün) eskiden yeniye değerlendirir. Her gün için önce hak yenileme (o günü izleyen günün Pazartesi tahakkuku, ayın ilk günü onarım hakkı; `dondurma_son_hafta`/`onarim_son_ay` ile idempotent, kaçırılan hafta kadar birikir, en çok 2), sonra: eşik sağlanmışsa `aktif` → önceki zincir 0 ise kayıt açılmaz → grup duraklatması / kapalı modül / askıdaki kurum ise `duraklatma` → dondurma stoğu varsa `dondurma` → ertesi gün zaten 2 kat hedefse doğrudan `onarim` → aksi halde `kacirildi` + `bozuldu` olayı (yalnız seri > 0 iken, tek kez). Öğrenci başına ayrı işlem ve `ogrenciKilitle`: iki worker aynı anda çalışsa da tek sonuç. Etkin olmayan üyelik kopyası (rol ≠ öğrenci ya da durum ≠ aktif) atlanır.
+- **Onarım:** kaçırılan günü izleyen gün (`bozulan_gun + 1`; pencere gün ile ölçülür, çevrimdışı geç eşlenen iş de kabul) aktivite 2 kat hedefe ulaşırsa kaçırılan gün `onarim`, hak 0.
+- **Risk işi** (`seriRiskIsi`, 5 dakikada bir): kurum saatinde `seri.risk_saati` (varsayılan **20**, 4–23; `motivasyon_ayarlari`'nda satır yoksa kodun varsayılanı) ile ertesi 04:00 arası; `mevcut_seri >= 3`, bugün `aktif` değil, duraklatma/kapalı modül yok. Gün başına bir kez: `ogrenci_sayaclari['seri_risk_gun']` o günün numarasını (1970-01-01'den gün) tutar, ilk yazan olayı üretir.
+- **Uçlar:** `GET .../benim/seri`; `POST/GET /v1/motivasyon/kurumlar/{kurum_id}/gruplar/{grup_id}/seri-duraklatmalari`, `DELETE .../{duraklatma_id}`. Duraklatma izni sözlükte olmadığından `oyunlastirma.oku` kapsamından türetildi: kurum kapsamı (sahip/yönetici) her grup, grup kapsamı (öğretmen) yalnız `atama_kopyalari`'nda aktif atandığı grup; öğrenci/veli 403. Başlangıç geçmiş gün olamaz (422), en çok 31 gün (422), çakışma 409, zaten iptalse DELETE 404. İptal yalnız henüz değerlendirilmemiş günleri etkiler.
+
+### Şemadan sapmalar ve kararlar
+
+- Risk saati 21:00 yerine şartnamedeki **20:00**, `seri.risk_saati` ile değişir (şema ve `olaylar.md` güncellendi).
+- Seri 0 iken (korunacak zincir yok) gün kaydı açılmaz ve dondurma harcanmaz; takvimde `yok` görünür.
+- Kapalı modül/askıdaki kurum günleri `duraklatma` yazılır (yeniden açılınca geçmiş gün cezası olmasın).
+- `dondurma`/`duraklatma` günü sonradan `aktif` olmaz (şema kuralı); o gün sayılmaz.
+- Dev/test: `tsx src/seri-komut.ts gece|risk <ISO>` işi verilen anda çalıştırır (`NODE_ENV=production`'da reddeder).
+
+### Bilinen eksikler
+
+- Kesinti sonrası boşluk taraması 60 günle sınırlı; gece işi adayları son 3 gündeki boşluklarla seçilir.
+- Odak paketi `seriDegerlendir`'i `odak_sn` güncellemesinden sonra çağırmalıdır; çağırmazsa gece işi eşiği sağlayan günü yine `aktif` yazar (kilometre taşı/rozet gecikir).
+
+## Uygulama notları (paket M3: odak, haftanın yıldızı, karakter)
+
+Şemalar `packages/contracts/src/motivasyon/odak-karakter.ts`; kod `services/motivasyon/src/{odak,yildiz,karakter}*.ts`. Migration eklenmedi. Tüm uçlar `/v1/motivasyon/kurumlar/{kurum_id}/...` altındadır, yol kurumu JWT'deki kurumla uyuşmazsa 403; `oyunlastirma` kapalıysa (ya da kurum aktif değilse) 403 `modul_kapali`. İzin sözlüğünde yazma izni yoktur; karar rol + kapsamla verilir (sözlük değiştirilmedi).
+
+### Uçlar
+
+| Yöntem | Yol | Rol / kapsam | Açıklama |
+| --- | --- | --- | --- |
+| POST | `/odak-oturumlari` | öğrenci (kendi) | Başlat. `istemci_id` ile idempotent (201 yeni, 200 aynı oturum). Başka açık oturum varsa 409 `acik_oturum_var` (`details.oturum`) |
+| GET | `/odak-oturumlari/acik` | öğrenci | Devam eden oturum (`oturum: null` olabilir; 6 saati geçen sayılmaz) |
+| GET | `/odak-oturumlari?limit=` | öğrenci | Son oturumlar |
+| POST | `/odak-oturumlari/{istemci_id}/bitir` | öğrenci | `tamam`/`yarida`, isteğe bağlı `bitis_at`; tekrar bitirme etkisiz |
+| POST | `/haftanin-yildizlari` | öğretmen (atandığı grup), yönetici/sahip (kurum) | Yıldız ver; 409 `haftanin_yildizi_verilmis`, 409 `haftalik_limit_asildi`; kapsam dışı 404 |
+| GET | `/haftanin-yildizlari/verdiklerim` | öğretmen, yönetici, sahip | Bu haftaki yıldızlar, `limit`/`kalan` (yönetici için null) |
+| GET | `/ogrenciler/{id}/haftanin-yildizlari` | öğrenci kendi, öğretmen grup, yönetici kurum | Alınan yıldızlar |
+| GET | `/karakter/turler` | öğrenci | Tür ve aşama tanımları |
+| GET / POST | `/karakter` | öğrenci | Benim karakterim / ilk seçim (`tur_kodu`, `ad`) |
+| PATCH | `/karakter/tur`, `/karakter/ad` | öğrenci | Tür tek sefer (409 `tur_degistirme_hakki_yok`), ad sınırsız |
+| GET | `/karakter/kozmetikler` | öğrenci | Tüm kozmetikler, sahiplik, kuşanım, açılma koşulu (rozet adıyla) |
+| PUT / DELETE | `/karakter/kusanimlar/{slot}` | öğrenci | Kuşan / çıkar |
+
+### Odak kuralları
+
+- `mod`: `25_5` (25 dk), `50_10` (50 dk), `serbest` (`planlanan_dk` 5-180 zorunlu). Mod saklanmaz, yalnız `planlanan_dk` belirler.
+- `baslangic_at` (çevrimdışı başlatma) isteğe bağlı: gelecekte (2 dk sapma payı) ya da 24 saatten eski olamaz (422 `baslangic_gecersiz`).
+- Süre: `gerceklesen_sn = LEAST(bitis - baslangic, planlanan_dk*60 + 60, 10800)`. İstemcinin `bitis_at` değeri `[baslangic, şimdi]` aralığına **sıkıştırılır** (reddedilmez).
+- XP: `tamam` ya da `yarida` ve `gerceklesen_sn >= 60` ise `odak_oturumu` kuralı `floor(sn/60)` (`odak` tavanı 120). `kaynak_olay_id` = UUIDv5(`odak:{oturum_id}`). `odak_sn` aktivite sayacı (gün = bitiş zamanının günü) ve `toplam_odak_dk` + rozet değerlendirmesi XP tavanından bağımsız artar.
+- **Doğrulanmamış süre (hile koruması, migration `0006_odak_karakter.sql`):** `odak_oturumlari.sunucu_gordu_at` başlat isteğinin ulaştığı andır. `baslangic_at` ile `sunucu_gordu_at` arasındaki süre (2 dk saat kayması payı düşülür) doğrulanamaz; öğrenci başına, bitiş gününde en çok `motivasyon_ayarlari['odak.dogrulanmamis_gunluk_azami_dk']` (30) kadarı XP'ye, `odak_sn` aktivitesine ve `toplam_odak_dk` sayacına girer. Süre üst sınırı (`planlanan*60+60`, 3 saat) önce doğrulanmamış kısımdan keser. Sayılan/sayılmayan süre oturumda (`dogrulanmamis_sayilan_sn`, `dogrulanmamis_sayilmayan_sn`, `dogrulanmamis_gun`) saklanır ve `kazanim` içinde döner; günlük kullanım aynı öğrenci kilidi altında toplanır. Aşan kısım oturumun `gerceklesen_sn`'inde görünür ama XP/aktivite/rozete girmez. Çevrimiçi başlatılan oturum tamamen doğrulanmıştır. En çok 30 dk + 2 dk kayma payı XP alınabilir.
+- Kapanmış oturumu yeniden bitirmek hiçbir şeyi değiştirmez; yanıttaki `kazanim.xp` defterdeki toplamdır.
+- Aynı öğrenci için işlemler `ogrenciKilitle` ile sıralanır.
+- Altı saati geçen `devam` oturumlar worker işiyle (10 dakikada bir) ve yeni oturum başlatılırken `yarida` yapılır: `bitis_at = baslangic_at + planlanan_dk`, `gerceklesen_sn = 0` (doğrulanmamış süreye XP verilmez; şemadaki "yarida ve >= 60 sn" kuralı yalnız istemcinin bildirdiği bitişlere uygulanır).
+- `plan_gorev_id` yalnız saklanır; plan görevine "gerçekleşen" yazımı api'ye ayrıca gönderilir.
+
+### Haftanın yıldızı
+
+Hafta Pazartesi 04:00 (kurum saati). Öğretmen için sayım `pg_advisory_xact_lock(727004, öğretmen)` altında; öğrenci kilidi sonra alınır (sıra sabit). 50 XP `haftanin_yildizi` kuralı (tavandan muaf), `haftanin_yildizi` sayacı +1, rozet değerlendirmesi (`yildiz_bronz` gizli rozet; kozmetik `arka_plan_yildiz` açılır). Öğretmen yalnız aktif atandığı grupta aktif üye olan öğrenciye verir (`atama_kopyalari` + `grup_uyesi_kopyalari`, tarih aralıkları bugünü içermeli); yönetici/sahip grup üyeliğini doğrular, haftalık sınır uygulanmaz. Kapsam dışı ve bilinmeyen öğrenci aynı 404'tür. Olay yazılmaz.
+
+### Karakter
+
+- Aşama seçimde mevcut seviyeden hesaplanır; sonrasını XP işleyicisi evrimleştirir. Tür değişiminde aşama ve kuşanımlar korunur, `tur_degistirme_hakki` 0 olur.
+- Ad süzgeci (`karakter-ad.ts`): kırpılmış 1-24 karakter, yalnız harf/rakam/tek boşluk (aksi 422 `karakter_adi_uygunsuz`); küçük harfe, aksansız ASCII'ye ve leet rakamlara (0134 57 → oi ea st) indirgenmiş ad küçük bir yasaklı kelime listesiyle karşılaştırılır: 5 harften kısa kelimeler yalnız tam kelime (ya da boşluksuz birleşik adın tamamı), uzunlar alt dize olarak aranır. Liste yer tutucudur; moderasyonla genişletilir.
+- Kuşan: karakter seçilmemişse 422 `karakter_secilmemis`; sahip olunmayan (ya da bilinmeyen) kozmetik 422 `kozmetik_sahip_degil`; slot uyuşmazlığı 422 `kozmetik_slot_uyusmuyor`. Çıkarma boş slot için de başarılıdır.
+- `benim.karakter` zaten kuşanımları içerir (çekirdekte); `tur_degistirme_hakki` gibi ek alanlar `GET /karakter`'dedir.
+- Betik: `services/motivasyon/scripts/odak-karakter-akisi.sh`.
