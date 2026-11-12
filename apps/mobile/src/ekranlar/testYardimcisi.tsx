@@ -14,6 +14,7 @@ import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-te
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { mockAdaptorler } from '../api/mock';
+import { mockMedya } from '../api/mockMedya';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
 import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/geriBildirim';
@@ -21,6 +22,8 @@ import { OfflineKuyruk } from '../offline/kuyruk';
 import { planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur } from '../oturum/yonetici';
+import { GonderimYoneticisi } from '../yukleme/gonderim';
+import { YuklemeKuyrugu } from '../yukleme/kuyruk';
 import { ServisBaglami } from '../uygulama/baglam';
 import type { Servisler } from '../uygulama/servisler';
 
@@ -43,6 +46,8 @@ export interface Ortam {
   adaptorler: Servisler['adaptorler'];
   kuyruk: OfflineKuyruk;
   queryClient: QueryClient;
+  gonderim: GonderimYoneticisi;
+  yukleme: YuklemeKuyrugu;
 }
 
 export const OGRETMEN = ['+905551110001', 'uyelik-ogretmen-a'] as const;
@@ -80,6 +85,34 @@ export function ortamKur(): Ortam {
       }
     },
   });
+  adaptorler.medya = mockMedya({ gecikmeMs: 0, isle: 0 });
+  const kapsamAl = () => {
+    const d = oturum.depo.al();
+    return d.asama === 'giris' ? (d.aktif?.uyelik.uyelikId ?? null) : null;
+  };
+  const yukleme = new YuklemeKuyrugu({
+    depo: bellekKv(),
+    yeniId: () => `00000000-0000-7000-9000-${String(Math.random()).slice(2, 14).padEnd(12, '0')}`,
+    kapsam: kapsamAl,
+    medya: () => adaptorler.medya,
+    yerel: { kalici: (u) => Promise.resolve(u), sil: () => Promise.resolve() },
+    cevrimiciMi: () => cevrimici.deger,
+    bekle: () => Promise.resolve(),
+    gecikme: () => 0,
+  });
+  const gonderim = new GonderimYoneticisi({
+    depo: bellekKv(),
+    yeniId: () => `00000000-0000-7000-a000-${String(Math.random()).slice(2, 14).padEnd(12, '0')}`,
+    kapsam: kapsamAl,
+    yukleme,
+    kuyruk,
+    soru: () => adaptorler.soru,
+    bekle: () => Promise.resolve(),
+    hazirDeneme: { sayi: 2, araMs: 0 },
+    gonderildi: () => {
+      void queryClient.invalidateQueries({ queryKey: ['soru'] });
+    },
+  });
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: Infinity, staleTime: 0 },
@@ -94,6 +127,8 @@ export function ortamKur(): Ortam {
     kuyruk,
     yerelDepo: bellekKv(),
     geriBildirimDeposu,
+    yukleme,
+    gonderim,
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,
@@ -105,6 +140,8 @@ export function ortamKur(): Ortam {
     adaptorler,
     kuyruk,
     queryClient,
+    gonderim,
+    yukleme,
     giris: async (telefon, uyelikId) => {
       await adaptorler.auth.otpDogrula(telefon, '123456');
       await oturum.girisTamamlandi();

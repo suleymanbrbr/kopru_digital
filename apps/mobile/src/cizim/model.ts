@@ -41,7 +41,7 @@ export const KALEM_HEX: Record<KalemRengi, string> = {
 };
 
 /** Kalinlik on binde birler (fotograf genisligine gore). */
-export const KALEM_KALINLIGI = 45;
+export const KALEM_KALINLIGI = 55;
 export const SILGI_KALINLIGI = 220;
 
 /** Calisma zamani noktasi: x, y 0..1 (genislik/yukseklige gore), t ms. */

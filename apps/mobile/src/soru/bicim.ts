@@ -111,3 +111,30 @@ export function durumIkonu(
       return 'lock-closed';
   }
 }
+
+/** Soru sorulabilen dersler (`ortak.bransler` kodlariyla ayni; mufredat bos olsa da secilebilir). */
+export const SORU_BRANS_KODLARI = [
+  'matematik',
+  'geometri',
+  'fizik',
+  'kimya',
+  'biyoloji',
+  'fen_bilimleri',
+  'turkce',
+  'edebiyat',
+  'tarih',
+  'inkilap_tarihi',
+  'cografya',
+  'sosyal_bilgiler',
+  'felsefe',
+  'din_kulturu',
+  'ingilizce',
+  'almanca',
+  'diger',
+] as const;
+
+/** Son secilen ders basa alinir (onerilen). */
+export function bransSirasi(son: string | null): string[] {
+  const hepsi: string[] = [...SORU_BRANS_KODLARI];
+  return son && hepsi.includes(son) ? [son, ...hepsi.filter((k) => k !== son)] : hepsi;
+}

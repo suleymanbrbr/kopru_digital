@@ -111,7 +111,7 @@ export function GorselGoruntule({
   if (!adres) return null;
   return (
     <Modal visible={gorunur} animationType="fade" onRequestClose={kapat} statusBarTranslucent>
-      <View className="flex-1 bg-black" testID="gorsel-tam-ekran">
+      <View className="flex-1" style={{ backgroundColor: '#000000' }} testID="gorsel-tam-ekran">
         <ScrollView
           maximumZoomScale={5}
           minimumZoomScale={1}
@@ -132,8 +132,15 @@ export function GorselGoruntule({
           accessibilityRole="button"
           accessibilityLabel={t('mobil.soru.ek.kapat')}
           onPress={kapat}
-          style={{ position: 'absolute', top: ins.top + 8, right: 16, minWidth: 44, minHeight: 44 }}
-          className="items-center justify-center rounded-tam bg-black/60"
+          style={{
+            position: 'absolute',
+            top: ins.top + 8,
+            right: 16,
+            minWidth: 44,
+            minHeight: 44,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+          }}
+          className="items-center justify-center rounded-tam"
           testID="gorsel-kapat"
         >
           <Ikon ad="close" renk="#FFFFFF" boyut={26} />
@@ -142,7 +149,7 @@ export function GorselGoruntule({
           style={{ position: 'absolute', bottom: ins.bottom + 12, left: 0, right: 0 }}
           className="items-center"
         >
-          <Metin varyant="kucuk" className="text-white">
+          <Metin varyant="kucuk" style={{ color: '#FFFFFF' }}>
             {t('mobil.soru.ek.yakinlastir')}
           </Metin>
         </View>

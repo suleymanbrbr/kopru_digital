@@ -182,23 +182,7 @@ export function CizimEkrani({
           <Metin varyant="altBaslik" accessibilityRole="header">
             {mod === 'isaret' ? t('mobil.soru.isaret.baslik') : t('mobil.soru.cizim.baslik')}
           </Metin>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('mobil.soru.cizim.tamam')}
-            accessibilityState={{ disabled: mesgul, busy: mesgul }}
-            disabled={mesgul}
-            onPress={() => void bitti()}
-            className="min-h-dokunma justify-center"
-            testID="cizim-tamam"
-          >
-            {mesgul ? (
-              <ActivityIndicator />
-            ) : (
-              <Metin varyant="etiket" className="text-birincil">
-                {t('mobil.soru.cizim.tamam')}
-              </Metin>
-            )}
-          </Pressable>
+          <View style={{ width: 56 }} />
         </View>
 
         <ScrollView
@@ -252,7 +236,7 @@ export function CizimEkrani({
                   testID="mini-kayit"
                 >
                   <Ikon ad={ses.asama === 'kaydediyor' ? 'stop' : 'mic'} renk="#FFFFFF" />
-                  <Metin varyant="etiket" className="text-white">
+                  <Metin varyant="etiket" style={{ color: '#FFFFFF' }}>
                     {ses.asama === 'kaydediyor'
                       ? t('mobil.soru.cizim.kayitDurdur')
                       : t('mobil.soru.cizim.kayitBasla')}
@@ -343,6 +327,23 @@ export function CizimEkrani({
               <Ikon ad="trash-outline" />
             </Arac_>
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('mobil.soru.cizim.tamam')}
+            accessibilityState={{ disabled: mesgul, busy: mesgul }}
+            disabled={mesgul}
+            onPress={() => void bitti()}
+            className="min-h-12 w-full items-center justify-center rounded-buyuk bg-birincil"
+            testID="cizim-tamam"
+          >
+            {mesgul ? (
+              <ActivityIndicator />
+            ) : (
+              <Metin varyant="etiket" className="text-birincilUzeri">
+                {t('mobil.soru.cizim.tamam')}
+              </Metin>
+            )}
+          </Pressable>
           {hata ? (
             <Metin varyant="ikincil" className="text-hata" accessibilityRole="alert">
               {t(hata)}

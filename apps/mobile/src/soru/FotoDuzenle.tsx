@@ -90,7 +90,10 @@ function Tutamac({
         justifyContent: 'center',
       }}
     >
-      <View className="h-6 w-6 rounded-tam border-2 border-white bg-birincil" />
+      <View
+        className="h-6 w-6 rounded-tam border-2 bg-birincil"
+        style={{ borderColor: '#FFFFFF' }}
+      />
     </View>
   );
 }
@@ -140,7 +143,15 @@ export function FotoDuzenle({
     };
   }, [derece, uri]);
 
-  const yerlesim = kap.genislik > 0 ? sigdir(donmusBoyut, kap) : null;
+  const KENAR = 28;
+  const ic =
+    kap.genislik > 0
+      ? sigdir(donmusBoyut, {
+          genislik: kap.genislik - 2 * KENAR,
+          yukseklik: kap.yukseklik - 2 * KENAR,
+        })
+      : null;
+  const yerlesim = ic ? { ...ic, sol: ic.sol + KENAR, ust: ic.ust + KENAR } : null;
 
   function olc(e: LayoutChangeEvent) {
     setKap({ genislik: e.nativeEvent.layout.width, yukseklik: e.nativeEvent.layout.height });
@@ -164,7 +175,10 @@ export function FotoDuzenle({
 
   return (
     <Modal visible animationType="slide" onRequestClose={onVazgec} statusBarTranslucent>
-      <View className="flex-1 bg-black" style={{ paddingTop: ins.top, paddingBottom: ins.bottom }}>
+      <View
+        className="flex-1"
+        style={{ backgroundColor: '#000000', paddingTop: ins.top, paddingBottom: ins.bottom }}
+      >
         <View className="flex-row items-center justify-between px-4 py-2">
           <Pressable
             accessibilityRole="button"
@@ -172,28 +186,12 @@ export function FotoDuzenle({
             onPress={onVazgec}
             className="min-h-dokunma justify-center"
           >
-            <Metin className="text-white">{t('mobil.soru.kirp.vazgec')}</Metin>
+            <Metin style={{ color: '#FFFFFF' }}>{t('mobil.soru.kirp.vazgec')}</Metin>
           </Pressable>
-          <Metin varyant="altBaslik" accessibilityRole="header" className="text-white">
+          <Metin varyant="altBaslik" accessibilityRole="header" style={{ color: '#FFFFFF' }}>
             {t('mobil.soru.kirp.baslik')}
           </Metin>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('mobil.soru.kirp.tamam')}
-            accessibilityState={{ disabled: mesgul, busy: mesgul }}
-            disabled={mesgul}
-            onPress={() => void tamam()}
-            className="min-h-dokunma justify-center"
-            testID="kirp-tamam"
-          >
-            {mesgul ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Metin varyant="etiket" className="text-white">
-                {t('mobil.soru.kirp.tamam')}
-              </Metin>
-            )}
-          </Pressable>
+          <View style={{ width: 56 }} />
         </View>
 
         <View className="flex-1" onLayout={olc}>
@@ -282,11 +280,11 @@ export function FotoDuzenle({
 
         <View className="items-center gap-2 px-4 pb-3 pt-2">
           {hata ? (
-            <Metin varyant="ikincil" className="text-white" accessibilityRole="alert">
+            <Metin varyant="ikincil" style={{ color: '#FFFFFF' }} accessibilityRole="alert">
               {t('mobil.soru.ogrenci.fotografHazirlanamadi')}
             </Metin>
           ) : (
-            <Metin varyant="kucuk" className="text-white">
+            <Metin varyant="kucuk" style={{ color: '#FFFFFF' }}>
               {t('mobil.soru.kirp.ipucu')}
             </Metin>
           )}
@@ -298,11 +296,12 @@ export function FotoDuzenle({
                 setDerece((d) => (d + 90) % 360);
                 setAlan(TUM_ALAN);
               }}
-              className="min-h-dokunma flex-row items-center gap-2 rounded-buyuk border border-white px-5"
+              className="min-h-dokunma flex-row items-center gap-2 rounded-buyuk border px-5"
+              style={{ borderColor: '#FFFFFF' }}
               testID="kirp-dondur"
             >
               <Ikon ad="refresh" renk="#FFFFFF" />
-              <Metin varyant="etiket" className="text-white">
+              <Metin varyant="etiket" style={{ color: '#FFFFFF' }}>
                 {t('mobil.soru.kirp.dondur')}
               </Metin>
             </Pressable>
@@ -313,14 +312,32 @@ export function FotoDuzenle({
                 setDerece(0);
                 setAlan(TUM_ALAN);
               }}
-              className="min-h-dokunma flex-row items-center gap-2 rounded-buyuk border border-white px-5"
+              className="min-h-dokunma flex-row items-center gap-2 rounded-buyuk border px-5"
+              style={{ borderColor: '#FFFFFF' }}
             >
               <Ikon ad="scan" renk="#FFFFFF" />
-              <Metin varyant="etiket" className="text-white">
+              <Metin varyant="etiket" style={{ color: '#FFFFFF' }}>
                 {t('mobil.soru.kirp.sifirla')}
               </Metin>
             </Pressable>
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('mobil.soru.kirp.tamam')}
+            accessibilityState={{ disabled: mesgul, busy: mesgul }}
+            disabled={mesgul}
+            onPress={() => void tamam()}
+            className="min-h-12 w-full items-center justify-center rounded-buyuk bg-birincil"
+            testID="kirp-tamam"
+          >
+            {mesgul ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Metin varyant="etiket" className="text-birincilUzeri">
+                {t('mobil.soru.kirp.tamam')}
+              </Metin>
+            )}
+          </Pressable>
         </View>
       </View>
     </Modal>

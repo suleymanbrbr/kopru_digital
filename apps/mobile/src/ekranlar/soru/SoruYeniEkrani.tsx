@@ -9,10 +9,11 @@ import { galeridenAl, kameradanAl, type AlinanFoto } from '../../foto/al';
 import { type fotoHazirla } from '../../foto/hazirla';
 import { yeniIstekId } from '../../lib/kimlik';
 import { bransAdi } from '../../ogrenme/konu';
-import { kotaGorunumu } from '../../soru/bicim';
+import { bransSirasi, kotaGorunumu } from '../../soru/bicim';
 import { CizimEkrani } from '../../soru/CizimEkrani';
 import { FotoDuzenle } from '../../soru/FotoDuzenle';
 import { IzinKarti } from '../../soru/parcalar';
+import { Cip } from '../../ui/Cip';
 import { Dugme } from '../../ui/Dugme';
 import { Ekran } from '../../ui/Ekran';
 import { Ikon } from '../../ui/Ikon';
@@ -70,6 +71,8 @@ export function SoruYeniEkrani() {
   const [mesgul, setMesgul] = useState(false);
   const [denendi, setDenendi] = useState(false);
 
+  // Son secilen ders (acilistaki degeri) basa alinir; secim degisince siralama oynamaz.
+  const [siralama] = useState(() => bransSirasi(secim.bransKodu));
   const kota = kotaSorgu.data
     ? kotaGorunumu(kotaSorgu.data, bekleyenSoruSayisi(gonderimler), tz)
     : null;
@@ -195,36 +198,34 @@ export function SoruYeniEkrani() {
         <Metin varyant="etiket" accessibilityRole="header">
           {t('mobil.soru.ogrenci.fotograflar', { n: fotolar.length, en: SORU_EN_FAZLA_FOTOGRAF })}
         </Metin>
-        <View className="flex-row flex-wrap gap-3" testID="foto-listesi">
+        <View className="gap-3" testID="foto-listesi">
           {fotolar.map((f, i) => (
-            <Kart key={f.id} className="w-[47%] gap-2 p-2" testID={`foto-${String(i)}`}>
-              <Image
-                source={{ uri: f.isaret?.duzUri ?? f.uri }}
-                style={{ width: '100%', aspectRatio: f.genislik / f.yukseklik }}
-                resizeMode="cover"
-                accessibilityLabel={t('mobil.soru.ogrenci.fotografEtiketi', { n: i + 1 })}
-              />
-              {f.isaret ? (
-                <View className="flex-row items-center gap-1">
-                  <Ikon ad="pencil" boyut={14} />
-                  <Metin varyant="kucuk">{t('mobil.soru.ogrenci.isaretli')}</Metin>
-                </View>
-              ) : null}
-              <View className="flex-row flex-wrap gap-1">
+            <Kart key={f.id} className="flex-row gap-3 p-3" testID={`foto-${String(i)}`}>
+              <View className="w-28 gap-1">
+                <Image
+                  source={{ uri: f.isaret?.duzUri ?? f.uri }}
+                  style={{ width: '100%', aspectRatio: f.genislik / f.yukseklik, borderRadius: 8 }}
+                  resizeMode="cover"
+                  accessibilityLabel={t('mobil.soru.ogrenci.fotografEtiketi', { n: i + 1 })}
+                />
+                {f.isaret ? (
+                  <View className="flex-row items-center gap-1">
+                    <Ikon ad="pencil" boyut={14} />
+                    <Metin varyant="kucuk">{t('mobil.soru.ogrenci.isaretli')}</Metin>
+                  </View>
+                ) : null}
+              </View>
+              <View className="flex-1 gap-2">
                 <Dugme
                   varyant="ikincil"
                   etiket={t('mobil.soru.ogrenci.fotografDuzenle')}
-                  className="flex-1 px-2"
                   onPress={() => {
                     setYeniden(f.id);
                   }}
                 />
-              </View>
-              <View className="flex-row gap-1">
                 <Dugme
                   varyant="ikincil"
                   etiket={t('mobil.soru.ogrenci.fotografIsaretle')}
-                  className="flex-1 px-2"
                   onPress={() => {
                     setIsaretlenen(f.id);
                   }}
@@ -233,7 +234,6 @@ export function SoruYeniEkrani() {
                   varyant="hayalet"
                   etiket={t('mobil.soru.ogrenci.fotografSil')}
                   accessibilityLabel={`${t('mobil.soru.ogrenci.fotografSil')}: ${t('mobil.soru.ogrenci.fotografEtiketi', { n: i + 1 })}`}
-                  className="flex-1 px-2"
                   onPress={() => {
                     setFotolar((l) => l.filter((x) => x.id !== f.id));
                   }}
@@ -286,7 +286,27 @@ export function SoruYeniEkrani() {
         ) : null}
       </View>
 
-      <KonuSecici deger={secim} onDegis={setSecim} etiket={t('mobil.soru.ogrenci.ders')} />
+      <View className="gap-2">
+        <Metin varyant="etiket">{t('mobil.soru.ogrenci.ders')}</Metin>
+        <View
+          className="flex-row flex-wrap gap-2"
+          accessibilityRole="radiogroup"
+          testID="ders-ciplari"
+        >
+          {siralama.map((k) => (
+            <Cip
+              key={k}
+              etiket={bransAdi(k)}
+              secili={secim.bransKodu === k}
+              onPress={() => {
+                setSecim({ bransKodu: k, konuId: secim.bransKodu === k ? secim.konuId : null });
+              }}
+              testID={`ders-${k}`}
+            />
+          ))}
+        </View>
+      </View>
+      <KonuSecici deger={secim} onDegis={setSecim} etiket={t('mobil.soru.ogrenci.konu')} />
       {denendi && !secim.bransKodu ? (
         <Metin varyant="ikincil" className="text-hata" accessibilityRole="alert">
           {t('mobil.soru.ogrenci.dersGerekli')}
@@ -300,7 +320,7 @@ export function SoruYeniEkrani() {
         onChangeText={setNot}
         multiline
         maxLength={1000}
-        style={{ minHeight: 72, textAlignVertical: 'top' }}
+        style={{ minHeight: 96, textAlignVertical: 'top', paddingTop: 12 }}
       />
 
       <Dugme
