@@ -12,6 +12,7 @@ import Yukleniyor from './loading';
 import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
 import { UygulamaKabugu } from '@/components/kabuk/uygulama-kabugu';
+import { XpSaglayici } from '@/components/motivasyon/xp-saglayici';
 import { dugmeStili } from '@/components/ui/button';
 import { KurumKutusu, type KurumBaglami } from '@/kurum/baglam';
 import { bffIstek, hataMesaji, UygulamaHatasi } from '@/lib/api';
@@ -121,7 +122,9 @@ export default function KurumDuzeni({ children }: { children: ReactNode }) {
 
   return (
     <KurumKutusu value={deger}>
-      <UygulamaKabugu>{children}</UygulamaKabugu>
+      <XpSaglayici>
+        <UygulamaKabugu>{children}</UygulamaKabugu>
+      </XpSaglayici>
     </KurumKutusu>
   );
 }
