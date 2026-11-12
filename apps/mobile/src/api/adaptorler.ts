@@ -1,5 +1,7 @@
 import type { KayitAdapter } from './kayitTipleri';
+import type { MedyaAdapter } from './medyaTipleri';
 import type { OgrenmeAdapter } from './ogrenmeTipleri';
+import type { SoruAdapter } from './soruTipleri';
 import type { DersAdapter, FinansAdapter } from './operasyonTipleri';
 import type {
   DavetSonucu,
@@ -82,4 +84,7 @@ export interface Adaptorler {
   finans: FinansAdapter;
   ogrenme: OgrenmeAdapter;
   kayit: KayitAdapter;
+  soru: SoruAdapter;
+  /** Dosya yukleme (medya servisi); soru/cevap fotograf ve ses ekleri icin. */
+  medya: MedyaAdapter;
 }

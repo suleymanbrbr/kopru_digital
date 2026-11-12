@@ -80,6 +80,22 @@ function baglanmamisAdaptorler(): Adaptorler {
       geriBildirimVer: hata,
       dersGeriBildirimleri: hata,
     },
+    soru: {
+      sorularim: hata,
+      kota: hata,
+      soru: hata,
+      soruSor: hata,
+      anladim: hata,
+      takip: hata,
+      bildir: hata,
+      gelenSorular: hata,
+      gelenSoruSayisi: hata,
+      cevapla: hata,
+      cevapladiklarim: hata,
+      musaitlik: hata,
+      musaitlikAyarla: hata,
+    },
+    medya: { izinAl: hata, yukle: hata, tamam: hata, durum: hata, yerelBilgi: hata },
     hesap: {
       sinifKoduKatil: hata,
       sinifKoduIsteklerim: hata,
@@ -106,6 +122,7 @@ export function adaptorleriOlustur(depo: BelirtecDeposu): Adaptorler {
   if (ortam.apiUrl) {
     return gercekAdaptorler({
       apiUrl: ortam.apiUrl,
+      ...(ortam.medyaUrl ? { medyaUrl: ortam.medyaUrl } : {}),
       depo,
       kaynak: Platform.OS === 'android' ? 'android' : Platform.OS === 'ios' ? 'ios' : 'web',
     });

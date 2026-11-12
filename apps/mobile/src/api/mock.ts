@@ -1,8 +1,10 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
 import { mockKayit } from './mockKayit';
+import { mockMedya } from './mockMedya';
 import { mockOgrenme } from './mockOgrenme';
 import { mockOperasyon } from './mockOperasyon';
+import { mockSoru } from './mockSoru';
 import {
   ApiHata,
   type GrupKatilimIstegi,
@@ -249,12 +251,16 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   const operasyon = mockOperasyon(operasyonSecenekleri);
   const ogrenme = mockOgrenme(operasyonSecenekleri);
   const kayit = mockKayit(operasyonSecenekleri, operasyon.okuma);
+  const soru = mockSoru(operasyonSecenekleri);
+  const medya = mockMedya({ gecikmeMs: Math.min(gecikmeMs, 200), isle: 300 });
 
   return {
     ders: operasyon.ders,
     finans: operasyon.finans,
     ogrenme,
     kayit,
+    soru,
+    medya,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);

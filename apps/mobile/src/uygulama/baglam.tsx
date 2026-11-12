@@ -1,5 +1,6 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import { queryOnlineYonetiminiBagla } from '../offline/ag';
 import type { AktifBaglam, OturumDurumu } from '../oturum/yonetici';
@@ -40,7 +41,17 @@ export function UygulamaSaglayicilari({ children }: { children: ReactNode }) {
       if (!kapandi) davetAboneligi = servisler.davet.baglan();
     });
     const kuyrukAboneligi = servisler.kuyruk.baglan(servisler.agGozlemcisi);
+    const yuklemeAboneligi = servisler.yukleme.baglan(servisler.agGozlemcisi);
+    // Uygulama one gelince (arka planda biten PUT'lar dahil) yukleme ve gonderim kaldigi yerden surer.
+    const durumAboneligi = AppState.addEventListener('change', (d) => {
+      if (d !== 'active') return;
+      void servisler.yukleme.calistir();
+      void servisler.gonderim.ilerlet();
+      void servisler.kuyruk.bosalt();
+    });
     return () => {
+      durumAboneligi.remove();
+      yuklemeAboneligi();
       kapandi = true;
       davetAboneligi?.();
       kuyrukAboneligi();
