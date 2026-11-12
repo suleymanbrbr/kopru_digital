@@ -2,6 +2,7 @@ import { createDb, runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
 import { gunlukTemizlik, haftalikSifirla } from './isler.js';
+import { acikOdakTemizle } from './odak-isler.js';
 import { seriGeceIsi, seriRiskIsi } from './seri-isleri.js';
 import { tuketicileriBaslat } from './tuketiciler.js';
 import { istanbulSaati, periyodikIs } from './zamanlayici.js';
@@ -52,6 +53,13 @@ await runWorker({
       periyodikIs('seri-risk', 5 * DAKIKA, log, async () => {
         const n = await seriRiskIsi({ db });
         if (n > 0) log.info({ olay: n }, 'seri risk olayları yazıldı');
+      }),
+    );
+    // 6 saati gecen `devam` odak oturumlari `yarida` olur (10 dakikada bir; idempotent).
+    temizleyiciler.push(
+      periyodikIs('odak-temizlik', 10 * DAKIKA, log, async () => {
+        const n = await acikOdakTemizle({ db });
+        if (n > 0) log.info({ oturum: n }, 'eski açık odak oturumları kapatıldı');
       }),
     );
     temizleyiciler.push(

@@ -19,3 +19,4 @@ export * from './medya/api.js';
 export * from './motivasyon/api.js';
 export * from './motivasyon/olaylar.js';
 export * from './motivasyon/seri.js';
+export * from './motivasyon/odak-karakter.js';
