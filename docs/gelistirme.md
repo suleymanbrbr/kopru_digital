@@ -152,6 +152,30 @@ curl -s -XPOST $B/auth/token -H "authorization: Bearer <oturum_belirteci>" -H "$
 - Yetki kapısı: rotada `preHandler: requirePermission('izin.kodu', { scope })` ([ADR 0004](adr/0004-kimlik-dogrulama-ve-yetkilendirme.md) kontrol sırası). Rol -> izin -> kapsam sözlüğü `packages/contracts/src/hesap/izinler.ts` içindedir.
 - Testler: `DATABASE_URL` (superuser) verildiğinde `vitest` global kurulumu sıfırdan migrate edilmiş geçici bir veritabanı oluşturur ve sonunda siler; verilmezse DB testleri atlanır.
 
+## medya: dosya yükleme, işleme ve depolama
+
+`services/medya`: dosya kayıtları, presigned yükleme, doğrulama/işleme (görsel yeniden kodlama, küçük resimler, ses süresi), saklama/silme, kota ve api için iç okuma ucu. Şema ve kurallar: [docs/schema/medya.md](schema/medya.md).
+
+```sh
+# veritabani (ilk kez): yeni cluster'da roller init betigiyle gelir; var olan cluster'da migrator rolleri olusturur
+pnpm --filter @kopru/medya db:migrate     # MEDYA_DATABASE_OWNER_URL (db sahibi) ile; MEDYA_APP_PASSWORD/MEDYA_SISTEM_PASSWORD istege bagli
+pnpm --filter @kopru/medya dev            # API (4003)
+pnpm --filter @kopru/medya dev:worker     # isleme, silme, zamanlanmis isler, olay tuketicileri, outbox relay
+```
+
+- **Roller:** `medya_owner` (tablo sahibi, nologin), `medya_app` (NOBYPASSRLS; API ve olay tüketicileri), `medya_sistem` (BYPASSRLS; worker işleri ve outbox relay). Her kiracı tablosunda `kurum_id` + RLS; izolasyon testleri `medya_app` ile bağlanır.
+- **Ortam:** `MEDYA_DATABASE_URL`/`MEDYA_DATABASE_SISTEM_URL`, `MEDYA_S3_ENDPOINT` (servis içi), `MEDYA_S3_GENEL_ENDPOINT` (istemciye verilen presigned adresin ana makinesi), `MEDYA_S3_ACCESS_KEY_ID/SECRET_ACCESS_KEY`, `S3_BUCKET` (varsayılan `medya`), `MEDYA_AUTH_ENABLED=true` + `JWKS_URL` (api'nin JWKS'i), `MEDYA_VARSAYILAN_KOTA_BAYT` (varsayılan 5 GiB). Geliştirmede açılışta kova ve CORS (`CORS_ORIGINS`) idempotent ayarlanır (RustFS `PutBucketCors` destekler; üretimde varsayılan kapalı).
+- **İstemci akışı:** (1) `POST /v1/dosyalar` `{tur, mime_tipi, boyut_bayt, sha256, istemci_anahtari}` → `yukleme.url` + `yukleme.basliklar`; (2) `PUT yukleme.url` gövde = ham bayt, başlıklar **aynen** (`Content-Type`; `Content-Length` istemci kitaplığı koyar, ikisi de imzalıdır, farklı değer 403 `SignatureDoesNotMatch`); (3) `POST /v1/dosyalar/{id}/tamam` (PUT bitince; 409 `yukleme_bulunamadi` ise kısa süre sonra tekrar); (4) `GET /v1/dosyalar/{id}` ile `durum=hazir` olana kadar 1–2 sn aralıkla yokla (`islenemedi` ise `hata_kodu`). Zayıf bağlantıda aynı `istemci_anahtari` ile (UUID, istemci üretir) `POST` tekrarlanabilir: aynı kayıt ve yeni PUT adresi döner; 15 dk geçtiyse 409 `yukleme_suresi_doldu` → yeni anahtarla yeniden başla. HEIC kabul edilmez: istemci JPEG'e çevirir. Ses azami 180 sn / 5 MB; süre bilgisi içermeyen kayıtlar (ör. başlıksız MediaRecorder webm) süresi doğrulanamadığı için reddedilir.
+- **Görsel kodlama (ölçüm):** fotoğraf türleri EXIF/ICC silinerek ve yön düzeltilerek uzun kenar 2000 px, JPEG kalite 78 (mozjpeg, 4:2:0) ile yeniden kodlanır; çizim PNG kalır (256 renk palet); logo uzun kenar 1024, avatar 1024 JPEG q80; küçük resimler WebP 256 px (q72) ve 1024 px (q78). `pnpm --filter @kopru/medya olc:gorsel` 12 MP (4032x3024) sentetik defter sayfası ve (`--dosya`) verilen gerçek fotoğraf için boyut/süre/ortalama piksel farkı tablosu basar. Ölçülen: sentetik sayfa q78 → 1600 px 97 KB, **2000 px 137 KB**, 2400 px 189 KB; 4K manzara fotoğrafı (yüksek ayrıntı) 2000 px q78 → 203 KB (q85: 262 KB). Yüksek gürültülü 3000x2000 sentetik JPEG (3,4 MB) uçtan uca denemede 391 KB'a (2000 px, q78) indi. Gerçek telefon fotoğrafları sensör gürültüsü ve ayrıntı nedeniyle daha ağırdır; 2000 px/q78 hedef bandı (250–400 KB) için seçildi, metin 2000 px'te okunur kalır (sayfa görseli incelendi). Gerçek defter fotoğraflarıyla yeniden ölçülmeli; ortalama 250 KB altında kalırsa kalite 85'e çıkarılabilir (`gorsel.ts` `FOTOGRAF_PROFILI`).
+- **Testler:** `DATABASE_URL` (superuser) verilirse veritabanı testleri, ayrıca `S3_ENDPOINT`+`S3_ACCESS_KEY_ID`+`S3_SECRET_ACCESS_KEY` ile yükleme/silme/iç uç testleri (rastgele adlı geçici kova açılır ve silinir), `NATS_URL` ile olay tüketicisi testleri çalışır; yoksa uyarıyla atlanır. Dosyalar sırayla koşar (silme işi kiracılar arası çalışır).
+  ```sh
+  DATABASE_URL=postgres://postgres:postgres@localhost:5433/kopru_test NATS_URL=nats://localhost:4222 \
+  S3_ENDPOINT=http://localhost:9000 S3_ACCESS_KEY_ID=kopru S3_SECRET_ACCESS_KEY=kopru-dev-secret \
+  pnpm --filter @kopru/medya test
+  ```
+- **Uçtan uca deneme:** `services/medya/scripts/yukleme-akisi.sh` (api 4267 + medya 4263 + worker; ayrıntı betiğin başında).
+- **Docker:** `docker build -f services/medya/Dockerfile -t kopru/medya .`; aynı imaj worker olarak `node dist/worker.js` çalıştırır. `sharp` platforma uygun yerel ikilisini (`@img/sharp-linux-*`) kurulumda alır.
+
 ## Outbox ve olay akışı
 
 - Tablo şablonu: `packages/service-kit/migrations/outbox.sql` (api'de `ortak.outbox`, migration içinde `-- @outbox-sablonu ortak` satırıyla eklenir) (`renderOutboxMigration(schema)` ile şema adı doldurulur). Her servis bunu kendi migration'larına dahil eder.

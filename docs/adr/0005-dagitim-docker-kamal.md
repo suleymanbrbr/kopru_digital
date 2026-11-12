@@ -83,3 +83,7 @@ Olumsuz:
 **Docker Swarm / Nomad.** Kamal'dan daha fazla kümeleme yükü getirir, daha az ekosistem desteği vardır. Reddedildi.
 
 **Yönetilen PostgreSQL.** Türkiye'de uygun sağlayıcı bulunursa tercih edilir. Karar sağlayıcı seçimine bağlıdır ve bu ADR'yi bozmaz. Bağlantı bilgisi ortam değişkeni olduğu için geçiş bir yapılandırma işidir.
+
+## Uygulama notu: medya yönlendirmesi
+
+Canlıda istemciler medya servisine ayrı bir alan adı yerine **aynı alan adında yol tabanlı yönlendirmeyle** ulaşır: kök proxy `/v1/dosyalar*` yollarını `medya`ya, diğer `/v1/*` yollarını `api`ye gönderir (`/ic/*` hiçbir zaman dışarı açılmaz). Böylece web (aynı origin) ve mobil için tek taban adres yeterlidir; yükleme baytları ise presigned adresle doğrudan nesne depolamaya gider (`medya-ozel` kovası, kovada tarayıcı PUT için CORS kuralı). Geliştirmede proxy yoktur: medya ayrı portta (4003) çalışır ve istemci medya taban adresini ayrıca bilir; presigned adreslerin ana makinesi `MEDYA_S3_GENEL_ENDPOINT` ile (simülatör/tarayıcı için `localhost:9000`) ayarlanır.

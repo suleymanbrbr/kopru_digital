@@ -14,7 +14,10 @@ Tek şema: `medya` (+ `ortak`). Roller: `medya_owner`, `medya_app`, `medya_siste
 - **Bağlama (referans):** Yüklenen dosya, bir iş kaydına bağlanana kadar "yetim"dir. `api`, dosyayı bir ödev teslimi/soru/mesajına bağlayınca `ortak.dosya.baglandi.v1` yayımlar. Yetim dosyalar `saklama_politikalari.yetim_saat` sonra silinir.
 - **Silme:** Fiziksel silme `silinecek_at` zamanı gelince işlenir. Satır silinmez, `durum='silindi'` olur ve depolama anahtarı `NULL`lanır; `sha256`, boyut, tür ve silme nedeni denetim için kalır.
 - **Güvenlik:** Yükleme sonrası içerik türü bayt imzasıyla (magic bytes) doğrulanır, bildirilen `mime_tipi` ile uyuşmazsa dosya reddedilir (`islenemedi`, `mime_uyusmazligi`). Görseller yeniden kodlanır (EXIF konum bilgisi silinir). Virüs taraması Faz 1 dışı.
-- **Depolama anahtarı:** `{kurum_id}/{tur}/{yyyy}/{mm}/{dosya_id}` (kullanıcı adı veya özgün dosya adı içermez).
+- **Depolama anahtarı:** `{kurum_id}/{tur}/{yyyy}/{mm}/{dosya_id}` (kullanıcı adı veya özgün dosya adı içermez). İstemci baytları presigned PUT ile `{anahtar}.yukleme` nesnesine yazar; işleme yeniden kodlanmış çıktıyı `{anahtar}`a yazar ve commit sonrası `.yukleme` nesnesini siler (çökme/yeniden denemede özgün bayt ve `sha256` hep elde kalır). Küçük resimler `{anahtar}.kucuk.webp` ve `{anahtar}.orta.webp`.
+- **İşleme:** worker `durum='yuklendi'` satırlarını `FOR UPDATE SKIP LOCKED` ile alıp `isleniyor` yapar (kısa işlem), ağır işi işlem dışında yapar, sonucu (`hazir` + `medya.dosya.hazir.v1` ya da `islenemedi` + `medya.dosya.islenemedi.v1`) tek işlemde yazar. Geçici (depolama) hatada satır `yuklendi`ye döner ve 10 sn / 30 sn / 2 dk / 10 dk / 30 dk gecikmeyle en çok 5 kez denenir; `isleniyor`da 10 dakikadan uzun kalan satır (çökmüş worker) kuyruğa geri alınır. Sıra: boyut → SHA-256 (`bozuk_dosya`) → bayt imzası (`mime_uyusmazligi`) → görsel yeniden kodlama / ses süresi.
+- **İzinli içerik:** görseller `image/jpeg`, `image/png`, `image/webp`; **HEIC/HEIF ve SVG kabul edilmez** (istemci yüklemeden önce JPEG'e çevirir). Ses: `audio/mp4` (m4a/AAC), `audio/aac`, `audio/mpeg`, `audio/webm`, `audio/ogg`; azami süre **180 sn**, azami 5 MB; süresi doğrulanamayan ses reddedilir. PDF `application/pdf` (`odev_eki`, `fatura_pdf`). Kural tek kaynağı `@kopru/contracts` `MEDYA_TUR_KURALLARI`; tohum testle birebir doğrulanır.
+- **Rol × tür** (JWT `rol`; medya üyelik kopyası tutmaz): `soru_fotografi`, `odev_teslim_fotografi` öğrenci; `soru_cevap_fotografi`, `soru_ses` öğretmen/yönetici/sahip; `soru_cizim` öğrenci ve personel; `odev_eki` personel; `kurum_logosu` sahip/yönetici; `avatar` herkes; `fatura_pdf` istemciden yüklenemez (403 `dosya_turu_yetkisi_yok`).
 
 ```mermaid
 erDiagram
@@ -31,8 +34,9 @@ Dosya türü kuralları. Profil: `G`. RLS: hayır. Tohum verisi.
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
 | `tur` | text | hayır | | `UNIQUE`. `dosyalar.tur` değerleri (aşağıda) |
-| `izinli_mime` | text[] | hayır | | Ör. `{image/jpeg,image/png,image/webp,image/heic}` |
-| `azami_boyut_bayt` | bigint | hayır | | Fotoğraf 10 MB, ses 5 MB, PDF 20 MB |
+| `izinli_mime` | text[] | hayır | | Ör. `{image/jpeg,image/png,image/webp}` (HEIC/SVG yok) |
+| `azami_boyut_bayt` | bigint | hayır | | Fotoğraf 10 MB (logo/avatar 5 MB), ses 5 MB, PDF 20 MB |
+| `azami_sure_sn` | int | evet | | Yalnız ses: 180 sn (şartname "3 dk") |
 | `varsayilan_saklama_gun` | int | evet | | Bağlandıktan sonra silinme süresi. NULL = süresiz |
 | `yetim_saat` | int | hayır | 48 | Bağlanmamış dosya silme süresi |
 | `kucuk_resim` | boolean | hayır | true | Küçük resim üretilsin mi |
@@ -51,14 +55,15 @@ Profil: `KS`. RLS: evet.
 | `sahip_kullanici_id` | uuid | hayır | | Yükleyen kullanıcı (JWT `sub`) |
 | `sahip_uyelik_id` | uuid | hayır | | Yükleyen üyelik (JWT `uyelik_id`) |
 | `tur` | text | hayır | | FK `saklama_politikalari(tur)` |
-| `mime_tipi` | text | hayır | | Doğrulanmış içerik türü |
+| `mime_tipi` | text | hayır | | Yükleme anında bildirilen; işleme sonrası saklanan (yeniden kodlanmış) içeriğin gerçek türü |
 | `bildirilen_boyut_bayt` | bigint | hayır | | İstemci beyanı |
-| `boyut_bayt` | bigint | evet | | `HEAD` ile doğrulanan gerçek boyut. `bildirilen` ile eşit olmalı. |
-| `sha256` | bytea | evet | | Doğrulanan özet |
+| `boyut_bayt` | bigint | evet | | `tamam`da `HEAD` ile doğrulanan boyut (`bildirilen` ile eşit olmalı); işleme sonrası saklanan (yeniden kodlanmış) nesnenin boyutu |
+| `bildirilen_sha256` | bytea | hayır | | İstemcinin bildirdiği özet (işleme doğrular) |
+| `sha256` | bytea | evet | | Yüklenen özgün baytların doğrulanan özeti (denetim için silinse de kalır) |
 | `depolama_anahtari` | text | evet | | UNIQUE; silinince NULL |
 | `kova` | text | hayır | `'medya-ozel'` | |
 | `durum` | text | hayır | `'yukleme_bekliyor'` | CHECK `IN ('yukleme_bekliyor','yuklendi','isleniyor','hazir','islenemedi','silindi')` |
-| `hata_kodu` | text | evet | | `mime_uyusmazligi`, `boyut_uyusmazligi`, `bozuk_dosya`, `yukleme_zaman_asimi` |
+| `hata_kodu` | text | evet | | `mime_uyusmazligi`, `boyut_uyusmazligi`, `bozuk_dosya`, `sure_asimi`, `yukleme_zaman_asimi` (`sure_asimi` olayda `bozuk_dosya` olarak yayımlanır; olay enum'u dardır) |
 | `genislik`, `yukseklik` | int | evet | | Görseller |
 | `sure_sn` | int | evet | | Ses |
 | `istemci_anahtari` | uuid | hayır | | Yükleme idempotency |
@@ -72,6 +77,9 @@ Profil: `KS`. RLS: evet.
 | `silinecek_at` | timestamptz | evet | | Silme zamanı (retention / `delete_after`). NULL = silme planlı değil. |
 | `silme_nedeni` | text | evet | | `yetim`, `saklama_suresi`, `soru_cozuldu`, `kullanici_silindi`, `kurum_kapandi`, `birakildi`, `yukleme_zaman_asimi` |
 | `silindi_at` | timestamptz | evet | | |
+| `kota_bayt` | bigint | hayır | 0 | Dosyanın kota hesabına şu anki katkısı: rezervasyon (`bildirilen_boyut_bayt`) → hazır olunca asıl + küçük resimler; silinince 0. Gece denetimi bunun toplamını kullanır. |
+| `isleme_basladi_at`, `isleme_deneme`, `sonraki_isleme_at` | timestamptz, int, timestamptz | | | İşleme kuyruğu: takılan satır geri alma, yeniden deneme sayacı ve gecikmesi |
+| `silme_hata_sayisi` | int | hayır | 0 | Depolamadan silme hatası sayacı |
 
 Kısıtlar:
 - `UNIQUE (kurum_id, sahip_kullanici_id, istemci_anahtari)`.
@@ -93,7 +101,7 @@ Durum makinesi: `yukleme_bekliyor` -> `yuklendi` -> `isleniyor` -> `hazir` | `is
 6. `hesap.kullanici.silindi.v1`: kullanıcının tüm dosyaları `now()` (`avatar` ve kullanıcı içeriği; `fatura_pdf` hariç, kurum varlığıdır).
 7. Kurum `kapali`: kurumun dosyaları 90 gün sonra.
 
-Silme işi: 5 dakikada bir. `WHERE silinecek_at <= now() AND durum <> 'silindi' ORDER BY silinecek_at LIMIT 200 FOR UPDATE SKIP LOCKED`; her dosya için nesne + küçük resimler depolamadan silinir (nesne yoksa hata sayılmaz), sonra `durum='silindi'`, `depolama_anahtari=NULL`, kota düşülür, `medya.dosya.silindi.v1` yayımlanır. Silme başarısızsa satır `silinecek_at` yarın olarak ertelenir ve hata sayacı artar.
+Silme işi (worker, `medya_sistem`): 5 dakikada bir; aynı turda yükleme zaman aşımı, yetim kuralı (hazır, bağlanmamış ve planı olmayan dosyaya `hazir_at + yetim_saat`) ve takılan işleme geri alma da çalışır. Günlük `processed_events` temizliği (30 gün) ve gece kota denetimi (İstanbul 03:00) ayrı zamanlanır. `WHERE silinecek_at <= now() AND durum <> 'silindi' ORDER BY silinecek_at LIMIT 200 FOR UPDATE SKIP LOCKED`; her dosya için nesne + küçük resimler depolamadan silinir (nesne yoksa hata sayılmaz), sonra `durum='silindi'`, `depolama_anahtari=NULL`, kota düşülür, `medya.dosya.silindi.v1` yayımlanır. Silme başarısızsa satır `silinecek_at` yarın olarak ertelenir ve hata sayacı artar. Nesne silinirken `.yukleme` (ham yükleme) ve küçük resim nesneleri de silinir. `islenemedi` dosyalar `silinecek_at = now()` ile (neden `yetim`) bir sonraki turda silinir.
 
 İndeks: `(kurum_id, sahip_kullanici_id, created_at DESC)`, `(silinecek_at) WHERE durum <> 'silindi' AND silinecek_at IS NOT NULL`, `(durum, yukleme_son_at) WHERE durum = 'yukleme_bekliyor'`, `(kurum_id, bagli_tur, bagli_id)`, `(durum, hazir_at) WHERE baglandi = false AND durum = 'hazir'`.
 Olaylar: `medya.dosya.hazir.v1`, `medya.dosya.islenemedi.v1`, `medya.dosya.silindi.v1`.
@@ -117,7 +125,7 @@ Kısıtlar: `UNIQUE (dosya_id, varyant)`, `UNIQUE (depolama_anahtari)`. Ana dosy
 
 ## `medya.kurum_kotalari`
 
-Kurum başına depolama kullanımı (türetilmiş).
+Kurum başına depolama kullanımı (türetilmiş). Gece denetimi `dosyalar.kota_bayt` toplamıyla karşılaştırır, farkı loglar (`error`) ve düzeltir.
 
 Profil: `KS` (kurum başına tek satır). RLS: evet. Sütunlar: `kullanilan_bayt bigint NOT NULL DEFAULT 0`, `dosya_sayisi int NOT NULL DEFAULT 0`. `UNIQUE (kurum_id)`. Artırım: yükleme izni verilirken **rezervasyon** (`bildirilen_boyut_bayt` eklenir); koşul `kullanilan_bayt + :boyut <= kurum_kopyalari.medya_kota_bayt`, aksi halde `413 kota_asildi`. Yükleme zaman aşımı ve silme rezervasyonu/kullanımı düşürür. Gece işi `SUM(boyut_bayt)` ile denetler. Olaylar: yok.
 
@@ -125,7 +133,9 @@ Profil: `KS` (kurum başına tek satır). RLS: evet. Sütunlar: `kullanilan_bayt
 
 | Tablo | Kaynak olay | Sütunlar | Neden gerekli |
 | --- | --- | --- | --- |
-| `kurum_kopyalari` | `hesap.kurum.degisti.v1`, `abonelik.abonelik.degisti.v1` | `kurum_id` PK, `durum`, `plan_kodu`, `abonelik_durumu`, `medya_kota_bayt`, `surum`, `abonelik_surumu` | Kota, askıdaki/kapalı kurumda yeni yüklemeyi reddetme |
+| `kurum_kopyalari` | `hesap.kurum.degisti.v1`, `abonelik.abonelik.degisti.v1` | `kurum_id` PK, `durum`, `plan_kodu`, `abonelik_durumu`, `medya_kota_bayt`, `surum`, `abonelik_surumu`, `son_olay_at` | Kota, askıdaki/kapalı kurumda yeni yüklemeyi reddetme |
+
+Olay zarfında özne sürümü olmadığından sıralama `son_olay_at` (olay `occurredAt`) ile yapılır: daha eski olay kopyayı geri almaz. Kopya yoksa kurum aktif ve kota `MEDYA_VARSAYILAN_KOTA_BAYT` (varsayılan 5 GiB) sayılır; `askida`/`kapali` kurumda yeni yükleme 403 `kurum_askida` olur. `kapali` olayı kurumun dosyalarını `occurredAt + 90 gün`e planlar (neden `kurum_kapandi`); kurum yeniden açılırsa bu plan geri alınır.
 
 Üyelik veya grup kopyası **tutulmaz**: yükleme yetkisi JWT rolünden (`ogrenci`, `ogretmen`...) ve `tur` kuralından belirlenir (ör. `kurum_logosu` yalnızca `yonetici`/`sahip`), okuma yetkisi `api`dadır. Kopya RLS: evet (`kurum_id`).
 
@@ -135,9 +145,9 @@ Profil: `KS` (kurum başına tek satır). RLS: evet. Sütunlar: `kullanilan_bayt
 | --- | --- | --- |
 | `ortak.dosya.baglandi.v1` | `baglandi=true`, `bagli_tur/id`, `silinecek_at` politikaya göre | `medya.baglama` |
 | `ortak.dosya.birakildi.v1` | Bağlantıyı çöz, yetim/silme kuralı | `medya.baglama` |
-| `ogrenme.soru.cozuldu.v1` | `silinecek_at = cozuldu_at + 30 gün` | `medya.saklama` |
-| `ogrenme.soru.yeniden_acildi.v1` | `silinecek_at = NULL` | `medya.saklama` |
-| `hesap.kullanici.silindi.v1` | Kullanıcı dosyalarını sil | `medya.saklama` |
+| `ogrenme.soru.cozuldu.v1` | `silinecek_at = cozuldu_at + 30 gün` | `medya.saklama` (**henüz bağlı değil**: sözleşme `contracts`ta yok) |
+| `ogrenme.soru.yeniden_acildi.v1` | `silinecek_at = NULL` | `medya.saklama` (**henüz bağlı değil**) |
+| `hesap.kullanici.silindi.v1` | Kullanıcı dosyalarını sil | `medya.saklama` (**henüz bağlı değil**: olay kullanıcı düzeyinde, zarf `kurumId` zorunlu) |
 | `hesap.kurum.degisti.v1` | `kurum_kopyalari` upsert; `kapali` ise silme planı | `medya.kopya` |
 | `abonelik.abonelik.degisti.v1` | Kota ve durum güncelle | `medya.kopya` |
 
@@ -146,6 +156,17 @@ Profil: `KS` (kurum başına tek satır). RLS: evet. Sütunlar: `kullanilan_bayt
 ## Üretilen olaylar
 
 `medya.dosya.hazir.v1`, `medya.dosya.islenemedi.v1`, `medya.dosya.silindi.v1`. Tüketici: `api` (`ortak.medya_dosya_kopyalari`).
+
+## HTTP uçları (özet)
+
+| Uç | Kimlik | Açıklama |
+| --- | --- | --- |
+| `POST /v1/dosyalar` | kullanıcı JWT | Yükleme izni (201 yeni, 200 aynı `istemci_anahtari`); 15 dk presigned PUT, `Content-Type` ve `Content-Length` imzada |
+| `POST /v1/dosyalar/{id}/tamam` | kullanıcı JWT (sahip) | HEAD doğrulama, `yuklendi`, kuyruk (202); idempotent |
+| `GET /v1/dosyalar/{id}` | kullanıcı JWT (sahip) | Durum; `hazir` ise 10 dk presigned GET (asıl, küçük, orta) |
+| `POST /ic/okuma-adresleri` | servis JWT (`aud=medya`, `scope=medya.okuma`) | `contracts/medya/ic-api.ts` |
+
+Hata kodları: 403 `dosya_turu_yetkisi_yok`, 403 `kurum_askida`, 415 `mime_desteklenmiyor`, 413 `dosya_cok_buyuk`, 413 `kota_asildi`, 409 `istemci_anahtari_cakisti`, 409 `yukleme_suresi_doldu`, 409 `yukleme_bulunamadi` (PUT bitince `tamam` yeniden denenir), 422 `boyut_uyusmazligi` / `mime_uyusmazligi`, 503 `depolama_yapilandirilmamis`.
 
 ## Açık sorular (bu servis)
 

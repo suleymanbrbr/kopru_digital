@@ -5,7 +5,8 @@
   "type": "module",
   "description": "medya servisi",
   "files": [
-    "dist"
+    "dist",
+    "migrations"
   ],
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
@@ -15,11 +16,25 @@
     "start:worker": "node --env-file-if-exists=../../.env dist/worker.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "olc:gorsel": "tsx scripts/gorsel-olc.ts",
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate-cli.ts migrate",
+    "db:generate": "tsx src/db/migrate-cli.ts generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
     "@kopru/contracts": "workspace:*",
     "@kopru/service-kit": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "fastify": "catalog:",
+    "file-type": "catalog:",
+    "jose": "catalog:",
+    "music-metadata": "catalog:",
+    "nats": "catalog:",
+    "postgres": "catalog:",
+    "sharp": "catalog:",
+    "uuidv7": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
