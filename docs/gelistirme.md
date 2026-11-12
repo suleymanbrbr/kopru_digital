@@ -181,6 +181,14 @@ pnpm --filter @kopru/medya dev:worker     # isleme, silme, zamanlanmis isler, ol
 - Tablo şablonu: `packages/service-kit/migrations/outbox.sql` (api'de `ortak.outbox`, migration içinde `-- @outbox-sablonu ortak` satırıyla eklenir) (`renderOutboxMigration(schema)` ile şema adı doldurulur). Her servis bunu kendi migration'larına dahil eder.
 - Worker süreci (`src/worker.ts`) `DATABASE_URL` ve `NATS_URL` tanımlıysa `EVENTS` stream'ini (`evt.>`) oluşturur ve `startOutboxRelay` ile bekleyen olayları `FOR UPDATE SKIP LOCKED` kullanarak JetStream'e yayınlar. `Nats-Msg-Id` olay id'sidir; tekrar gönderimler JetStream'in duplicate penceresinde elenir.
 - Outbox tablosu migration ile oluşturulmadan worker çalıştırılırsa relay her saniye hata loglar; önce migration'ı uygulayın.
+- **Hesap olaylarını yeniden yayımlama.** Tüketici servislerin (`motivasyon`, `medya`, `bildirim`) `hesap` kopyaları boşsa ya da bozulduysa mevcut durumu olay olarak yeniden yazın ([ADR 0002](adr/0002-olay-sozlesmesi-outbox-idempotent-tuketici.md) "yeniden yayımlama"):
+  ```sh
+  export API_DATABASE_SISTEM_URL=postgres://api_sistem:...@localhost:5432/kopru   # BYPASSRLS rolü
+  pnpm --filter @kopru/api olaylari-yeniden-yayimla -- --kapsam hesap --kuru                 # yalnız sayar
+  pnpm --filter @kopru/api olaylari-yeniden-yayimla -- --kapsam hesap                        # tüm kurumlar
+  pnpm --filter @kopru/api olaylari-yeniden-yayimla -- --kapsam hesap --kurum <uuid> --parca 200
+  ```
+  Olaylar outbox'a yazılır; api worker'ının relay'i yayımlar. Olaylar `actor.id = 'olay-yeniden-yayimla'` ve `correlationId = 'yeniden-yayimla:<id>'` ile ayırt edilir. Komut tekrar çalıştırılabilir; hata alan kurum raporlanır ve çıkış kodu 1 olur.
 
 ## CI
 

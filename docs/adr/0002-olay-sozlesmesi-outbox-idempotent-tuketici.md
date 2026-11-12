@@ -93,6 +93,15 @@ Tüketici çatısı `@kopru/service-kit` içindedir (`startConsumer`, `YenidenDe
 - **Eşzamanlılık ve kapanış.** Aynı anda en çok `esZamanli` (varsayılan 8) mesaj işlenir; sıra garantisi yoktur (yukarıdaki "Sıra varsayımları"). `stop()` yeni mesaj almayı bırakır ve çalışan işlerin commit + ack ile bitmesini bekler.
 - **Temizlik.** `islenmisOlaylariTemizle(db)` 30 günden eski `processed_events` satırlarını siler (günlük bir işe bağlanır; zamanlayıcı servisin işidir).
 
+## Uygulama notu (2026-11-12): yeniden yayımlama
+
+Tüketici servislerin `hesap.*` yerel kopyaları yalnız `*.degisti` olaylarıyla dolar; servis sonradan devreye girerse ya da kopya bozulursa mevcut kayıtlar için olay gelmez. `pnpm --filter @kopru/api olaylari-yeniden-yayimla -- --kapsam hesap [--kurum <uuid>]... [--kuru] [--parca 500]` komutu bugünkü durumu `hesap.{kurum,kademe,uyelik,grup,grup_uyesi,atama,modul_ayari}.degisti` olarak outbox'a yazar (`src/sistem/olaylari-yeniden-yayimla.ts`, `withSistem` ile, parça başına bir işlem ve denetim kaydı).
+
+- **İşaret.** Zarf sözleşmesi değişmedi: yeniden yayımlama olayları `actor = {tur:'sistem', id:'olay-yeniden-yayimla'}` ve `correlationId = 'yeniden-yayimla:<calistirma_id>'` taşır. Yük, olayı normalde üreten kodla aynıdır (kişisel veri yok).
+- **Sıra ve idempotency.** Koddaki zarfta `ozne`/`ozne_surumu` alanı yoktur (yukarıdaki tablo hedef tasarımdır). Tüketiciler eski olayı olay kimliğiyle (UUIDv7, `kaynak_olay_id <`) eler. Yeniden yayımlama her olaya **yeni** kimlik verir ve satırın o anki durumunu taşır; kopya aynı duruma upsert olur. Aynı komut tekrar çalıştırılabilir (kopya değişmez, outbox'a yeni olaylar eklenir). Gerçek bir değişiklikle yarışmaya karşı satırlar `FOR SHARE` ile okunur: eşzamanlı güncelleme ya önce commit olur (güncel durum okunur) ya da kilidi bekler ve olayı bizimkinden sonra kimlik alır. `ozne_surumu` zarfa eklenirse (v2 zarf) komut `surum` sütununu da taşıyacak şekilde genişletilir.
+- **Silinmiş/pasif kayıtlar.** Durum alanla taşındığı için tümü yayımlanır: kapalı/askıdaki kurum, `ayrildi` üyelik, `arsivlendi` kademe, `arsiv` grup, `bitis_tarihi` dolu grup üyeliği ve atama. Fiziksel olarak silinen tek kayıt modül ayarıdır (mirasa dönüş satırı siler); satır olmadığı için yayımlanmaz ve komut kopyalardaki eski satırı **silemez** (kopyayı sıfırlamak tüketici servisin işidir).
+- **Sınır.** `hesap.kullanici.degisti`, `hesap.kullanici.silindi` (zarfta kurum yok) ve `hesap.davet.kabul_edildi` (olgu olayı) yeniden yayımlanmaz.
+
 ## Sonuçlar
 
 Olumlu:
