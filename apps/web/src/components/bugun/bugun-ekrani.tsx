@@ -1,7 +1,7 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { ClipboardCheck, MessageCircleQuestion, Sparkles } from 'lucide-react';
+import { ClipboardCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import { BolumKarti } from './bolum-karti';
@@ -16,11 +16,12 @@ import {
   BugunOdevKarti,
   BugunPlanKarti,
 } from '@/components/ogrenme/bugun-kartlari';
+import { BugunSoruKarti } from '@/components/soru/bugun-karti';
 import { dugmeStili } from '@/components/ui/button';
 import { Iskelet, Kart } from '@/components/ui/kart';
 import { BugunYoklamaKarti } from '@/components/yoklama/bugun-karti';
 import { useKurum } from '@/kurum/baglam';
-import { useOgrenciBugun, useOgretmenBugun } from '@/lib/bugun-verisi';
+import { useOgrenciBugun } from '@/lib/bugun-verisi';
 import type { NavBaglami } from '@/lib/navigasyon';
 
 function selam(saat: number): string {
@@ -56,9 +57,6 @@ function BugunBasligi({ aciklama }: { aciklama: string }) {
 }
 
 function PersonelBugun({ yonetim }: { yonetim: boolean }) {
-  const { uyelik } = useKurum();
-  const veri = useOgretmenBugun(uyelik.kurumId);
-  const kok = `/${uyelik.kurumId}`;
   return (
     <>
       <BugunBasligi
@@ -66,24 +64,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
       />
       <div className="grid gap-4 md:grid-cols-2">
         <BugunDersleriKarti />
-        <BolumKarti
-          baslik={t('bugun.sorular')}
-          yukleniyor={veri.isPending}
-          hata={veri.isError}
-          tekrarDene={() => void veri.refetch()}
-        >
-          {veri.data?.sorular.length ? null : (
-            <BosDurum
-              ikon={MessageCircleQuestion}
-              baslik={t('bugun.soruBos')}
-              aciklama={t('bugun.soruBosAciklama')}
-            >
-              <Link href={`${kok}/sorular`} className={dugmeStili({ gorunum: 'ikincil' })}>
-                {t('bugun.soruBosEylem')}
-              </Link>
-            </BosDurum>
-          )}
-        </BolumKarti>
+        <BugunSoruKarti />
         <BugunYoklamaKarti />
         <BugunBekleyenKarti />
         {yonetim ? (

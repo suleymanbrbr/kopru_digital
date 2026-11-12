@@ -21,6 +21,8 @@ export interface MockIstek {
   basliklar: Readonly<Record<string, string>>;
   /** JSON olmayan (ornegin `.xlsx` yukleme) govde: ham baytlar; bu durumda `govde` tanimsizdir. */
   ikili?: Uint8Array;
+  /** Istegin geldigi kaynak (`https://host`); mock mutlak adres uretirken kullanir. */
+  kaynak?: string;
 }
 
 export interface MockYanit {
@@ -31,7 +33,9 @@ export interface MockYanit {
 }
 
 export interface VekilTanimi {
-  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme';
+  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya';
+  /** Hedef adres; verilmezse `api` servisi (`<API_URL>/v1/<servis>/<yol>`). */
+  hedef?: (yol: string) => string;
   /** Yol parcalarinin (birlestirilmis) eslesmesi gereken desenler. */
   izinli: readonly RegExp[];
   /** Yalniz GET'e acik ek desenler (ornegin kurum bilgisini okuma). */
@@ -142,13 +146,15 @@ export async function servisVekili(
         sorgu: request.nextUrl.searchParams,
         govde: govde.length > 0 ? guvenliJson(govde) : undefined,
         basliklar: idempotency ? { 'idempotency-key': idempotency } : {},
+        kaynak: request.nextUrl.origin,
         ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
       }),
     );
   }
 
   try {
-    const yanit = await fetch(`${apiAdresi()}/v1/${tanim.servis}/${yol}${arama}`, {
+    const hedef = tanim.hedef?.(yol) ?? `${apiAdresi()}/v1/${tanim.servis}/${yol}`;
+    const yanit = await fetch(`${hedef}${arama}`, {
       method: request.method,
       headers: {
         authorization: `Bearer ${erisim}`,

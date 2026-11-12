@@ -80,7 +80,12 @@ test.describe('rol ve modul duyarli navigasyon', () => {
       'Kayıtlar',
       'Finans',
     ]) {
-      await expect(menu.getByRole('link', { name: ad, exact: true })).toBeVisible();
+      // "Sorular" baglantisi cevap bekleyen sayisini da okutur ("Sorular 1 cevap bekleyen soru").
+      const baglanti =
+        ad === 'Sorular'
+          ? menu.getByRole('link', { name: /^Sorular/ })
+          : menu.getByRole('link', { name: ad, exact: true });
+      await expect(baglanti).toBeVisible();
     }
     await expect(menu.getByRole('link', { name: 'Abonelik' })).toHaveCount(0);
     await expect(menu.getByRole('link', { name: 'Kurum', exact: true })).toHaveCount(0);
@@ -126,9 +131,9 @@ test.describe('rol ve modul duyarli navigasyon', () => {
   });
 
   test('hazirlanmakta olan bolum yer tutucu gosterir', async ({ page }) => {
-    await girisYap(page, 'Ege Işık Dershanesi');
-    await page.goto('/kurum-ege/sorular');
-    await expect(page.getByRole('heading', { name: 'Sorular', level: 1 })).toBeVisible();
+    await girisYap(page, 'Atlas Etüt Merkezi');
+    await page.goto('/kurum-atlas/gorevler');
+    await expect(page.getByRole('heading', { name: 'Görevler', level: 1 })).toBeVisible();
     await expect(page.getByText('Bu bölüm hazırlanıyor')).toBeVisible();
   });
 });

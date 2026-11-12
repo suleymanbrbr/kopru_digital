@@ -4,7 +4,7 @@ import type { z } from 'zod';
 import { bffIstek, UygulamaHatasi } from '@/lib/api';
 import { belirteciYenile, erisimBelirteciAl } from '@/oturum/saglayici';
 
-export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme';
+export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya';
 
 interface IstekSecenekleri<S> {
   yontem?: string;
@@ -61,6 +61,11 @@ export function ogrenmeIstek<S extends z.ZodType>(
   secenekler: IstekSecenekleri<S> = {},
 ) {
   return servisIstek('ogrenme', yol, secenekler);
+}
+
+/** Medya servisi (`/api/medya/dosyalar/*` -> `MEDYA_URL/v1/dosyalar/*`). */
+export function medyaIstek<S extends z.ZodType>(yol: string, secenekler: IstekSecenekleri<S> = {}) {
+  return servisIstek('medya', yol, secenekler);
 }
 
 /** `content-disposition` basligindan dosya adini cikarir. */

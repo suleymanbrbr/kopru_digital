@@ -6,11 +6,28 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/cn';
 import type { NavOgesi } from '@/lib/navigasyon';
+import { useBekleyenSayisi } from '@/lib/soru/veri';
 
 export function useAktifMi(kurumId: string, yol: string): boolean {
   const yolAdi = usePathname();
   const hedef = `/${kurumId}/${yol}`;
   return yolAdi === hedef || yolAdi.startsWith(`${hedef}/`);
+}
+
+/** "Sorular" menusunde cevap bekleyen soru sayisi; sifirsa gorunmez. */
+function BekleyenRozeti({ kurumId }: { kurumId: string }) {
+  const q = useBekleyenSayisi(kurumId, true);
+  const n = q.data?.bekleyen ?? 0;
+  if (n === 0) return null;
+  return (
+    <span
+      data-testid="menu-bekleyen-sayi"
+      aria-label={t('soruSor.nav.bekleyen', { n })}
+      className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-vurgu px-1.5 text-xs font-semibold text-vurgu-uzeri"
+    >
+      {n}
+    </span>
+  );
 }
 
 /** Yan menu / cekmece satiri. Etkin sayfa `aria-current="page"` ile isaretlenir. */
@@ -43,6 +60,7 @@ export function NavSatiri({
       ) : null}
       <Ikon className="size-[1.125rem] shrink-0" aria-hidden />
       {t(oge.baslik)}
+      {oge.anahtar === 'sorular' ? <BekleyenRozeti kurumId={kurumId} /> : null}
     </Link>
   );
 }
