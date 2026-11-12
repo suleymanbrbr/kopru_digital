@@ -47,8 +47,8 @@ export function Kucukresim({
       >
         <Image
           source={gorselKaynagi(adres.ortaUrl ?? adres.asilUrl)}
-          style={{ width: '100%', aspectRatio: oran }}
-          resizeMode="cover"
+          style={{ width: '100%', aspectRatio: oran, maxHeight: 360, backgroundColor: '#00000020' }}
+          resizeMode="contain"
         />
       </Pressable>
       <GorselGoruntule
@@ -145,7 +145,7 @@ export function MesajKarti({
     >
       <View className="flex-row items-center justify-between gap-2">
         <Metin varyant="etiket" accessibilityRole="header">
-          {yazar} · {tur}
+          {yazar ? `${yazar} · ${tur}` : tur}
         </Metin>
         <Metin varyant="kucuk">{kisaZaman(mesaj.olusturma, tz)}</Metin>
       </View>

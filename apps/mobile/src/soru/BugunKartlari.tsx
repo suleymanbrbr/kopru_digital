@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
 import { kisaZaman } from '../lib/saat';
-import { bransAdi } from '../ogrenme/konu';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';
@@ -45,7 +44,7 @@ export function BekleyenSorularKarti() {
         <>
           <Metin varyant="ikincil" testID="en-eski">
             {t('mobil.soru.ogretmen.enEski', {
-              ogrenci: enEski.ogrenciAdi ?? bransAdi(enEski.bransKodu),
+              ogrenci: enEski.ogrenciAdi ?? t('mobil.soru.ogretmen.adsiz'),
               zaman: kisaZaman(enEski.sonHareket, tz),
             })}
           </Metin>

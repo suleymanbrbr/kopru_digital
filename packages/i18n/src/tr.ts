@@ -2861,6 +2861,7 @@ export const tr = {
         ogrenciSuzgeci: 'Öğrenci: {ad}',
         ogrenciSuzgeciKaldir: 'Öğrenci süzgecini kaldır',
         satirEtiketi: '{ogrenci}, {ders}, {durum}. {zaman}',
+        adsiz: 'Öğrenci',
         musait: 'Bugün cevap veremiyorum',
         musaitAciklama:
           'Açarsan öğrencilerin sorularında “öğretmenin bugün müsait değil” notu görünür.',

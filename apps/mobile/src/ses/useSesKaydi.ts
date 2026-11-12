@@ -85,20 +85,26 @@ export function useSesKaydi(enFazlaSn = SES_EN_FAZLA_SN): SesKaydi {
 
   const baslat = useCallback(async () => {
     setHata(null);
+    console.log('[ses] izin isteniyor');
     const izin = await requestRecordingPermissionsAsync();
+    console.log('[ses] izin', izin.granted);
     if (!izin.granted) {
       setHata('izin');
       return false;
     }
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      console.log('[ses] mod tamam');
       await kaydedici.prepareToRecordAsync();
+      console.log('[ses] hazir');
       kaydedici.record();
+      console.log('[ses] kayit basladi');
       setGecenSn(0);
       setUri(null);
       set('kaydediyor');
       return true;
-    } catch {
+    } catch (e) {
+      console.log('[ses] hata', String(e));
       setHata('baslamadi');
       return false;
     }

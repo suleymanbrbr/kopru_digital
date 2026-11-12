@@ -182,7 +182,7 @@ export function CevapEkrani({ id }: { id: string }) {
       {soru ? (
         <>
           <Metin varyant="etiket">
-            {soru.ogrenciAdi ?? ''} · {bransAdi(soru.bransKodu)}
+            {soru.ogrenciAdi ?? t('mobil.soru.ogretmen.adsiz')} · {bransAdi(soru.bransKodu)}
           </Metin>
           <MetinGirdisi
             etiket={t('mobil.soru.cevap.metin')}

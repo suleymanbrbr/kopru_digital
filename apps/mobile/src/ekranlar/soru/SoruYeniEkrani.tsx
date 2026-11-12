@@ -201,7 +201,7 @@ export function SoruYeniEkrani() {
         <View className="gap-3" testID="foto-listesi">
           {fotolar.map((f, i) => (
             <Kart key={f.id} className="flex-row gap-3 p-3" testID={`foto-${String(i)}`}>
-              <View className="w-28 gap-1">
+              <View className="gap-1" style={{ width: 112 }}>
                 <Image
                   source={{ uri: f.isaret?.duzUri ?? f.uri }}
                   style={{ width: '100%', aspectRatio: f.genislik / f.yukseklik, borderRadius: 8 }}

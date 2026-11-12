@@ -45,7 +45,7 @@ export function SoruSatiri({
     >
       <View className="flex-row items-center justify-between gap-2">
         <Metin varyant="altBaslik" className="flex-1" numberOfLines={1}>
-          {ogrencili ? (soru.ogrenciAdi ?? ders) : ders}
+          {ogrencili ? (soru.ogrenciAdi ?? t('mobil.soru.ogretmen.adsiz')) : ders}
         </Metin>
         <Ikon ad="chevron-forward" boyut={18} />
       </View>
