@@ -30,7 +30,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
 
   it('bos veritabaninda uygulanir, ikinci calistirma bir sey yapmaz', async () => {
     const ilk = await migrate({ url: ownerUrl });
-    expect(ilk).toEqual(['0001_temel.sql', '0002_medya.sql']);
+    expect(ilk).toEqual(['0001_temel.sql', '0002_medya.sql', '0003_saklama_olay_at.sql']);
     expect(await migrate({ url: ownerUrl })).toEqual([]);
     owner = postgres(ownerUrl, { max: 2, onnotice: () => undefined });
   });

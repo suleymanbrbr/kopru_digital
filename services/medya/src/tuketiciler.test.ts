@@ -1,5 +1,7 @@
 import {
   hesapKurumDegistiV1,
+  ogrenmeSoruCozulduV1,
+  ogrenmeSoruYenidenAcildiV1,
   ortakDosyaBaglandiV1,
   ortakDosyaBirakildiV1,
   type MedyaDosyaTuru,
@@ -92,7 +94,7 @@ describe.skipIf(natsYok())('olay tuketicileri (gercek PostgreSQL + NATS)', () =>
     // Paylasilan EVENTS gecmisini tekrar oynatmamak icin tuketicileri `new` ile onceden olusturur;
     // startConsumer varolan tuketiciyi gunceller (deliver_policy korunur).
     const jsm = await nats.jetstreamManager();
-    for (const ad of [`medya_baglama${sonek}`, `medya_kopya${sonek}`]) {
+    for (const ad of [`medya_baglama${sonek}`, `medya_saklama${sonek}`, `medya_kopya${sonek}`]) {
       await jsm.consumers.add('EVENTS', {
         durable_name: ad,
         ack_policy: AckPolicy.Explicit,
@@ -110,7 +112,7 @@ describe.skipIf(natsYok())('olay tuketicileri (gercek PostgreSQL + NATS)', () =>
   afterAll(async () => {
     for (const d of durdur) await d();
     const jsm = await nats.jetstreamManager();
-    for (const ad of [`medya_baglama${sonek}`, `medya_kopya${sonek}`]) {
+    for (const ad of [`medya_baglama${sonek}`, `medya_saklama${sonek}`, `medya_kopya${sonek}`]) {
       await jsm.consumers.delete('EVENTS', ad).catch(() => undefined);
     }
     // bu testin urettigi (varsa) DLQ kayitlari
@@ -289,5 +291,129 @@ describe.skipIf(natsYok())('olay tuketicileri (gercek PostgreSQL + NATS)', () =>
     const acik = await satir(dosya);
     expect(acik?.silinecek_at).toBeNull();
     expect(acik?.neden).toBeNull();
+  });
+
+  describe('medya.saklama (soru cozuldu / yeniden acildi)', () => {
+    const saklamaSatiri = async (id: string) =>
+      (
+        await sistem<{ silinecek_at: Date | null; neden: string | null; durum: string }[]>`
+          select silinecek_at, silme_nedeni as neden, durum from medya.dosyalar where id = ${id}`
+      )[0];
+
+    /** Soruya bagli, suresiz saklanan (silme plani olmayan) hazir dosya. */
+    async function soruDosyasi(kurum: string, tur: MedyaDosyaTuru = 'soru_fotografi') {
+      const id = await hazirDosya(kurum, tur);
+      await sistem`update medya.dosyalar set silinecek_at = null, silme_nedeni = null, baglandi = true,
+                          bagli_tur = 'soru', bagli_id = ${uuidv7()} where id = ${id}`;
+      return id;
+    }
+
+    const cozuldu = (kurum: string, dosyalar: string[], t: number, silinecek: Date) =>
+      ogrenmeSoruCozulduV1.create({
+        kurumId: kurum,
+        actor,
+        correlationId: 'c',
+        occurredAt: new Date(t),
+        data: {
+          soru_id: uuidv7(),
+          ogrenci_id: uuidv7(),
+          brans_kodu: 'matematik',
+          cozuldu_at: new Date(t).toISOString(),
+          dosya_idleri: dosyalar,
+          silinecek_at: silinecek.toISOString(),
+        },
+      });
+    const acildi = (kurum: string, dosyalar: string[], t: number) =>
+      ogrenmeSoruYenidenAcildiV1.create({
+        kurumId: kurum,
+        actor,
+        correlationId: 'c',
+        occurredAt: new Date(t),
+        data: { soru_id: uuidv7(), ogrenci_id: uuidv7(), dosya_idleri: dosyalar },
+      });
+
+    it('cozuldu: silinecek_at dolar (soru_cozuldu), silinmis dosyaya dokunulmaz; ayni olay iki kez tek etki; yeniden acildi NULL yapar', async () => {
+      const kurum = uuidv7();
+      const a = await soruDosyasi(kurum);
+      const b = await soruDosyasi(kurum, 'soru_cizim');
+      const silinmis = await soruDosyasi(kurum);
+      await sistem`update medya.dosyalar set durum = 'silindi', silindi_at = now(), depolama_anahtari = null
+                    where id = ${silinmis}`;
+      const t0 = Date.now();
+      const plan = new Date(t0 + 30 * 86_400_000);
+      const c = cozuldu(kurum, [a, b, silinmis], t0, plan);
+      await yayinla(c);
+      await yayinla(c); // ayni olay iki kez
+      await bekle(async () => (await islenenSayisi(c.id)) === 1);
+      await new Promise((r) => setTimeout(r, 300));
+      for (const id of [a, b]) {
+        const d = await saklamaSatiri(id);
+        expect(d?.silinecek_at?.toISOString()).toBe(plan.toISOString());
+        expect(d?.neden).toBe('soru_cozuldu');
+      }
+      expect((await saklamaSatiri(silinmis))?.silinecek_at).toBeNull();
+      expect(await islenenSayisi(c.id)).toBe(1);
+
+      const r = acildi(kurum, [a, b, silinmis], t0 + 1000);
+      await yayinla(r);
+      await bekle(async () => (await islenenSayisi(r.id)) === 1);
+      for (const id of [a, b]) {
+        const d = await saklamaSatiri(id);
+        expect(d?.silinecek_at).toBeNull();
+        expect(d?.neden).toBeNull();
+      }
+      expect((await saklamaSatiri(silinmis))?.durum).toBe('silindi');
+    });
+
+    it('sira bagimsizligi: yeniden acildi, cozuldu olayindan once islenirse eski cozuldu olayi ezmez; sonra gelen yeni cozuldu uygular', async () => {
+      const kurum = uuidv7();
+      const id = await soruDosyasi(kurum);
+      const t0 = Date.now();
+      const eskiCozuldu = cozuldu(kurum, [id], t0, new Date(t0 + 30 * 86_400_000));
+      const acilma = acildi(kurum, [id], t0 + 5000);
+      await yayinla(acilma); // once yeni olay
+      await bekle(async () => (await islenenSayisi(acilma.id)) === 1);
+      await yayinla(eskiCozuldu); // sonra eski olay (yeniden teslim / ters sira)
+      await bekle(async () => (await islenenSayisi(eskiCozuldu.id)) === 1);
+      expect((await saklamaSatiri(id))?.silinecek_at).toBeNull();
+
+      const yeniPlan = new Date(t0 + 40 * 86_400_000);
+      const yeniCozuldu = cozuldu(kurum, [id], t0 + 9000, yeniPlan);
+      await yayinla(yeniCozuldu);
+      await bekle(async () => (await islenenSayisi(yeniCozuldu.id)) === 1);
+      expect((await saklamaSatiri(id))?.silinecek_at?.toISOString()).toBe(yeniPlan.toISOString());
+
+      // gecikmeli eski yeniden-acildi yeni cozulmeyi geri almaz
+      const eskiAcilma = acildi(kurum, [id], t0 + 2000);
+      await yayinla(eskiAcilma);
+      await bekle(async () => (await islenenSayisi(eskiAcilma.id)) === 1);
+      expect((await saklamaSatiri(id))?.silinecek_at?.toISOString()).toBe(yeniPlan.toISOString());
+    });
+
+    it('baska kurumun olayi baska kurumun dosyasini etkilemez (RLS)', async () => {
+      const kurumA = uuidv7();
+      const kurumB = uuidv7();
+      const dosyaB = await soruDosyasi(kurumB);
+      const t0 = Date.now();
+      const e = cozuldu(kurumA, [dosyaB], t0, new Date(t0 + 30 * 86_400_000));
+      await yayinla(e);
+      await new Promise((r) => setTimeout(r, 1500));
+      expect((await saklamaSatiri(dosyaB))?.silinecek_at).toBeNull();
+      // Kurum A'nin kendi (bos kapsamli) guncellemesi islenir; B dosyasi bulunamadigi icin 0 satir etkilenir.
+    });
+
+    it('daha guclu plan (kurum kapandi) cozuldu olayiyla ezilmez', async () => {
+      const kurum = uuidv7();
+      const id = await soruDosyasi(kurum);
+      const kapanis = new Date(Date.now() + 90 * 86_400_000);
+      await sistem`update medya.dosyalar set silinecek_at = ${kapanis}, silme_nedeni = 'kurum_kapandi' where id = ${id}`;
+      const t0 = Date.now();
+      const e = cozuldu(kurum, [id], t0, new Date(t0 + 30 * 86_400_000));
+      await yayinla(e);
+      await bekle(async () => (await islenenSayisi(e.id)) === 1);
+      const d = await saklamaSatiri(id);
+      expect(d?.neden).toBe('kurum_kapandi');
+      expect(d?.silinecek_at?.toISOString()).toBe(kapanis.toISOString());
+    });
   });
 });
