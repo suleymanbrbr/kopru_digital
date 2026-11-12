@@ -17,6 +17,7 @@ import {
 import { sql } from 'drizzle-orm';
 
 import { gunHesapla, iso, kurumBilgisi, modulAcikMi } from './ortak.js';
+import { seriYollari } from './seri-yollari.js';
 
 function kimlik(request: { auth: AuthContext | null }, kurumId: string) {
   const a = request.auth;
@@ -318,6 +319,6 @@ export function yollariOlustur(secenek: YolSecenekleri = {}): ServicePlugin {
       },
     );
 
-    return Promise.resolve();
+    return seriYollari({ simdi })(app, {});
   };
 }

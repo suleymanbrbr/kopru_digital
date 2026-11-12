@@ -21,6 +21,7 @@ import {
   type IsBaglami,
   type Islem,
 } from './ortak.js';
+import { seriDegerlendir } from './seri.js';
 import {
   aktifKazanim,
   aktiviteArtir,
@@ -177,6 +178,7 @@ export async function odevTeslimIsle(
     bransKodu: d.brans_kodu,
   });
   await aktiviteArtir(tx, b, b.gun, 'odev_teslim_sayisi', 1);
+  await seriDegerlendir(tx, b);
   await sayacArtir(tx, b, 'toplam_odev_teslim', 1);
   if (d.yapilan_soru_sayisi > 0) {
     await sayacArtir(tx, b, 'toplam_cozulen_soru', d.yapilan_soru_sayisi);
@@ -225,6 +227,7 @@ export async function planGoreviIsle(
     return;
   }
   await aktiviteArtir(tx, b, b.gun, 'plan_gorevi_sayisi', 1);
+  await seriDegerlendir(tx, b);
 
   // Supheli orunti: pencerede esikten FAZLA tamamlama -> XP yok.
   const pencere = await ayarOku<number>(tx, 'supheli.plan_gorevi_pencere_sn', 60);
@@ -305,6 +308,7 @@ export async function soruCozulduIsle(
   if (!(await ozneIlkKez(tx, b, kural.kod, d.soru_id))) return;
   await xpKazan(tx, b, { kural, ozne: { id: d.soru_id }, bransKodu: d.brans_kodu });
   await aktiviteArtir(tx, b, b.gun, 'soru_anladim_sayisi', 1);
+  await seriDegerlendir(tx, b);
   await sayacArtir(tx, b, 'toplam_anladim', 1);
   await rozetleriDegerlendir(tx, b, ['toplam_anladim']);
 }
