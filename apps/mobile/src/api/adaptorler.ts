@@ -1,3 +1,4 @@
+import type { KayitAdapter } from './kayitTipleri';
 import type { OgrenmeAdapter } from './ogrenmeTipleri';
 import type { DersAdapter, FinansAdapter } from './operasyonTipleri';
 import type {
@@ -80,4 +81,5 @@ export interface Adaptorler {
   ders: DersAdapter;
   finans: FinansAdapter;
   ogrenme: OgrenmeAdapter;
+  kayit: KayitAdapter;
 }

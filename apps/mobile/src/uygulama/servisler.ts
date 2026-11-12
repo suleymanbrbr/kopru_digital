@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
+import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { cevrimiciKorumaliOperasyon } from '../api/cevrimiciOperasyon';
 import { apiHatasiMi } from '../api/tipler';
@@ -14,6 +15,7 @@ import { kv, webDeposuOlarak, type KvDepo } from '../depo/kv';
 import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
 import { netInfoGozlemcisi } from '../offline/ag';
+import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/geriBildirim';
 import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
 import { planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
@@ -34,6 +36,8 @@ export interface Servisler {
   /** Yerel tercih deposu (ornegin son kullanilan konular). */
   yerelDepo: KvDepo;
   agGozlemcisi: ReturnType<typeof netInfoGozlemcisi>;
+  /** Verilen geri bildirimlerin yerel kaydi (kartin "degistir" durumu icin). */
+  geriBildirimDeposu: GeriBildirimDeposu;
 }
 
 /** Uygulama omru boyunca tek kez kurulan servisler. */
@@ -50,7 +54,9 @@ export function servisleriKur(): Servisler {
     ders: operasyon.ders,
     finans: operasyon.finans,
     ogrenme: cevrimiciKorumaliOgrenme(ham.ogrenme, () => agGozlemcisi.cevrimiciMi()),
+    kayit: cevrimiciKorumaliKayit(ham.kayit, () => agGozlemcisi.cevrimiciMi()),
   };
+  const geriBildirimDeposu = new GeriBildirimDeposu(kv());
 
   const oturumRef: { current: OturumYoneticisi | null } = { current: null };
   const hataIsle = (e: unknown) => oturumRef.current?.hataIsle(e);
@@ -77,6 +83,8 @@ export function servisleriKur(): Servisler {
     // Paylasilan cihazda baska biri giris yapinca onceki kullanicinin daveti kabul edilmesin.
     kullaniciCikisi: () => {
       void davetRef.current?.unut();
+      // Yerel "verdim" kaydi uyelik kapsamlidir (kurum degisiminde karismaz); yalniz cikista silinir.
+      geriBildirimDeposu.temizle();
     },
   });
   oturumRef.current = oturum;
@@ -118,6 +126,18 @@ export function servisleriKur(): Servisler {
     },
   );
 
+  geriBildirimIsleyicisiKaydet(kuyruk, () => adaptorler.kayit, {
+    basarili: () => {
+      void queryClient.invalidateQueries({ queryKey: ['geri-bildirim'] });
+    },
+    reddedildi: (yuk) => {
+      const kapsam = oturum.depo.al();
+      if (kapsam.asama === 'giris' && kapsam.aktif) {
+        geriBildirimDeposu.kaldir(kapsam.aktif.uyelik.uyelikId, yuk.dersId);
+      }
+    },
+  });
+
   return {
     adaptorler,
     oturum,
@@ -132,5 +152,6 @@ export function servisleriKur(): Servisler {
     kuyruk,
     yerelDepo: kv(),
     agGozlemcisi,
+    geriBildirimDeposu,
   };
 }

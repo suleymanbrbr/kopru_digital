@@ -16,6 +16,7 @@ import { ApiHata } from '../api/tipler';
 import KurumSec from '../app/(onboarding)/kurum-sec';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
+import { GeriBildirimDeposu } from '../offline/geriBildirim';
 import { OfflineKuyruk } from '../offline/kuyruk';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur } from '../oturum/yonetici';
@@ -106,6 +107,7 @@ function ortamKur(): Ortam {
     oturum,
     queryClient,
     kuyruk,
+    geriBildirimDeposu: new GeriBildirimDeposu(bellekKv()),
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,

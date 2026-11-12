@@ -26,6 +26,8 @@ import {
 import { useOgrenciBugun } from '../uygulama/sorgular';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
+import { GeriBildirimKartlari } from './GeriBildirimKartlari';
+import { KayitlarimGirisi } from './KayitlarimGirisi';
 import { OgrenciBugunOgrenme } from './OgrenciBugunOgrenme';
 
 /** Ogretmenin "ogrenciye gorunsun" notu (api `ogretmene_ozel` notlari ogrenciye hic donmez). */
@@ -82,6 +84,8 @@ export function OgrenciBugun() {
       ) : null}
       {d ? (
         <>
+          <GeriBildirimKartlari />
+          <KayitlarimGirisi />
           {oyun ? (
             <Kart className="items-center gap-3">
               <Companion

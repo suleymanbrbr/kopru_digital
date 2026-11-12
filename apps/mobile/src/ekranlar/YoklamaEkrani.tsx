@@ -22,7 +22,7 @@ import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { Secici } from '../ui/Secici';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { useKuyruk, useYoklamaKatilimcilari } from '../uygulama/operasyon';
+import { useKuyruk, useModulAcik, useYoklamaKatilimcilari } from '../uygulama/operasyon';
 
 const DURUMLAR: readonly YoklamaDurumu[] = ['geldi', 'gelmedi', 'izinli', 'gec'];
 
@@ -48,6 +48,7 @@ export function YoklamaEkrani({ dersId, baslik, baslangic }: Props) {
   const uyelikId = useAktif()?.uyelik.uyelikId;
   const kat = useYoklamaKatilimcilari(dersId);
   const { bekleyen } = useKuyruk();
+  const kayitAcik = useModulAcik('kayitlar');
 
   const [degisen, setDegisen] = useState<Record<string, YoklamaSecimi>>({});
   const [not, setNot] = useState('');
@@ -99,6 +100,20 @@ export function YoklamaEkrani({ dersId, baslik, baslangic }: Props) {
           <Metin varyant="ikincil" className="text-center">
             {bekliyor ? t('mobil.yoklama.gonderilmeyiBekliyor') : t('mobil.yoklama.alindiMesaj')}
           </Metin>
+          {kayitAcik ? (
+            <Dugme
+              varyant="ikincil"
+              etiket={t('mobil.kayit.ekle.dugme')}
+              accessibilityLabel={t('mobil.kayit.ekle.dugmeEtiket', { ders: baslik })}
+              testID="yoklama-kayit-ekle"
+              onPress={() => {
+                router.replace({
+                  pathname: '/kayit-ekle',
+                  params: { dersId, baslik, baslangic },
+                });
+              }}
+            />
+          ) : null}
           <Dugme
             etiket={t('ortak.devam')}
             onPress={() => {

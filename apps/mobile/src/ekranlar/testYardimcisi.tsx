@@ -11,10 +11,12 @@ import { act } from 'react';
 import type { ReactElement } from 'react';
 import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 
+import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { mockAdaptorler } from '../api/mock';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
+import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/geriBildirim';
 import { OfflineKuyruk } from '../offline/kuyruk';
 import { planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
@@ -53,6 +55,8 @@ export function ortamKur(): Ortam {
   const cevrimici = { deger: true };
   // Uretimdeki gibi: cevrimdisiyken ogrenme istekleri gonderilmez (gerceklesen kuyrugu haric).
   adaptorler.ogrenme = cevrimiciKorumaliOgrenme(adaptorler.ogrenme, () => cevrimici.deger);
+  adaptorler.kayit = cevrimiciKorumaliKayit(adaptorler.kayit, () => cevrimici.deger);
+  const geriBildirimDeposu = new GeriBildirimDeposu(bellekKv());
   const kuyruk = new OfflineKuyruk({
     depo: bellekKv(),
     yeniId: (() => {
@@ -68,6 +72,14 @@ export function ortamKur(): Ortam {
   });
   yoklamaIsleyicisiKaydet(kuyruk, () => adaptorler.ders);
   planIsleyicisiKaydet(kuyruk, () => adaptorler.ogrenme);
+  geriBildirimIsleyicisiKaydet(kuyruk, () => adaptorler.kayit, {
+    reddedildi: (yuk) => {
+      const d = oturum.depo.al();
+      if (d.asama === 'giris' && d.aktif) {
+        geriBildirimDeposu.kaldir(d.aktif.uyelik.uyelikId, yuk.dersId);
+      }
+    },
+  });
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: Infinity, staleTime: 0 },
@@ -81,6 +93,7 @@ export function ortamKur(): Ortam {
     queryClient,
     kuyruk,
     yerelDepo: bellekKv(),
+    geriBildirimDeposu,
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,

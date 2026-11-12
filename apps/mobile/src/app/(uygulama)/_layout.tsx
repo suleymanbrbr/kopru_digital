@@ -25,6 +25,8 @@ export default function UygulamaDuzeni() {
       <Stack.Screen name="katilim" options={{ title: t('mobil.sinifKodu.baslik') }} />
       <Stack.Screen name="ders-ekle" options={{ title: t('mobil.ders.formBaslik') }} />
       <Stack.Screen name="yoklama/[dersId]" options={{ title: t('mobil.yoklama.ekranBaslik') }} />
+      <Stack.Screen name="kayitlarim" options={{ title: t('mobil.kayit.baslik') }} />
+      <Stack.Screen name="kayit-ekle" options={{ title: t('mobil.kayit.ekle.baslik') }} />
       <Stack.Screen name="senkron" options={{ title: t('mobil.senkron.baslik') }} />
       <Stack.Screen name="ogrenci/[id]" options={{ title: t('mobil.finans.kartBaslik') }} />
       <Stack.Screen name="paket-sat" options={{ title: t('mobil.finans.paketSatBaslik') }} />

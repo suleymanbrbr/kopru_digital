@@ -3,6 +3,7 @@ import { MODUL_KODLARI, type ModulDurumu } from '@kopru/contracts';
 
 import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { kayitAdaptoru } from './gercekKayit';
 import { ogrenmeAdaptoru } from './gercekOgrenme';
 import { operasyonAdaptorleri } from './gercekOperasyon';
 import {
@@ -291,10 +292,12 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
 
   const operasyon = operasyonAdaptorleri({ yetkili, etkinKurum, veriAl });
   const ogrenme = ogrenmeAdaptoru({ yetkili, etkinKurum, veriAl });
+  const kayit = kayitAdaptoru({ yetkili, etkinKurum, veriAl });
 
   return {
     ...operasyon,
     ogrenme,
+    kayit,
     auth: {
       async otpIste(telefon) {
         otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));
