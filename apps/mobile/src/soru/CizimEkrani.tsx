@@ -141,7 +141,8 @@ export function CizimEkrani({
     setMesgul(true);
     setHata(null);
     try {
-      if (ses.asama === 'kaydediyor') await ses.durdur();
+      const kayit =
+        ses.asama === 'kaydediyor' ? await ses.durdur() : { uri: ses.uri, sureSn: ses.gecenSn };
       const veri = serilestir(durum.cizgiler, oran, { zamanli: mini });
       const duz = await cizimiDuzlestir(kaynakUri, durum.cizgiler);
       onBitti({
@@ -149,7 +150,7 @@ export function CizimEkrani({
         genislik: duz.genislik,
         yukseklik: duz.yukseklik,
         veri,
-        ...(mini && ses.uri ? { sesUri: ses.uri, sesSn: kayitSuresiSn(ses.gecenSn) } : {}),
+        ...(mini && kayit.uri ? { sesUri: kayit.uri, sesSn: kayitSuresiSn(kayit.sureSn) } : {}),
       });
     } catch (e) {
       setHata(

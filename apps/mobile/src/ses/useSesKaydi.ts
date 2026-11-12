@@ -27,7 +27,8 @@ export interface SesKaydi {
   /** Bitmis kaydin yerel adresi. */
   uri: string | null;
   baslat: () => Promise<boolean>;
-  durdur: () => Promise<void>;
+  /** Kaydi durdurur; donus degeri durdurulan kaydin adresi (kullanilamayacak kadar kisaysa null) ve suresidir. */
+  durdur: () => Promise<{ uri: string | null; sureSn: number }>;
   /** Bitmis kaydi atar (yeniden kaydetmek icin). */
   sil: () => void;
   /** Kayit basindan beri gecen ms (mini anlatimda cizgi zaman damgasi); kayit yoksa 0. */
@@ -51,17 +52,19 @@ export function useSesKaydi(enFazlaSn = SES_EN_FAZLA_SN): SesKaydi {
   };
 
   const durdur = useCallback(async () => {
-    if (asamaRef.current !== 'kaydediyor') return;
+    if (asamaRef.current !== 'kaydediyor') return { uri: null, sureSn: 0 };
     const sure = kaydedici.currentTime;
     await kaydedici.stop();
     await setAudioModeAsync({ allowsRecording: false });
     setGecenSn(sure);
-    if (kayitKullanilabilirMi(sure) && kaydedici.uri) {
-      setUri(kaydedici.uri);
+    const uri = kayitKullanilabilirMi(sure) ? kaydedici.uri : null;
+    if (uri) {
+      setUri(uri);
       set('bitti');
     } else {
       set('bos');
     }
+    return { uri, sureSn: sure };
   }, [kaydedici]);
 
   useEffect(() => {
@@ -85,26 +88,20 @@ export function useSesKaydi(enFazlaSn = SES_EN_FAZLA_SN): SesKaydi {
 
   const baslat = useCallback(async () => {
     setHata(null);
-    console.log('[ses] izin isteniyor');
     const izin = await requestRecordingPermissionsAsync();
-    console.log('[ses] izin', izin.granted);
     if (!izin.granted) {
       setHata('izin');
       return false;
     }
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      console.log('[ses] mod tamam');
       await kaydedici.prepareToRecordAsync();
-      console.log('[ses] hazir');
       kaydedici.record();
-      console.log('[ses] kayit basladi');
       setGecenSn(0);
       setUri(null);
       set('kaydediyor');
       return true;
-    } catch (e) {
-      console.log('[ses] hata', String(e));
+    } catch {
       setHata('baslamadi');
       return false;
     }

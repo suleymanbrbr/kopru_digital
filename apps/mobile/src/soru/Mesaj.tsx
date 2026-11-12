@@ -33,7 +33,6 @@ export function Kucukresim({
       </View>
     );
   }
-  const oran = adres.genislik && adres.yukseklik ? adres.genislik / adres.yukseklik : 4 / 3;
   return (
     <>
       <Pressable
@@ -47,7 +46,7 @@ export function Kucukresim({
       >
         <Image
           source={gorselKaynagi(adres.ortaUrl ?? adres.asilUrl)}
-          style={{ width: '100%', aspectRatio: oran, maxHeight: 360, backgroundColor: '#00000020' }}
+          style={{ width: '100%', height: 360, backgroundColor: '#00000020' }}
           resizeMode="contain"
         />
       </Pressable>

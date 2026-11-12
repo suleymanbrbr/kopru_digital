@@ -2851,6 +2851,7 @@ export const tr = {
       ogretmen: {
         baslik: 'Sorular',
         bekleyen: 'Bekleyen',
+        bekleyenSekme: 'Bekleyen ({n})',
         cevapladiklarim: 'Cevapladıklarım',
         bekleyenBaslik: 'Cevap bekleyen sorular ({n})',
         bekleyenBos: 'Cevap bekleyen soru yok. Güzel iş!',

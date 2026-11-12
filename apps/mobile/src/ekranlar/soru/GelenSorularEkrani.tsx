@@ -113,7 +113,7 @@ export function GelenSorularEkrani() {
         secenekler={[
           {
             deger: 'bekleyen',
-            etiket: t('mobil.soru.ogretmen.bekleyenBaslik', { n: sayi.data?.bekleyen ?? 0 }),
+            etiket: t('mobil.soru.ogretmen.bekleyenSekme', { n: sayi.data?.bekleyen ?? 0 }),
           },
           { deger: 'cevaplanan', etiket: t('mobil.soru.ogretmen.cevapladiklarim') },
         ]}

@@ -22,10 +22,10 @@ import { OfflineKuyruk } from '../offline/kuyruk';
 import { planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur } from '../oturum/yonetici';
-import { GonderimYoneticisi } from '../yukleme/gonderim';
-import { YuklemeKuyrugu } from '../yukleme/kuyruk';
 import { ServisBaglami } from '../uygulama/baglam';
 import type { Servisler } from '../uygulama/servisler';
+import { GonderimYoneticisi } from '../yukleme/gonderim';
+import { YuklemeKuyrugu } from '../yukleme/kuyruk';
 
 const render: ReactTestRenderer[] = [];
 const istemciler: QueryClient[] = [];

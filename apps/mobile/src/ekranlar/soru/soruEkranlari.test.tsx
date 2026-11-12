@@ -28,8 +28,8 @@ import {
 import { CevapEkrani } from './CevapEkrani';
 import { GelenSorularEkrani } from './GelenSorularEkrani';
 import { SoruDetayEkrani } from './SoruDetayEkrani';
-import { SoruSorSekmesi } from './SoruSorSekmesi';
 import { SorularimEkrani } from './SorularimEkrani';
+import { SoruSorSekmesi } from './SoruSorSekmesi';
 
 const mockYonlendirici = {
   push: jest.fn(),
@@ -193,7 +193,7 @@ describe('ogretmen', () => {
     const o = await ogretmenOrtami();
     const r = await ac(o, <GelenSorularEkrani />);
     const m = metinler(r);
-    expect(m).toContain(t('mobil.soru.ogretmen.bekleyenBaslik', { n: 3 }));
+    expect(m).toContain(t('mobil.soru.ogretmen.bekleyenSekme', { n: 3 }));
     // En eski (26 saat onceki takip bekleyen) once.
     expect(m.indexOf('Mert Demir')).toBeLessThan(m.indexOf('Deniz Aydın'));
     const anahtar = r.root.findAll(
@@ -201,7 +201,7 @@ describe('ogretmen', () => {
         n.props.accessibilityLabel === t('mobil.soru.ogretmen.musait') &&
         typeof n.props.onValueChange === 'function',
     )[0];
-    await act(async () => {
+    act(() => {
       (anahtar?.props.onValueChange as (v: boolean) => void)(true);
     });
     await bekle(60);
@@ -237,7 +237,7 @@ describe('ogretmen', () => {
         n.props.accessibilityLabel === t('mobil.soru.cevap.dersteKonusalim') &&
         typeof n.props.onValueChange === 'function',
     )[0];
-    await act(async () => {
+    act(() => {
       (anahtar?.props.onValueChange as (v: boolean) => void)(true);
     });
     await testIDDokun(r, 'cevap-gonder');
