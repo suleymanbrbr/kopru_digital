@@ -197,18 +197,21 @@ export function mockSoru(sec: MockOperasyonSecenekleri): SoruAdapter {
   ];
 
   function ozet(s: MockSoru): SoruOzeti {
-    const {
-      istekId: _i,
-      fotoIdleri: _f,
-      mesajlar: _m,
-      takipSayisi: _t,
-      fotoSilinme: _fs,
-      yenidenAcmaSayisi: _y,
-      adresAlinamadi: _a,
-      ...o
-    } = s;
-    void [_i, _f, _m, _t, _fs, _y, _a];
-    return { ...o, mesajSayisi: s.mesajlar.length };
+    return {
+      id: s.id,
+      ogrenciId: s.ogrenciId,
+      ogrenciAdi: s.ogrenciAdi,
+      bransKodu: s.bransKodu,
+      konuId: s.konuId,
+      baslik: s.baslik,
+      onizleme: s.onizleme,
+      durum: s.durum,
+      mesajSayisi: s.mesajlar.length,
+      olusturma: s.olusturma,
+      sonHareket: s.sonHareket,
+      ilkCevap: s.ilkCevap,
+      cozuldu: s.cozuldu,
+    };
   }
 
   function detay(s: MockSoru): SoruDetayi {
@@ -276,7 +279,9 @@ export function mockSoru(sec: MockOperasyonSecenekleri): SoruAdapter {
   }
   const aramaEsle = (s: MockSoru, q: string | undefined) =>
     !q ||
-    `${s.onizleme ?? ''} ${s.baslik ?? ''}`.toLocaleLowerCase('tr').includes(q.toLocaleLowerCase('tr'));
+    `${s.onizleme ?? ''} ${s.baslik ?? ''}`
+      .toLocaleLowerCase('tr')
+      .includes(q.toLocaleLowerCase('tr'));
 
   return {
     async sorularim(suzgec, imlec) {
@@ -457,9 +462,7 @@ export function mockSoru(sec: MockOperasyonSecenekleri): SoruAdapter {
       return {
         bekleyen: bekleyen.length,
         branslar: [...branslar].map(([bransKodu, n]) => ({ bransKodu, bekleyen: n })),
-        enEski: bekleyen.length
-          ? bekleyen.map((s) => s.sonHareket).sort()[0] ?? null
-          : null,
+        enEski: bekleyen.length ? (bekleyen.map((s) => s.sonHareket).sort()[0] ?? null) : null,
       };
     },
     async cevapla(id, g) {

@@ -125,17 +125,18 @@ export function sadelestir(noktalar: readonly Nokta[], esik: number): Nokta[] {
   const tut = new Array<boolean>(noktalar.length).fill(false);
   tut[0] = true;
   tut[noktalar.length - 1] = true;
+  const nk = (i: number): Nokta => {
+    const n = noktalar[i];
+    if (!n) throw new Error('nokta indeksi');
+    return n;
+  };
   const yigin: [number, number][] = [[0, noktalar.length - 1]];
-  while (yigin.length > 0) {
-    const [bas, son] = yigin.pop() as [number, number];
+  for (let aralik = yigin.pop(); aralik; aralik = yigin.pop()) {
+    const [bas, son] = aralik;
     let enUzak = -1;
     let indeks = -1;
     for (let i = bas + 1; i < son; i++) {
-      const m = noktaDogruMesafesi(
-        noktalar[i] as Nokta,
-        noktalar[bas] as Nokta,
-        noktalar[son] as Nokta,
-      );
+      const m = noktaDogruMesafesi(nk(i), nk(bas), nk(son));
       if (m > enUzak) {
         enUzak = m;
         indeks = i;
@@ -153,7 +154,12 @@ export function sadelestir(noktalar: readonly Nokta[], esik: number): Nokta[] {
 
 const sinirla = (v: number) => Math.max(0, Math.min(IZGARA, Math.round(v * IZGARA)));
 
-function kur(cizgiler: readonly Cizgi[], oran: number, zamanli: boolean, esik: number): CizimVerisi {
+function kur(
+  cizgiler: readonly Cizgi[],
+  oran: number,
+  zamanli: boolean,
+  esik: number,
+): CizimVerisi {
   let sure = 0;
   const cikti = cizgiler
     .map((c) => {
@@ -207,7 +213,9 @@ export function serilestir(
 }
 
 /** `cizim_verisi`ni (api'den gelen serbest JSON) cizgilere cevirir; gecersizse null. */
-export function cozumle(ham: unknown): { cizgiler: Cizgi[]; oran: number; zamanli: boolean } | null {
+export function cozumle(
+  ham: unknown,
+): { cizgiler: Cizgi[]; oran: number; zamanli: boolean } | null {
   if (!ham || typeof ham !== 'object' || Array.isArray(ham)) return null;
   const v = ham as Partial<CizimVerisi>;
   if (v.v !== CIZIM_SURUMU || !Array.isArray(v.cizgiler) || typeof v.oran !== 'number') {
@@ -217,13 +225,13 @@ export function cozumle(ham: unknown): { cizgiler: Cizgi[]; oran: number; zamanl
   const adim = zamanli ? 3 : 2;
   const cizgiler: Cizgi[] = [];
   for (const c of v.cizgiler) {
-    if (!c || !Array.isArray(c.n) || (c.a !== 'silgi' && !KALEM_RENKLERI.includes(c.a))) continue;
+    if (!Array.isArray(c.n) || (c.a !== 'silgi' && !KALEM_RENKLERI.includes(c.a))) continue;
     const noktalar: Nokta[] = [];
     for (let i = 0; i + adim <= c.n.length; i += adim) {
       noktalar.push({
-        x: (c.n[i] as number) / IZGARA,
-        y: (c.n[i + 1] as number) / IZGARA,
-        t: zamanli ? (c.n[i + 2] as number) : 0,
+        x: (c.n[i] ?? 0) / IZGARA,
+        y: (c.n[i + 1] ?? 0) / IZGARA,
+        t: zamanli ? (c.n[i + 2] ?? 0) : 0,
       });
     }
     cizgiler.push({ arac: c.a, kalinlik: c.k, noktalar });
@@ -243,7 +251,7 @@ export function gorunenCizgiler(cizgiler: readonly Cizgi[], tMs: number): Cizgi[
   for (const c of cizgiler) {
     const ilk = c.noktalar[0];
     if (!ilk || ilk.t > tMs) continue;
-    const sonNokta = c.noktalar[c.noktalar.length - 1] as Nokta;
+    const sonNokta = c.noktalar.at(-1) ?? ilk;
     if (sonNokta.t <= tMs) {
       sonuc.push(c);
       continue;

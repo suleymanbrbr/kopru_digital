@@ -32,9 +32,18 @@ describe('kucultulmusBoyut', () => {
 
 describe('dondurulmusBoyut', () => {
   it('90/270 derecede en-boyu degistirir', () => {
-    expect(dondurulmusBoyut({ genislik: 4, yukseklik: 3 }, 90)).toEqual({ genislik: 3, yukseklik: 4 });
-    expect(dondurulmusBoyut({ genislik: 4, yukseklik: 3 }, -90)).toEqual({ genislik: 3, yukseklik: 4 });
-    expect(dondurulmusBoyut({ genislik: 4, yukseklik: 3 }, 180)).toEqual({ genislik: 4, yukseklik: 3 });
+    expect(dondurulmusBoyut({ genislik: 4, yukseklik: 3 }, 90)).toEqual({
+      genislik: 3,
+      yukseklik: 4,
+    });
+    expect(dondurulmusBoyut({ genislik: 4, yukseklik: 3 }, -90)).toEqual({
+      genislik: 3,
+      yukseklik: 4,
+    });
+    expect(dondurulmusBoyut({ genislik: 4, yukseklik: 3 }, 180)).toEqual({
+      genislik: 4,
+      yukseklik: 3,
+    });
   });
 });
 
@@ -58,9 +67,15 @@ describe('kirpma', () => {
   });
 
   it('piksele cevirir ve goruntu disina tasmaz', () => {
-    const k = kirpmaPikseli({ x: 0.25, y: 0.1, g: 0.5, y2: 0.8 }, { genislik: 2000, yukseklik: 1000 });
+    const k = kirpmaPikseli(
+      { x: 0.25, y: 0.1, g: 0.5, y2: 0.8 },
+      { genislik: 2000, yukseklik: 1000 },
+    );
     expect(k).toEqual({ originX: 500, originY: 100, width: 1000, height: 800 });
-    const tasan = kirpmaPikseli({ x: 0.9, y: 0.9, g: 0.5, y2: 0.5 }, { genislik: 100, yukseklik: 100 });
+    const tasan = kirpmaPikseli(
+      { x: 0.9, y: 0.9, g: 0.5, y2: 0.5 },
+      { genislik: 100, yukseklik: 100 },
+    );
     expect(tasan.originX + tasan.width).toBeLessThanOrEqual(100);
     expect(tasan.originY + tasan.height).toBeLessThanOrEqual(100);
   });
@@ -73,7 +88,12 @@ describe('kirpma', () => {
 
 describe('kaliteBul', () => {
   it('hedefin altina giren ilk (en yuksek) kaliteyi secer', async () => {
-    const boyutlar: Record<number, number> = { 0.8: 520_000, 0.7: 430_000, 0.6: 380_000, 0.5: 300_000 };
+    const boyutlar: Record<number, number> = {
+      0.8: 520_000,
+      0.7: 430_000,
+      0.6: 380_000,
+      0.5: 300_000,
+    };
     const denenen: number[] = [];
     const s = await kaliteBul((k) => {
       denenen.push(k);

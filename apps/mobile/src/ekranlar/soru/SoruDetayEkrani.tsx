@@ -125,9 +125,13 @@ export function SoruDetayEkrani({ id }: { id: string }) {
   const ogrenci = aktif?.uyelik.rol === 'ogrenci';
   const s = sorgu.data;
   const bekleyenTakip = gonderimler.some(
-    (g) => g.tur === 'takip' && g.hedefId === id && (g.durum === 'yukleniyor' || g.durum === 'gonderiliyor'),
+    (g) =>
+      g.tur === 'takip' &&
+      g.hedefId === id &&
+      (g.durum === 'yukleniyor' || g.durum === 'gonderiliyor'),
   );
-  const fotoYok = !!s && !s.adresAlinamadi && s.fotograflar.length > 0 && s.fotograflar.every((f) => !f.adres);
+  const fotoYok =
+    !!s && !s.adresAlinamadi && s.fotograflar.length > 0 && s.fotograflar.every((f) => !f.adres);
 
   return (
     <Ekran kenarlar={['left', 'right', 'bottom']} klavye>
@@ -142,7 +146,9 @@ export function SoruDetayEkrani({ id }: { id: string }) {
               {bransAdi(s.bransKodu)}
             </Metin>
             {!ogrenci && s.ogrenciAdi ? (
-              <Metin varyant="etiket">{t('mobil.soru.detay.ogrenciEtiketi', { ad: s.ogrenciAdi })}</Metin>
+              <Metin varyant="etiket">
+                {t('mobil.soru.detay.ogrenciEtiketi', { ad: s.ogrenciAdi })}
+              </Metin>
             ) : null}
             <DurumRozeti durum={s.durum} />
           </View>
@@ -154,7 +160,9 @@ export function SoruDetayEkrani({ id }: { id: string }) {
           ) : null}
           {fotoYok ? <Metin varyant="ikincil">{t('mobil.soru.detay.fotoSilindi')}</Metin> : null}
 
-          {s.mesajlar.length > 0 && s.fotograflar.length > 0 && !s.mesajlar[0]?.ekler.some((e) => e.tur === 'fotograf') ? (
+          {s.mesajlar.length > 0 &&
+          s.fotograflar.length > 0 &&
+          !s.mesajlar[0]?.ekler.some((e) => e.tur === 'fotograf') ? (
             <View className="gap-2">
               {s.fotograflar.map((f, i) => (
                 <Kucukresim
@@ -167,7 +175,13 @@ export function SoruDetayEkrani({ id }: { id: string }) {
           ) : null}
 
           {s.mesajlar.map((m) => (
-            <MesajKarti key={m.id} mesaj={m} soru={s} tz={tz} benimMi={ogrenci && m.yazarRolu === 'ogrenci'} />
+            <MesajKarti
+              key={m.id}
+              mesaj={m}
+              soru={s}
+              tz={tz}
+              benimMi={ogrenci && m.yazarRolu === 'ogrenci'}
+            />
           ))}
 
           <GonderimKartlari turler={['takip']} />
@@ -221,7 +235,9 @@ export function SoruDetayEkrani({ id }: { id: string }) {
                   <Metin varyant="kucuk">{t('mobil.soru.detay.yenidenAcIpucu')}</Metin>
                 </View>
               ) : null}
-              {takipAcik && !bekleyenTakip && (s.durum === 'cevaplandi' || s.durum === 'cozuldu') ? (
+              {takipAcik &&
+              !bekleyenTakip &&
+              (s.durum === 'cevaplandi' || s.durum === 'cozuldu') ? (
                 <TakipFormu id={id} hak={s.kalanTakipHakki} />
               ) : null}
 

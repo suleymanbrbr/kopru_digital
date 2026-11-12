@@ -25,7 +25,6 @@ export function SorularimEkrani() {
   const [q, setQ] = useState('');
   const [durum, setDurum] = useState<SoruDurumu | null>(null);
   const [brans, setBrans] = useState<string | null>(null);
-  const [gorulen, setGorulen] = useState<string[]>([]);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -47,11 +46,12 @@ export function SorularimEkrani() {
   const sorgu = useSorularim(suzgec);
   const sorular = useMemo(() => sorgu.data?.pages.flatMap((p) => p.sorular) ?? [], [sorgu.data]);
 
-  // Ders suzgeci: o ana dek gorulen derslerden (suzgec uygulaninca liste daralsa da cipler kalir).
-  useEffect(() => {
-    const yeni = sorular.map((s) => s.bransKodu).filter((b) => !gorulen.includes(b));
-    if (yeni.length > 0) setGorulen((g) => [...g, ...new Set(yeni)]);
-  }, [sorular, gorulen]);
+  // Ders suzgeci: suzgecsiz liste (onbellekte) derslerinden; suzgec uygulaninca ciplar kalir.
+  const tum = useSorularim({});
+  const gorulen = useMemo(
+    () => [...new Set((tum.data?.pages.flatMap((p) => p.sorular) ?? []).map((x) => x.bransKodu))],
+    [tum.data],
+  );
 
   return (
     <Ekran kenarlar={['left', 'right', 'bottom']} klavye>

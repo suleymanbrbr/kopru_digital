@@ -6,7 +6,7 @@ import {
   useImage,
   type SkPath,
 } from '@shopify/react-native-skia';
-import { memo, useMemo, useReducer, useRef } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { View, type GestureResponderEvent } from 'react-native';
 
 import {
@@ -77,9 +77,10 @@ const CizgiKatmani = memo(function CizgiKatmani({
  */
 export function Tuval({ kaynak, oran, genislik, cizgiler, arac, onCizgi, zaman, testID }: Props) {
   const yukseklik = Math.round(genislik * oran);
-  const gorsel = useImage(kaynak as never);
-  const canli = useRef<{ cizgi: Cizgi; yol: SkPath } | null>(null);
-  const [, yenile] = useReducer((n: number) => n + 1, 0);
+  const gorsel = useImage(kaynak);
+  /** Canli (henuz bitmemis) cizgi: noktalar mutable dizide, goruntu yeni yolla state'e yazilir. */
+  const noktalar = useRef<Nokta[]>([]);
+  const [canli, setCanli] = useState<{ arac: Arac; kalinlik: number; yol: SkPath } | null>(null);
   const duzenlenebilir = !!arac && !!onCizgi;
 
   function nokta(e: GestureResponderEvent): Nokta {
@@ -91,38 +92,42 @@ export function Tuval({ kaynak, oran, genislik, cizgiler, arac, onCizgi, zaman, 
     };
   }
 
-  function basla(e: GestureResponderEvent) {
+  function guncelle() {
     if (!arac) return;
-    const p = nokta(e);
-    const cizgi: Cizgi = {
+    setCanli({
       arac,
       kalinlik: arac === 'silgi' ? SILGI_KALINLIGI : KALEM_KALINLIGI,
-      noktalar: [p],
-    };
-    const yol = yolOlustur([p], genislik, yukseklik);
-    canli.current = { cizgi, yol };
-    yenile();
+      yol: yolOlustur(noktalar.current, genislik, yukseklik),
+    });
+  }
+
+  function basla(e: GestureResponderEvent) {
+    noktalar.current = [nokta(e)];
+    guncelle();
   }
 
   function hareket(e: GestureResponderEvent) {
-    const c = canli.current;
-    if (!c) return;
+    if (noktalar.current.length === 0) return;
     const p = nokta(e);
-    const son = c.cizgi.noktalar[c.cizgi.noktalar.length - 1];
+    const son = noktalar.current.at(-1);
     if (son && Math.abs(son.x - p.x) < 0.0003 && Math.abs(son.y - p.y) < 0.0003) return;
-    c.cizgi.noktalar.push(p);
-    c.yol = yolOlustur(c.cizgi.noktalar, genislik, yukseklik);
-    yenile();
+    noktalar.current.push(p);
+    guncelle();
   }
 
   function bitir() {
-    const c = canli.current;
-    canli.current = null;
-    if (c) onCizgi?.({ ...c.cizgi, noktalar: [...c.cizgi.noktalar] });
-    yenile();
+    const n = noktalar.current;
+    noktalar.current = [];
+    setCanli(null);
+    if (arac && n.length > 0) {
+      onCizgi?.({
+        arac,
+        kalinlik: arac === 'silgi' ? SILGI_KALINLIGI : KALEM_KALINLIGI,
+        noktalar: [...n],
+      });
+    }
   }
 
-  const c = canli.current;
   return (
     <View style={{ width: genislik, height: yukseklik }} testID={testID}>
       <Canvas style={{ width: genislik, height: yukseklik }}>
@@ -131,15 +136,15 @@ export function Tuval({ kaynak, oran, genislik, cizgiler, arac, onCizgi, zaman, 
         ) : null}
         <Group layer={KATMAN_PAINT}>
           <CizgiKatmani cizgiler={cizgiler} g={genislik} y={yukseklik} />
-          {c ? (
+          {canli ? (
             <Path
-              path={c.yol}
+              path={canli.yol}
               style="stroke"
-              strokeWidth={cizgiPx(c.cizgi, genislik)}
+              strokeWidth={(canli.kalinlik / 10_000) * genislik}
               strokeCap="round"
               strokeJoin="round"
-              color={c.cizgi.arac === 'silgi' ? '#000000' : KALEM_HEX[c.cizgi.arac]}
-              blendMode={c.cizgi.arac === 'silgi' ? 'clear' : 'srcOver'}
+              color={canli.arac === 'silgi' ? '#000000' : KALEM_HEX[canli.arac]}
+              blendMode={canli.arac === 'silgi' ? 'clear' : 'srcOver'}
             />
           ) : null}
         </Group>

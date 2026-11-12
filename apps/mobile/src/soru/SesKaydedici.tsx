@@ -58,7 +58,9 @@ export function SesKaydedici({
         ) : null}
         {ses.asama === 'bitti' && ses.uri ? (
           <>
-            <Metin varyant="etiket">{t('mobil.soru.ses.hazir', { sure: sureMetni(ses.gecenSn) })}</Metin>
+            <Metin varyant="etiket">
+              {t('mobil.soru.ses.hazir', { sure: sureMetni(ses.gecenSn) })}
+            </Metin>
             <SesOynatici url={ses.uri} sureSn={Math.round(ses.gecenSn)} />
             {ses.gecenSn >= 179.5 ? (
               <Metin varyant="kucuk">{t('mobil.soru.ses.sinirDoldu')}</Metin>
@@ -78,7 +80,9 @@ export function SesKaydedici({
         ) : (
           <Dugme
             className="flex-1"
-            etiket={ses.asama === 'bitti' ? t('mobil.soru.ses.yenidenKaydet') : t('mobil.soru.ses.kaydet')}
+            etiket={
+              ses.asama === 'bitti' ? t('mobil.soru.ses.yenidenKaydet') : t('mobil.soru.ses.kaydet')
+            }
             onPress={() => {
               if (ses.asama === 'bitti') {
                 ses.sil();

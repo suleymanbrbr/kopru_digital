@@ -55,7 +55,9 @@ export function SoruSatiri({
         <DurumRozeti durum={soru.durum} />
         <Metin varyant="kucuk">{zaman}</Metin>
         {soru.mesajSayisi > 1 ? (
-          <Metin varyant="kucuk">{t('mobil.soru.liste.mesajSayisi', { n: soru.mesajSayisi })}</Metin>
+          <Metin varyant="kucuk">
+            {t('mobil.soru.liste.mesajSayisi', { n: soru.mesajSayisi })}
+          </Metin>
         ) : null}
       </View>
     </Pressable>

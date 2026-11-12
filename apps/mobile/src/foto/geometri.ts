@@ -101,5 +101,10 @@ export function sigdir(
   const olcek = Math.min(kap.genislik / b.genislik, kap.yukseklik / b.yukseklik);
   const genislik = b.genislik * olcek;
   const yukseklik = b.yukseklik * olcek;
-  return { genislik, yukseklik, sol: (kap.genislik - genislik) / 2, ust: (kap.yukseklik - yukseklik) / 2 };
+  return {
+    genislik,
+    yukseklik,
+    sol: (kap.genislik - genislik) / 2,
+    ust: (kap.yukseklik - yukseklik) / 2,
+  };
 }

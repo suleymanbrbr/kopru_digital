@@ -123,7 +123,12 @@ describe('serilestir / cozumle', () => {
     expect(cozumle(null)).toBeNull();
     expect(cozumle([])).toBeNull();
     expect(cozumle({ v: 9, cizgiler: [], oran: 1 })).toBeNull();
-    const k = cozumle({ v: 1, oran: 1, zamanli: false, cizgiler: [{ a: 'yesil', k: 1, n: [1, 2] }] });
+    const k = cozumle({
+      v: 1,
+      oran: 1,
+      zamanli: false,
+      cizgiler: [{ a: 'yesil', k: 1, n: [1, 2] }],
+    });
     expect(k?.cizgiler).toEqual([]);
   });
 
@@ -145,9 +150,9 @@ describe('serilestir / cozumle', () => {
       y: ((i * 104729) % 1000) / 1000,
       t: i,
     }));
-    expect(() => serilestir([cizgi('mavi', rastgele)], 1, { enFazlaBayt: 2000, zamanli: true })).toThrow(
-      CizimCokBuyukHatasi,
-    );
+    expect(() =>
+      serilestir([cizgi('mavi', rastgele)], 1, { enFazlaBayt: 2000, zamanli: true }),
+    ).toThrow(CizimCokBuyukHatasi);
   });
 });
 

@@ -66,7 +66,8 @@ export function mockMedya(sec: MockMedyaSecenekleri = {}): MedyaAdapter & {
           yuklendi: false,
         });
       }
-      const d = dosyalar.get(id) as MockDosya;
+      const d = dosyalar.get(id);
+      if (!d) throw new ApiHata('bulunamadi');
       return {
         dosyaId: id,
         durum: d.durum,

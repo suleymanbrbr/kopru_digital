@@ -145,10 +145,8 @@ export function useAnladim(id: string) {
 export function useBildir(id: string) {
   const { adaptorler } = useServisler();
   return useMutation({
-    mutationFn: (g: {
-      neden: Parameters<typeof adaptorler.soru.bildir>[1];
-      aciklama?: string;
-    }) => adaptorler.soru.bildir(id, g.neden, g.aciklama),
+    mutationFn: (g: { neden: Parameters<typeof adaptorler.soru.bildir>[1]; aciklama?: string }) =>
+      adaptorler.soru.bildir(id, g.neden, g.aciklama),
   });
 }
 

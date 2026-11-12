@@ -13,7 +13,9 @@ function kur(
   } = {},
 ) {
   const depo = secenek.depo ?? bellekKv();
-  const medya = secenek.medya ?? mockMedya({ gecikmeMs: 0, isle: secenek.isle ?? 0, kancalar: secenek.kancalar });
+  const medya =
+    secenek.medya ??
+    mockMedya({ gecikmeMs: 0, isle: secenek.isle ?? 0, kancalar: secenek.kancalar });
   const cevrimici = secenek.cevrimici ?? { deger: true };
   let n = 0;
   const silinen: string[] = [];
@@ -23,7 +25,10 @@ function kur(
     kapsam: () => 'uyelik-1',
     medya: () => medya,
     yerel: {
-      kalici: (uri, ad) => Promise.resolve(`file:///kalici/${ad}`.replace('//kalici', '/kalici') + `?src=${encodeURIComponent(uri)}`),
+      kalici: (uri, ad) =>
+        Promise.resolve(
+          `file:///kalici/${ad}`.replace('//kalici', '/kalici') + `?src=${encodeURIComponent(uri)}`,
+        ),
       sil: (uri) => {
         silinen.push(uri);
         return Promise.resolve();
@@ -36,11 +41,26 @@ function kur(
   return { kuyruk, medya, depo, cevrimici, silinen };
 }
 
+function gerekli(k: YuklemeKuyrugu, id: string): YuklemeKaydi {
+  const x = k.al(id);
+  if (!x) throw new Error('kayit yok');
+  return x;
+}
+
+function gerekliMetin(m: string | undefined): string {
+  if (m === undefined) throw new Error('metin yok');
+  return m;
+}
+
 async function bitir(k: YuklemeKuyrugu, tur = 6) {
   for (let i = 0; i < tur; i++) await k.calistir();
 }
 
-const girdi = { tur: 'soru_fotografi', mimeTipi: 'image/jpeg', yerelUri: 'file:///cache/a.jpg' } as const;
+const girdi = {
+  tur: 'soru_fotografi',
+  mimeTipi: 'image/jpeg',
+  yerelUri: 'file:///cache/a.jpg',
+} as const;
 
 describe('YuklemeKuyrugu', () => {
   it('izin -> PUT -> tamam -> hazir; dosya kimligi ve istemci anahtari kayitlidir', async () => {
@@ -48,7 +68,7 @@ describe('YuklemeKuyrugu', () => {
     const k = await kuyruk.ekle(girdi);
     expect(k.durum).toBe('bekliyor');
     await bitir(kuyruk);
-    const son = kuyruk.al(k.id) as YuklemeKaydi;
+    const son = gerekli(kuyruk, k.id);
     expect(son.durum).toBe('hazir');
     expect(son.dosyaId).toMatch(/^00000000-0000-7000/);
     expect(son.boyutBayt).toBeGreaterThan(0);
@@ -64,7 +84,7 @@ describe('YuklemeKuyrugu', () => {
     });
     const k = await kuyruk.ekle(girdi);
     await bitir(kuyruk, 10);
-    const son = kuyruk.al(k.id) as YuklemeKaydi;
+    const son = gerekli(kuyruk, k.id);
     expect(son.durum).toBe('hazir');
     expect(medya.sayilar.yukle).toBe(2);
     // Ayni anahtar -> medya ayni kaydi dondurdu (tek dosya).
@@ -75,7 +95,11 @@ describe('YuklemeKuyrugu', () => {
   it('gecici hatada deneme sayilir ve geri cekilme zamani yazilir', async () => {
     const t = { simdi: 1_000_000 };
     const depo = bellekKv();
-    const medya = mockMedya({ gecikmeMs: 0, isle: 0, kancalar: { izinAl: () => new ApiHata('ag') } });
+    const medya = mockMedya({
+      gecikmeMs: 0,
+      isle: 0,
+      kancalar: { izinAl: () => new ApiHata('ag') },
+    });
     const kuyruk = new YuklemeKuyrugu({
       depo,
       yeniId: () => `id-${String(t.simdi++)}`,
@@ -88,7 +112,7 @@ describe('YuklemeKuyrugu', () => {
     });
     const k = await kuyruk.ekle(girdi);
     await kuyruk.calistir();
-    const a = kuyruk.al(k.id) as YuklemeKaydi;
+    const a = gerekli(kuyruk, k.id);
     expect(a.durum).toBe('bekliyor');
     expect(a.deneme).toBe(1);
     expect(a.sonrakiDenemeAt).toBe(6_000);
@@ -106,10 +130,10 @@ describe('YuklemeKuyrugu', () => {
     // PUT bitti (arka plan oturumu) ama uygulama `tamam` demeden olduruldu: durum yukleniyor.
     const k = await a.kuyruk.ekle(girdi);
     await a.kuyruk.calistir();
-    const bitmis = a.kuyruk.al(k.id) as YuklemeKaydi;
+    const bitmis = gerekli(a.kuyruk, k.id);
     expect(bitmis.durum).toBe('hazir');
     // Bellekteki kaydi "yukleniyor"a geri sarip yeni bir kuyruk (yeniden baslatma) ac.
-    const ham = JSON.parse(depo.getString('kopru.yukleme.v1') as string) as {
+    const ham = JSON.parse(gerekliMetin(depo.getString('kopru.yukleme.v1'))) as {
       kayitlar: YuklemeKaydi[];
     };
     ham.kayitlar[0] = { ...bitmis, durum: 'yukleniyor' };
@@ -133,14 +157,14 @@ describe('YuklemeKuyrugu', () => {
       mimeTipi: 'image/jpeg',
       boyutBayt: 1,
       sha256: 'a'.repeat(64),
-      istemciAnahtari: (a.kuyruk.al(k.id) as YuklemeKaydi).istemciAnahtari,
+      istemciAnahtari: gerekli(a.kuyruk, k.id).istemciAnahtari,
     });
-    const izinli = (a.kuyruk.al(k.id) as YuklemeKaydi).istemciAnahtari;
-    const ham = JSON.parse(depo.getString('kopru.yukleme.v1') as string) as {
+    const izinli = gerekli(a.kuyruk, k.id).istemciAnahtari;
+    const ham = JSON.parse(gerekliMetin(depo.getString('kopru.yukleme.v1'))) as {
       kayitlar: YuklemeKaydi[];
     };
     ham.kayitlar[0] = {
-      ...(a.kuyruk.al(k.id) as YuklemeKaydi),
+      ...gerekli(a.kuyruk, k.id),
       durum: 'yukleniyor',
       dosyaId: [...medya.dosyalar.keys()][0] ?? null,
       istemciAnahtari: izinli,
@@ -176,7 +200,7 @@ describe('YuklemeKuyrugu', () => {
     });
     const k = await kuyruk.ekle(girdi);
     await bitir(kuyruk);
-    const a = kuyruk.al(k.id) as YuklemeKaydi;
+    const a = gerekli(kuyruk, k.id);
     expect(a.durum).toBe('hata');
     expect(a.hataKodu).toBe('mime_desteklenmiyor');
     bozuk = false;
@@ -186,10 +210,12 @@ describe('YuklemeKuyrugu', () => {
   });
 
   it('yetkisiz: dosya beklemede kalir, hataya dusmez', async () => {
-    const { kuyruk } = kur({ kancalar: { izinAl: () => new ApiHata('yetkisiz', undefined, { durum: 401 }) } });
+    const { kuyruk } = kur({
+      kancalar: { izinAl: () => new ApiHata('yetkisiz', undefined, { durum: 401 }) },
+    });
     const k = await kuyruk.ekle(girdi);
     await bitir(kuyruk);
-    const a = kuyruk.al(k.id) as YuklemeKaydi;
+    const a = gerekli(kuyruk, k.id);
     expect(a.durum).toBe('bekliyor');
     expect(a.deneme).toBe(0);
   });
@@ -214,7 +240,7 @@ describe('YuklemeKuyrugu', () => {
     });
     const k = await kuyruk.ekle(girdi);
     await kuyruk.calistir();
-    const a = kuyruk.al(k.id) as YuklemeKaydi;
+    const a = gerekli(kuyruk, k.id);
     expect(a.durum).toBe('tamam');
     expect(a.deneme).toBe(0);
     t.simdi += 20_000;

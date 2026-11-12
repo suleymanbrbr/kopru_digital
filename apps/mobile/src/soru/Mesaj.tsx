@@ -151,13 +151,22 @@ export function MesajKarti({
       </View>
       {mesaj.metin ? <Metin>{mesaj.metin}</Metin> : null}
       {mesaj.dersteKonusalim ? (
-        <View className="flex-row items-center gap-2 rounded-orta bg-yuzeyIkincil p-3" testID="derste-konusalim">
+        <View
+          className="flex-row items-center gap-2 rounded-orta bg-yuzeyIkincil p-3"
+          testID="derste-konusalim"
+        >
           <Ikon ad="people" boyut={18} />
           <Metin className="flex-1">{t('mobil.soru.detay.dersteKonusalim')}</Metin>
         </View>
       ) : null}
       {mesaj.ekler.map((e) => (
-        <EkSatiri key={e.id} ek={e} mesaj={mesaj} soru={soru} genislik={Math.min(width - 64, 520)} />
+        <EkSatiri
+          key={e.id}
+          ek={e}
+          mesaj={mesaj}
+          soru={soru}
+          genislik={Math.min(width - 64, 520)}
+        />
       ))}
     </Kart>
   );

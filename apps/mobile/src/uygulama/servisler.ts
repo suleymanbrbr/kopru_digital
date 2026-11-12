@@ -95,7 +95,7 @@ export function servisleriKur(): Servisler {
       // Yerel "verdim" kaydi uyelik kapsamlidir (kurum degisiminde karismaz); yalniz cikista silinir.
       geriBildirimDeposu.temizle();
       void yuklemeRef.current?.temizle();
-      void gonderimRef.current?.hepsiniSil();
+      gonderimRef.current?.hepsiniSil();
     },
   });
   oturumRef.current = oturum;

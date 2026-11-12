@@ -1,5 +1,13 @@
 import { t } from '@kopru/i18n';
-import { Linking, Modal, ScrollView, View, useWindowDimensions, Pressable, Image } from 'react-native';
+import {
+  Linking,
+  Modal,
+  ScrollView,
+  View,
+  useWindowDimensions,
+  Pressable,
+  Image,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { OkumaAdresi, SoruDurumu } from '../api/soruTipleri';
@@ -27,7 +35,9 @@ export function DurumRozeti({ durum }: { durum: SoruDurumu }) {
       <Ikon
         ad={durumIkonu(durum)}
         boyut={14}
-        renk={bekliyor ? renkler.uyari : durum === 'cozuldu' ? renkler.birincil : renkler.metinIkincil}
+        renk={
+          bekliyor ? renkler.uyari : durum === 'cozuldu' ? renkler.birincil : renkler.metinIkincil
+        }
       />
       <Metin varyant="kucuk" className="text-metin">
         {durumAdi(durum)}

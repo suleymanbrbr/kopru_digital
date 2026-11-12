@@ -17,10 +17,7 @@ export function yolOlustur(noktalar: readonly Nokta[], g: number, y: number): Sk
     yol.lineTo(ilk.x * g + 0.01, ilk.y * y);
     return yol.build();
   }
-  for (let i = 1; i < noktalar.length; i++) {
-    const p = noktalar[i] as Nokta;
-    yol.lineTo(p.x * g, p.y * y);
-  }
+  for (const p of noktalar.slice(1)) yol.lineTo(p.x * g, p.y * y);
   return yol.build();
 }
 

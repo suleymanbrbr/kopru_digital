@@ -2,8 +2,8 @@ import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { bransAdi } from '../ogrenme/konu';
 import { kisaZaman } from '../lib/saat';
+import { bransAdi } from '../ogrenme/konu';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';

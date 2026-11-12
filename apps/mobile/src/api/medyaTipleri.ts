@@ -7,12 +7,7 @@
 export type MedyaTuru = 'soru_fotografi' | 'soru_cevap_fotografi' | 'soru_cizim' | 'soru_ses';
 
 export type MedyaDurumu =
-  | 'yukleme_bekliyor'
-  | 'yuklendi'
-  | 'isleniyor'
-  | 'hazir'
-  | 'islenemedi'
-  | 'silindi';
+  'yukleme_bekliyor' | 'yuklendi' | 'isleniyor' | 'hazir' | 'islenemedi' | 'silindi';
 
 export interface MedyaIzniGirdisi {
   tur: MedyaTuru;

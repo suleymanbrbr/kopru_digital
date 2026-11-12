@@ -1,6 +1,5 @@
 import type { ImageSourcePropType } from 'react-native';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Metro varlik baglamasi
 const DEFTER = require('../../assets/soru/defter.jpg') as number;
 
 /** Mock adaptorun `mock://` adresleri paketle gelen ornek gorsele, gercek adresler uri'ye cevrilir. */

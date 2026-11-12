@@ -242,7 +242,7 @@ export function soruAdaptoru(b: OperasyonBagimliligi): SoruAdapter {
           params: { path: { kurum_id } },
         }),
       );
-      return kotaCevir(d as unknown as ApiKota);
+      return kotaCevir(d);
     },
 
     async soru(id) {
@@ -252,7 +252,7 @@ export function soruAdaptoru(b: OperasyonBagimliligi): SoruAdapter {
           params: { path: { kurum_id, id } },
         }),
       );
-      return detayCevir(d as unknown as ApiDetay);
+      return detayCevir(d);
     },
 
     async soruSor(g) {
@@ -271,7 +271,9 @@ export function soruAdaptoru(b: OperasyonBagimliligi): SoruAdapter {
                   isaretler: g.isaretler.map((i) => ({
                     medya_dosya_id: i.dosyaId,
                     kaynak_dosya_id: i.kaynakDosyaId,
-                    ...(i.cizimVerisi ? { cizim_verisi: i.cizimVerisi as Record<string, unknown> } : {}),
+                    ...(i.cizimVerisi
+                      ? { cizim_verisi: i.cizimVerisi as Record<string, unknown> }
+                      : {}),
                   })),
                 }
               : {}),
@@ -300,7 +302,7 @@ export function soruAdaptoru(b: OperasyonBagimliligi): SoruAdapter {
           body: {} as never,
         }),
       );
-      return detayCevir(d as unknown as ApiDetay);
+      return detayCevir(d);
     },
 
     async takip(id, g) {
@@ -310,14 +312,12 @@ export function soruAdaptoru(b: OperasyonBagimliligi): SoruAdapter {
           params: { path: { kurum_id, id } },
           body: {
             metin: g.metin,
-            ...(g.ekler?.length
-              ? { ekler: g.ekler.map((e) => ekGirdisiCevir(e) as never) }
-              : {}),
+            ...(g.ekler?.length ? { ekler: g.ekler.map((e) => ekGirdisiCevir(e) as never) } : {}),
             istek_id: g.istekId,
           },
         }),
       );
-      return detayCevir(d as unknown as ApiDetay);
+      return detayCevir(d);
     },
 
     async bildir(id, neden, aciklama, mesajId) {
@@ -379,7 +379,7 @@ export function soruAdaptoru(b: OperasyonBagimliligi): SoruAdapter {
           },
         }),
       );
-      return detayCevir(d as unknown as ApiDetay);
+      return detayCevir(d);
     },
 
     async cevapladiklarim(suzgec, imlec) {

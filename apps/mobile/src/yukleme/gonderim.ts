@@ -135,7 +135,7 @@ export class GonderimYoneticisi {
     this.durum = this.oku();
     sec.kuyruk.kaydet(GONDERIM_TURU, (is) => this.isle(is));
     sec.yukleme.abone(() => {
-      void this.ilerlet();
+      this.ilerlet();
     });
   }
 
@@ -222,12 +222,12 @@ export class GonderimYoneticisi {
     };
     this.durum = { ...this.durum, gonderimler: [...this.durum.gonderimler, g] };
     this.yaz();
-    void this.ilerlet();
+    this.ilerlet();
     return g;
   }
 
   /** `yukleniyor` gonderimlerde dosya durumuna bakar: hepsi hazirsa isi kuyruga alir, biri hatadaysa durur. */
-  async ilerlet(): Promise<void> {
+  ilerlet(): void {
     if (this.ilerliyor) {
       this.tekrar = true;
       return;
@@ -251,7 +251,7 @@ export class GonderimYoneticisi {
       this.ilerliyor = false;
       if (this.tekrar) {
         this.tekrar = false;
-        void this.ilerlet();
+        this.ilerlet();
       }
     }
   }
@@ -263,7 +263,7 @@ export class GonderimYoneticisi {
     for (const yid of Object.values(g.dosyalar)) this.sec.yukleme.yenidenDene(yid);
     this.degistir(id, { durum: 'yukleniyor', hataKodu: undefined, hataSifirlanma: undefined });
     void this.sec.yukleme.calistir();
-    void this.ilerlet();
+    this.ilerlet();
   }
 
   /** Gonderimden vazgecer: kayit, bekleyen is ve yerel dosyalar silinir. */
@@ -286,7 +286,7 @@ export class GonderimYoneticisi {
     this.yaz();
   }
 
-  async hepsiniSil() {
+  hepsiniSil() {
     this.durum = { surum: 1, gonderimler: [] };
     this.yaz();
   }
@@ -295,7 +295,8 @@ export class GonderimYoneticisi {
 
   private dosyaKimligi(g: Gonderim, ad: string): string {
     const k = this.sec.yukleme.al(g.dosyalar[ad] ?? '');
-    if (!k?.dosyaId) throw new ApiHata('cakisma', 'Dosya hazir degil', { ayrinti: 'dosya_hazir_degil' });
+    if (!k?.dosyaId)
+      throw new ApiHata('cakisma', 'Dosya hazir degil', { ayrinti: 'dosya_hazir_degil' });
     return k.dosyaId;
   }
 
@@ -306,7 +307,8 @@ export class GonderimYoneticisi {
 
   private ekCevir(g: Gonderim, e: EkTaslagi): EkGirdisi {
     if (e.tur === 'fotograf') return { tur: 'fotograf', dosyaId: this.dosyaKimligi(g, e.dosya) };
-    if (e.tur === 'ses') return { tur: 'ses', dosyaId: this.dosyaKimligi(g, e.dosya), sureSn: e.sureSn };
+    if (e.tur === 'ses')
+      return { tur: 'ses', dosyaId: this.dosyaKimligi(g, e.dosya), sureSn: e.sureSn };
     return {
       tur: 'cizimli_fotograf',
       dosyaId: this.dosyaKimligi(g, e.dosya),
@@ -394,7 +396,9 @@ export class GonderimYoneticisi {
       }
       if (apiHatasiMi(e) && (e.yenidenDenenebilir || e.kod === 'yetkisiz')) throw e;
       // Kalici hata: kuyrukta tutma, gonderimi hataya al (kullanici karar verir).
-      const detay = apiHatasiMi(e) ? (e.detay as { kota?: { gunluk_sifirlanma_at?: string } } | undefined) : undefined;
+      const detay = apiHatasiMi(e)
+        ? (e.detay as { kota?: { gunluk_sifirlanma_at?: string } } | undefined)
+        : undefined;
       this.degistir(g.id, {
         durum: 'hata',
         hataKodu: apiHatasiMi(e) ? (e.ayrinti ?? e.kod) : 'bilinmeyen',
@@ -408,6 +412,7 @@ export class GonderimYoneticisi {
 
 /** Soru gonderimlerinden henuz sunucuya ulasmamis olanlar (gunluk kotadan sayilir). */
 export function bekleyenSoruSayisi(g: readonly Gonderim[]): number {
-  return g.filter((x) => x.tur === 'soru' && (x.durum === 'yukleniyor' || x.durum === 'gonderiliyor'))
-    .length;
+  return g.filter(
+    (x) => x.tur === 'soru' && (x.durum === 'yukleniyor' || x.durum === 'gonderiliyor'),
+  ).length;
 }

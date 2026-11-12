@@ -1,6 +1,13 @@
 import { t, type MessageKey } from '@kopru/i18n';
 import { useReducer, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cizimiDuzlestir } from '../cizim/duzlestir';
@@ -41,11 +48,7 @@ export interface CizimSonucu {
 
 export type CizimModu = 'isaret' | 'cizim' | 'mini';
 
-type Eylem =
-  | { tur: 'ekle'; c: Cizgi }
-  | { tur: 'geri' }
-  | { tur: 'yinele' }
-  | { tur: 'temizle' };
+type Eylem = { tur: 'ekle'; c: Cizgi } | { tur: 'geri' } | { tur: 'yinele' } | { tur: 'temizle' };
 
 function indirge(d: CizimDurumu, e: Eylem): CizimDurumu {
   switch (e.tur) {
@@ -149,7 +152,11 @@ export function CizimEkrani({
         ...(mini && ses.uri ? { sesUri: ses.uri, sesSn: kayitSuresiSn(ses.gecenSn) } : {}),
       });
     } catch (e) {
-      setHata(e instanceof CizimCokBuyukHatasi ? 'mobil.soru.cizim.cokBuyuk' : 'mobil.soru.cizim.hazirlanamadi');
+      setHata(
+        e instanceof CizimCokBuyukHatasi
+          ? 'mobil.soru.cizim.cokBuyuk'
+          : 'mobil.soru.cizim.hazirlanamadi',
+      );
       setMesgul(false);
     }
   }
@@ -158,7 +165,10 @@ export function CizimEkrani({
 
   return (
     <Modal visible animationType="slide" onRequestClose={onVazgec} statusBarTranslucent>
-      <View className="flex-1 bg-arkaPlan" style={{ paddingTop: ins.top, paddingBottom: ins.bottom }}>
+      <View
+        className="flex-1 bg-arkaPlan"
+        style={{ paddingTop: ins.top, paddingBottom: ins.bottom }}
+      >
         <View className="flex-row items-center justify-between px-4 py-2">
           <Pressable
             accessibilityRole="button"

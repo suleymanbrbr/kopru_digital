@@ -92,7 +92,13 @@ export function CevapEkrani({ id }: { id: string }) {
   function fotografBitti(f: HazirFoto) {
     setEkler((l) => [
       ...l,
-      { id: yeniIstekId(), tur: 'fotograf', uri: f.uri, genislik: f.genislik, yukseklik: f.yukseklik },
+      {
+        id: yeniIstekId(),
+        tur: 'fotograf',
+        uri: f.uri,
+        genislik: f.genislik,
+        yukseklik: f.yukseklik,
+      },
     ]);
     setDuzenlenecek(null);
   }
@@ -142,7 +148,12 @@ export function CevapEkrani({ id }: { id: string }) {
           taslak.ekler.push({ tur: 'fotograf', dosya: ad });
         } else if (e.tur === 'cizim') {
           dosyalar[ad] = { tur: 'soru_cizim', mimeTipi: 'image/jpeg', yerelUri: e.duzUri };
-          taslak.ekler.push({ tur: 'cizimli_fotograf', dosya: ad, kaynak: e.kaynak, cizimVerisi: e.veri });
+          taslak.ekler.push({
+            tur: 'cizimli_fotograf',
+            dosya: ad,
+            kaynak: e.kaynak,
+            cizimVerisi: e.veri,
+          });
         } else {
           dosyalar[ad] = { tur: 'soru_ses', mimeTipi: 'audio/mp4', yerelUri: e.uri };
           taslak.ekler.push({ tur: 'ses', dosya: ad, sureSn: e.sureSn });
@@ -255,7 +266,8 @@ export function CevapEkrani({ id }: { id: string }) {
                     varyant="ikincil"
                     etiket={t('mobil.soru.cevap.fotografSec', { n: i + 1 })}
                     onPress={() => {
-                      if (f.adres) setHedef({ mod: secim, adres: f.adres, kaynakId: f.medyaDosyaId });
+                      if (f.adres)
+                        setHedef({ mod: secim, adres: f.adres, kaynakId: f.medyaDosyaId });
                       setSecim(null);
                     }}
                   />
@@ -286,9 +298,15 @@ export function CevapEkrani({ id }: { id: string }) {
               {ekler.map((e) => (
                 <Kart key={e.id} className="flex-row items-center gap-3 p-3">
                   {e.tur === 'fotograf' ? (
-                    <Image source={{ uri: e.uri }} style={{ width: 56, height: 56, borderRadius: 8 }} />
+                    <Image
+                      source={{ uri: e.uri }}
+                      style={{ width: 56, height: 56, borderRadius: 8 }}
+                    />
                   ) : e.tur === 'cizim' ? (
-                    <Image source={{ uri: e.duzUri }} style={{ width: 56, height: 56, borderRadius: 8 }} />
+                    <Image
+                      source={{ uri: e.duzUri }}
+                      style={{ width: 56, height: 56, borderRadius: 8 }}
+                    />
                   ) : (
                     <Ikon ad="mic" boyut={28} />
                   )}
@@ -313,7 +331,13 @@ export function CevapEkrani({ id }: { id: string }) {
                         l.filter(
                           (x) =>
                             x.id !== e.id &&
-                            !(e.tur !== 'fotograf' && 'mini' in e && e.mini && 'mini' in x && x.mini),
+                            !(
+                              e.tur !== 'fotograf' &&
+                              'mini' in e &&
+                              e.mini &&
+                              'mini' in x &&
+                              x.mini
+                            ),
                         ),
                       );
                     }}

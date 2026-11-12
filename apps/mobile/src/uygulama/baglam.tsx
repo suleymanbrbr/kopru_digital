@@ -46,7 +46,7 @@ export function UygulamaSaglayicilari({ children }: { children: ReactNode }) {
     const durumAboneligi = AppState.addEventListener('change', (d) => {
       if (d !== 'active') return;
       void servisler.yukleme.calistir();
-      void servisler.gonderim.ilerlet();
+      servisler.gonderim.ilerlet();
       void servisler.kuyruk.bosalt();
     });
     return () => {

@@ -21,13 +21,7 @@ import type { AgGozlemcisi } from '../offline/kuyruk';
  *    Cevrimdisi iken hicbir istek denenmez. `yetkisiz`: bekler (oturum yenilenince devam).
  *  - Kalici hata (415, 413, 403 tur yetkisi, 422 ...) ya da `EN_FAZLA_DENEME`: `hata`.
  */
-export type YuklemeDurumu =
-  | 'bekliyor'
-  | 'izin_alindi'
-  | 'yukleniyor'
-  | 'tamam'
-  | 'hazir'
-  | 'hata';
+export type YuklemeDurumu = 'bekliyor' | 'izin_alindi' | 'yukleniyor' | 'tamam' | 'hazir' | 'hata';
 
 export interface YuklemeKaydi {
   id: string;
@@ -54,7 +48,8 @@ const ADRES_PAYI_MS = 30_000;
 /** `tamam` sonrasi `hazir` icin tek turdaki yoklama sayisi ve araligi. */
 const HAZIR_YOKLAMA = { sayi: 12, araMs: 800 } as const;
 
-export const yuklemeGecikmesi = (deneme: number) => Math.min(2 ** Math.min(deneme, 6) * 1000, 60_000);
+export const yuklemeGecikmesi = (deneme: number) =>
+  Math.min(2 ** Math.min(deneme, 6) * 1000, 60_000);
 
 export interface YerelDosyalar {
   /** Gecici dosyayi kalici konuma tasir ve yeni uri'yi dondurur. */
@@ -160,7 +155,7 @@ export class YuklemeKuyrugu {
   /** Dosyayi kalici konuma alir, kuyruga yazar ve yuklemeyi baslatir. */
   async ekle(girdi: { tur: MedyaTuru; mimeTipi: string; yerelUri: string }): Promise<YuklemeKaydi> {
     const id = this.sec.yeniId();
-    const uzanti = girdi.mimeTipi === 'audio/mp4' ? 'm4a' : girdi.mimeTipi.split('/')[1] ?? 'bin';
+    const uzanti = girdi.mimeTipi === 'audio/mp4' ? 'm4a' : (girdi.mimeTipi.split('/')[1] ?? 'bin');
     const yerelUri = await this.sec.yerel.kalici(girdi.yerelUri, `${id}.${uzanti}`);
     const kayit: YuklemeKaydi = {
       id,
@@ -399,12 +394,9 @@ export class YuklemeKuyrugu {
     if (aktifler.length === 0) return;
     const en = Math.min(...aktifler.map((k) => k.sonrakiDenemeAt));
     const bekleme = Math.max(en - this.simdi(), 0);
-    this.zamanlayici = setTimeout(
-      () => {
-        this.zamanlayici = null;
-        void this.calistir();
-      },
-      bekleme + 50,
-    );
+    this.zamanlayici = setTimeout(() => {
+      this.zamanlayici = null;
+      void this.calistir();
+    }, bekleme + 50);
   }
 }

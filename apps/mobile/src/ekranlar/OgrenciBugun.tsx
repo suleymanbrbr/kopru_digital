@@ -7,6 +7,7 @@ import type { Ders } from '../api/operasyonTipleri';
 import { Companion } from '../karakter/Companion';
 import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import { modulAcikMi } from '../nav/yapilandirma';
+import { CevaplananSorularKarti } from '../soru/BugunKartlari';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
@@ -24,7 +25,6 @@ import {
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
 import { useOgrenciBugun } from '../uygulama/sorgular';
-import { CevaplananSorularKarti } from '../soru/BugunKartlari';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';

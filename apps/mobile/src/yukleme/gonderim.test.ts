@@ -28,7 +28,12 @@ const sonuc: SoruSonucu = {
 
 function kur(
   ozel: Partial<SoruAdapter> = {},
-  secenek: { depo?: KvDepo; kuyrukDepo?: KvDepo; yukleDepo?: KvDepo; medya?: ReturnType<typeof mockMedya> } = {},
+  secenek: {
+    depo?: KvDepo;
+    kuyrukDepo?: KvDepo;
+    yukleDepo?: KvDepo;
+    medya?: ReturnType<typeof mockMedya>;
+  } = {},
 ) {
   const depo = secenek.depo ?? bellekKv();
   const kuyrukDepo = secenek.kuyrukDepo ?? bellekKv();
@@ -72,13 +77,25 @@ function kur(
     bekle: () => Promise.resolve(),
     hazirDeneme: { sayi: 3, araMs: 0 },
   });
-  return { y, adaptor, kuyruk, yukleme, medya, cevrimici, gonderildi, depo, kuyrukDepo, yukleDepo, yeniId };
+  return {
+    y,
+    adaptor,
+    kuyruk,
+    yukleme,
+    medya,
+    cevrimici,
+    gonderildi,
+    depo,
+    kuyrukDepo,
+    yukleDepo,
+    yeniId,
+  };
 }
 
 async function bitir(o: ReturnType<typeof kur>, tur = 12) {
   for (let i = 0; i < tur; i++) {
     await o.yukleme.calistir();
-    await o.y.ilerlet();
+    o.y.ilerlet();
     await o.kuyruk.bosalt();
   }
 }
@@ -117,7 +134,7 @@ describe('GonderimYoneticisi', () => {
     expect(son?.sonuc?.soruId).toBe('soru-1');
     expect(son?.sonuc?.tahmin?.sureSn).toBe(7200);
     expect(son?.sonuc?.kota?.gunlukKalan).toBe(2);
-    const cagri = (o.adaptor.soruSor as jest.Mock).mock.calls[0]?.[0] as {
+    const cagri = ((o.adaptor.soruSor as jest.Mock).mock.calls as unknown[][])[0]?.[0] as {
       fotograflar: string[];
       isaretler: { dosyaId: string; kaynakDosyaId: string }[];
       istekId: string;
@@ -157,7 +174,9 @@ describe('GonderimYoneticisi', () => {
       soruSor: jest.fn(() => {
         n += 1;
         return n < 3
-          ? Promise.reject(new ApiHata('cakisma', 'x', { durum: 409, ayrinti: 'dosya_hazir_degil' }))
+          ? Promise.reject(
+              new ApiHata('cakisma', 'x', { durum: 409, ayrinti: 'dosya_hazir_degil' }),
+            )
           : Promise.resolve(sonuc);
       }),
     });
@@ -257,7 +276,9 @@ describe('GonderimYoneticisi', () => {
       isle: 0,
       kancalar: {
         izinAl: () =>
-          bozuk ? new ApiHata('dogrulama', 'x', { durum: 415, ayrinti: 'mime_desteklenmiyor' }) : null,
+          bozuk
+            ? new ApiHata('dogrulama', 'x', { durum: 415, ayrinti: 'mime_desteklenmiyor' })
+            : null,
       },
     });
     const o = kur({}, { medya });
@@ -301,7 +322,11 @@ describe('GonderimYoneticisi', () => {
     expect(o.y.al(g.id)?.durum).toBe('gonderildi');
     const [id, girdi] = (o.adaptor.cevapla as jest.Mock).mock.calls[0] as [
       string,
-      { dersteKonusalim: boolean; ekler: { tur: string; kaynakDosyaId?: string; sureSn?: number }[]; istekId: string },
+      {
+        dersteKonusalim: boolean;
+        ekler: { tur: string; kaynakDosyaId?: string; sureSn?: number }[];
+        istekId: string;
+      },
     ];
     expect(id).toBe('soru-9');
     expect(girdi.dersteKonusalim).toBe(true);

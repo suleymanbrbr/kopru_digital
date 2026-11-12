@@ -211,7 +211,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     fetch: aglaFetch,
   });
   const { api: yetkili, medya: medyaIstemcisi } = createServisIstemcileri({
-    adresler: { api: sec.apiUrl, medya: sec.medyaUrl || sec.apiUrl },
+    adresler: { api: sec.apiUrl, medya: sec.medyaUrl ?? sec.apiUrl },
     tokenAl: erisimAl,
     fetch: yenilemeliFetch,
   });

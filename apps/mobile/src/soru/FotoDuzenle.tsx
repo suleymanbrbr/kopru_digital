@@ -1,11 +1,10 @@
 import { t } from '@kopru/i18n';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   Modal,
-  PanResponder,
   Pressable,
   View,
   type LayoutChangeEvent,
@@ -50,34 +49,33 @@ function Tutamac({
   boyut: { genislik: number; yukseklik: number; sol: number; ust: number };
   degistir: (a: KirpmaAlani) => void;
 }) {
-  const bas = useRef({ x: 0, y: 0 });
-  const guncel = useRef({ alan, boyut });
-  guncel.current = { alan, boyut };
-  const pan = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          const { alan: a, boyut: b } = guncel.current;
-          const sag = kose.endsWith('sag');
-          const alt = kose.startsWith('alt');
-          bas.current = {
-            x: (sag ? a.x + a.g : a.x) * b.genislik,
-            y: (alt ? a.y + a.y2 : a.y) * b.yukseklik,
-          };
-        },
-        onPanResponderMove: (_e, g) => {
-          const { alan: a, boyut: b } = guncel.current;
-          degistir(
-            koseyiTasi(a, kose, (bas.current.x + g.dx) / b.genislik, (bas.current.y + g.dy) / b.yukseklik),
-          );
-        },
-      }),
-    [kose, degistir],
-  );
+  // Surukleme baslangici: dokunus noktasi (sayfa) ve kosenin o andaki konumu (px).
+  const bas = useRef({ px: 0, py: 0, kx: 0, ky: 0 });
   return (
     <View
-      {...pan.panHandlers}
+      onStartShouldSetResponder={() => true}
+      onResponderTerminationRequest={() => false}
+      onResponderGrant={(e) => {
+        const sag = kose.endsWith('sag');
+        const alt = kose.startsWith('alt');
+        bas.current = {
+          px: e.nativeEvent.pageX,
+          py: e.nativeEvent.pageY,
+          kx: (sag ? alan.x + alan.g : alan.x) * boyut.genislik,
+          ky: (alt ? alan.y + alan.y2 : alan.y) * boyut.yukseklik,
+        };
+      }}
+      onResponderMove={(e) => {
+        const b = bas.current;
+        degistir(
+          koseyiTasi(
+            alan,
+            kose,
+            (b.kx + e.nativeEvent.pageX - b.px) / boyut.genislik,
+            (b.ky + e.nativeEvent.pageY - b.py) / boyut.yukseklik,
+          ),
+        );
+      }}
       accessible
       accessibilityRole="adjustable"
       accessibilityLabel={etiket}
@@ -131,7 +129,9 @@ export function FotoDuzenle({
         return;
       }
       const ctx = ImageManipulator.manipulate(uri).rotate(derece).resize({ width: 1200 });
-      const r = await (await ctx.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
+      const r = await (
+        await ctx.renderAsync()
+      ).saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
       if (!iptal) setOnizleme(r.uri);
     }
     void yap();
@@ -212,13 +212,57 @@ export function FotoDuzenle({
                 accessibilityLabel={t('mobil.soru.ogrenci.fotografEtiketi', { n: 1 })}
               />
               {/* Kirpma disini karart */}
-              <View style={{ position: 'absolute', left: yerlesim.sol, top: yerlesim.ust, width: yerlesim.genislik, height: alan.y * yerlesim.yukseklik, backgroundColor: 'rgba(0,0,0,0.55)' }} />
-              <View style={{ position: 'absolute', left: yerlesim.sol, top: ust + yuk, width: yerlesim.genislik, height: Math.max(0, yerlesim.ust + yerlesim.yukseklik - ust - yuk), backgroundColor: 'rgba(0,0,0,0.55)' }} />
-              <View style={{ position: 'absolute', left: yerlesim.sol, top: ust, width: alan.x * yerlesim.genislik, height: yuk, backgroundColor: 'rgba(0,0,0,0.55)' }} />
-              <View style={{ position: 'absolute', left: sol + gen, top: ust, width: Math.max(0, yerlesim.sol + yerlesim.genislik - sol - gen), height: yuk, backgroundColor: 'rgba(0,0,0,0.55)' }} />
+              <View
+                style={{
+                  position: 'absolute',
+                  left: yerlesim.sol,
+                  top: yerlesim.ust,
+                  width: yerlesim.genislik,
+                  height: alan.y * yerlesim.yukseklik,
+                  backgroundColor: 'rgba(0,0,0,0.55)',
+                }}
+              />
+              <View
+                style={{
+                  position: 'absolute',
+                  left: yerlesim.sol,
+                  top: ust + yuk,
+                  width: yerlesim.genislik,
+                  height: Math.max(0, yerlesim.ust + yerlesim.yukseklik - ust - yuk),
+                  backgroundColor: 'rgba(0,0,0,0.55)',
+                }}
+              />
+              <View
+                style={{
+                  position: 'absolute',
+                  left: yerlesim.sol,
+                  top: ust,
+                  width: alan.x * yerlesim.genislik,
+                  height: yuk,
+                  backgroundColor: 'rgba(0,0,0,0.55)',
+                }}
+              />
+              <View
+                style={{
+                  position: 'absolute',
+                  left: sol + gen,
+                  top: ust,
+                  width: Math.max(0, yerlesim.sol + yerlesim.genislik - sol - gen),
+                  height: yuk,
+                  backgroundColor: 'rgba(0,0,0,0.55)',
+                }}
+              />
               <View
                 pointerEvents="none"
-                style={{ position: 'absolute', left: sol, top: ust, width: gen, height: yuk, borderWidth: 2, borderColor: '#FFFFFF' }}
+                style={{
+                  position: 'absolute',
+                  left: sol,
+                  top: ust,
+                  width: gen,
+                  height: yuk,
+                  borderWidth: 2,
+                  borderColor: '#FFFFFF',
+                }}
               />
               {KOSELER.map(({ kose, anahtar }) => (
                 <Tutamac

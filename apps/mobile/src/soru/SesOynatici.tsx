@@ -3,12 +3,12 @@ import { useAudioPlayer, useAudioPlayerStatus, type AudioPlayer } from 'expo-aud
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { useTema } from '../tema/TemaSaglayici';
-import { Ikon } from '../ui/Ikon';
-import { Metin } from '../ui/Metin';
 import { cozumle, gorunenCizgiler } from '../cizim/model';
 import { Tuval } from '../cizim/Tuval';
 import { sureMetni } from '../ses/sinirlar';
+import { useTema } from '../tema/TemaSaglayici';
+import { Ikon } from '../ui/Ikon';
+import { Metin } from '../ui/Metin';
 
 const mockMu = (url: string) => url.startsWith('mock://');
 
@@ -65,7 +65,15 @@ export function OynatmaSeridi({
   );
 }
 
-function GercekOynatici({ url, sureSn, etiket }: { url: string; sureSn: number | null; etiket: string }) {
+function GercekOynatici({
+  url,
+  sureSn,
+  etiket,
+}: {
+  url: string;
+  sureSn: number | null;
+  etiket: string;
+}) {
   const player = useAudioPlayer(url, { updateInterval: 100 });
   return <OynatmaSeridi player={player} sureSn={sureSn} etiket={etiket} testID="ses-oynatici" />;
 }
@@ -111,13 +119,12 @@ function MiniGercek({
   const player = useAudioPlayer(sesUrl, { updateInterval: 100 });
   const durum = useAudioPlayerStatus(player);
   const veri = useMemo(() => cozumle(cizimVerisi), [cizimVerisi]);
+  const basladi = durum.playing || durum.currentTime > 0.05;
   const [t_, setT] = useState(0);
-  const [basladi, setBasladi] = useState(false);
 
   // Oynarken ses pozisyonunu kare kare okuyup cizgileri o ana kadarki haliyle gosterir.
   useEffect(() => {
     if (!durum.playing) return;
-    setBasladi(true);
     let id = 0;
     const don = () => {
       setT(Math.round(player.currentTime * 1000));
@@ -138,7 +145,13 @@ function MiniGercek({
 
   return (
     <View className="gap-3" testID="mini-anlatim">
-      <Tuval kaynak={gorsel} oran={oran} genislik={genislik} cizgiler={cizgiler} testID="mini-tuval" />
+      <Tuval
+        kaynak={gorsel}
+        oran={oran}
+        genislik={genislik}
+        cizgiler={cizgiler}
+        testID="mini-tuval"
+      />
       <OynatmaSeridi
         player={player}
         sureSn={sureSn}
@@ -166,7 +179,11 @@ export function MiniAnlatimOynatici(props: {
   if (!veri?.zamanli || mockMu(props.sesUrl)) {
     return (
       <View className="gap-2">
-        <SesOynatici url={props.sesUrl} sureSn={props.sureSn} etiket={t('mobil.soru.ek.miniAnlatim')} />
+        <SesOynatici
+          url={props.sesUrl}
+          sureSn={props.sureSn}
+          etiket={t('mobil.soru.ek.miniAnlatim')}
+        />
       </View>
     );
   }

@@ -78,20 +78,25 @@ export function GelenSorularEkrani() {
     }),
     [brans, ogrenciId],
   );
-  const arsivSuzgeci = useMemo(() => ({ ...kuyrukSuzgeci, ...(q ? { q } : {}) }), [kuyrukSuzgeci, q]);
+  const arsivSuzgeci = useMemo(
+    () => ({ ...kuyrukSuzgeci, ...(q ? { q } : {}) }),
+    [kuyrukSuzgeci, q],
+  );
   const bekleyen = useGelenSorular(kuyrukSuzgeci, sekme === 'bekleyen');
   const arsiv = useCevapladiklarim(arsivSuzgeci, sekme === 'cevaplanan');
   const sorgu = sekme === 'bekleyen' ? bekleyen : arsiv;
   const sorular = useMemo(() => sorgu.data?.pages.flatMap((p) => p.sorular) ?? [], [sorgu.data]);
 
-  // Ogrenci suzgeci: o ana dek gorulen ogrencilerden.
-  const [ogrenciler, setOgrenciler] = useState<{ id: string; ad: string }[]>([]);
-  useEffect(() => {
-    const yeni = sorular
-      .filter((s) => s.ogrenciAdi && !ogrenciler.some((o) => o.id === s.ogrenciId))
-      .map((s) => ({ id: s.ogrenciId, ad: s.ogrenciAdi ?? '' }));
-    if (yeni.length > 0) setOgrenciler((o) => [...o, ...yeni].slice(0, 12));
-  }, [sorular, ogrenciler]);
+  // Ogrenci suzgeci: suzgecsiz kuyruk/arsivdeki ogrencilerden.
+  const tumKuyruk = useGelenSorular({}, sekme === 'bekleyen');
+  const tumArsiv = useCevapladiklarim({}, sekme === 'cevaplanan');
+  const ogrenciler = useMemo(() => {
+    const kaynak =
+      (sekme === 'bekleyen' ? tumKuyruk : tumArsiv).data?.pages.flatMap((p) => p.sorular) ?? [];
+    const harita = new Map<string, string>();
+    for (const x of kaynak) if (x.ogrenciAdi) harita.set(x.ogrenciId, x.ogrenciAdi);
+    return [...harita].slice(0, 12).map(([id, ad]) => ({ id, ad }));
+  }, [sekme, tumKuyruk, tumArsiv]);
 
   const branslar = sayi.data?.branslar ?? [];
 

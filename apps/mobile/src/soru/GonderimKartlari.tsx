@@ -99,7 +99,10 @@ function Kart_({ g }: { g: Gonderim }) {
               className="flex-1"
               etiket={t('mobil.soru.ogrenci.gonderimiAc')}
               onPress={() => {
-                router.push({ pathname: '/(uygulama)/soru/[id]', params: { id: g.sonuc?.soruId ?? '' } });
+                router.push({
+                  pathname: '/(uygulama)/soru/[id]',
+                  params: { id: g.sonuc?.soruId ?? '' },
+                });
               }}
             />
           ) : null}

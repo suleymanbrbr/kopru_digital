@@ -1,12 +1,12 @@
 import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, View } from 'react-native';
+import { ActivityIndicator, Image, View } from 'react-native';
 
 import { SORU_EN_FAZLA_FOTOGRAF } from '../../api/soruTipleri';
 import type { CizimVerisi } from '../../cizim/model';
 import { galeridenAl, kameradanAl, type AlinanFoto } from '../../foto/al';
-import { fotoHazirla } from '../../foto/hazirla';
+import { type fotoHazirla } from '../../foto/hazirla';
 import { yeniIstekId } from '../../lib/kimlik';
 import { bransAdi } from '../../ogrenme/konu';
 import { kotaGorunumu } from '../../soru/bicim';
@@ -61,7 +61,9 @@ export function SoruYeniEkrani() {
   const [duzenlenecek, setDuzenlenecek] = useState<AlinanFoto[]>([]);
   const [yeniden, setYeniden] = useState<string | null>(null);
   const [isaretlenen, setIsaretlenen] = useState<string | null>(null);
-  const [secim, setSecim] = useState<KonuSecimi>(() => sonSecimiOku((k) => yerelDepo.getString(k), uyelikId));
+  const [secim, setSecim] = useState<KonuSecimi>(() =>
+    sonSecimiOku((k) => yerelDepo.getString(k), uyelikId),
+  );
   const [not, setNot] = useState('');
   const [mesaj, setMesaj] = useState<string | null>(null);
   const [izin, setIzin] = useState(false);
@@ -73,7 +75,7 @@ export function SoruYeniEkrani() {
     : null;
   const kalanYer = SORU_EN_FAZLA_FOTOGRAF - fotolar.length - duzenlenecek.length;
 
-  async function ekle(sonuc: Awaited<ReturnType<typeof kameradanAl>>) {
+  function ekle(sonuc: Awaited<ReturnType<typeof kameradanAl>>) {
     setMesaj(null);
     if (sonuc.durum === 'izin') {
       setIzin(true);
@@ -142,7 +144,11 @@ export function SoruYeniEkrani() {
             mimeTipi: 'image/jpeg',
             yerelUri: f.isaret.duzUri,
           };
-          isaretler.push({ dosya: `i${String(i)}`, kaynak: `f${String(i)}`, cizimVerisi: f.isaret.veri });
+          isaretler.push({
+            dosya: `i${String(i)}`,
+            kaynak: `f${String(i)}`,
+            cizimVerisi: f.isaret.veri,
+          });
         }
       });
       yerelDepo.set(SON_BRANS_ANAHTARI(uyelikId), JSON.stringify(secim));
@@ -165,18 +171,6 @@ export function SoruYeniEkrani() {
       setMesgul(false);
     }
   }
-
-  function cik() {
-    if (fotolar.length === 0) {
-      router.back();
-      return;
-    }
-    Alert.alert(t('mobil.soru.ogrenci.uygulamadanCik'), undefined, [
-      { text: t('mobil.soru.ogrenci.devamEt'), style: 'cancel' },
-      { text: t('mobil.soru.ogrenci.cik'), style: 'destructive', onPress: () => { router.back(); } },
-    ]);
-  }
-  void cik;
 
   return (
     <Ekran klavye kenarlar={['left', 'right', 'bottom']}>
@@ -268,7 +262,9 @@ export function SoruYeniEkrani() {
             />
           </View>
         ) : (
-          <Metin varyant="kucuk">{t('mobil.soru.ogrenci.enFazla', { n: SORU_EN_FAZLA_FOTOGRAF })}</Metin>
+          <Metin varyant="kucuk">
+            {t('mobil.soru.ogrenci.enFazla', { n: SORU_EN_FAZLA_FOTOGRAF })}
+          </Metin>
         )}
         {mesaj ? (
           <Metin varyant="ikincil" className="text-hata" accessibilityRole="alert">
@@ -290,11 +286,7 @@ export function SoruYeniEkrani() {
         ) : null}
       </View>
 
-      <KonuSecici
-        deger={secim}
-        onDegis={setSecim}
-        etiket={t('mobil.soru.ogrenci.ders')}
-      />
+      <KonuSecici deger={secim} onDegis={setSecim} etiket={t('mobil.soru.ogrenci.ders')} />
       {denendi && !secim.bransKodu ? (
         <Metin varyant="ikincil" className="text-hata" accessibilityRole="alert">
           {t('mobil.soru.ogrenci.dersGerekli')}
@@ -345,7 +337,9 @@ export function SoruYeniEkrani() {
           }}
           onBitti={(s) => {
             setFotolar((l) =>
-              l.map((x) => (x.id === isaretFoto.id ? { ...x, isaret: { duzUri: s.duzUri, veri: s.veri } } : x)),
+              l.map((x) =>
+                x.id === isaretFoto.id ? { ...x, isaret: { duzUri: s.duzUri, veri: s.veri } } : x,
+              ),
             );
             setIsaretlenen(null);
           }}

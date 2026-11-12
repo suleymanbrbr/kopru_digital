@@ -58,15 +58,13 @@ export function medyaAdaptoru({ medya, veriAl }: MedyaBagimliligi): MedyaAdapter
             params: { path: { id: dosyaId } },
             body: {} as never,
           }),
-        ) as ApiDurum,
+        ),
       );
     },
 
     async durum(dosyaId) {
       return durumCevir(
-        veriAl(
-          await medya.GET('/v1/dosyalar/{id}', { params: { path: { id: dosyaId } } }),
-        ) as ApiDurum,
+        veriAl(await medya.GET('/v1/dosyalar/{id}', { params: { path: { id: dosyaId } } })),
       );
     },
 

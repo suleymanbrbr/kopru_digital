@@ -36,11 +36,21 @@ export function kotaGorunumu(
   simdi: number = Date.now(),
 ): KotaGorunumu {
   if (kota.gunlukKalan === null) {
-    return { kalan: null, dolu: false, mesaj: t('mobil.soru.kota.kalanSinirsiz'), sifirlanma: null };
+    return {
+      kalan: null,
+      dolu: false,
+      mesaj: t('mobil.soru.kota.kalanSinirsiz'),
+      sifirlanma: null,
+    };
   }
   const kalan = Math.max(0, kota.gunlukKalan - bekleyen);
   if (kalan > 0) {
-    return { kalan, dolu: false, mesaj: t('mobil.soru.kota.kalan', { n: kalan }), sifirlanma: null };
+    return {
+      kalan,
+      dolu: false,
+      mesaj: t('mobil.soru.kota.kalan', { n: kalan }),
+      sifirlanma: null,
+    };
   }
   return {
     kalan: 0,
@@ -85,7 +95,9 @@ export function gonderimHataMesaji(kod: string | undefined): string {
 }
 
 /** Durum rozetinin ikonu (renk tek sinyal degildir: ikon + metin). */
-export function durumIkonu(d: SoruDurumu): 'time-outline' | 'chatbubble-ellipses' | 'help-circle' | 'checkmark-circle' | 'lock-closed' {
+export function durumIkonu(
+  d: SoruDurumu,
+): 'time-outline' | 'chatbubble-ellipses' | 'help-circle' | 'checkmark-circle' | 'lock-closed' {
   switch (d) {
     case 'acik':
       return 'time-outline';
