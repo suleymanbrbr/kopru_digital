@@ -108,9 +108,9 @@ function LinkBlogu({
         }}
         hata={hata}
         keyboardType="url"
-        multiline={false}
-        numberOfLines={1}
-        scrollEnabled
+        multiline
+        submitBehavior="blurAndSubmit"
+        scrollEnabled={false}
         autoCapitalize="none"
         autoCorrect={false}
         placeholder="https://"
@@ -266,7 +266,7 @@ export function KayitEkleEkrani({ dersId, baslik, baslangic }: Props) {
 
   if (eklenen !== null) {
     return (
-      <Ekran>
+      <Ekran kenarlar={['left', 'right', 'bottom']}>
         <Kart
           className="items-center gap-3"
           testID="kayit-eklendi"
@@ -290,7 +290,7 @@ export function KayitEkleEkrani({ dersId, baslik, baslangic }: Props) {
   }
 
   return (
-    <Ekran klavye>
+    <Ekran kenarlar={['left', 'right', 'bottom']} klavye>
       <View className="gap-1" accessible accessibilityRole="header">
         <Metin varyant="altBaslik">{baslik || t('mobil.ders.adsiz')}</Metin>
         {baslangic ? <Metin varyant="ikincil">{kisaZaman(baslangic, tz)}</Metin> : null}

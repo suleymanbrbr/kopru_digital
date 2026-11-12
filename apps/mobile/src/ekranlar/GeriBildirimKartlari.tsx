@@ -278,39 +278,63 @@ export function GeriBildirimKartlari() {
   const sorgu = useGeriBildirimBekleyen();
   const verilen = useVerilenGeriBildirimler();
   const [simdi] = useState(() => Date.now());
+  const [genis, setGenis] = useState(false);
   if (!acik) return null;
 
   const gecerli = verilen.filter((v) => Date.parse(v.sonVerme) > simdi);
   const verilenIdler = new Set(gecerli.map((v) => v.dersId));
   const sorular = (sorgu.data ?? []).filter((b) => !verilenIdler.has(b.dersId));
-  if (sorular.length === 0 && gecerli.length === 0) return null;
+  // Tek liste, en son biten ders ustte (`sonVerme` = bitis + 24 saat): cevaplanan kart yerinden
+  // oynamaz, "tesekkurler" durumuna gecer.
+  const kartlar: { ders: KartDersi; verilen: VerilenGeriBildirim | null }[] = [
+    ...sorular.map((b) => ({
+      ders: {
+        dersId: b.dersId,
+        ad: bekleyenAdi(b.baslik, b.bransKodu),
+        baslangic: b.baslangic,
+        sonVerme: b.sonVerme,
+      },
+      verilen: null,
+    })),
+    ...gecerli.map((v) => ({
+      ders: {
+        dersId: v.dersId,
+        ad: v.dersBaslik,
+        baslangic: v.dersBaslangic,
+        sonVerme: v.sonVerme,
+      },
+      verilen: v,
+    })),
+  ].sort(
+    (a, b) =>
+      Date.parse(b.ders.sonVerme) - Date.parse(a.ders.sonVerme) ||
+      a.ders.dersId.localeCompare(b.ders.dersId),
+  );
+  if (kartlar.length === 0) return null;
+  const [ilk, ...digerleri] = kartlar;
+  if (!ilk) return null;
 
   return (
     <View className="gap-3" testID="geri-bildirim-kartlari">
-      {sorular.map((b) => (
-        <GeriBildirimKarti
-          key={b.dersId}
-          ders={{
-            dersId: b.dersId,
-            ad: bekleyenAdi(b.baslik, b.bransKodu),
-            baslangic: b.baslangic,
-            sonVerme: b.sonVerme,
-          }}
-          verilen={null}
-        />
-      ))}
-      {gecerli.map((v) => (
-        <GeriBildirimKarti
-          key={v.dersId}
-          ders={{
-            dersId: v.dersId,
-            ad: v.dersBaslik,
-            baslangic: v.dersBaslangic,
-            sonVerme: v.sonVerme,
-          }}
-          verilen={v}
-        />
-      ))}
+      <GeriBildirimKarti key={ilk.ders.dersId} ders={ilk.ders} verilen={ilk.verilen} />
+      {digerleri.length > 0 ? (
+        <>
+          <Dugme
+            varyant="ikincil"
+            etiket={t('mobil.geriBildirim.dahaFazla', { n: digerleri.length })}
+            accessibilityState={{ expanded: genis }}
+            testID="geri-bildirim-daha"
+            onPress={() => {
+              setGenis(!genis);
+            }}
+          />
+          {genis
+            ? digerleri.map((k) => (
+                <GeriBildirimKarti key={k.ders.dersId} ders={k.ders} verilen={k.verilen} />
+              ))
+            : null}
+        </>
+      ) : null}
     </View>
   );
 }

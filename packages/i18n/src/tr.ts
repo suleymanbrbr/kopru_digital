@@ -2326,6 +2326,8 @@ export const tr = {
       suzgecTemizle: 'Süzgeçleri temizle',
       daha: 'Daha fazla kayıt yükleniyor',
       suzgec: {
+        baslik: 'Süzgeç',
+        tumu: 'Tümü',
         tur: 'Tür',
         hepsi: 'Hepsi',
         kayit: 'Ders kaydı',
@@ -2444,6 +2446,7 @@ export const tr = {
     geriBildirim: {
       soru: 'Bugünkü ders nasıldı?',
       soruEtiket: '{ders} dersi nasıldı?',
+      dahaFazla: '{n} ders daha',
       dersZaman: '{ders}, {zaman}',
       anladim: 'Anladım',
       kismen: 'Kısmen',

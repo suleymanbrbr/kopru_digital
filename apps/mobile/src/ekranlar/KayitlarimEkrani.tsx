@@ -38,7 +38,7 @@ export function acilabilirMi(url: string): boolean {
   return /^https:\/\//i.test(url.trim());
 }
 
-function Suzgecler({
+function SuzgecGruplari({
   tur,
   setTur,
   brans,
@@ -63,7 +63,7 @@ function Suzgecler({
     ['otuz', 'mobil.kayit.suzgec.otuzGun'],
   ] as const;
   return (
-    <View className="gap-3" testID="kayit-suzgecler">
+    <View className="gap-3">
       <View className="gap-1">
         <Metin varyant="kucuk">{t('mobil.kayit.suzgec.tur')}</Metin>
         <View className="flex-row flex-wrap gap-2">
@@ -122,6 +122,52 @@ function Suzgecler({
           ))}
         </View>
       </View>
+    </View>
+  );
+}
+
+type SuzgecProps = Parameters<typeof SuzgecGruplari>[0];
+
+/**
+ * Suzgec tek satira iner: "Suzgec" dugmesi + secili suzgeclerin ozeti. Gruplar dugmeyle acilir.
+ * Gerekce: 3 ayri cip satiri (tur, brans, tarih) ekranin ust ucte birini kapliyordu; kayit listesi
+ * ilk bakista gorunsun diye varsayilan kapali, secim durumu ozetle (metinle) her zaman gorunur.
+ */
+function Suzgecler(p: SuzgecProps) {
+  const { renkler } = useTema();
+  const [acik, setAcik] = useState(false);
+  const secili = [
+    p.tur !== 'hepsi' ? t(`mobil.kayit.suzgec.${p.tur === 'kayit' ? 'kayit' : 'materyal'}`) : null,
+    p.brans ? bransAdi(p.brans) : null,
+    p.tarih === 'bugun'
+      ? t('mobil.kayit.suzgec.bugun')
+      : p.tarih === 'yedi'
+        ? t('mobil.kayit.suzgec.yediGun')
+        : p.tarih === 'otuz'
+          ? t('mobil.kayit.suzgec.otuzGun')
+          : null,
+  ].filter(Boolean);
+  const ozet = secili.length > 0 ? secili.join(' · ') : t('mobil.kayit.suzgec.tumu');
+  return (
+    <View className="gap-3" testID="kayit-suzgecler">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${t('mobil.kayit.suzgec.baslik')}: ${ozet}`}
+        accessibilityState={{ expanded: acik }}
+        testID="suzgec-ac"
+        onPress={() => {
+          setAcik(!acik);
+        }}
+        className="min-h-dokunma flex-row items-center gap-2 rounded-buyuk border border-kenar bg-yuzey px-4 active:opacity-80"
+      >
+        <Ikon ad="options-outline" boyut={20} renk={renkler.metin} />
+        <Metin varyant="etiket">{t('mobil.kayit.suzgec.baslik')}</Metin>
+        <Metin varyant="ikincil" className="flex-1" numberOfLines={1}>
+          {ozet}
+        </Metin>
+        <Ikon ad={acik ? 'chevron-up' : 'chevron-down'} boyut={18} renk={renkler.metin} />
+      </Pressable>
+      {acik ? <SuzgecGruplari {...p} /> : null}
     </View>
   );
 }
@@ -189,7 +235,9 @@ function KayitKarti({
             </Metin>
           </View>
         </View>
-        <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1 pl-9">
+      </Pressable>
+      <View className="flex-row items-center justify-between gap-2">
+        <View className="flex-1 flex-row flex-wrap items-center gap-x-3 gap-y-1">
           <View className="flex-row items-center gap-1">
             <Ikon
               ad={kayit.izlendi ? 'checkmark-circle' : 'ellipse-outline'}
@@ -217,19 +265,18 @@ function KayitKarti({
             </View>
           ) : null}
         </View>
-      </Pressable>
-      {!kayit.izlendi ? (
-        <Dugme
-          className="self-start"
-          varyant="ikincil"
-          etiket={t('mobil.kayit.izledim')}
-          accessibilityLabel={t('mobil.kayit.izledimEtiket', { baslik: kayit.baslik })}
-          testID={`kayit-izledim-${kayit.id}`}
-          onPress={() => {
-            onIzledim(kayit);
-          }}
-        />
-      ) : null}
+        {!kayit.izlendi ? (
+          <Dugme
+            varyant="ikincil"
+            etiket={t('mobil.kayit.izledim')}
+            accessibilityLabel={t('mobil.kayit.izledimEtiket', { baslik: kayit.baslik })}
+            testID={`kayit-izledim-${kayit.id}`}
+            onPress={() => {
+              onIzledim(kayit);
+            }}
+          />
+        ) : null}
+      </View>
     </View>
   );
 }

@@ -82,9 +82,9 @@ async function ogrenciOrtami(): Promise<Ortam> {
   return o;
 }
 
-/** 8-A grubuna bir saat once biten 30 dk'lik ders ekler (ogrenci katilimci; geri bildirim penceresinde). */
+/** 8-A grubuna 10 dk once biten 30 dk'lik ders ekler (ogrenci katilimci; geri bildirim penceresinde). */
 async function bitmisDersEkle(o: Ortam, baslik = 'Geometri'): Promise<Ders> {
-  const baslangic = Date.now() - 90 * 60_000;
+  const baslangic = Date.now() - 40 * 60_000;
   const s = await o.adaptorler.ders.dersOlustur({
     grupId: 'g-8a',
     tarih: yerelTarih(baslangic, MOCK_SAAT_DILIMI),
@@ -97,11 +97,17 @@ async function bitmisDersEkle(o: Ortam, baslik = 'Geometri'): Promise<Ders> {
   return s.dersler[0]!;
 }
 
+/** Mock tohum dersleri de bekleyen olabilir: "N ders daha" aciksa tum kartlar gorunsun. */
+async function genislet(r: Parameters<typeof dokun>[0]) {
+  if (var_(r, 'geri-bildirim-daha')) await testIDDokun(r, 'geri-bildirim-daha');
+}
+
 describe('ogrenci Bugun: geri bildirim karti', () => {
   it('bitmis ders icin soru gosterilir; tek dokunusla gonderilir, iyimser tesekkur, sunucuda kayit', async () => {
     const o = await ogrenciOrtami();
     const ders = await bitmisDersEkle(o);
     const r = await ac(o, <GeriBildirimKartlari />);
+    await genislet(r);
     expect(metinler(r)).toContain('Bugünkü ders nasıldı?');
     expect(var_(r, `geri-bildirim-kart-${ders.id}`)).toBe(true);
     expect(etiketVarMi(r, 'Geometri dersi: Anladım')).toBe(true);
@@ -122,6 +128,7 @@ describe('ogrenci Bugun: geri bildirim karti', () => {
     const o = await ogrenciOrtami();
     const ders = await bitmisDersEkle(o);
     const r = await ac(o, <GeriBildirimKartlari />);
+    await genislet(r);
     o.cevrimici.deger = false;
     await dokun(r, 'Geometri dersi: Kısmen');
     expect(metinler(r)).toContain('Teşekkürler! Cevabın: Kısmen');
@@ -142,6 +149,7 @@ describe('ogrenci Bugun: geri bildirim karti', () => {
     const o = await ogrenciOrtami();
     const ders = await bitmisDersEkle(o);
     const r = await ac(o, <GeriBildirimKartlari />);
+    await genislet(r);
     await dokun(r, 'Geometri dersi: Anladım');
     await dokun(r, 'Cevabı değiştir');
     expect(etiketVarMi(r, 'Geometri dersi: Kısmen')).toBe(true);
@@ -159,11 +167,67 @@ describe('ogrenci Bugun: geri bildirim karti', () => {
     expect(sunucu.satirlar[0]?.ad).toBe('Deniz Yılmaz');
   });
 
+  it('en fazla bir tam kart: en son biten ders ustte, digerleri "N ders daha" altinda', async () => {
+    const o = await ogrenciOrtami();
+    const eski = await bitmisDersEkle(o, 'Eski ders');
+    const yeni = await bitmisDersEkle(o, 'Yeni ders');
+    // Eski dersi 3 saat once bitmis say: yeni ders (10 dk once) tek tam kart olur.
+    const sorgu = await o.adaptorler.kayit.geriBildirimBekleyen();
+    expect(sorgu.map((b) => b.dersId)).toEqual(expect.arrayContaining([eski.id, yeni.id]));
+    const r = await ac(o, <GeriBildirimKartlari />);
+    expect(var_(r, 'geri-bildirim-daha')).toBe(true);
+    expect(
+      var_(r, `geri-bildirim-kart-${yeni.id}`) || var_(r, `geri-bildirim-kart-${eski.id}`),
+    ).toBe(true);
+    const tamKart = r.root.findAll(
+      (n) =>
+        typeof n.props.testID === 'string' &&
+        n.props.testID.startsWith('geri-bildirim-kart-') &&
+        typeof n.type === 'string',
+    );
+    expect(tamKart).toHaveLength(1);
+    expect(metinler(r)).toMatch(/\d+ ders daha/);
+    await testIDDokun(r, 'geri-bildirim-daha');
+    const hepsi = r.root.findAll(
+      (n) =>
+        typeof n.props.testID === 'string' &&
+        n.props.testID.startsWith('geri-bildirim-kart-') &&
+        typeof n.type === 'string',
+    );
+    expect(hepsi.length).toBeGreaterThan(1);
+  });
+
+  it('cevaplanan ilk kart yerinde kalir (tesekkur durumuna gecer, "daha" listesine kaymaz)', async () => {
+    const o = await ogrenciOrtami();
+    const ders = await bitmisDersEkle(o, 'Birinci');
+    await bitmisDersEkle(o, 'Ikinci');
+    const r = await ac(o, <GeriBildirimKartlari />);
+    const ilkId = r.root.findAll(
+      (n) =>
+        typeof n.props.testID === 'string' &&
+        n.props.testID.startsWith('geri-bildirim-kart-') &&
+        typeof n.type === 'string',
+    )[0]?.props.testID as string;
+    expect(ilkId).toBeTruthy();
+    await testIDDokun(r, 'geri-bildirim-anladim');
+    await bekle(60);
+    expect(metinler(r)).toContain('Teşekkürler! Cevabın: Anladım');
+    const sonra = r.root.findAll(
+      (n) =>
+        typeof n.props.testID === 'string' &&
+        n.props.testID.startsWith('geri-bildirim-kart-') &&
+        typeof n.type === 'string',
+    )[0]?.props.testID as string;
+    expect(sonra).toBe(ilkId);
+    expect(ders.id).toBeTruthy();
+  });
+
   it('modul kapaliysa kart hic gorunmez', async () => {
     const o = await ogrenciOrtami();
     await bitmisDersEkle(o);
     modulAyarla(o, { geri_bildirim: false });
     const r = await ac(o, <GeriBildirimKartlari />);
+    await genislet(r);
     expect(var_(r, 'geri-bildirim-kartlari')).toBe(false);
     expect(metinler(r)).not.toContain('Bugünkü ders nasıldı?');
   });
@@ -183,6 +247,7 @@ describe('ogrenci Bugun: geri bildirim karti', () => {
       'istek-1',
     );
     const r = await ac(o, <GeriBildirimKartlari />);
+    await genislet(r);
     expect(var_(r, `geri-bildirim-kart-${ders.id}`)).toBe(false);
     await expect(
       o.adaptorler.kayit.geriBildirimVer(ders.id, { deger: 'anladim' }),
@@ -223,11 +288,13 @@ describe('ogrenci Kayitlarim', () => {
     expect(m).toContain('Üslü sayılar kaydı');
     expect(m).toContain('Üslü sayılar konu anlatımı');
     expect(m).toContain('Parola var'); // Zoom kaydi
+    await testIDDokun(r, 'suzgec-ac');
     await dokun(r, 'Materyal');
     await bekle(60);
     const m2 = metinler(r);
     expect(m2).toContain('Üslü sayılar konu anlatımı');
     expect(m2).not.toContain('Denklemler kaydı');
+    expect(m2).toContain('Materyal'); // ozet satiri secimi metinle de gosterir
   });
 
   it('2. dokunus: kayda dokununca parola kopyalanir ve uygulama ici tarayicida acilir', async () => {

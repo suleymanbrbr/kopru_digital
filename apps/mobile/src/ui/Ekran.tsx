@@ -1,5 +1,5 @@
-import type { ReactNode, ComponentRef, Ref } from 'react';
-import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
+import { useEffect, useState, type ReactNode, type ComponentRef, type Ref } from 'react';
+import { Keyboard, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 /** `Ekran` kaydirma kapsayicisinin ornek tipi. */
@@ -23,6 +23,30 @@ interface Props {
   kaydirmaRef?: Ref<KaydirmaOgesi>;
 }
 
+/**
+ * Klavye yuksekligi (yalniz `etkin` iken dinlenir). `KeyboardAvoidingView` yerel ust basliklu (Stack)
+ * ekranlarda ve kenardan kenara duzende klavyeyi hesaba katmadigi icin icerigin altina bu kadar bosluk
+ * eklenir: son alan ve "Kaydet" klavyenin ustune kaydirilabilir.
+ */
+function useKlavyeYuksekligi(etkin: boolean): number {
+  const [yukseklik, setYukseklik] = useState(0);
+  useEffect(() => {
+    if (!etkin) return;
+    const ios = Platform.OS === 'ios';
+    const goster = Keyboard.addListener(ios ? 'keyboardWillShow' : 'keyboardDidShow', (e) => {
+      setYukseklik(e.endCoordinates.height);
+    });
+    const gizle = Keyboard.addListener(ios ? 'keyboardWillHide' : 'keyboardDidHide', () => {
+      setYukseklik(0);
+    });
+    return () => {
+      goster.remove();
+      gizle.remove();
+    };
+  }, [etkin]);
+  return etkin ? yukseklik : 0;
+}
+
 /** Guvenli alan + opsiyonel kaydirma/klavye isleme ile ekran iskeleti. */
 export function Ekran({
   children,
@@ -34,6 +58,7 @@ export function Ekran({
   kaydirmaRef,
 }: Props) {
   const ins = useSafeAreaInsets();
+  const klavyeYuk = useKlavyeYuksekligi(klavye);
   const stil = {
     paddingTop: kenarlar.includes('top') ? ins.top : 0,
     paddingBottom: kenarlar.includes('bottom') ? ins.bottom : 0,
@@ -46,6 +71,7 @@ export function Ekran({
       contentContainerClassName={`grow gap-4 p-4 ${className}`}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
+      contentContainerStyle={klavyeYuk > 0 ? { paddingBottom: 16 + klavyeYuk } : undefined}
     >
       {children}
     </ScrollView>
@@ -55,14 +81,7 @@ export function Ekran({
   return (
     <View className="flex-1 bg-arkaPlan" style={stil}>
       {ust}
-      {klavye ? (
-        // Android'de kenardan kenara duzende pencere klavyeyle kuculmez; iki platformda da bosluk birakilir.
-        <KeyboardAvoidingView className="flex-1" behavior="padding">
-          {icerik}
-        </KeyboardAvoidingView>
-      ) : (
-        icerik
-      )}
+      {icerik}
     </View>
   );
 }
