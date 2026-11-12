@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 7;
+export const IZIN_SOZLUGU_SURUMU = 8;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -126,6 +126,8 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'deneme.oku': 'grup',
     'deneme.yaz': 'grup',
     'soru.cevapla': 'grup',
+    // Ogretmen atandigi gruplardaki ogrencinin motivasyon ozetini (seviye, beceriler, seri) gorur.
+    'oyunlastirma.oku': 'grup',
     'duyuru.oku': 'kurum',
     'duyuru.yaz': 'grup',
   },

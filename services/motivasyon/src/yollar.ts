@@ -41,9 +41,9 @@ async function modulKontrol(tx: Tx, kurumId: string, ogrenciId: string, gun: str
 }
 
 /**
- * Ogrenci durumu. `oyunlastirma.oku` izni (izin sozlugu surum 7) ogrenciye `kendi`, sahip/yoneticiye `kurum`
- * kapsaminda verilir; ogretmenin bu izni sozlukte YOKTUR, ogretmen ozeti burada atandigi gruplar kapsamiyla
- * (`atama_kopyalari` + `grup_uyesi_kopyalari`) acilir (izin sozlugune `oyunlastirma.oku: grup` eklenmesi onerilir).
+ * Ogrenci durumu. `oyunlastirma.oku` izni (izin sozlugu surum 8) ogrenciye `kendi`, ogretmene `grup`,
+ * sahip/yoneticiye `kurum` kapsaminda verilir. `grup` kapsami atandigi gruplardaki ogrencilerle sinirlidir
+ * (`atama_kopyalari` + `grup_uyesi_kopyalari`).
  */
 export async function ogrenciDurumuOku(
   tx: Tx,
@@ -284,8 +284,9 @@ export function yollariOlustur(secenek: YolSecenekleri = {}): ServicePlugin {
         const { ogrenci_id: ogrenciId } = request.params;
         const k = kimlik(request, request.params.kurum_id);
         const kurumKapsami = izinVarMi(k.rol, 'oyunlastirma.oku', 'kurum');
+        const grupKapsami = izinVarMi(k.rol, 'oyunlastirma.oku', 'grup');
         const kendi = k.rol === 'ogrenci' && k.uyelikId === ogrenciId;
-        if (!kurumKapsami && k.rol !== 'ogretmen' && !kendi) {
+        if (!grupKapsami && !kendi) {
           throw new AppError(403, errorCodes.izinYok, 'Bu öğrencinin özetini görme yetkiniz yok.');
         }
         return withTenant(
@@ -297,7 +298,7 @@ export function yollariOlustur(secenek: YolSecenekleri = {}): ServicePlugin {
             const { gun } = await gunHesapla(tx, kurum.saatDilimi, an.toISOString());
             const bulunamadi = () => new AppError(404, errorCodes.notFound, 'Öğrenci bulunamadı.');
             if (!kendi) {
-              if (k.rol === 'ogretmen' && !kurumKapsami) {
+              if (!kurumKapsami) {
                 if (!(await ogretmenKapsamindaMi(tx, k.kurumId, k.uyelikId, ogrenciId, gun))) {
                   throw bulunamadi();
                 }
