@@ -439,3 +439,47 @@ Ek sayaçlar: `toplam_yoklama` (rozeti yok; yoklama etkin duruma göre artar/aza
 ### Okuma uçları
 
 `GET /v1/motivasyon/kurumlar/{kurum_id}/benim` (rol `ogrenci`) ve `GET .../ogrenciler/{ogrenci_id}/ozet` (aynı gövde; öğrenci kendini, `sahip`/`yonetici` kurumdakini, `ogretmen` atama + grup üyeliği kopyalarıyla atandığı gruptakini görür, kapsam dışı 404; veli 403). Kurum yolu JWT'deki kurumla uyuşmazsa 403. Modül kapalıysa `403 modul_kapali`. Gizli rozetler kazanılana kadar yok. Şema: `packages/contracts/src/motivasyon/api.ts`.
+
+## Uygulama notları (paket M3: odak, haftanın yıldızı, karakter)
+
+Şemalar `packages/contracts/src/motivasyon/odak-karakter.ts`; kod `services/motivasyon/src/{odak,yildiz,karakter}*.ts`. Migration eklenmedi. Tüm uçlar `/v1/motivasyon/kurumlar/{kurum_id}/...` altındadır, yol kurumu JWT'deki kurumla uyuşmazsa 403; `oyunlastirma` kapalıysa (ya da kurum aktif değilse) 403 `modul_kapali`. İzin sözlüğünde yazma izni yoktur; karar rol + kapsamla verilir (sözlük değiştirilmedi).
+
+### Uçlar
+
+| Yöntem | Yol | Rol / kapsam | Açıklama |
+| --- | --- | --- | --- |
+| POST | `/odak-oturumlari` | öğrenci (kendi) | Başlat. `istemci_id` ile idempotent (201 yeni, 200 aynı oturum). Başka açık oturum varsa 409 `acik_oturum_var` (`details.oturum`) |
+| GET | `/odak-oturumlari/acik` | öğrenci | Devam eden oturum (`oturum: null` olabilir; 6 saati geçen sayılmaz) |
+| GET | `/odak-oturumlari?limit=` | öğrenci | Son oturumlar |
+| POST | `/odak-oturumlari/{istemci_id}/bitir` | öğrenci | `tamam`/`yarida`, isteğe bağlı `bitis_at`; tekrar bitirme etkisiz |
+| POST | `/haftanin-yildizlari` | öğretmen (atandığı grup), yönetici/sahip (kurum) | Yıldız ver; 409 `haftanin_yildizi_verilmis`, 409 `haftalik_limit_asildi`; kapsam dışı 404 |
+| GET | `/haftanin-yildizlari/verdiklerim` | öğretmen, yönetici, sahip | Bu haftaki yıldızlar, `limit`/`kalan` (yönetici için null) |
+| GET | `/ogrenciler/{id}/haftanin-yildizlari` | öğrenci kendi, öğretmen grup, yönetici kurum | Alınan yıldızlar |
+| GET | `/karakter/turler` | öğrenci | Tür ve aşama tanımları |
+| GET / POST | `/karakter` | öğrenci | Benim karakterim / ilk seçim (`tur_kodu`, `ad`) |
+| PATCH | `/karakter/tur`, `/karakter/ad` | öğrenci | Tür tek sefer (409 `tur_degistirme_hakki_yok`), ad sınırsız |
+| GET | `/karakter/kozmetikler` | öğrenci | Tüm kozmetikler, sahiplik, kuşanım, açılma koşulu (rozet adıyla) |
+| PUT / DELETE | `/karakter/kusanimlar/{slot}` | öğrenci | Kuşan / çıkar |
+
+### Odak kuralları
+
+- `mod`: `25_5` (25 dk), `50_10` (50 dk), `serbest` (`planlanan_dk` 5-180 zorunlu). Mod saklanmaz, yalnız `planlanan_dk` belirler.
+- `baslangic_at` (çevrimdışı başlatma) isteğe bağlı: gelecekte (2 dk sapma payı) ya da 24 saatten eski olamaz (422 `baslangic_gecersiz`).
+- Süre: `gerceklesen_sn = LEAST(bitis - baslangic, planlanan_dk*60 + 60, 10800)`. İstemcinin `bitis_at` değeri `[baslangic, şimdi]` aralığına **sıkıştırılır** (reddedilmez).
+- XP: `tamam` ya da `yarida` ve `gerceklesen_sn >= 60` ise `odak_oturumu` kuralı `floor(sn/60)` (`odak` tavanı 120). `kaynak_olay_id` = UUIDv5(`odak:{oturum_id}`). `odak_sn` aktivite sayacı (gün = bitiş zamanının günü) ve `toplam_odak_dk` + rozet değerlendirmesi XP tavanından bağımsız artar.
+- Kapanmış oturumu yeniden bitirmek hiçbir şeyi değiştirmez; yanıttaki `kazanim.xp` defterdeki toplamdır.
+- Aynı öğrenci için işlemler `ogrenciKilitle` ile sıralanır.
+- Altı saati geçen `devam` oturumlar worker işiyle (10 dakikada bir) ve yeni oturum başlatılırken `yarida` yapılır: `bitis_at = baslangic_at + planlanan_dk`, `gerceklesen_sn = 0` (doğrulanmamış süreye XP verilmez; şemadaki "yarida ve >= 60 sn" kuralı yalnız istemcinin bildirdiği bitişlere uygulanır).
+- `plan_gorev_id` yalnız saklanır; plan görevine "gerçekleşen" yazımı api'ye ayrıca gönderilir.
+
+### Haftanın yıldızı
+
+Hafta Pazartesi 04:00 (kurum saati). Öğretmen için sayım `pg_advisory_xact_lock(727004, öğretmen)` altında; öğrenci kilidi sonra alınır (sıra sabit). 50 XP `haftanin_yildizi` kuralı (tavandan muaf), `haftanin_yildizi` sayacı +1, rozet değerlendirmesi (`yildiz_bronz` gizli rozet; kozmetik `arka_plan_yildiz` açılır). Öğretmen yalnız aktif atandığı grupta aktif üye olan öğrenciye verir (`atama_kopyalari` + `grup_uyesi_kopyalari`, tarih aralıkları bugünü içermeli); yönetici/sahip grup üyeliğini doğrular, haftalık sınır uygulanmaz. Kapsam dışı ve bilinmeyen öğrenci aynı 404'tür. Olay yazılmaz.
+
+### Karakter
+
+- Aşama seçimde mevcut seviyeden hesaplanır; sonrasını XP işleyicisi evrimleştirir. Tür değişiminde aşama ve kuşanımlar korunur, `tur_degistirme_hakki` 0 olur.
+- Ad süzgeci (`karakter-ad.ts`): kırpılmış 1-24 karakter, yalnız harf/rakam/tek boşluk (aksi 422 `karakter_adi_uygunsuz`); küçük harfe, aksansız ASCII'ye ve leet rakamlara (0134 57 → oi ea st) indirgenmiş ad küçük bir yasaklı kelime listesiyle karşılaştırılır: 5 harften kısa kelimeler yalnız tam kelime (ya da boşluksuz birleşik adın tamamı), uzunlar alt dize olarak aranır. Liste yer tutucudur; moderasyonla genişletilir.
+- Kuşan: karakter seçilmemişse 422 `karakter_secilmemis`; sahip olunmayan (ya da bilinmeyen) kozmetik 422 `kozmetik_sahip_degil`; slot uyuşmazlığı 422 `kozmetik_slot_uyusmuyor`. Çıkarma boş slot için de başarılıdır.
+- `benim.karakter` zaten kuşanımları içerir (çekirdekte); `tur_degistirme_hakki` gibi ek alanlar `GET /karakter`'dedir.
+- Betik: `services/motivasyon/scripts/odak-karakter-akisi.sh`.
