@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 import type { Rol } from '@kopru/contracts';
 import {
@@ -160,6 +161,30 @@ export function mp3(sureSn: number): Buffer {
   kare.set([0xff, 0xf3, 0x10, 0xc0]);
   const adet = Math.ceil((sureSn * 22050) / 576);
   return Buffer.concat(Array.from({ length: adet }, () => kare));
+}
+
+/**
+ * Gercek Chrome `MediaRecorder` kayitlari (`fixtures/`): 440 Hz osilator, WebM/Opus 5 sn ve fMP4/AAC 3 sn
+ * (Safari'nin urettigi `audio/mp4` ile ayni kapsayici). Baslikta sure yoktur.
+ */
+export const chromeWebm = () =>
+  readFileSync(new URL('./fixtures/chrome-5sn.webm', import.meta.url));
+export const chromeM4a = () => readFileSync(new URL('./fixtures/chrome-3sn.m4a', import.meta.url));
+
+/**
+ * Chrome WebM kaydinin sonuna `sonMs` zamanli ek bir Cluster ekler (gercekte o kadar uzun kayit almadan
+ * 180 sn ustu senaryosu): bilinmeyen boyutlu Cluster + Timecode + tek Opus (CELT 20 ms) SimpleBlock.
+ */
+export function webmUzat(sonMs: number): Buffer {
+  const zaman = Buffer.alloc(4);
+  zaman.writeUInt32BE(sonMs);
+  const kume = Buffer.concat([
+    Buffer.from([0x1f, 0x43, 0xb6, 0x75, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
+    Buffer.from([0xe7, 0x84]),
+    zaman,
+    Buffer.from([0xa3, 0x85, 0x81, 0x00, 0x00, 0x80, 0xf8]),
+  ]);
+  return Buffer.concat([chromeWebm(), kume]);
 }
 
 // --- Yukleme akisi ---------------------------------------------------------------------------

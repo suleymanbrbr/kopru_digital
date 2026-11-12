@@ -1,10 +1,10 @@
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 
-import { jpegExifli, mp3, png } from '../test/yardimcilar.js';
+import { chromeM4a, chromeWebm, jpegExifli, mp3, png, webmUzat } from '../test/yardimcilar.js';
 import { gorselIsle } from './gorsel.js';
 import { icerikTuruTespit, mimeUyusuyor } from './icerik.js';
-import { sesSuresiSn } from './ses.js';
+import { oggOpusSuresi, sesSuresiSn, webmSuresi } from './ses.js';
 
 describe('icerik turu (bayt imzasi)', () => {
   it('JPEG, PNG ve MP3 taninir; metin taninmaz', async () => {
@@ -91,5 +91,49 @@ describe('ses suresi', () => {
   it('180 sn uzeri sure olculur', async () => {
     const sure = await sesSuresiSn(mp3(200), 'audio/mpeg');
     expect(sure).toBeGreaterThan(180);
+  });
+
+  it('Chrome MediaRecorder WebM/Opus (basliksiz sure) 5 sn olarak olculur (Chrome decodeAudioData: 4.92)', async () => {
+    const sure = await sesSuresiSn(chromeWebm(), 'audio/webm');
+    expect(sure).toBe(5);
+  });
+
+  it('WebM suresi ham olarak da dogru (5 sn kayit, 1 sn parca)', () => {
+    const sn = webmSuresi(chromeWebm());
+    expect(sn).toBeGreaterThan(4.7);
+    expect(sn).toBeLessThan(5.1);
+  });
+
+  it('180 sn ustu WebM olculur', async () => {
+    const sure = await sesSuresiSn(webmUzat(200_000), 'audio/webm');
+    expect(sure).toBe(200);
+  });
+
+  it('Safari tipi audio/mp4 (fMP4/AAC, Chrome kaydi) suresi okunur', async () => {
+    const sure = await sesSuresiSn(chromeM4a(), 'audio/mp4');
+    expect(sure).toBe(3);
+  });
+
+  it('WebM olmayan ya da bloksuz veri icin null', () => {
+    expect(webmSuresi(Buffer.from('merhaba dunya'))).toBeNull();
+    expect(webmSuresi(chromeWebm().subarray(0, 120))).toBeNull();
+  });
+
+  it('Ogg/Opus: son sayfa granule konumundan sure (sentetik sayfalar)', () => {
+    const sayfa = (granule: bigint, icerik: Buffer) => {
+      const bas = Buffer.alloc(27);
+      bas.write('OggS', 0, 'latin1');
+      bas.writeBigInt64LE(granule, 6);
+      return Buffer.concat([bas, icerik]);
+    };
+    const opusBas = Buffer.alloc(19);
+    opusBas.write('OpusHead', 0, 'latin1');
+    opusBas.writeUInt16LE(312, 10);
+    const ogg = Buffer.concat([
+      sayfa(0n, opusBas),
+      sayfa(BigInt(48000 * 5 + 312), Buffer.alloc(10)),
+    ]);
+    expect(oggOpusSuresi(ogg)).toBeCloseTo(5, 3);
+    expect(oggOpusSuresi(Buffer.from('OggSxxxx'))).toBeNull();
   });
 });
