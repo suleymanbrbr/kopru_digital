@@ -40,6 +40,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-dev-client',
     'expo-web-browser',
     [
+      'expo-audio',
+      {
+        microphonePermission:
+          'Köprü, öğretmen olarak sesli anlatım ve mini anlatım kaydetmek için mikrofonunu kullanır.',
+      },
+    ],
+    [
+      'expo-image-picker',
+      {
+        cameraPermission: 'Köprü, çözemediğin sorunun fotoğrafını çekmek için kamerayı kullanır.',
+        photosPermission:
+          'Köprü, galerinden soru ve çözüm fotoğrafı seçmen için fotoğraflarına erişir.',
+        microphonePermission: false,
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         image: './assets/ikon-on.png',
