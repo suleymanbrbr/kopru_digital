@@ -54,7 +54,10 @@ export function yetki(token: string) {
 }
 
 // --- Servis ----------------------------------------------------------------------------------
-export function testServisi(ek: Record<string, string> = {}): Service {
+export function testServisi(
+  ek: Record<string, string> = {},
+  options: { simdi?: () => Date } = {},
+): Service {
   const db = testDb();
   if (!db) throw new Error('testDb yok');
   const env = loadServiceEnv({
@@ -67,6 +70,7 @@ export function testServisi(ek: Record<string, string> = {}): Service {
   });
   return buildService(env, {
     verifyJwt: kullaniciDogrulayici,
+    ...(options.simdi ? { simdi: options.simdi } : {}),
   });
 }
 
