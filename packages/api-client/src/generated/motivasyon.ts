@@ -126,6 +126,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/motivasyon/kurumlar/{kurum_id}/benim/seri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin seri ekrani: son 35 gunun takvimi (gun basina durum), mevcut/en uzun seri, dondurma stogu, onarim hakki ve penceresi, bugun aktif mi ve hedefe ne kaldi, siradaki kilometre tasi. Modul kapaliysa 403 modul_kapali. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date */
+                            bugun: string;
+                            bugun_aktif: boolean;
+                            dondurma_stogu: number;
+                            en_uzun_seri: number;
+                            gunler: {
+                                bugun: boolean;
+                                /** @enum {string} */
+                                durum: "aktif" | "dondurma" | "duraklatma" | "onarim" | "kacirildi" | "yok";
+                                /** Format: date */
+                                gun: string;
+                            }[];
+                            hedefler: {
+                                esik: number;
+                                kalan: number;
+                                /** @enum {string} */
+                                tur: "plan_gorevi" | "odak_dk" | "odev" | "soru";
+                                yapilan: number;
+                            }[];
+                            mevcut_seri: number;
+                            onarim: {
+                                /** Format: date-time */
+                                bitis_at: string;
+                                /** Format: date */
+                                bozulan_gun: string;
+                                bozulan_seri: number;
+                                hedefler: {
+                                    esik: number;
+                                    kalan: number;
+                                    /** @enum {string} */
+                                    tur: "plan_gorevi" | "odak_dk" | "odev" | "soru";
+                                    yapilan: number;
+                                }[];
+                            } | null;
+                            onarim_hakki: number;
+                            sonraki_kilometre_tasi: {
+                                hedef: number;
+                                kalan: number;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/motivasyon/kurumlar/{kurum_id}/gruplar/{grup_id}/seri-duraklatmalari": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grubun seri duraklatmalari (iptal edilenler dahil, baslangica gore yeniden eskiye; en cok 100). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            duraklatmalar: {
+                                /** Format: date */
+                                baslangic_gun: string;
+                                /** Format: date */
+                                bitis_gun: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                neden: string | null;
+                                /** Format: uuid */
+                                veren_ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Grup icin seri duraklatmasi baslatir (ogretmen yalniz atandigi grup, yonetici/sahip kurumdaki grup). En cok 31 gun (baslangic ve bitis dahil), gecmis gun olamaz; cakisan aralik 409. Aralikta grubun etkin uyeleri icin gunler `duraklatma` olur: seri bozulmaz, dondurma harcanmaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        baslangic_gun: string;
+                        /** Format: date */
+                        bitis_gun: string;
+                        neden?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date */
+                            baslangic_gun: string;
+                            /** Format: date */
+                            bitis_gun: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            neden: string | null;
+                            /** Format: uuid */
+                            veren_ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/motivasyon/kurumlar/{kurum_id}/gruplar/{grup_id}/seri-duraklatmalari/{duraklatma_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Duraklatmayi iptal eder (yalniz henuz degerlendirilmemis gunler etkilenir; gecen gunler `duraklatma` kalir). Zaten iptalse 404. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duraklatma_id: string;
+                    grup_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date */
+                            baslangic_gun: string;
+                            /** Format: date */
+                            bitis_gun: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            grup_id: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            neden: string | null;
+                            /** Format: uuid */
+                            veren_ogretmen_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/motivasyon/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/ozet": {
         parameters: {
             query?: never;
