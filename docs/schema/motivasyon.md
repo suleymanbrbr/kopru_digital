@@ -230,7 +230,7 @@ Kurallar:
 - **Öğretmen duraklatması (grup bazlı):** bir grup için duraklatma aralığı varsa, o aralıktaki günlerde grubun etkin üyeleri için `duraklatma` yazılır; seri bozulmaz, dondurma harcanmaz.
 - Kilometre taşları: 3, 7, 14, 30, 60, 100, 365.
 Kısıtlar: `CHECK (mevcut_seri >= 0 AND en_uzun_seri >= mevcut_seri)`. İndeks: `UNIQUE (kurum_id, ogrenci_id)`, `(son_aktif_gun)` (gece işi taraması, `_sistem`).
-Olaylar: `motivasyon.seri.bozuldu.v1`, `motivasyon.seri.kilometre_tasi.v1`, `motivasyon.seri.risk.v1` (21:00 yerel, bugün henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler).
+Olaylar: `motivasyon.seri.bozuldu.v1`, `motivasyon.seri.kilometre_tasi.v1`, `motivasyon.seri.risk.v1` (20:00 yerel, `seri.risk_saati` ile değişir; bugün henüz `aktif` olmayan ve `mevcut_seri >= 3` öğrenciler).
 
 ### `motivasyon.seri_gunleri`
 
@@ -439,3 +439,30 @@ Ek sayaçlar: `toplam_yoklama` (rozeti yok; yoklama etkin duruma göre artar/aza
 ### Okuma uçları
 
 `GET /v1/motivasyon/kurumlar/{kurum_id}/benim` (rol `ogrenci`) ve `GET .../ogrenciler/{ogrenci_id}/ozet` (aynı gövde; öğrenci kendini, `sahip`/`yonetici` kurumdakini, `ogretmen` atama + grup üyeliği kopyalarıyla atandığı gruptakini görür, kapsam dışı 404; veli 403). Kurum yolu JWT'deki kurumla uyuşmazsa 403. Modül kapalıysa `403 modul_kapali`. Gizli rozetler kazanılana kadar yok. Şema: `packages/contracts/src/motivasyon/api.ts`.
+
+## Uygulama notları (paket M2, seri)
+
+Kod: `services/motivasyon/src/{seri,seri-isleri,seri-yollari,seri-komut}.ts`; API şemaları `packages/contracts/src/motivasyon/seri.ts`. Migration eklenmedi.
+
+### Algoritma
+
+- **Aktif gün:** aktivite sayacı artan olay (plan görevi tamam, ödev teslimi, "anladım"; odak paketi de `seriDegerlendir`'i çağırmalı) aynı işlemde `seriDegerlendir(tx, b)` çağırır. Gün (olayın `occurredAt`'inden, kurum saatiyle 04:00 kuralı) eşiklerden birini sağlıyorsa `seri_gunleri`ne `aktif` yazılır (`ON CONFLICT`: yalnız `kacirildi` yükselir), `toplam_aktif_gun` +1, seri yeniden türetilir. Geç eşlenen geçmiş gün doğru güne yazılır. Seri satırı ilk aktif günde açılır (`dondurma_son_hafta`/`onarim_son_ay` o dönemdir: ilk dondurma sonraki Pazartesi gelir).
+- **Türetme** (`zincirOlc`): kaydı olan günlerde `kacirildi` dışındakilerin ardışık adası; en son kayıtlı günde biten ada sayılır (`aktif`/`onarim` sayılır, `dondurma`/`duraklatma` zinciri korur). Kaydı olmayan gün zinciri kırar; değerlendirilmemiş son günler kırmaz. `en_uzun_seri` azalmaz. Bozulma bilgisi (`bozulan_*`, `onarim_bitis_at`) kaçırılan gün artık `kacirildi` değilse temizlenir.
+- **Kilometre taşı:** ulaşılan en yüksek taş `ogrenci_sayaclari['seri_kilometre_tasi']`'nda; yalnız ondan büyük yeni taşlar için olay (seri bozulup yeniden 3 olsa da tekrar yok). `en_uzun_seri` rozet sayacı ve kozmetikler güncellenir.
+- **Gece işi** (`seriGeceIsi`, worker 5 dakikada bir; kurum saatiyle 04:10'dan sonra): `seri > 0` olan öğrencinin kaydı olmayan günlerini (son 60 gün) eskiden yeniye değerlendirir. Her gün için önce hak yenileme (o günü izleyen günün Pazartesi tahakkuku, ayın ilk günü onarım hakkı; `dondurma_son_hafta`/`onarim_son_ay` ile idempotent, kaçırılan hafta kadar birikir, en çok 2), sonra: eşik sağlanmışsa `aktif` → önceki zincir 0 ise kayıt açılmaz → grup duraklatması / kapalı modül / askıdaki kurum ise `duraklatma` → dondurma stoğu varsa `dondurma` → ertesi gün zaten 2 kat hedefse doğrudan `onarim` → aksi halde `kacirildi` + `bozuldu` olayı (yalnız seri > 0 iken, tek kez). Öğrenci başına ayrı işlem ve `ogrenciKilitle`: iki worker aynı anda çalışsa da tek sonuç. Etkin olmayan üyelik kopyası (rol ≠ öğrenci ya da durum ≠ aktif) atlanır.
+- **Onarım:** kaçırılan günü izleyen gün (`bozulan_gun + 1`; pencere gün ile ölçülür, çevrimdışı geç eşlenen iş de kabul) aktivite 2 kat hedefe ulaşırsa kaçırılan gün `onarim`, hak 0.
+- **Risk işi** (`seriRiskIsi`, 5 dakikada bir): kurum saatinde `seri.risk_saati` (varsayılan **20**, 4–23; `motivasyon_ayarlari`'nda satır yoksa kodun varsayılanı) ile ertesi 04:00 arası; `mevcut_seri >= 3`, bugün `aktif` değil, duraklatma/kapalı modül yok. Gün başına bir kez: `ogrenci_sayaclari['seri_risk_gun']` o günün numarasını (1970-01-01'den gün) tutar, ilk yazan olayı üretir.
+- **Uçlar:** `GET .../benim/seri`; `POST/GET /v1/motivasyon/kurumlar/{kurum_id}/gruplar/{grup_id}/seri-duraklatmalari`, `DELETE .../{duraklatma_id}`. Duraklatma izni sözlükte olmadığından `oyunlastirma.oku` kapsamından türetildi: kurum kapsamı (sahip/yönetici) her grup, grup kapsamı (öğretmen) yalnız `atama_kopyalari`'nda aktif atandığı grup; öğrenci/veli 403. Başlangıç geçmiş gün olamaz (422), en çok 31 gün (422), çakışma 409, zaten iptalse DELETE 404. İptal yalnız henüz değerlendirilmemiş günleri etkiler.
+
+### Şemadan sapmalar ve kararlar
+
+- Risk saati 21:00 yerine şartnamedeki **20:00**, `seri.risk_saati` ile değişir (şema ve `olaylar.md` güncellendi).
+- Seri 0 iken (korunacak zincir yok) gün kaydı açılmaz ve dondurma harcanmaz; takvimde `yok` görünür.
+- Kapalı modül/askıdaki kurum günleri `duraklatma` yazılır (yeniden açılınca geçmiş gün cezası olmasın).
+- `dondurma`/`duraklatma` günü sonradan `aktif` olmaz (şema kuralı); o gün sayılmaz.
+- Dev/test: `tsx src/seri-komut.ts gece|risk <ISO>` işi verilen anda çalıştırır (`NODE_ENV=production`'da reddeder).
+
+### Bilinen eksikler
+
+- Kesinti sonrası boşluk taraması 60 günle sınırlı; gece işi adayları son 3 gündeki boşluklarla seçilir.
+- Odak paketi `seriDegerlendir`'i `odak_sn` güncellemesinden sonra çağırmalıdır; çağırmazsa gece işi eşiği sağlayan günü yine `aktif` yazar (kilometre taşı/rozet gecikir).
