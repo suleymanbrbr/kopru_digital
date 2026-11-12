@@ -1400,13 +1400,13 @@ Kurum başına kota ve sınırlar. Profil: `KS` (kurum başına tek satır). RLS
 
 | Sütun | Tip | Null | Varsayılan | Not |
 | --- | --- | --- | --- | --- |
-| `aylik_soru_limiti` | int | evet | 30 | NULL = sınırsız. Plan limitiyle `LEAST` alınır. |
-| `gunluk_soru_limiti` | int | evet | 5 | NULL = sınırsız |
+| `aylik_soru_limiti` | int | evet | NULL | NULL = sınırsız (proje sahibi kararı: varsayılan aylık sınır yok). Plan limitiyle `LEAST` alınır (abonelik bloğu; kanca `planAylikUstSiniri`). |
+| `gunluk_soru_limiti` | int | evet | 3 | NULL = sınırsız. Proje sahibi kararı: günde 3 soru. |
 | `soru_basina_takip_limiti` | smallint | hayır | 3 | Öğrencinin takip sorusu sayısı |
-| `ses_azami_sn` | smallint | hayır | 120 | |
+| `ses_azami_sn` | smallint | hayır | 180 | Şartname 3 dk; CHECK 10–180. |
 | `foto_saklama_gun` | smallint | hayır | 30 | Çözüldükten sonra fotoğraf silinme süresi (30 sabit hedef, değiştirme yalnızca yönetici) |
 
-`UNIQUE (kurum_id)`. Satır yoksa varsayılanlar. Olaylar: yok.
+`UNIQUE (kurum_id)`. Satır yoksa varsayılanlar. Değiştirme: `soru.yonet` (sahip/yönetici). Olaylar: yok.
 
 #### `ogrenme.sorular`
 
@@ -1433,11 +1433,12 @@ Profil: `KS`. RLS: evet.
 
 Kısıtlar: `CHECK ((durum = 'cozuldu') = (cozuldu_at IS NOT NULL) OR durum = 'kapandi')`, `CHECK (yonlendirme <> 'atanan_ogretmen' OR atanan_ogretmen_id IS NOT NULL)`, `CHECK (yonlendirme <> 'masa' OR masa_id IS NOT NULL)`, `UNIQUE (kurum_id, id)`. Durum geçişleri: `acik` -> `cevaplandi` (öğretmen cevabı) -> `takip_bekliyor` (öğrenci takip sorusu) -> `cevaplandi` ...; `cevaplandi` -> `cozuldu`; `cozuldu` -> `takip_bekliyor` (yeniden açma, `foto_silinme_at` temizlenir, olay `soru.yeniden_acildi`). Fotoğrafın süresi dolmuşsa (`silindi`) yeniden açma metinle devam eder.
 İndeks: `(kurum_id, ogrenci_id, son_hareket_at DESC)`, `(kurum_id, atanan_ogretmen_id, durum)`, `(kurum_id, masa_id, durum)`, `(kurum_id, durum, son_hareket_at)`.
+Eklenen sütunlar (şemada yoktu): `istek_id uuid NULL` + `UNIQUE (kurum_id, istek_id)` (soru oluşturmada istemci yeniden denemesi; aynı `istek_id` önceki soruyu döndürür, kota harcanmaz), `ilk_cevap_at`, `ilk_cevaplayan_id` (cevap süresi ölçümü ve tahmini süre; ilk `cevap` mesajında yazılır), `cozuldu_kaynagi` (`ogrenci` | `otomatik`; "anladım oranı" ölçümü). `kota_donemi` ayın ilk günüdür (kurum yerel saat dilimi).
 Olaylar: `ogrenme.soru.sorildi.v1`, `ogrenme.soru.cozuldu.v1`, `ogrenme.soru.yeniden_acildi.v1`.
 
 #### `ogrenme.soru_dosyalari`
 
-Sorunun fotoğrafları. Profil: `K`. RLS: evet. Sütunlar: `soru_id uuid NOT NULL`, `medya_dosya_id uuid NOT NULL`, `sira smallint NOT NULL DEFAULT 0`. `UNIQUE (soru_id, medya_dosya_id)`. En çok 4 fotoğraf. Dosya sahibi sorunun öğrencisidir. Olaylar: `ortak.dosya.baglandi.v1`.
+Sorunun fotoğrafları. Profil: `K`. RLS: evet. Sütunlar: `soru_id uuid NOT NULL`, `medya_dosya_id uuid NOT NULL`, `sira smallint NOT NULL DEFAULT 0`. `UNIQUE (soru_id, medya_dosya_id)`, `UNIQUE (soru_id, sira)`, `UNIQUE (medya_dosya_id)` (bir dosya tek kayda bağlanır). En çok **3** fotoğraf (şartname; `sira` CHECK 0–2; önceki "4" kaldırıldı). Dosya sahibi sorunun öğrencisidir. Olaylar: `ortak.dosya.baglandi.v1`.
 
 #### `ogrenme.soru_mesajlari`
 
@@ -1454,7 +1455,8 @@ Profil: `K`. RLS: evet.
 | `metin` | text | evet | | ≤ 4000 |
 | `sira` | int | hayır | | Soru içi artan sıra |
 
-Kısıtlar: `UNIQUE (soru_id, sira)`, `CHECK (metin IS NOT NULL OR tur = 'cevap')` (cevap yalnızca ekten oluşabilir; ek varlığı uygulamada doğrulanır). İndeks: `(kurum_id, soru_id, sira)`.
+Kısıtlar: `UNIQUE (soru_id, sira)`, `CHECK (metin IS NOT NULL OR tur IN ('soru','cevap'))` (cevap yalnızca ekten ya da "derste konuşalım"dan oluşabilir; ilk soru metinsiz olabilir, en az 1 fotoğraf uygulamada zorunlu: şemadaki "yalnız cevap" gevşetildi), `UNIQUE (kurum_id, istek_id)`, `CHECK (NOT derste_konusalim OR tur = 'cevap')`.
+Eklenen sütunlar: `derste_konusalim boolean NOT NULL DEFAULT false` ("derste konuşalım" cevabı), `istek_id uuid NULL` (istemci yeniden denemesi; takip ve cevap mesajlarında). İndeks: `(kurum_id, soru_id, sira)`.
 Olaylar: `ogrenme.soru_mesaji.eklendi.v1`.
 
 #### `ogrenme.soru_mesaj_ekleri`
@@ -1470,10 +1472,18 @@ Profil: `K`. RLS: evet.
 | `medya_dosya_id` | uuid | hayır | | `cizimli_fotograf` için düzleştirilmiş görsel |
 | `kaynak_dosya_id` | uuid | evet | | `cizimli_fotograf`: üzerine çizilen özgün fotoğraf (`soru_dosyalari.medya_dosya_id`) |
 | `cizim_verisi` | jsonb | evet | | Vektör çizgi verisi (yeniden düzenleme için), ≤ 256 KB |
-| `sure_sn` | smallint | evet | | `ses` için, CHECK `<= 120` |
+| `sure_sn` | smallint | evet | | `ses` için, CHECK `1–180` (şartname 3 dk; önceki 120 kaldırıldı) |
 | `sira` | smallint | hayır | 0 | |
 
-Kısıtlar: `CHECK (tur <> 'cizimli_fotograf' OR kaynak_dosya_id IS NOT NULL)`, `CHECK (tur <> 'ses' OR sure_sn IS NOT NULL)`, `UNIQUE (mesaj_id, medya_dosya_id)`. Bir mesajda en çok 4 ek. Olaylar: `ortak.dosya.baglandi.v1`.
+Kısıtlar: `CHECK (tur <> 'cizimli_fotograf' OR kaynak_dosya_id IS NOT NULL)`, `CHECK (tur <> 'ses' OR sure_sn IS NOT NULL)`, `UNIQUE (mesaj_id, medya_dosya_id)`, `UNIQUE (medya_dosya_id)`, `UNIQUE (mesaj_id, sira)`, `CHECK (cizim_verisi IS NULL OR octet_length(cizim_verisi::text) <= 262144)`. Bir mesajda en çok 4 ek (`sira` CHECK 0–3). Olaylar: `ortak.dosya.baglandi.v1`.
+
+#### `ogrenme.soru_ogretmen_durumlari` (şemaya eklendi)
+
+Öğretmenin "müsait / bugün cevap veremiyorum" durumu. Profil: `K`. RLS: evet. Sütunlar: `ogretmen_id uuid NOT NULL`, `musait_degil_tarihi date NULL` (kurum yerel günü; o gün geçince kendiliğinden geçersiz, temizleme işi gerekmez; NULL = müsait). `UNIQUE (kurum_id, ogretmen_id)`. Gerekçe: şartname "Öğretmen durumu" maddesi; tahmini cevap yanıtında `hedef_musait` buradan gelir. Olaylar: yok.
+
+#### `ogrenme.soru_bildirimleri` (şemaya eklendi)
+
+Uygunsuz içerik bildirimi (şartname: "yönetici yazışmaları görüntüleyebilir; uygunsuz içerik bildirimi"). Profil: `KS`. RLS: evet. Sütunlar: `soru_id`, `mesaj_id NULL`, `bildiren_id`, `neden` (`uygunsuz`,`kisisel_bilgi`,`diger`), `aciklama` (≤ 500, serbest metin: olaya girmez), `durum` (`acik`,`kapandi`), `kapatan_id`, `kapandi_at`, `kapatma_notu`. Kısmi `UNIQUE (soru_id, bildiren_id) WHERE durum = 'acik'`. Olaylar: yok (Faz 1'de tüketicisi yok).
 
 #### `ogrenme.soru_kota_sayaclari`
 
@@ -1487,6 +1497,33 @@ Profil: `K`. RLS: evet. PK: `(ogrenci_id, donem_turu, donem)` (UUID `id` yok).
 | `donem_turu` | text | hayır | | CHECK `IN ('gun','ay')` |
 | `donem` | date | hayır | | Yerel gün ya da ayın ilk günü |
 | `kullanilan` | int | hayır | 0 | CHECK `>= 0` |
+
+Ek sütunlar: `kurum_id` (RLS), `created_at`, `updated_at`. Atomik artırım: `INSERT .. ON CONFLICT (ogrenci_id, donem_turu, donem) DO UPDATE SET kullanilan = kullanilan + 1 WHERE limit IS NULL OR kullanilan < limit RETURNING` — satırı kilitler, eşzamanlı isteklerde limit aşılamaz; soruyla aynı işlemde (soru yazılamazsa hak geri döner). Hem `gun` hem `ay` sayacı artar. 400 günden eski sayaçlar worker işiyle silinir.
+
+#### Soru sor uçları ve kararlar
+
+Yol öneki `/v1/ogrenme/kurumlar/:kurum_id`. `soru_sor` modülü kapalıyken (kurum, kademe ya da öğrencinin grupları düzeyinde) 403 `modul_kapali`.
+
+| Uç | Yetki | Not |
+| --- | --- | --- |
+| `POST /sorular` | `soru.sor` (yalnız öğrenci) | Önce medya'ya yükle; dosyalar `hazir` olunca çağır. Branş+konu doğrulanır, yönlendirme ve kota aynı işlemde. 201 (yinelemede 200, `tekrar: true`). 429 `kota_asildi` (`details.kota`). 409 `dosya_hazir_degil`: istemci yeniden dener. Yanıtta `kota` ve `tahmini_cevap`. |
+| `GET /sorularim`, `GET /soru-kotam` | `soru.sor` | Arşiv (branş, konu, durum, Türkçe harf duyarsız `q`; imleç); kalan hak. |
+| `GET /sorular/:id` | `soru.sor`/`soru.cevapla`/`soru.yonet` | Ek adresleri medya'dan (10 dk). Öğrenci kendi; öğretmen yönlenen/üstlenen/cevaplayan/masası; yönetim hepsi; aksi 404. |
+| `POST /sorular/:id/anladim`, `/takip`, `/bildir` | `soru.sor` (`bildir`: herkes) | `anladim`: `cozuldu` + olay. `takip`: `takip_bekliyor`; çözülmüşse yeniden açar. |
+| `GET /gelen-sorular[/sayi]`, `GET /cevapladigim-sorular` | `soru.cevapla` | Kuyruk en eski önce. |
+| `POST /sorular/:id/cevap` | `soru.cevapla` | Metin ve/veya ek (≤ 4) ya da `derste_konusalim`. Masada ilk cevaplayan `ustlenen_id`; sonra 409 `masa_ustlenildi` (sahip/yönetici hariç). |
+| `GET/PUT /soru-musaitligim` | `soru.cevapla` | "Bugün cevap veremiyorum". |
+| `GET/POST/PATCH/DELETE /soru-masalari[/:id]`, `POST/DELETE /soru-masalari/:id/uyeler[/:ogretmen_id]` | `soru.yonet` | Masa CRUD (DELETE = arşiv). |
+| `GET/PUT /soru-ayarlari` | `soru.yonet` | Kota vb. |
+| `GET /yonetim/sorular`, `GET /soru-bildirimleri`, `POST /soru-bildirimleri/:id/kapat`, `GET /soru-olcum` | `soru.yonet` | Tüm yazışmalar, bildirimler, ölçüm. |
+
+**Yönlendirme:** öğrencinin etkin üyesi olduğu gruplardaki etkin (bitişsiz, etkin üyelikli) atama: `ana_ogretmen` öncelikli, sonra en eski atama; yoksa branşın aktif ve etkin üyesi olan masası; yoksa yönetici kuyruğu. Branş, öğrencinin gruplarında atanmış (geçmiş atama dahil) ya da masası olan bir branş olmalı, yoksa 422 `brans_gecersiz`; **bireysel kurumda** (solo hoca atama akışı henüz yok) her branş kabul edilir ve yönetici (sahip) kuyruğuna düşer. Sahip/yönetici kendi kuyruğunda yönetici kuyruğunu da görür.
+
+**Tahmini cevap süresi:** hedefin (atanan öğretmen, masa ya da yönetici kuyruğu) son 30 günde `ilk_cevap_at - created_at` medyanı; 3'ten az örnek varsa `null`. `hedef_musait: false`: hedef(ler) bugün cevap veremiyorum demiş.
+
+**Dosya bağlama:** kopyada aynı kurum, sahibi çağıran kullanıcı, tür uygun (öğrenci: `soru_fotografi`, `soru_cizim`; personel: `soru_cevap_fotografi`, `soru_cizim`, `soru_ses`), `durum='hazir'`, başka kayda bağlı değil. Kopya yok/hazır değil 409 `dosya_hazir_degil`; `islenemedi` 422 `dosya_islenemedi`; sahip/tür uyumsuz 422 `dosya_gecersiz`; zaten bağlı 409 `dosya_zaten_bagli`; `cizimli_fotograf` kaynağı aynı sorunun fotoğrafı değilse 422 `kaynak_dosya_gecersiz`. Satırlar `FOR UPDATE` ile kilitlenir; her dosya için aynı işlemde `ortak.dosya.baglandi.v1`.
+
+**Worker işleri:** 7 gündür `cevaplandi` ve takipsiz soru otomatik `cozuldu` (`cozuldu_kaynagi='otomatik'`, `soru.cozuldu.v1`); 400 günden eski kota sayaçları silinir; `processed_events` günlük temizlenir. Medya dosya kopyası `api.medya` tüketicisiyle (uygulama rolü, RLS) doldurulur.
 
 Artırım: `INSERT ... VALUES (..., 1) ON CONFLICT (ogrenci_id, donem_turu, donem) DO UPDATE SET kullanilan = soru_kota_sayaclari.kullanilan + 1 WHERE soru_kota_sayaclari.kullanilan < :limit RETURNING kullanilan`. Dönen satır yoksa `429 kota_asildi` (soru yazılmaz). Gün ve ay sayaçları aynı işlemde artırılır; biri aşılırsa işlem geri alınır. Soru oluşturma ile sayaç aynı `tx`tedir. Sorunun sonradan silinmesi/kapanması sayacı azaltmaz. Takip soruları kotaya girmez, `soru_basina_takip_limiti` ile sınırlıdır. Eski dönemler 400 gün sonra silinir. Olaylar: yok.
 

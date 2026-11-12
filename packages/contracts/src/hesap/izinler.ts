@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 6;
+export const IZIN_SOZLUGU_SURUMU = 7;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -70,6 +70,11 @@ export const IZINLER = {
   'deneme.yaz': { modul: 'deneme', aciklama: 'Deneme sonucu girme' },
   'soru.sor': { modul: 'soru_sor', aciklama: 'Soru sorma' },
   'soru.cevapla': { modul: 'soru_sor', aciklama: 'Soruları cevaplama' },
+  'soru.yonet': {
+    modul: 'soru_sor',
+    aciklama:
+      'Soru masaları, kota ayarları, kurumdaki tüm soru yazışmaları, uygunsuz içerik bildirimleri ve ölçüm',
+  },
   'oyunlastirma.oku': { modul: 'oyunlastirma', aciklama: 'XP, seri ve rozetleri görme' },
   'duyuru.oku': { modul: 'duyuru', aciklama: 'Duyuruları görme' },
   'duyuru.yaz': { modul: 'duyuru', aciklama: 'Duyuru yazma' },

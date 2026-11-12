@@ -203,7 +203,7 @@ Solo hoca hem sahip hem öğretmen rolündedir ve kurum menülerini (şube, kade
 - Soru yönlendirme: öğrencinin o branştaki atanmış öğretmeni; kurumda isteğe bağlı branş soru masası (ilk üstlenen cevaplar).
 - Cevap türleri: metin, fotoğraf, fotoğraf üzerine çizim, ses. Çizim + ses birlikte “mini anlatım” olarak oynatılır.
 - Öğrenci tepkisi: “anladım” / “hala anlamadım” + takip sorusu (aynı başlıkta).
-- Kota: öğrenci başına günlük ve haftalık limit (öğretmen/kurum ayarı), plan üst sınırı.
+- Kota: öğrenci başına günlük (varsayılan 3) ve isteğe bağlı aylık limit (kurum ayarı), plan üst sınırı. Takip sorusu kotaya girmez.
 - Öğretmen durumu: “müsait / bugün cevap veremiyorum”; tahmini cevap süresi geçmiş ortalamadan hesaplanır.
 - Kuyruk: filtre (branş, öğrenci, en eski), öğretmenin cevapladığı soru arşivi.
 - Öğrencinin kendi soru arşivi (ders ve konuya göre, aranabilir).
@@ -471,7 +471,7 @@ Karakter çizimi ve animasyonu dış kaynakla paralel yürür; geliştirme süre
 
 - [ ] Ürün adı (TakipHocam kullanılamaz).
 - [ ] Karakter çizimi ve animasyonu için bütçe aralığı; illustratör ve animatörden teklif alayım mı?
-- [ ] Öğrencinin günlük soru sorma limiti varsayılanı (önerim: günde 5, haftada 20; hoca değiştirebilir).
+- [x] Öğrencinin günlük soru sorma limiti varsayılanı. **Karar: günde 3 soru**; haftalık/aylık varsayılan sınır yok (aylık sınır boş = sınırsız). Kurum (sahip/yönetici; solo hoca sahiptir) değiştirebilir; abonelik plan üst sınırı `LEAST` ile uygulanır (abonelik bloğunda).
 - [ ] Öğrenci kendi deneme sonucunu girebilsin mi (öğretmen onayıyla)? Önerim: evet.
 - [ ] Kurumda öğretmen kendi grubunu oluşturabilsin mi, yoksa yalnız yönetici mi? Önerim: kurum ayarı, varsayılan evet.
 - [ ] Öğrenci kalan ders sayısını görsün mü? Önerim: evet, kurum kapatabilsin.
