@@ -111,7 +111,10 @@ describe.skipIf(!dbUrl || !natsUrl)('idempotent olay tuketicisi (gercek NATS + P
       tuketici: ad,
       olaylar,
       processedEventsTablosu: `${schema}.processed_events`,
-      // Paylasilan stream'de baska testlerin olaylari da gorunebilir; yalnizca bu testin kurumu islenir.
+      // Paylasilan `EVENTS` stream'inde yerel betiklerin/servislerin gercek olaylari durabilir (7 gun);
+      // test consumer'i yalniz kendinden sonra yayimlananlari gorur. Ayni anda kosan baska testlerin
+      // olaylari yine gorunebilir; yalnizca bu testin kurumu islenir.
+      baslangic: 'yeni',
       isle: async (tx, olay, baglam) => {
         if (olay.kurumId !== kurumId) return;
         await isle(tx, olay, baglam);

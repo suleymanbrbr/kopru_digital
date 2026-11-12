@@ -105,6 +105,13 @@ export interface TuketiciSecenekleri<TOlaylar extends readonly EventDefinition[]
   yenidenDeneGecikmeleriMs?: readonly number[];
   /** Varsayilan `ortak.processed_events`. */
   processedEventsTablosu?: string;
+  /**
+   * Consumer ilk kez olusturulurken nereden baslanacagi. `hepsi` (varsayilan): stream'de kalan tum
+   * olaylar (yeni servis gecmisi yakalar). `yeni`: yalniz olusturulduktan sonra yayimlananlar; paylasilan
+   * `EVENTS` stream'inde baska sureclerin olaylarini gormemesi gereken testler icindir. Var olan
+   * consumer'da etkisizdir (NATS `deliver_policy` sonradan degistirilemez).
+   */
+  baslangic?: 'hepsi' | 'yeni';
 }
 
 export interface Tuketici {
@@ -210,7 +217,7 @@ export async function startConsumer<const TOlaylar extends readonly EventDefinit
       ...guncellenebilir,
       durable_name: ad,
       ack_policy: AckPolicy.Explicit,
-      deliver_policy: DeliverPolicy.All,
+      deliver_policy: options.baslangic === 'yeni' ? DeliverPolicy.New : DeliverPolicy.All,
     });
   }
 
