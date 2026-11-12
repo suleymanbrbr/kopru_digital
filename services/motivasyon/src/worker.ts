@@ -1,9 +1,61 @@
-import { runWorker, startTelemetry } from '@kopru/service-kit';
+import { createDb, runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
+import { gunlukTemizlik, haftalikSifirla } from './isler.js';
+import { tuketicileriBaslat } from './tuketiciler.js';
+import { istanbulSaati, periyodikIs } from './zamanlayici.js';
 
 const env = loadServiceEnv();
 const telemetry = startTelemetry(`${serviceName}-worker`, env.OTEL_EXPORTER_OTLP_ENDPOINT);
 
-// Ayri surec: isler / olay tuketicileri buraya `setup` ile eklenir.
-await runWorker({ name: serviceName, env, onClose: telemetry.shutdown });
+const DAKIKA = 60_000;
+
+// Ayri surec. Outbox relay ve isler `motivasyon_sistem` (BYPASSRLS) baglantisiyla calisir (ADR 0003);
+// olay tuketicileri `motivasyon_app` (RLS'e tabi) ile `kiraci: 'olaydan'` calisir.
+await runWorker({
+  name: serviceName,
+  env: { ...env, DATABASE_URL: env.DATABASE_SISTEM_URL ?? env.DATABASE_URL },
+  outboxTable: 'ortak.outbox',
+  setup: async ({ db, nats, log }) => {
+    const temizleyiciler: (() => Promise<void>)[] = [];
+    if (!db) {
+      log.info('motivasyon işleri devre dışı (veritabanı yok)');
+      return undefined;
+    }
+
+    if (nats && env.DATABASE_URL) {
+      const appDb = createDb({ url: env.DATABASE_URL, max: env.DATABASE_POOL_MAX });
+      const tuketiciler = await tuketicileriBaslat({ nats, db: appDb, log });
+      temizleyiciler.push(async () => {
+        await Promise.all(tuketiciler.map((t) => t.stop()));
+        await appDb.close();
+      });
+    }
+
+    // Haftalik bu_hafta_xp sifirlama: her kurumun Pazartesi 04:00'ini gecince; idempotent, sik kontrol.
+    temizleyiciler.push(
+      periyodikIs('haftalik-sifirlama', env.HAFTALIK_ARALIK_MS, log, async () => {
+        const n = await haftalikSifirla({ db });
+        if (n > 0) log.info({ satir: n }, 'bu_hafta_xp sıfırlandı');
+      }),
+    );
+    temizleyiciler.push(
+      periyodikIs(
+        'gunluk-temizlik',
+        60 * DAKIKA,
+        log,
+        async () => {
+          if (istanbulSaati().saat !== 4) return;
+          const silinen = await gunlukTemizlik({ db });
+          if (silinen > 0) log.info({ silinen }, 'eski processed_events silindi');
+        },
+        { hemenCalistirma: false },
+      ),
+    );
+
+    return async () => {
+      for (const t of temizleyiciler.reverse()) await t();
+    };
+  },
+  onClose: telemetry.shutdown,
+});

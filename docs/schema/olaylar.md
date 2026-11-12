@@ -73,8 +73,6 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | `ogrenme.odev.teslim_edildi.v1` | K | Öğrenci teslim edince (yeniden teslimde tekrar). Özne: `ogrenci_odevi`. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `veren_id`, `brans_kodu`, `yapilan_soru_sayisi`, `dosya_sayisi`, `gec_teslim`, `yeniden_teslim` (bool) | `motivasyon`, `bildirim` |
 | `ogrenme.odev.incelendi.v1` | K | Öğretmen inceleyince. | `ogrenci_odev_id`, `odev_id`, `ogrenci_id`, `inceleyen_id`, `brans_kodu`, `inceleme_sonucu` (`tamam`,`eksik`,`tekrar`) | `motivasyon`, `bildirim` |
 | `ogrenme.plan_gorevi.guncellendi.v1` | K | Görevin `gerceklesen_miktar`ı veya durumu değişince (öğrenci girişi, öğretmenin hedefi değiştirip durumun yeniden hesaplanması, devretme: eski görev `devredildi`). Aynı değer tekrar yazılırsa olay yok. Ad, telefon, e-posta, başlık ve not yük dışıdır. | `gorev_id`, `plan_id`, `ogrenci_id`, `hafta_baslangic`, `gun`, `brans_kodu`, `hedef_turu`, `hedef_miktar`, `gerceklesen_miktar`, `onceki_gerceklesen_miktar`, `durum`, `onceki_durum` | `motivasyon` |
-| `ogrenme.deneme.girildi.v1` | K | Deneme sonucu kaydedilince. | `deneme_id`, `ogrenci_id`, `kural_kodu`, `sinav_tarihi`, `toplam_net` | `motivasyon` |
-| `ogrenme.plan_gorevi.guncellendi.v1` | K | Görevin `gerceklesen_miktar`ı veya durumu değişince. | `gorev_id`, `plan_id`, `ogrenci_id`, `hafta_baslangic`, `gun`, `brans_kodu`, `hedef_turu`, `hedef_miktar`, `gerceklesen_miktar`, `onceki_gerceklesen_miktar`, `durum`, `onceki_durum` | `motivasyon` |
 | `ogrenme.deneme.girildi.v1` | K | Yalnız **onaylanmış** sonuçta: öğretmen/yönetici girişinde kayıt anında, öğrenci girişinde öğretmen onayı anında. Düzeltmede tekrarlanmaz. Ad, telefon, e-posta, deneme adı ve not yoktur. | `deneme_id`, `ogrenci_id`, `kural_kodu`, `sinav_tarihi`, `toplam_net` | `motivasyon` |
 | `ogrenme.soru.sorildi.v1` | K | Soru oluşturulunca. | `soru_id`, `ogrenci_id`, `brans_kodu`, `yonlendirme`, `atanan_ogretmen_id`, `masa_id`, `hedef_ogretmen_idleri[]` | `bildirim`, `motivasyon` |
 | `ogrenme.soru_mesaji.eklendi.v1` | K | Cevap veya takip sorusu eklenince (alıcı: cevapta öğrenci; takipte masada üstlenen varsa yalnız o, yoksa hedef öğretmenler). Metin ve başlık yükte yoktur. Özne: `soru`. | `soru_id`, `mesaj_id`, `tur` (`cevap`,`takip`), `yazar_id`, `ogrenci_id`, `alici_idleri[]` | `bildirim` |
@@ -108,6 +106,10 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | `motivasyon.seri.kilometre_tasi.v1` | K | Seri 3, 7, 14, 30, 60, 100, 365'e ulaşınca. | `ogrenci_id`, `seri` | `bildirim` |
 | `motivasyon.rozet.kazanildi.v1` | K | Yeni rozet kazanılınca (ilk eklemede). | `ogrenci_id`, `rozet_kodu`, `kazanildi_at` | `bildirim` |
 | `motivasyon.karakter.evrildi.v1` | K | Karakter aşaması yükselince. | `ogrenci_id`, `tur_kodu`, `eski_asama`, `yeni_asama` | `bildirim` |
+
+> **Uygulama notu (motivasyon olayları).** Altı olayın Zod tanımları `packages/contracts/src/motivasyon/olaylar.ts` içindedir (`packages/contracts/src/motivasyon/olaylar.test.ts` kişisel veri alanlarını denetler; karakter adı, rozet adı gibi görünen adlar yükte yoktur). `seviye.atladi`, `rozet.kazanildi` ve `karakter.evrildi` `motivasyon.xp` tüketicisinden, ilgili XP/sayaç işlemiyle aynı işlemde outbox'a (`ortak.outbox`) yazılır; çoklu seviye atlayışı tek olaydır (`eski_seviye` → `yeni_seviye`). `seri.*` olaylarını seri paketi yayımlar (sözleşmeleri hazır). `seri.bozuldu.onarim_son_gun` onarılamazsa `null` olabilir.
+>
+> **Kopya sıralaması.** Olay zarfında `ozne_surumu` yoktur; `motivasyon.kopya` eski olayı `(occurredAt, olay id)` ikilisiyle ayıklar (eşit zamanda büyük UUIDv7 kazanır), aynı durumun yeniden yayımı upsert olarak etkisizdir. `hesap.modul_ayari.degisti` `acik: null` ise kopya satırı silinir. `hesap.kullanici.silindi.v1` sözleşmesi henüz olmadığı için `motivasyon.kopya` bu olayı tüketmez.
 
 ## `bildirim`
 

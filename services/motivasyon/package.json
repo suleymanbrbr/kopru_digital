@@ -5,7 +5,8 @@
   "type": "module",
   "description": "motivasyon servisi",
   "files": [
-    "dist"
+    "dist",
+    "migrations"
   ],
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
@@ -15,11 +16,20 @@
     "start:worker": "node --env-file-if-exists=../../.env dist/worker.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "egri": "tsx scripts/egri-sql.ts",
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate-cli.ts migrate",
+    "db:generate": "tsx src/db/migrate-cli.ts generate"
   },
   "dependencies": {
     "@kopru/contracts": "workspace:*",
     "@kopru/service-kit": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "fastify": "catalog:",
+    "jose": "catalog:",
+    "nats": "catalog:",
+    "postgres": "catalog:",
+    "uuidv7": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

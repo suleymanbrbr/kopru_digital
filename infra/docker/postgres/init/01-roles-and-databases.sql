@@ -35,3 +35,11 @@ create role medya_owner nologin;
 create role medya_app login nosuperuser nobypassrls password 'medya_app';
 create role medya_sistem login nosuperuser bypassrls password 'medya_sistem';
 grant medya_owner to medya;
+
+-- motivasyon servisi (ADR 0003 deseni): migration kullanicisi `motivasyon` (db sahibi) motivasyon_owner rolune
+-- gecerek tablolari olusturur. Uygulama `motivasyon_app` (NOBYPASSRLS, olay tuketicileri ve kullanici uclari),
+-- sistem isleri (outbox relay, haftalik sifirlama, temizlik) `motivasyon_sistem` (BYPASSRLS).
+create role motivasyon_owner nologin;
+create role motivasyon_app login nosuperuser nobypassrls password 'motivasyon_app';
+create role motivasyon_sistem login nosuperuser bypassrls password 'motivasyon_sistem';
+grant motivasyon_owner to motivasyon;

@@ -44,7 +44,10 @@ describe('izin sozlugu', () => {
   });
 
   it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
-    expect(IZIN_SOZLUGU_SURUMU).toBe(7);
+    expect(IZIN_SOZLUGU_SURUMU).toBe(8);
+    expect(izinKapsami('ogretmen', 'oyunlastirma.oku')).toBe('grup');
+    expect(izinKapsami('ogrenci', 'oyunlastirma.oku')).toBe('kendi');
+    expect(izinKapsami('veli', 'oyunlastirma.oku')).toBeNull();
     expect(izinKapsami('ogretmen', 'finans.oku')).toBe('grup');
     expect(izinKapsami('ogretmen', 'finans.tahsilat.yaz')).toBe('grup');
     expect(izinKapsami('ogretmen', 'finans.paket.yaz')).toBeNull();

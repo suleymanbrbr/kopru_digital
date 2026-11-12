@@ -176,6 +176,27 @@ pnpm --filter @kopru/medya dev:worker     # isleme, silme, zamanlanmis isler, ol
 - **Uçtan uca deneme:** `services/medya/scripts/yukleme-akisi.sh` (api 4267 + medya 4263 + worker; ayrıntı betiğin başında).
 - **Docker:** `docker build -f services/medya/Dockerfile -t kopru/medya .`; aynı imaj worker olarak `node dist/worker.js` çalıştırır. `sharp` platforma uygun yerel ikilisini (`@img/sharp-linux-*`) kurulumda alır.
 
+## motivasyon: XP, seviye, rozet
+
+`services/motivasyon`: olaylardan beslenen oyunlaştırma çekirdeği (XP defteri, günlük tavanlar, seviye, rozet, kozmetik, karakter aşaması) ve okuma uçları. Seri, odak, karakter ve haftanın yıldızı mantığı sonraki paketlerde (tabloları hazır). Şema, kararlar ve seviye eğrisi: [docs/schema/motivasyon.md](schema/motivasyon.md).
+
+```sh
+pnpm --filter @kopru/motivasyon db:migrate   # MOTIVASYON_DATABASE_OWNER_URL (db sahibi) ile; roller yoksa olusturulur
+pnpm --filter @kopru/motivasyon dev          # API (4001): GET /v1/motivasyon/kurumlar/{kurum_id}/benim ve .../ogrenciler/{id}/ozet
+pnpm --filter @kopru/motivasyon dev:worker   # tuketiciler (motivasyon.kopya, motivasyon.xp), outbox relay, haftalik sifirlama
+pnpm --filter @kopru/motivasyon egri         # seviye egrisi ve hedef tablosu (migration tohumunun kaynagi)
+```
+
+- **Roller:** `motivasyon_owner` (nologin), `motivasyon_app` (NOBYPASSRLS; API ve olay tüketicileri), `motivasyon_sistem` (BYPASSRLS; outbox relay, haftalık `bu_hafta_xp` sıfırlama, `processed_events` temizliği). Yapılandırma tabloları (kurallar, tavanlar, seviyeler, rozetler) `motivasyon_app`'e salt okunurdur. Var olan Postgres'te init betiği yeniden çalışmaz; `db:migrate` rolleri (`motivasyon_owner/app/sistem`) süper kullanıcı bağlantısıyla oluşturur.
+- **Ortam:** `MOTIVASYON_DATABASE_URL` / `MOTIVASYON_DATABASE_SISTEM_URL` / `MOTIVASYON_DATABASE_OWNER_URL`, `MOTIVASYON_AUTH_ENABLED=true` + `JWKS_URL`, `NATS_URL`.
+- **Tüketiciler:** worker açılışta yeni tüketicinin stream'in başından okumasını bekler (`baslangic: 'hepsi'`); aynı NATS'a bağlı iki farklı veritabanı aynı adlı tüketiciyi (`motivasyon_xp`) paylaşır, yerel denemede ayrı NATS kullanın. Hesap verisini kopyalara doldurmak için api'nin `olaylari-yeniden-yayimla` komutu kullanılır.
+- **Testler:** `DATABASE_URL` (superuser) ile veritabanı/XP/RLS testleri, `NATS_URL` ile tüketici testleri (tüketici adlarına rastgele sonek, `baslangic: 'yeni'`; paylaşılan `EVENTS`/`DLQ` stream'lerine dokunulmaz):
+  ```sh
+  DATABASE_URL=postgres://postgres:postgres@localhost:5433/kopru_test NATS_URL=nats://localhost:4222 \
+  pnpm --filter @kopru/motivasyon test
+  ```
+- **Uçtan uca deneme:** `services/motivasyon/scripts/xp-akisi.sh` (api + motivasyon + worker'lar; ayrıntı betiğin başında).
+
 ## Outbox ve olay akışı
 
 - Tablo şablonu: `packages/service-kit/migrations/outbox.sql` (api'de `ortak.outbox`, migration içinde `-- @outbox-sablonu ortak` satırıyla eklenir) (`renderOutboxMigration(schema)` ile şema adı doldurulur). Her servis bunu kendi migration'larına dahil eder.
