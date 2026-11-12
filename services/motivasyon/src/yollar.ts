@@ -16,7 +16,10 @@ import {
 } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 
+import { karakterYollari } from './karakter-yollari.js';
+import { odakYollari } from './odak-yollari.js';
 import { gunHesapla, iso, kurumBilgisi, modulAcikMi } from './ortak.js';
+import { yildizYollari } from './yildiz-yollari.js';
 
 function kimlik(request: { auth: AuthContext | null }, kurumId: string) {
   const a = request.auth;
@@ -317,6 +320,11 @@ export function yollariOlustur(secenek: YolSecenekleri = {}): ServicePlugin {
         );
       },
     );
+
+    // Odak oturumlari, haftanin yildizi, karakter ve kozmetik uclari (paket M3).
+    app.register(odakYollari({ simdi }));
+    app.register(yildizYollari({ simdi }));
+    app.register(karakterYollari({ simdi }));
 
     return Promise.resolve();
   };
