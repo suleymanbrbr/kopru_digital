@@ -16,3 +16,5 @@ export * from './ortak/dosya.js';
 export * from './medya/olaylar.js';
 export * from './medya/ic-api.js';
 export * from './medya/api.js';
+export * from './motivasyon/api.js';
+export * from './motivasyon/olaylar.js';
