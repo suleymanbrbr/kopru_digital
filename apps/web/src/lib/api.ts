@@ -125,6 +125,7 @@ const kayitKodlari = new Set([
 
 const soruKodlari = new Set([
   'kota_asildi',
+  'brans_gecersiz',
   'dosya_hazir_degil',
   'dosya_gecersiz',
   'dosya_islenemedi',

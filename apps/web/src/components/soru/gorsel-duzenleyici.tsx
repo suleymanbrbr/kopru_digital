@@ -42,7 +42,9 @@ export function GorselDuzenleyici({
   tamam: (sonuc: DuzenlemeSonucu) => void;
 }) {
   const kimlik = useId();
-  const tuval = useRef<HTMLCanvasElement>(null);
+  // Tuval pencerenin portalinda sonradan baglanir: ref yerine state ile efekt tetiklenir.
+  const tuval = useRef<HTMLCanvasElement | null>(null);
+  const [tuvalHazir, setTuvalHazir] = useState(false);
   const [derece, setDerece] = useState<Derece>(baslangic.derece);
   const [kirpma, setKirpma] = useState<Kirpma>(baslangic.kirpma);
 
@@ -69,7 +71,7 @@ export function GorselDuzenleyici({
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.strokeRect(x + 1, y + 1, Math.max(1, g - 2), Math.max(1, h - 2));
-  }, [acik, bitmap, derece, kirpma]);
+  }, [acik, bitmap, derece, kirpma, tuvalHazir]);
 
   const donder = (yon: 1 | -1) => {
     setDerece((d) => sonrakiDerece(d, yon));
@@ -89,7 +91,10 @@ export function GorselDuzenleyici({
     >
       <div className="flex flex-col gap-4">
         <canvas
-          ref={tuval}
+          ref={(el) => {
+            tuval.current = el;
+            setTuvalHazir(el !== null);
+          }}
           role="img"
           aria-label={t('soruSor.duzenle.onizleme')}
           className="mx-auto max-h-[50dvh] max-w-full rounded-orta border border-kenar"

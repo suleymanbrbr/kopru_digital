@@ -2138,6 +2138,8 @@ export const tr = {
     },
     hata: {
       kota_asildi: 'Soru hakkın doldu.',
+      brans_gecersiz:
+        'Bu derste sana atanmış bir öğretmen ya da soru masası yok. Başka bir ders seç ya da yöneticine haber ver.',
       dosya_hazir_degil: 'Fotoğraflar henüz hazır değil. Birazdan yeniden dene.',
       dosya_gecersiz: 'Dosyalardan biri bu soru için geçerli değil. Yeniden yükle.',
       dosya_islenemedi: 'Dosya işlenemedi. Yeniden yükleyip dene.',

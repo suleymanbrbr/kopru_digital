@@ -141,7 +141,7 @@ function Tablo({
       {satirlar.length === 0 ? (
         <p className="text-sm text-metin-ikincil">{t('soruSor.olcum.veriYok')}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label={baslik} tabIndex={0}>
           <table className="w-full min-w-[32rem] text-left text-sm">
             <caption className="sr-only">{baslik}</caption>
             <thead>

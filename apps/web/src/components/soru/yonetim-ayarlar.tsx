@@ -52,20 +52,36 @@ const tamSayi = (s: string): number | null => (/^\d+$/.test(s.trim()) ? Number(s
 export function YonetimAyarlar() {
   const { uyelik } = useKurum();
   const q = useSoruAyarlari(uyelik.kurumId);
+  // Bildirim, kayittan sonra yeniden kurulan formun disinda tutulur.
+  const [bildirim, setBildirim] = useState<Bildirim>(null);
   if (q.isPending) return <ListeIskeleti satir={3} />;
   if (q.isError) {
     return <HataDurumu aciklama={hataMesaji(q.error)} tekrarDene={() => void q.refetch()} />;
   }
   // Kayittan sonra gelen yeni surumle form yeniden kurulur.
-  return <AyarFormu key={q.data.surum ?? 0} ayar={q.data} />;
+  return (
+    <AyarFormu
+      key={q.data.surum ?? 0}
+      ayar={q.data}
+      bildirim={bildirim}
+      bildirimYaz={setBildirim}
+    />
+  );
 }
 
-function AyarFormu({ ayar }: { ayar: SoruAyarlari }) {
+function AyarFormu({
+  ayar,
+  bildirim,
+  bildirimYaz: setBildirim,
+}: {
+  ayar: SoruAyarlari;
+  bildirim: Bildirim;
+  bildirimYaz: (b: Bildirim) => void;
+}) {
   const { uyelik } = useKurum();
   const kurumId = uyelik.kurumId;
   const yenile = useSoruYenile(kurumId);
   const [form, setForm] = useState<Form>(() => formdan(ayar));
-  const [bildirim, setBildirim] = useState<Bildirim>(null);
 
   const kaydet = useMutation({
     mutationFn: (g: Record<string, number | null>) =>
