@@ -116,7 +116,7 @@ export const MEDYA_DOSYA_DURUMLARI = [
 export const medyaDosyaDurumuSema = z.enum(MEDYA_DOSYA_DURUMLARI);
 export type MedyaDosyaDurumu = z.infer<typeof medyaDosyaDurumuSema>;
 
-/** `dosyalar.hata_kodu` degerleri. `sure_asimi` olayda `bozuk_dosya` olarak yayimlanir (olay enum'u dar). */
+/** `dosyalar.hata_kodu` degerleri (olaydaki `medyaIslemeHataKoduSema` ile ayni kume). */
 export const MEDYA_HATA_KODLARI = [
   'mime_uyusmazligi',
   'boyut_uyusmazligi',
