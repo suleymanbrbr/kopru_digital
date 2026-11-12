@@ -18,6 +18,7 @@ import { GrupSatirBilgisi } from './gruplar-ekrani';
 import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { GrupMateryalleri } from '@/components/kayit/grup-materyalleri';
 import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Iskelet } from '@/components/ui/kart';
 import { OnayPenceresi } from '@/components/ui/pencere';
@@ -142,6 +143,7 @@ export function GrupDetay() {
         <GrupKatilim kurumId={kurumId} grup={g} />
         <GrupUyeleri kurumId={kurumId} grup={g} yazabilir={yazabilir} />
         <GrupAtamalari kurumId={kurumId} grup={g} yazabilir={yazabilir} />
+        <GrupMateryalleri grup={g} />
       </div>
 
       <GrupFormu

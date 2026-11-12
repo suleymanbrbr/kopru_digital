@@ -18,6 +18,7 @@ import {
   PawPrint,
   Puzzle,
   Rows3,
+  SmilePlus,
   School,
   Target,
   UsersRound,
@@ -162,6 +163,15 @@ export const navOgeleri: readonly NavOgesi[] = [
     ikon: Files,
     modul: 'kayitlar',
     roller: personel,
+    grup: 'calisma',
+  },
+  {
+    anahtar: 'geri-bildirim',
+    yol: 'geri-bildirim',
+    baslik: 'nav.geriBildirim',
+    ikon: SmilePlus,
+    modul: 'geri_bildirim',
+    roller: yonetim,
     grup: 'calisma',
   },
   {

@@ -791,3 +791,32 @@ export function dersMock(istek: MockIstek): MockYanit {
   }
   return bulunamadi();
 }
+
+/** Kayit ve geri bildirim mock'u icin: kurumun deneme dersleri, yoklamalari ve kimlikleri (salt okunur kullanin). */
+export interface MockDers {
+  id: string;
+  grup_id: string;
+  ogretmen_id: string;
+  brans_kodu: string;
+  baslik: string | null;
+  konu_id: string | null;
+  baslangic_at: string;
+  bitis_at: string;
+  durum: 'planli' | 'tamamlandi' | 'iptal';
+  katilimcilar: string[];
+}
+
+export function mockDersBaglami(kurumId: string) {
+  const s = durum(kurumId);
+  const { v, ogretmenId, ogrenciId } = kimlikler(kurumId);
+  return {
+    rol: rolu(kurumId),
+    dersler: s.dersler as unknown as MockDers[],
+    /** `dersId/ogrenciId` -> yoklama satiri. */
+    yoklamalar: s.yoklamalar,
+    gruplar: v.gruplar,
+    uyeler: v.uyeler,
+    ogretmenId,
+    ogrenciId,
+  };
+}

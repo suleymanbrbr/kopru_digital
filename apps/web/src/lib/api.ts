@@ -111,11 +111,26 @@ const ogrenmeKodlari = new Set([
   'deneme_kurali_gerekli',
 ]);
 
+const kayitKodlari = new Set([
+  'kaynak_url_gecersiz',
+  'kaynak_alici_gecersiz',
+  'kaynak_sifreleme_yapilandirilmamis',
+  'kaynak_sorun_zaten_acik',
+  'kaynak_ders_iptal',
+  'kaynak_suresi_gecmis',
+  'geri_bildirim_ders_bitmedi',
+  'geri_bildirim_yoklama_uygun_degil',
+  'geri_bildirim_guncelleme_suresi_doldu',
+]);
+
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
   if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
   if (hata instanceof UygulamaHatasi && operasyonKodlari.has(hata.kod)) {
     return t(`operasyon.hata.${hata.kod}` as MessageKey);
+  }
+  if (hata instanceof UygulamaHatasi && kayitKodlari.has(hata.kod)) {
+    return t(`kayitGeriBildirim.hata.${hata.kod}` as MessageKey);
   }
   if (hata instanceof UygulamaHatasi && ogrenmeKodlari.has(hata.kod)) {
     return t(`ogrenme.hata.${hata.kod}` as MessageKey);

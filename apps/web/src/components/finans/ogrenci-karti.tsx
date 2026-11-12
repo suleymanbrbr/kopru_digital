@@ -21,6 +21,7 @@ import { bakiyeMetni, KrediRozeti } from './kredi-rozeti';
 import { IptalPenceresi, OdemeAl } from './odeme-al';
 import { PaketSat } from './paket-sat';
 
+import { OgrenciGeriBildirimleri } from '@/components/geri-bildirim/ogrenci-geri-bildirimleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,
@@ -90,6 +91,7 @@ function KartYukleyici() {
       ) : (
         <OgrenciGorunumu kalan={q.data.kalan_kredi} />
       )}
+      {q.data?.gorunum === 'tam' ? <OgrenciGeriBildirimleri ogrenciId={ogrenciId} /> : null}
     </>
   );
 }

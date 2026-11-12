@@ -91,7 +91,7 @@ test.describe('rol ve modul duyarli navigasyon', () => {
     await expect(page.getByRole('heading', { name: 'Bugünkü görevler' })).toBeVisible();
     // Ogrenci bugunku kendi derslerini gorur (kapsam api'dedir).
     await expect(page.getByRole('heading', { name: 'Bugünkü dersler' })).toBeVisible();
-    await expect(page.getByText('Geometri tekrarı')).toBeVisible();
+    await expect(page.getByText('Matematik · Geometri tekrarı', { exact: true })).toBeVisible();
     await expect(page.getByRole('img', { name: /Kıvılcım/ })).toBeVisible();
     if (isMobile) await page.getByRole('button', { name: 'Menü' }).click();
     const menu = page.getByRole('navigation', { name: 'Ana menü' });
