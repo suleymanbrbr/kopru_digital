@@ -91,11 +91,11 @@ Yapılandırma değişikliklerinin günlüğü (yalnızca ekleme, kiracısız, R
 
 ### `motivasyon.seviyeler`
 
-Seviye eşikleri (başlangıç eğrisi yer tutucudur, ürün onayı gerekir). Sütunlar: `seviye int PK`, `gereken_toplam_xp bigint NOT NULL`, `ad text NULL`. CHECK `seviye >= 1`, `gereken_toplam_xp >= 0`; seviye 1 = 0 XP. Artan, `gereken_toplam_xp` seviye ile kesin artan (uygulama doğrular). Başlangıç eğrisi: `gereken = 50 * (seviye-1)^2` (ayar).
+Seviye eşikleri. Sütunlar: `seviye int PK`, `gereken_toplam_xp bigint NOT NULL UNIQUE`, `ad text NULL`. CHECK `seviye >= 1`, `gereken_toplam_xp >= 0`; seviye 1 = 0 XP; `gereken_toplam_xp` seviye ile kesin artan. **Tohum 1..60 ve `50·(n−1)²` değil**: şartnamenin hedeflerine oturan parçalı eğri (aşağıda "Seviye eğrisi"). Ayar tablosudur, platform yöneticisi değiştirir.
 
 ### `motivasyon.rozet_tanimlari`
 
-`kod text UNIQUE`, `ad text`, `aciklama text`, `kategori text` (`devamlilik`,`odev`,`sinav`,`ders`,`ozel`), `sayac_kodu text NOT NULL`, `esik bigint NOT NULL` (rozet, `ogrenci_sayaclari.deger >= esik` olunca kazanılır), `gizli boolean DEFAULT false`, `sira int`, `aktif boolean`. Rozet koşulu sayaç eşiği ile ifade edilir; karmaşık koşullar sayaç türetir.
+`kod text UNIQUE`, `ad text`, `aciklama text`, `kategori text` (`devamlilik`,`emek`,`gelisim`,`merak`,`ozel`; şartnamedeki beş kategori), `kademe text` (`bronz`,`gumus`,`altin`), `sayac_kodu text NOT NULL`, `esik bigint NOT NULL` (rozet, `ogrenci_sayaclari.deger >= esik` olunca kazanılır), `gizli boolean DEFAULT false`, `sira int`, `aktif boolean`. Rozet koşulu sayaç eşiği ile ifade edilir; karmaşık koşullar sayaç türetir.
 
 ### `motivasyon.karakter_turleri`
 
@@ -334,16 +334,16 @@ Olaylar: yok.
 
 ## Yerel okuma kopyaları
 
-Yalnızca olay tüketicisi yazar. Her kopya `ozne_surumu` ile eski olayı yok sayar (`surum` karşılaştırması). RLS: evet (`kurum_id`). Profil: `K` benzeri; PK kaynak kimliğidir.
+Yalnızca olay tüketicisi yazar. Olay zarfında `ozne_surumu` olmadığından her kopya, `(son_olay_at, son_olay_id)` = olayın (`occurredAt`, UUIDv7 kimliği) ikilisiyle eski olayı yok sayar; eşit zamanda büyük kimlik kazanır. Aynı durumun yeniden yayımı (api `olaylari-yeniden-yayimla`) upsert olarak etkisizdir. RLS: evet (`kurum_id`). Profil: `K` benzeri; PK kaynak kimliğidir.
 
 | Tablo | Kaynak olay | Sütunlar | Neden gerekli |
 | --- | --- | --- | --- |
-| `kurum_kopyalari` | `hesap.kurum.degisti.v1` | `kurum_id` PK, `ad`, `durum`, `saat_dilimi`, `surum` | Gün sınırı saat dilimi, askıdaki kurum için XP durdurma |
-| `uyelik_kopyalari` | `hesap.uyelik.degisti.v1` | `uyelik_id` PK, `kurum_id`, `kullanici_id`, `rol`, `durum`, `kademe_id`, `surum` | Yalnızca etkin `ogrenci` için durum açılır; kademe modül çözümlemesi için |
-| `grup_kopyalari` | `hesap.grup.degisti.v1` | `grup_id` PK, `kurum_id`, `kademe_id`, `tur`, `durum`, `surum` | Modül çözümleme (grup düzeyi) |
-| `grup_uyesi_kopyalari` | `hesap.grup_uyesi.degisti.v1` | `grup_id`, `ogrenci_id`, `baslangic_tarihi`, `bitis_tarihi`, `surum`; PK `(grup_id, ogrenci_id)` | Öğrencinin hangi gruplarda olduğu (modül çözümleme, duraklatma yetkisi) |
-| `atama_kopyalari` | `hesap.atama.degisti.v1` | `atama_id` PK, `grup_id`, `ogretmen_id`, `brans_kodu`, `bitis_tarihi`, `surum` | Öğretmenin öğrenciye seri duraklatma yetkisi |
-| `modul_ayari_kopyalari` | `hesap.modul_ayari.degisti.v1` | `kurum_id`, `modul_kodu`, `kapsam`, `kapsam_id`, `acik`, `surum`; PK `(kurum_id, modul_kodu, kapsam, kapsam_id)` | `oyunlastirma` modülü açık mı (kurum > kademe > grup, ADR 0004) |
+| `kurum_kopyalari` | `hesap.kurum.degisti.v1` | `kurum_id` PK, `tur`, `durum`, `saat_dilimi`, `son_olay_at`, `son_olay_id` | Gün sınırı saat dilimi, askıdaki kurum için XP durdurma |
+| `uyelik_kopyalari` | `hesap.uyelik.degisti.v1` | `uyelik_id` PK, `kurum_id`, `kullanici_id`, `rol`, `durum`, `kademe_id`, `son_olay_at`, `son_olay_id` | Yalnızca etkin `ogrenci` için durum açılır; kademe modül çözümlemesi için |
+| `grup_kopyalari` | `hesap.grup.degisti.v1` | `grup_id` PK, `kurum_id`, `kademe_id`, `tur`, `durum`, `son_olay_at`, `son_olay_id` | Modül çözümleme (grup düzeyi) |
+| `grup_uyesi_kopyalari` | `hesap.grup_uyesi.degisti.v1` | `grup_id`, `ogrenci_id`, `grup_uyesi_id`, `baslangic_tarihi`, `bitis_tarihi`, `son_olay_at`, `son_olay_id`; PK `(grup_id, ogrenci_id)` | Öğrencinin hangi gruplarda olduğu (modül çözümleme, duraklatma yetkisi) |
+| `atama_kopyalari` | `hesap.atama.degisti.v1` | `atama_id` PK, `grup_id`, `ogretmen_id`, `brans_kodu`, `baslangic_tarihi`, `bitis_tarihi`, `son_olay_at`, `son_olay_id` | Öğretmenin öğrenciye seri duraklatma yetkisi |
+| `modul_ayari_kopyalari` | `hesap.modul_ayari.degisti.v1` | `kurum_id`, `modul_kodu`, `kapsam`, `kapsam_id`, `acik` (boş olamaz; `acik: null` olayı satırı siler), `son_olay_at`, `son_olay_id`; PK `(kurum_id, modul_kodu, kapsam, kapsam_id)` | `oyunlastirma` modülü açık mı (kurum > kademe > grup, ADR 0004) |
 
 `hesap.kullanici.silindi.v1` gelince: ilgili `kullanici_id`'nin üyelikleri bulunur, o üyeliklerin `ogrenci_durumlari`, `xp_hareketleri`, `seriler`, `seri_gunleri`, `ogrenci_rozetleri`, `ogrenci_karakterleri`, `ogrenci_kozmetikleri`, `karakter_kusanimlari`, `beceri_puanlari`, `ogrenci_sayaclari`, `odak_oturumlari`, `seri_duraklatmalari` satırları silinir (oyunlaştırma verisi tanımlayıcı veridir; defter değişmezliği KVKK silme için istisnadır ve `ortak.anonimlestir(ogrenci_id)` yordamıyla yapılır).
 
@@ -371,6 +371,71 @@ Her tüketici `ortak.processed_events` ile idempotent çalışır ([ADR 0002](..
 
 ## Açık sorular (bu servis)
 
-- Seviye eşik eğrisi (`seviyeler`) ve rozet listesi ürün tarafından henüz verilmedi; tohumlar yer tutucudur.
-- `haftanin_yildizi.ogretmen_haftalik_limit` varsayılanı (3) ürün onayı bekler.
+- Rozet listesi ve kozmetik tanımları yer tutucudur (ad, açıklama, eşik); ürün/tasarım onayı bekler.
+- `haftanin_yildizi.ogretmen_haftalik_limit` varsayılanı (3) ürün onayı bekler (orkestratör kararı: 3 kalsın).
 - Net artışı referansı: öğrencinin aynı sınav türündeki önceki 3 denemesinin ortalaması ve 50 XP sınırı yalnızca net artışı bonusu için varsayıldı (toplam deneme XP'si en çok 60).
+- `oyunlastirma.oku` izni öğretmene verilmedi (izin sözlüğü sürüm 7); öğretmen özeti şimdilik uçta rol + atama kapsamıyla açılıyor. Sözlüğe `ogretmen: oyunlastirma.oku = grup` eklenip sürüm artırılmalı.
+- `hesap.kullanici.silindi.v1` sözleşmesi yok; KVKK temizliği (`ortak.anonimlestir`) yazılmadı.
+
+## Uygulama notları (paket M1, çekirdek)
+
+Bu bölüm şemadan **bilinçli sapmaları** ve orkestratör/uygulama kararlarını gerekçesiyle listeler. Tüm değerler ayar tablolarındadır, sonradan değiştirilebilir.
+
+### Seviye eğrisi (tohum 1..60)
+
+Üretici: `services/motivasyon/src/seviye-egrisi.ts` (`pnpm --filter @kopru/motivasyon egri` tabloyu yazdırır); testler tohumun fonksiyonla aynı olduğunu ve hedefleri denetler. Şemadaki `50·(n−1)²` hedefleri tutmuyordu: seviye 5 için 800 XP (haftalık ~393 XP ile ~14 gün), seviye 12 için 6.050 XP (~108 gün), seviye 40 için 76.050 XP (~7 yıl).
+
+**"Düzenli çalışan öğrenci" varsayımları** (`services/motivasyon/src/duzenli-ogrenci.ts`, XP değerleri `xp_kurallari` tohumundan): haftada 3 ders (yoklama 20 + geri bildirim 2), 2 ödev (zamanında teslim 15 + onay 10), 5 gün × 3 plan görevi (5 XP, günlük tavan 40 altında), 5 gün × 30 dk odak (1 XP/dk, tavan 120 altında), 4 gün × (1 soru sorma 3 + 1 "anladım" 5), haftada 2 ders kaydı (5), iki haftada bir deneme (10 + ortalama 2 net artışı × 5). **Haftalık 393 XP, günlük ortalama ~56 XP**; ders gününde ilk gün XP'si 75 (20+2+15+30+8). Günlük 300 genel tavanı bu modelin çok üstündedir.
+
+| Hedef               | Seviye | Toplam XP | Düzenli öğrencide gün     | Şartname hedefi          |
+| ------------------- | ------ | --------- | ------------------------- | ------------------------ |
+| İlk gün             | 3      | 60        | 1 (ilk gün XP'si 75)      | ilk gün 2 seviye         |
+| İlk evrim (aşama 2) | 5      | 380       | 7                         | ilk hafta                |
+| 3. aşama            | 12     | 3.300     | 59                        | ~2 ay                    |
+| 4. aşama            | 25     | 7.500     | 134                       | dönem sonu, ~4,5 ay      |
+| Efsane (aşama 5)    | 40     | 20.000    | 356                       | bir yıl                  |
+| Üst sınır           | 60     | 57.210    | 1019                      |                          |
+
+Çapa noktalarından aralık içinde `T0 + ΔT·((n−n0)/(n1−n0))^1,15` (maliyet aralık içinde artar); seviye 41–60 her seviye öncekinin %6 fazlası. **Sınırlama:** hedefler sabit günlük hızda tek bir düzgün (maliyeti hep artan) eğriye oturmaz; seviye 12'ye geçişte maliyet kısa süre düşer (11→12: 470 XP, 12→13: 220 XP; "evrim sonrası hızlı seviye"), 25→26'da yeniden artar. Eğri `seviyeler` tablosunda ayardır.
+
+### Rozet listesi (33 rozet, 5 kategori × bronz/gümüş/altın)
+
+Her rozet bir sayaç eşiğidir. Gizli (`gizli=true`) olanlar kazanılana kadar listelenmez: `odak_altin`, `yildiz_*`.
+
+| Kategori      | Aileler (sayaç; bronz/gümüş/altın eşiği)                                                                                                                                                                | Sayacı güncelleyen                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `devamlilik`  | `seri_*` (`en_uzun_seri`; 7/30/100), `aktif_gun_*` (`toplam_aktif_gun`; 10/50/150)                                                                                                                      | seri paketi                        |
+| `emek`        | `odev_*` (`toplam_odev_teslim`; 5/25/100), `odak_*` (`toplam_odak_dk`; 300/1500/6000), `soru_cozum_*` (`toplam_cozulen_soru` = ödevlerdeki `yapilan_soru_sayisi` toplamı; 100/500/2000)                  | XP tüketicisi (odak: odak paketi)  |
+| `gelisim`     | `net_*` (`net_artisi_deneme` = net artışı > 0 olan deneme sayısı; 1/5/15), `net_toplam_*` (`toplam_net_artisi` = artışların tam kısımlarının toplamı; 10/50/150)                                         | XP tüketicisi                      |
+| `merak`       | `merak_soru_*` (`toplam_soru`; 3/15/50), `merak_anladim_*` (`toplam_anladim`; 3/15/50), `merak_kayit_*` (`toplam_kayit_izleme`; 3/15/50)                                                                | XP tüketicisi                      |
+| `ozel`        | `yildiz_*` (`haftanin_yildizi`; 1/3/10)                                                                                                                                                                 | yıldız ucu                         |
+
+Ek sayaçlar: `toplam_yoklama` (rozeti yok; yoklama etkin duruma göre artar/azalır), `toplam_deneme`. Rozet bir kez kazanılır ve sayaç azalsa da geri alınmaz. Kozmetik tanımları (12 yer tutucu): `seri` 3/7/14/30/60/100/365, rozet (`odev_bronz`, `merak_soru_gumus`, `yildiz_bronz`), seviye 5 ve 10.
+
+### Şemadan sapmalar ve ek tablolar
+
+- **`kod` doğal anahtar** (`xp_kurallari`, `xp_tavanlari`, `rozet_tanimlari`, `kozmetik_tanimlari`, `karakter_turleri` vb.): `id uuid` profili yerine metin PK; FK'ler koda bağlanır.
+- **Kopya tabloları `surum` yerine (`son_olay_at`, `son_olay_id`)**: olay zarfında özne sürümü yok. `kurum_kopyalari`'nda `ad` saklanmaz (gereksiz kişisel veri riski), `tur` saklanır.
+- **`xp_hareketleri.olusma_at`** (tetikleyen olayın zamanı) eklendi: `created_at` işleme zamanıdır, `gun` olay zamanından hesaplanır.
+- **`ogrenci_durumlari.hafta_baslangic`** eklendi: `bu_hafta_xp`'in haftası. XP yazımı hafta değişmişse sıfırlayıp yazar (eski haftanın gecikmiş olayı yeni haftaya eklenmez); haftalık iş (10 dakikada bir, Pazartesi 04:00'ü geçmiş kurumlar için) sıfırlar ve idempotenttir.
+- **`xp_ozne_durumlari`** (yeni tablo): yoklama (`geldi`/`gec` mi) ve plan görevi (tamam mı) gibi durumu değişen öznelerin son işlenen sürümü/zamanı ve "etkin" durumu. Eski olayı yok saymak (yoklama: `yoklama_surumu`, plan: `occurredAt`), sayaçları XP tavanından bağımsız doğru tutmak (`toplam_yoklama`; `plan_gorevi_sayisi` tamamlanan günden azalır) ve şüpheli örüntü sayımı için gerekli. Ayrıca soru, "anladım", kayıt izleme ve ödev teslim ödülü/sayaçları özne başına bir kez çalışır.
+- `seri_gunleri`, `seri_duraklatmalari`, `haftanin_yildizlari`, `odak_oturumlari`, karakter ve kozmetik tabloları şemadaki gibidir; **mantıkları yok**, yalnız tablolar (sonraki paketler migration eklemeden çalışsın diye).
+- `rozet_tanimlari.kademe`, `rozet_tanimlari.kategori` listesi ve `kozmetik_tanimlari.acilma_kosulu` CHECK'i eklendi. Yapılandırma tabloları `motivasyon_app`'e salt okunurdur (değişiklik `motivasyon_sistem` ile).
+- `btree_gist` uzantısı migration bootstrap'inde etkinleştirilir (`seri_duraklatmalari` EXCLUDE).
+- `xp_hareketleri` bölümlenmedi (eşik 20 milyon satır; README kuralı).
+
+### XP tüketicisi kuralları (uygulanan)
+
+- **Gün** = `((occurredAt AT TIME ZONE kurum.saat_dilimi) − 4 saat)::date`; kurum kopyası yoksa `Europe/Istanbul`.
+- **Modül/kurum çözümlemesi**: kurum durumu `aktif` değilse veya `oyunlastirma` modülü kurum > kademe > grup düzeyinde kapalıysa olay işlenir ama XP yazılmaz, `pasif_olay_sayisi` artar (sayaç/rozet/aktivite de işlenmez; `deneme_gecmisi` modül kapalıyken de tutulur). Grup bağlamı olan olayda (yoklama, kayıt izleme) o grup; olmayanda öğrencinin o günkü etkin grupları: **tümü kapalıysa** kapalı (grubu olmayan öğrenci yalnız kurum ve öğrencinin kademesine bakar). Kopya yoksa modül açık. `uyelik_kopyası` var ve (rol ≠ `ogrenci` ya da durum ≠ `aktif`) ise olay tümüyle yok sayılır; kopya yoksa öğrenci etkin sayılır.
+- **Tavan**: öğrenci başına `pg_advisory_xact_lock`; kuralın grup tavanı ve (tabiyse) `genel`; `verilecek = min(ham, kalanlar)`; kırpılmışsa `kismi=true`; 0 ise satır yok. Ters kayıt orijinal günün sayaçlarından (en az 0) düşer.
+- **Net artışı**: `floor(artış × 5)` (numeric, SQL'de), deneme başına en çok 50; önceki en son 3 deneme (aynı `kural_kodu`, `sinav_tarihi` ≤ bu denemenin tarihi) ortalaması, yoksa artış 0. Düşüşte 0.
+- **Geç teslim**: `floor(15 × 0,50) = 7`. Yeniden teslimde (bayrak ya da ikinci kez) XP ve sayaç yok.
+- **Şüpheli örüntü**: aynı öğrencinin `motivasyon_ayarlari['supheli.plan_gorevi_pencere_sn']` (60) saniye içinde `['supheli.plan_gorevi_esik']` (10) değerinden **fazla** plan görevini tamamlaması: o tamamlama XP almaz (aktivite sayacı artar). Ayarlanabilir.
+- **Seviye**: `seviye = max(seviye, hedef)`; ters kayıt seviyeyi/aşamayı düşürmez; çoklu seviye atlayışı tek olay (`eski_seviye` → `yeni_seviye`). Karakter varsa aşama yükselince `karakter.evrildi`; seviye/rozet sonrası kozmetikler açılır.
+- **Rozet**: sayaç eşiği geçilince `ogrenci_rozetleri` + `motivasyon.rozet.kazanildi.v1` (tek kez).
+- Seri paketi için yeniden kullanılabilir yardımcılar: `aktiviteArtir`, `sayacArtir`, `sayacEnAz`, `rozetleriDegerlendir`, `kozmetikleriAc`, `durumuGarantile`, `ogrenciKilitle`, `xpKazan` (`services/motivasyon/src/xp-cekirdek.ts`, `ortak.ts`).
+
+### Okuma uçları
+
+`GET /v1/motivasyon/kurumlar/{kurum_id}/benim` (rol `ogrenci`) ve `GET .../ogrenciler/{ogrenci_id}/ozet` (aynı gövde; öğrenci kendini, `sahip`/`yonetici` kurumdakini, `ogretmen` atama + grup üyeliği kopyalarıyla atandığı gruptakini görür, kapsam dışı 404; veli 403). Kurum yolu JWT'deki kurumla uyuşmazsa 403. Modül kapalıysa `403 modul_kapali`. Gizli rozetler kazanılana kadar yok. Şema: `packages/contracts/src/motivasyon/api.ts`.

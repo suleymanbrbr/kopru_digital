@@ -109,6 +109,10 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | `motivasyon.rozet.kazanildi.v1` | K | Yeni rozet kazanılınca (ilk eklemede). | `ogrenci_id`, `rozet_kodu`, `kazanildi_at` | `bildirim` |
 | `motivasyon.karakter.evrildi.v1` | K | Karakter aşaması yükselince. | `ogrenci_id`, `tur_kodu`, `eski_asama`, `yeni_asama` | `bildirim` |
 
+> **Uygulama notu (motivasyon olayları).** Altı olayın Zod tanımları `packages/contracts/src/motivasyon/olaylar.ts` içindedir (`packages/contracts/src/motivasyon/olaylar.test.ts` kişisel veri alanlarını denetler; karakter adı, rozet adı gibi görünen adlar yükte yoktur). `seviye.atladi`, `rozet.kazanildi` ve `karakter.evrildi` `motivasyon.xp` tüketicisinden, ilgili XP/sayaç işlemiyle aynı işlemde outbox'a (`ortak.outbox`) yazılır; çoklu seviye atlayışı tek olaydır (`eski_seviye` → `yeni_seviye`). `seri.*` olaylarını seri paketi yayımlar (sözleşmeleri hazır). `seri.bozuldu.onarim_son_gun` onarılamazsa `null` olabilir.
+>
+> **Kopya sıralaması.** Olay zarfında `ozne_surumu` yoktur; `motivasyon.kopya` eski olayı `(occurredAt, olay id)` ikilisiyle ayıklar (eşit zamanda büyük UUIDv7 kazanır), aynı durumun yeniden yayımı upsert olarak etkisizdir. `hesap.modul_ayari.degisti` `acik: null` ise kopya satırı silinir. `hesap.kullanici.silindi.v1` sözleşmesi henüz olmadığı için `motivasyon.kopya` bu olayı tüketmez.
+
 ## `bildirim`
 
 Faz 1'de olay üretmez.
