@@ -50,6 +50,13 @@ export class XpYoneticisi {
     this.son = d;
   }
 
+  /** Olayi dogrudan dinleyicilere verir (gelistirici onizlemesi: Profil > Bilesenler). */
+  yayinla(olay: XpOlayi): void {
+    this.dinleyiciler.forEach((f) => {
+      f(olay);
+    });
+  }
+
   /** Cikis / kurum degisimi: taban cizgisi ve bekleyen isler atilir. */
   sifirla(): void {
     this.son = null;

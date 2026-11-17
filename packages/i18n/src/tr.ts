@@ -3571,6 +3571,12 @@ export const tr = {
         yeniTur: 'Yeni tur',
         kapat: 'Kapat',
       },
+      onizleme: {
+        baslik: 'XP geri bildirimi önizlemesi (yalnızca geliştirme)',
+        xp: '+15 XP',
+        seviye: 'Seviye atlama',
+        evrim: 'Evrim sahnesi',
+      },
       hata: {
         karakter_adi_uygunsuz: 'Bu ad uygun değil. Lütfen farklı bir ad dene.',
         karakter_zaten_secildi: 'Zaten bir karakterin var.',

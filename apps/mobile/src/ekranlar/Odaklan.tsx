@@ -204,7 +204,7 @@ export function Odaklan() {
             {t('mobil.motivasyon.odak.devralindi')}
           </Metin>
         ) : null}
-        {!o.sunucuda && !agGozlemcisi.cevrimiciMi() ? (
+        {!o.sunucuda && (gecen > 4 || !agGozlemcisi.cevrimiciMi()) ? (
           <Metin varyant="kucuk" className="text-center" accessibilityLiveRegion="polite">
             {t('mobil.motivasyon.odak.cevrimdisiBaslandi')}
           </Metin>
