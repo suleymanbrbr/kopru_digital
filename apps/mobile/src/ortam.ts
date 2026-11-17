@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion -- process.env tipi expo-env.d.ts varligina gore degisir */
 import { Platform } from 'react-native';
 
 /**
@@ -22,6 +21,8 @@ export const ortam = {
   apiUrl: apiUrlCoz((process.env.EXPO_PUBLIC_API_URL as string | undefined) ?? ''),
   /** Medya servisi adresi (bos: api ile ayni alan adi). */
   medyaUrl: apiUrlCoz((process.env.EXPO_PUBLIC_MEDYA_URL as string | undefined) ?? ''),
+  /** Motivasyon servisi adresi (bos: api ile ayni alan adi; yerelde http://localhost:4001). */
+  motivasyonUrl: apiUrlCoz((process.env.EXPO_PUBLIC_MOTIVASYON_URL as string | undefined) ?? ''),
   /** Gelistirici ekranlari (Bilesenler) yalnizca gelistirme derlemesinde acilir. */
   gelistirici: __DEV__,
 } as const;
