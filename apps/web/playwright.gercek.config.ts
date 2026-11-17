@@ -33,6 +33,7 @@ export default defineConfig({
       NEXT_PUBLIC_API_MOCK: '0',
       API_URL: process.env.API_URL ?? 'http://localhost:4000',
       MEDYA_URL: process.env.MEDYA_URL ?? 'http://localhost:4003',
+      MOTIVASYON_URL: process.env.MOTIVASYON_URL ?? 'http://localhost:4001',
     },
   },
 });

@@ -3,19 +3,21 @@
 import type { MotivasyonOgrenciDurumu } from '@kopru/contracts';
 import { t, type MessageKey } from '@kopru/i18n';
 import { Award, Lock } from 'lucide-react';
+import { useState } from 'react';
 
 import { Ilerleme } from './ortak';
 
 import { BosDurum } from '@/components/bos-durum';
+import { Dugme } from '@/components/ui/button';
 import { Kart } from '@/components/ui/kart';
 import { cn } from '@/lib/cn';
 
 type Rozetler = MotivasyonOgrenciDurumu['rozetler'];
 
 const KADEME_STILI: Record<string, string> = {
-  bronz: 'bg-uyari-yumusak text-uyari',
-  gumus: 'bg-yuzey-ikincil text-metin-ikincil',
-  altin: 'bg-vurgu-yumusak text-uyari',
+  bronz: 'bg-uyari-yumusak text-metin',
+  gumus: 'bg-yuzey-ikincil text-metin',
+  altin: 'bg-vurgu-yumusak text-metin',
 };
 
 function KademeRozeti({ kademe }: { kademe: string }) {
@@ -36,7 +38,13 @@ function KademeRozeti({ kademe }: { kademe: string }) {
  * gelmez; kademe bronz/gumus/altin metinle de yazilir (renge dayanmaz). Siralama ya da kiyaslama yoktur.
  */
 export function RozetlerKarti({ rozetler }: { rozetler: Rozetler }) {
-  const { kazanilan, kilitli } = rozetler;
+  const { kazanilan } = rozetler;
+  const [hepsi, setHepsi] = useState(false);
+  // Yolda olanlar: tamamlanmaya en yakin olanlar once; varsayilan 6 tanesi.
+  const siraliKilitli = [...rozetler.kilitli].sort(
+    (a, b) => b.ilerleme / b.esik - a.ilerleme / a.esik,
+  );
+  const kilitli = hepsi ? siraliKilitli : siraliKilitli.slice(0, 6);
   return (
     <Kart aria-labelledby="rozet-baslik" className="flex flex-col gap-4 p-5">
       <div>
@@ -95,6 +103,21 @@ export function RozetlerKarti({ rozetler }: { rozetler: Rozetler }) {
               </li>
             ))}
           </ul>
+          {siraliKilitli.length > 6 ? (
+            <Dugme
+              gorunum="ikincil"
+              boyut="sm"
+              className="mt-3"
+              aria-expanded={hepsi}
+              onClick={() => {
+                setHepsi((h) => !h);
+              }}
+            >
+              {hepsi
+                ? t('motivasyon.rozet.azGoster')
+                : t('motivasyon.rozet.hepsiniGoster', { n: siraliKilitli.length })}
+            </Dugme>
+          ) : null}
         </div>
       ) : null}
     </Kart>

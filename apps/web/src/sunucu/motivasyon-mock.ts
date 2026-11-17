@@ -954,7 +954,7 @@ function aldigiYildizlar(kurumId: string, ogrenciId: string): MockYanit {
   const d = kurum(kurumId);
   const eski: Yildiz = {
     id: uid(),
-    ogrenci_id: ogrenciId,
+    ogrenci_id: ogrenciId.length === 36 ? ogrenciId : benId(kurumId),
     veren_ogretmen_id: ogretmenKimligi(kurumId),
     grup_id: uid(),
     hafta_baslangic: pazartesi(gunEkle(bugunGun(), -21)),

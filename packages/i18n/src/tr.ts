@@ -2278,6 +2278,8 @@ export const tr = {
       bos: 'Henüz rozetin yok',
       bosAciklama: 'Çalıştıkça ilk rozetini kazanırsın.',
       kilitli: 'Yolda olanlar',
+      hepsiniGoster: 'Hepsini göster ({n})',
+      azGoster: 'Daha az göster',
       ilerleme: '{ilerleme} / {esik}',
       kademe: { bronz: 'Bronz', gumus: 'Gümüş', altin: 'Altın' },
     },
