@@ -1,10 +1,8 @@
 import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
 
 import type { Ders } from '../api/operasyonTipleri';
-import { Companion } from '../karakter/Companion';
 import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import { modulAcikMi } from '../nav/yapilandirma';
 import { CevaplananSorularKarti } from '../soru/BugunKartlari';
@@ -29,6 +27,7 @@ import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
 import { KayitlarimGirisi } from './KayitlarimGirisi';
+import { BugunMotivasyon } from './motivasyon/BugunMotivasyon';
 import { OgrenciBugunOgrenme } from './OgrenciBugunOgrenme';
 
 /** Ogretmenin "ogrenciye gorunsun" notu (api `ogretmene_ozel` notlari ogrenciye hic donmez). */
@@ -83,40 +82,11 @@ export function OgrenciBugun() {
       {sorgu.isError ? (
         <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
+      {oyun ? <BugunMotivasyon /> : null}
       {d ? (
         <>
           <GeriBildirimKartlari />
           <KayitlarimGirisi />
-          {oyun ? (
-            <Kart className="items-center gap-3">
-              <Companion
-                tur={d.karakter.tur}
-                asama={d.karakter.asama}
-                seviye={d.karakter.seviye}
-                varyant={d.karakter.varyant}
-                beceriler={d.karakter.beceriler}
-                ruhHali={d.karakter.uykulu ? 'uykulu' : 'normal'}
-                ad={d.karakter.ad}
-                boyut={168}
-              />
-              <View
-                className="flex-row items-center gap-2 rounded-tam bg-yuzeyIkincil px-4 py-2"
-                accessible
-                accessibilityLabel={`${t('mobil.bugun.ogrenci.seri')}: ${
-                  d.seri > 0
-                    ? t('mobil.bugun.ogrenci.seriGun', { n: d.seri })
-                    : t('mobil.bugun.ogrenci.seriYok')
-                }`}
-              >
-                <Ikon ad="flame" renk="#FF8A3D" />
-                <Metin varyant="etiket">
-                  {d.seri > 0
-                    ? t('mobil.bugun.ogrenci.seriGun', { n: d.seri })
-                    : t('mobil.bugun.ogrenci.seriYok')}
-                </Metin>
-              </View>
-            </Kart>
-          ) : null}
           {finans && kalan !== null ? (
             <Kart className="flex-row items-center gap-3" testID="kalan-ders">
               <Ikon ad="ticket-outline" />
@@ -165,14 +135,16 @@ export function OgrenciBugun() {
           <OgrenciBugunOgrenme />
         </>
       ) : null}
-      <Dugme
-        etiket={t('mobil.bugun.ogrenci.odaklan')}
-        varyant="birincil"
-        buyuk
-        onPress={() => {
-          router.push('/odaklan');
-        }}
-      />
+      {oyun ? null : (
+        <Dugme
+          etiket={t('mobil.bugun.ogrenci.odaklan')}
+          varyant="birincil"
+          buyuk
+          onPress={() => {
+            router.push('/odaklan');
+          }}
+        />
+      )}
       {soru ? <CevaplananSorularKarti /> : null}
       {soru ? (
         <Dugme

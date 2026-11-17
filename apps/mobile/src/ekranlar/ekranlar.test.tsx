@@ -16,6 +16,8 @@ import { ApiHata } from '../api/tipler';
 import KurumSec from '../app/(onboarding)/kurum-sec';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
+import { OdakYoneticisi } from '../motivasyon/odak';
+import { XpYoneticisi } from '../motivasyon/xpYonetici';
 import { GeriBildirimDeposu } from '../offline/geriBildirim';
 import { OfflineKuyruk } from '../offline/kuyruk';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
@@ -108,6 +110,23 @@ function ortamKur(): Ortam {
     queryClient,
     kuyruk,
     geriBildirimDeposu: new GeriBildirimDeposu(bellekKv()),
+    xp: new XpYoneticisi({
+      getir: () => adaptorler.motivasyon.benim(),
+      etkin: () => true,
+      gecikmeler: [0],
+      bekle: () => Promise.resolve(),
+    }),
+    odak: new OdakYoneticisi({
+      depo: bellekKv(),
+      kuyruk,
+      motivasyon: () => adaptorler.motivasyon,
+      kapsam: () => {
+        const d = oturum.depo.al();
+        return d.asama === 'giris' ? (d.aktif?.uyelik.uyelikId ?? null) : null;
+      },
+      yeniId: () => '00000000-0000-7000-b000-000000000001',
+      cevrimiciMi: () => cevrimici.deger,
+    }),
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,

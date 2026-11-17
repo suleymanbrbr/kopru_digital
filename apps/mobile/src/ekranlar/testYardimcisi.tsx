@@ -17,6 +17,8 @@ import { mockAdaptorler } from '../api/mock';
 import { mockMedya } from '../api/mockMedya';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
+import { OdakYoneticisi } from '../motivasyon/odak';
+import { XpYoneticisi } from '../motivasyon/xpYonetici';
 import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/geriBildirim';
 import { OfflineKuyruk } from '../offline/kuyruk';
 import { planIsleyicisiKaydet } from '../offline/plan';
@@ -120,6 +122,20 @@ export function ortamKur(): Ortam {
     },
   });
   istemciler.push(queryClient);
+  const xp = new XpYoneticisi({
+    getir: () => adaptorler.motivasyon.benim(),
+    etkin: () => true,
+    gecikmeler: [0],
+    bekle: () => Promise.resolve(),
+  });
+  const odak = new OdakYoneticisi({
+    depo: bellekKv(),
+    kuyruk,
+    motivasyon: () => adaptorler.motivasyon,
+    kapsam: kapsamAl,
+    yeniId: () => `00000000-0000-7000-b000-${String(Math.random()).slice(2, 14).padEnd(12, '0')}`,
+    cevrimiciMi: () => cevrimici.deger,
+  });
   const servisler = {
     adaptorler,
     oturum,
@@ -129,6 +145,8 @@ export function ortamKur(): Ortam {
     geriBildirimDeposu,
     yukleme,
     gonderim,
+    xp,
+    odak,
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,
