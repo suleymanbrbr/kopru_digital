@@ -1,5 +1,6 @@
 import type { KayitAdapter } from './kayitTipleri';
 import type { MedyaAdapter } from './medyaTipleri';
+import type { MotivasyonAdapter } from './motivasyonTipleri';
 import type { OgrenmeAdapter } from './ogrenmeTipleri';
 import type { DersAdapter, FinansAdapter } from './operasyonTipleri';
 import type { SoruAdapter } from './soruTipleri';
@@ -87,4 +88,6 @@ export interface Adaptorler {
   soru: SoruAdapter;
   /** Dosya yukleme (medya servisi); soru/cevap fotograf ve ses ekleri icin. */
   medya: MedyaAdapter;
+  /** XP, seri, odak, karakter (motivasyon servisi). */
+  motivasyon: MotivasyonAdapter;
 }

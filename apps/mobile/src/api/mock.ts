@@ -2,6 +2,7 @@ import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
 import { mockKayit } from './mockKayit';
 import { mockMedya } from './mockMedya';
+import { mockMotivasyon } from './mockMotivasyon';
 import { mockOgrenme } from './mockOgrenme';
 import { mockOperasyon } from './mockOperasyon';
 import { mockSoru } from './mockSoru';
@@ -253,14 +254,55 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   const kayit = mockKayit(operasyonSecenekleri, operasyon.okuma);
   const soru = mockSoru(operasyonSecenekleri);
   const medya = mockMedya({ gecikmeMs: Math.min(gecikmeMs, 200), isle: 300 });
+  const motivasyon = mockMotivasyon(operasyonSecenekleri);
+
+  /** Eylem basariyla bitince mock motivasyon XP yazar (gercekte olay hatti yapar). */
+  function xpKancali<T>(hedef: T, kancalar: Record<string, (sonuc: unknown) => void>): T {
+    const sonuc = { ...hedef } as Record<string, unknown>;
+    for (const [ad, kanca] of Object.entries(kancalar)) {
+      const f = (hedef as Record<string, (...a: unknown[]) => Promise<unknown>>)[ad];
+      if (!f) continue;
+      sonuc[ad] = async (...a: unknown[]) => {
+        const r = await f.apply(hedef, a);
+        kanca(r);
+        return r;
+      };
+    }
+    return sonuc as T;
+  }
+  const ogrenmeXp = xpKancali(ogrenme, {
+    gorevGerceklesen: (r) => {
+      if ((r as { durum?: string }).durum === 'tamam') motivasyon.odul('plan');
+    },
+    odevTeslim: () => {
+      motivasyon.odul('odev');
+    },
+  });
+  const kayitXp = xpKancali(kayit, {
+    izledim: () => {
+      motivasyon.odul('kayit');
+    },
+    geriBildirimVer: () => {
+      motivasyon.odul('geri_bildirim');
+    },
+  });
+  const soruXp = xpKancali(soru, {
+    soruSor: () => {
+      motivasyon.odul('soru');
+    },
+    anladim: () => {
+      motivasyon.odul('anladim');
+    },
+  });
 
   return {
     ders: operasyon.ders,
     finans: operasyon.finans,
-    ogrenme,
-    kayit,
-    soru,
+    ogrenme: ogrenmeXp,
+    kayit: kayitXp,
+    soru: soruXp,
     medya,
+    motivasyon: motivasyon.adaptor,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);

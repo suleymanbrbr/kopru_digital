@@ -5,6 +5,7 @@ import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
 import { kayitAdaptoru } from './gercekKayit';
 import { medyaAdaptoru } from './gercekMedya';
+import { motivasyonAdaptoru } from './gercekMotivasyon';
 import { ogrenmeAdaptoru } from './gercekOgrenme';
 import { operasyonAdaptorleri } from './gercekOperasyon';
 import { soruAdaptoru } from './gercekSoru';
@@ -27,6 +28,8 @@ export interface GercekAdaptorSecenekleri {
   apiUrl: string;
   /** Medya servisi taban adresi; canlida api ile ayni alan adi (varsayilan `apiUrl`). */
   medyaUrl?: string;
+  /** Motivasyon servisi taban adresi; canlida api ile ayni alan adi (varsayilan `apiUrl`). */
+  motivasyonUrl?: string;
   depo: BelirtecDeposu;
   /** Test icin fetch degistirme; varsayilan `globalThis.fetch` (her cagrida okunur). */
   fetch?: typeof globalThis.fetch;
@@ -210,8 +213,16 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     adresler: { api: sec.apiUrl },
     fetch: aglaFetch,
   });
-  const { api: yetkili, medya: medyaIstemcisi } = createServisIstemcileri({
-    adresler: { api: sec.apiUrl, medya: sec.medyaUrl ?? sec.apiUrl },
+  const {
+    api: yetkili,
+    medya: medyaIstemcisi,
+    motivasyon: motivasyonIstemcisi,
+  } = createServisIstemcileri({
+    adresler: {
+      api: sec.apiUrl,
+      medya: sec.medyaUrl ?? sec.apiUrl,
+      motivasyon: sec.motivasyonUrl ?? sec.apiUrl,
+    },
     tokenAl: erisimAl,
     fetch: yenilemeliFetch,
   });
@@ -299,6 +310,12 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   const kayit = kayitAdaptoru({ yetkili, etkinKurum, veriAl });
   const soru = soruAdaptoru({ yetkili, etkinKurum, veriAl });
   const medya = medyaAdaptoru({ medya: medyaIstemcisi, veriAl });
+  const motivasyon = motivasyonAdaptoru({
+    motivasyon: motivasyonIstemcisi,
+    yetkili,
+    etkinKurum,
+    veriAl,
+  });
 
   return {
     ...operasyon,
@@ -306,6 +323,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     kayit,
     soru,
     medya,
+    motivasyon,
     auth: {
       async otpIste(telefon) {
         otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));
