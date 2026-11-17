@@ -4,6 +4,7 @@ import { ayniKaynakMi, hataYaniti } from './bff';
 import { istemciIpBasliklari } from './istemci-ip';
 import { mockModu } from './kimlik';
 import { apiAdresi } from './kimlik/api';
+import { motivasyonMockXpYaz } from './motivasyon-mock';
 
 /**
  * `/api/<servis>/<yol>` -> `api` servisinin `/v1/<servis>/<yol>` ucu icin ortak gecit. Tarayici bellekteki
@@ -33,7 +34,7 @@ export interface MockYanit {
 }
 
 export interface VekilTanimi {
-  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya';
+  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon';
   /** Hedef adres; verilmezse `api` servisi (`<API_URL>/v1/<servis>/<yol>`). */
   hedef?: (yol: string) => string;
   /** Yol parcalarinin (birlestirilmis) eslesmesi gereken desenler. */
@@ -139,17 +140,18 @@ export async function servisVekili(
   const idempotency = anahtar && UUID.test(anahtar) ? anahtar : undefined;
 
   if (mockModu()) {
-    return mockYaniti(
-      tanim.mock({
-        yontem: request.method,
-        yol,
-        sorgu: request.nextUrl.searchParams,
-        govde: govde.length > 0 ? guvenliJson(govde) : undefined,
-        basliklar: idempotency ? { 'idempotency-key': idempotency } : {},
-        kaynak: request.nextUrl.origin,
-        ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
-      }),
-    );
+    const sonuc = tanim.mock({
+      yontem: request.method,
+      yol,
+      sorgu: request.nextUrl.searchParams,
+      govde: govde.length > 0 ? guvenliJson(govde) : undefined,
+      basliklar: idempotency ? { 'idempotency-key': idempotency } : {},
+      kaynak: request.nextUrl.origin,
+      ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
+    });
+    // Mock'ta olay tuketicisi yok: basarili ogrenci eylemi motivasyon mock'unda XP yazar.
+    if (sonuc.durum < 300) motivasyonMockXpYaz(tanim.servis, request.method, yol);
+    return mockYaniti(sonuc);
   }
 
   try {

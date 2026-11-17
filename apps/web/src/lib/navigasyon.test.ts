@@ -43,6 +43,7 @@ describe('navigasyon yapilandirmasi', () => {
       'soru-sor',
       'kayitlarim',
       'karakterim',
+      'odak',
     ]);
   });
 

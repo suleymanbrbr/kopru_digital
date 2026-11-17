@@ -10,7 +10,7 @@ import { BugunDersleriKarti } from './bugun-dersleri';
 import { BosDurum } from '@/components/bos-durum';
 import { BugunGeriBildirimKarti } from '@/components/geri-bildirim/bugun-karti';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
-import { Karakter, karakterAdi } from '@/components/karakter';
+import { BugunMotivasyonKarti } from '@/components/motivasyon/bugun-karti';
 import {
   BugunBekleyenKarti,
   BugunOdevKarti,
@@ -18,7 +18,6 @@ import {
 } from '@/components/ogrenme/bugun-kartlari';
 import { BugunSoruKarti } from '@/components/soru/bugun-karti';
 import { dugmeStili } from '@/components/ui/button';
-import { Iskelet, Kart } from '@/components/ui/kart';
 import { BugunYoklamaKarti } from '@/components/yoklama/bugun-karti';
 import { useKurum } from '@/kurum/baglam';
 import { useOgrenciBugun } from '@/lib/bugun-verisi';
@@ -92,7 +91,6 @@ function OgrenciBugun() {
   const { uyelik, acikModuller } = useKurum();
   const veri = useOgrenciBugun(uyelik.kurumId);
   const kok = `/${uyelik.kurumId}`;
-  const karakter = veri.data?.karakter;
   const karakterVar = acikModuller.includes('oyunlastirma');
 
   return (
@@ -125,34 +123,7 @@ function OgrenciBugun() {
         )}
         {acikModuller.includes('odev') ? <BugunOdevKarti /> : null}
 
-        {karakterVar ? (
-          <Kart
-            aria-labelledby="karakter-baslik"
-            className="flex flex-col items-center bg-vurgu-yumusak p-5 text-center"
-          >
-            <h2 id="karakter-baslik" className="self-start text-base font-semibold">
-              {t('bugun.karakterBaslik')}
-            </h2>
-            {karakter ? (
-              <>
-                <div className="my-3 rounded-full bg-yuzey p-3">
-                  <Karakter tur={karakter.tur} asama={karakter.asama} boyut={144} oncelikli />
-                </div>
-                <p className="text-sm text-metin-ikincil">
-                  {t('bugun.karakterAciklama', { ad: karakterAdi(karakter.tur) })}
-                </p>
-                <Link
-                  href={`${kok}/karakterim`}
-                  className={dugmeStili({ gorunum: 'ikincil', className: 'mt-4' })}
-                >
-                  {t('bugun.karakterGor')}
-                </Link>
-              </>
-            ) : (
-              <Iskelet className="my-3 size-40 rounded-full" />
-            )}
-          </Kart>
-        ) : null}
+        {karakterVar ? <BugunMotivasyonKarti /> : null}
       </div>
     </>
   );

@@ -3,6 +3,7 @@
 import { UyeListeYanitSema } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { Users } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { DavetBolumu } from '../davetler/davet-bolumu';
@@ -12,6 +13,7 @@ import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { dugmeStili } from '@/components/ui/button';
 import { Rozet } from '@/components/ui/rozet';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
@@ -30,7 +32,7 @@ export function UyeBolumu({ rolu }: { rolu: 'ogrenci' | 'ogretmen' }) {
 }
 
 function UyeIcerigi({ rolu }: { rolu: 'ogrenci' | 'ogretmen' }) {
-  const { uyelik, rol } = useKurum();
+  const { uyelik, rol, acikModuller } = useKurum();
   const kurumId = uyelik.kurumId;
   const kopya = rolu === 'ogrenci' ? 'ogrenciler' : 'ogretmenler';
   const davetEdebilir = izinli(rol, 'davet.yaz');
@@ -88,6 +90,17 @@ function UyeIcerigi({ rolu }: { rolu: 'ogrenci' | 'ogretmen' }) {
                         </p>
                       ) : null}
                     </div>
+                    {rolu === 'ogrenci' && acikModuller.includes('oyunlastirma') ? (
+                      <Link
+                        href={`/${kurumId}/ogrenciler/${u.uyelik_id}`}
+                        className={dugmeStili({ gorunum: 'ikincil', boyut: 'sm' })}
+                        aria-label={t('motivasyon.ozet.baglantiEtiketi', {
+                          ad: u.gorunen_ad ?? t('hesap.uye.adsiz'),
+                        })}
+                      >
+                        {t('motivasyon.ozet.baglanti')}
+                      </Link>
+                    ) : null}
                     <Rozet ton={u.durum === 'aktif' ? 'basari' : 'notr'}>
                       {t(`hesap.uye.durum.${u.durum}`)}
                     </Rozet>
