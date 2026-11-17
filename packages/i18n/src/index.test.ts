@@ -1,4 +1,9 @@
-import { MODUL_KODLARI, type ModulKodu } from '@kopru/contracts';
+import {
+  BILDIRIM_KANALLARI,
+  BILDIRIM_KATEGORILERI,
+  MODUL_KODLARI,
+  type ModulKodu,
+} from '@kopru/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { createT, type Messages, t, tr } from './index.js';
@@ -18,5 +23,12 @@ describe('modul adlari', () => {
   it('anahtarlar @kopru/contracts MODUL_KODLARI ile birebir ayni', () => {
     const adlar: Record<ModulKodu, string> = tr.modul;
     expect(Object.keys(adlar).sort()).toEqual([...MODUL_KODLARI].sort());
+  });
+});
+
+describe('bildirim adlari', () => {
+  it('kategori ve kanal anahtarlari @kopru/contracts ile birebir ayni', () => {
+    expect(Object.keys(tr.bildirim.kategori).sort()).toEqual([...BILDIRIM_KATEGORILERI].sort());
+    expect(Object.keys(tr.bildirim.kanal).sort()).toEqual([...BILDIRIM_KANALLARI].sort());
   });
 });
