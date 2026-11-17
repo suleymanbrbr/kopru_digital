@@ -47,6 +47,17 @@ const AYRINTI_MESAJLARI: Record<string, MessageKey> = {
   geri_bildirim_ders_bitmedi: 'mobil.kayit.hata.dersBitmedi',
   geri_bildirim_yoklama_uygun_degil: 'mobil.kayit.hata.yoklamaUygunDegil',
   geri_bildirim_guncelleme_suresi_doldu: 'mobil.kayit.hata.guncellemeSuresiDoldu',
+  // Motivasyon: karakter, odak, haftanin yildizi
+  karakter_adi_uygunsuz: 'mobil.motivasyon.hata.karakter_adi_uygunsuz',
+  karakter_zaten_secildi: 'mobil.motivasyon.hata.karakter_zaten_secildi',
+  karakter_secilmemis: 'mobil.motivasyon.hata.karakter_secilmemis',
+  tur_degistirme_hakki_yok: 'mobil.motivasyon.hata.tur_degistirme_hakki_yok',
+  kozmetik_sahip_degil: 'mobil.motivasyon.hata.kozmetik_sahip_degil',
+  kozmetik_slot_uyusmuyor: 'mobil.motivasyon.hata.kozmetik_slot_uyusmuyor',
+  haftanin_yildizi_verilmis: 'mobil.motivasyon.hata.haftanin_yildizi_verilmis',
+  haftalik_limit_asildi: 'mobil.motivasyon.hata.haftalik_limit_asildi',
+  baslangic_gecersiz: 'mobil.motivasyon.hata.baslangic_gecersiz',
+  acik_oturum_var: 'mobil.motivasyon.hata.acik_oturum_var',
 };
 
 /** Kuyrukta basarisiz olan isin hata kodunu (api `ayrinti` ya da adaptor kodu) mesaja cevirir. */
