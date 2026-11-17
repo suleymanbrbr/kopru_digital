@@ -12,8 +12,8 @@ import Animated, {
 import { useHareketAzalt } from '../../hooks/useHareketAzalt';
 import { Companion } from '../../karakter/Companion';
 import type { TurKodu } from '../../karakter/tipler';
-import { titresim } from '../../motivasyon/titresim';
 import { adimlariPlanla } from '../../motivasyon/adimlar';
+import { titresim } from '../../motivasyon/titresim';
 import type { XpOlayi } from '../../motivasyon/xpYonetici';
 import { Dugme } from '../../ui/Dugme';
 import { Metin } from '../../ui/Metin';

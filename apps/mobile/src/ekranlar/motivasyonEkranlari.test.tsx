@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion --
+/* eslint-disable @typescript-eslint/require-await, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion --
    react-test-renderer React 19'da kullanimdan kaldirildi ama React Native icin ek bagimlilik
    gerektirmeyen tek renderer; `props` tipsizdir (any). */
 /**
@@ -10,9 +10,9 @@ import { Alert } from 'react-native';
 
 import { ApiHata } from '../api/tipler';
 import type { XpOlayi } from '../motivasyon/xpYonetici';
+import { Karakterim, kuralAdi } from './Karakterim';
 import { GrupMotivasyonEkrani, duraklatmaHatasi } from './motivasyon/GrupMotivasyonEkrani';
 import { KarakterSecimi } from './motivasyon/KarakterSecimi';
-import { Karakterim, kuralAdi } from './Karakterim';
 import { Odaklan, odakGorevleri } from './Odaklan';
 import { OgrenciBugun } from './OgrenciBugun';
 import { OgrenciKartiEkrani } from './OgrenciKartiEkrani';

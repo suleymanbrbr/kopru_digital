@@ -41,7 +41,7 @@ export function BeceriRadari({ beceriler, boyut = 220 }: Props) {
       accessibilityRole="image"
       accessibilityLabel={radarMetni(beceriler)}
       testID="beceri-radari"
-      style={{ width: kapsam, height: boyut + 36 * 2, alignSelf: 'center' }}
+      style={{ width: kapsam, height: boyut + 36 + 24, alignSelf: 'center' }}
     >
       <View
         importantForAccessibility="no-hide-descendants"

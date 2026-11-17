@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- testlerde tohum verisi varligi dogrudan varsayilir */
 import { mockMotivasyon } from '../api/mockMotivasyon';
 import type { MotivasyonAdapter, OdakOturumu } from '../api/motivasyonTipleri';
 import { ApiHata } from '../api/tipler';

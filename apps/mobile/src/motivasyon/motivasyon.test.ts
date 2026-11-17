@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- testlerde tohum verisi varligi dogrudan varsayilir */
 import type { MotivasyonDurumu, SeriDetayi } from '../api/motivasyonTipleri';
 import { bellekKv } from '../depo/kv';
 import { adimlariPlanla, EVRIM_ENFAZLA_MS } from './adimlar';
-import { gunFarki, ruhHaliSec } from './ruhHali';
 import {
   noktalarMetni,
   radarCokgeni,
@@ -10,6 +10,7 @@ import {
   radarNoktasi,
   radarOlcegi,
 } from './radar';
+import { gunFarki, ruhHaliSec } from './ruhHali';
 import {
   enYakinHedef,
   gunDurumuEtiketi,
