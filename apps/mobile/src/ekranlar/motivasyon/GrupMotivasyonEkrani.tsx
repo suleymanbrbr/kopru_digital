@@ -62,7 +62,8 @@ function YildizBolumu({ grupId }: { grupId: string }) {
       });
     },
     onSuccess: (s) => {
-      const ad = ogrenciler.data?.find((o) => o.ogrenciId === s.yildiz.ogrenci_id)?.ad ?? '';
+      const bulunan = ogrenciler.data?.find((o) => o.ogrenciId === s.yildiz.ogrenci_id)?.ad;
+      const ad = bulunan ? bulunan : t('mobil.ogrenciler.adsiz');
       setMesaj(t('mobil.motivasyon.yildiz.verildi', { ad, xp: s.xp }));
       setSecili(null);
       setGerekce('');

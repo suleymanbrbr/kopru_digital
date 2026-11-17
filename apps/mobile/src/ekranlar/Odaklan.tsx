@@ -345,6 +345,19 @@ export function Odaklan() {
           />
         </View>
       ) : null}
+      {hata ? (
+        <Metin varyant="ikincil" className="text-center text-hata" accessibilityLiveRegion="polite">
+          {hata}
+        </Metin>
+      ) : null}
+      <Dugme
+        buyuk
+        className="self-stretch"
+        etiket={t('mobil.odaklan.baslat')}
+        yukleniyor={baslatiyor}
+        onPress={() => void baslat()}
+        testID="odak-baslat"
+      />
       {gorevler.length > 0 ? (
         <View className="gap-2 self-stretch" testID="odak-gorevler">
           <Metin varyant="etiket">{t('mobil.motivasyon.odak.gorevSec')}</Metin>
@@ -396,19 +409,6 @@ export function Odaklan() {
           </View>
         </View>
       ) : null}
-      {hata ? (
-        <Metin varyant="ikincil" className="text-center text-hata" accessibilityLiveRegion="polite">
-          {hata}
-        </Metin>
-      ) : null}
-      <Dugme
-        buyuk
-        className="self-stretch"
-        etiket={t('mobil.odaklan.baslat')}
-        yukleniyor={baslatiyor}
-        onPress={() => void baslat()}
-        testID="odak-baslat"
-      />
     </Ekran>
   );
 }

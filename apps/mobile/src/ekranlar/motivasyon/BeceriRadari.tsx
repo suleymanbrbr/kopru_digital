@@ -19,7 +19,7 @@ interface Props {
   boyut?: number;
 }
 
-const ETIKET_PAYI = 44;
+const ETIKET_PAYI = 62;
 
 /**
  * Beceri grafigi (besgen). Etiketler ve puanlar RN metni olarak cizilir (yazi boyutuna uyar, renk
@@ -41,12 +41,12 @@ export function BeceriRadari({ beceriler, boyut = 220 }: Props) {
       accessibilityRole="image"
       accessibilityLabel={radarMetni(beceriler)}
       testID="beceri-radari"
-      style={{ width: kapsam, height: boyut + 36 + 24, alignSelf: 'center' }}
+      style={{ width: kapsam, height: boyut + 44 + 40, alignSelf: 'center' }}
     >
       <View
         importantForAccessibility="no-hide-descendants"
         accessibilityElementsHidden
-        style={{ position: 'absolute', left: ETIKET_PAYI, top: 36, width: boyut, height: boyut }}
+        style={{ position: 'absolute', left: ETIKET_PAYI, top: 44, width: boyut, height: boyut }}
       >
         <Svg width={boyut} height={boyut}>
           {[0.25, 0.5, 0.75, 1].map((oran) => (
@@ -86,7 +86,7 @@ export function BeceriRadari({ beceriler, boyut = 220 }: Props) {
         </Svg>
       </View>
       {beceriler.map((b, i) => {
-        const u = radarNoktasi(i, n, 1.2, merkez, yaricap);
+        const u = radarNoktasi(i, n, 1.42, merkez, yaricap);
         const solda = u.x < merkez - 4;
         const sagda = u.x > merkez + 4;
         const genislik = 84;
@@ -98,7 +98,7 @@ export function BeceriRadari({ beceriler, boyut = 220 }: Props) {
             style={{
               position: 'absolute',
               left: sol,
-              top: 36 + u.y - 18,
+              top: 44 + u.y - 18,
               width: genislik,
               alignItems: solda ? 'flex-end' : sagda ? 'flex-start' : 'center',
             }}
