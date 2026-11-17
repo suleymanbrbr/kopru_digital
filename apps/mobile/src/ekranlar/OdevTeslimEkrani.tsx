@@ -77,7 +77,7 @@ function SonucOzeti({ odev, tz }: { odev: OgrenciOdevi; tz: string }) {
 export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
   const router = useRouter();
   const qc = useQueryClient();
-  const { adaptorler } = useServisler();
+  const { adaptorler, xp } = useServisler();
   const { tz } = useSaatDilimi();
   const liste = useOdevlerim();
   const konular = useKonuHaritasi();
@@ -100,6 +100,7 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
       setHata(null);
       setTamam(true);
       void qc.invalidateQueries({ queryKey: ['odev'] });
+      void xp.eylemTamam();
     },
     onError: (e) => {
       setHata(hataMesaji(e));

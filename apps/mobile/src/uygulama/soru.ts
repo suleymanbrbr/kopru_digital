@@ -134,11 +134,14 @@ export function useMusaitlikAyarla() {
 }
 
 export function useAnladim(id: string) {
-  const { adaptorler } = useServisler();
+  const { adaptorler, xp } = useServisler();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => adaptorler.soru.anladim(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['soru'] }),
+    onSuccess: () => {
+      void xp.eylemTamam();
+      return qc.invalidateQueries({ queryKey: ['soru'] });
+    },
   });
 }
 

@@ -184,6 +184,8 @@ function IstekSatiri({
 
 function SinifKarti({ veri, uyelikId }: { veri: SinifBekleyenleri; uyelikId: string }) {
   const { adaptorler } = useServisler();
+  const router = useRouter();
+  const oyun = useModulAcik('oyunlastirma');
   const qc = useQueryClient();
   const anahtar = sinifBekleyenleriAnahtari(uyelikId);
   const karar = useMutation(katilimKarariSecenekleri(qc, adaptorler.hesap, anahtar));
@@ -211,6 +213,18 @@ function SinifKarti({ veri, uyelikId }: { veri: SinifBekleyenleri; uyelikId: str
       </View>
 
       <KodBolumu grupId={grup.id} grupAd={grup.ad} uyelikId={uyelikId} />
+
+      {oyun ? (
+        <Dugme
+          varyant="ikincil"
+          etiket={t('mobil.motivasyon.grup.giris')}
+          accessibilityLabel={t('mobil.motivasyon.grup.girisEtiketi', { grup: grup.ad })}
+          onPress={() => {
+            router.push({ pathname: '/grup-motivasyon', params: { grupId: grup.id, ad: grup.ad } });
+          }}
+          testID={`grup-motivasyon-${grup.id}`}
+        />
+      ) : null}
 
       <View className="gap-3">
         <Metin varyant="etiket">

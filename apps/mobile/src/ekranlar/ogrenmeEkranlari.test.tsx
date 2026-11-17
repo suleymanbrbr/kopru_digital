@@ -296,8 +296,10 @@ describe('odev teslim (ogrenci)', () => {
   it('yapilan hedefle dolu: kart + "Teslim et"; teslim sonrasi onay', async () => {
     const o = await ogrenciOrtami();
     const teslim = jest.spyOn(o.adaptorler.ogrenme, 'odevTeslim');
+    const xp = jest.spyOn(o.servisler.xp, 'eylemTamam');
     const r = await ac(o, <OdevTeslimEkrani ogrenciOdevId={ODEV_1} />);
     await dokun(r, 'Teslim et');
+    expect(xp).toHaveBeenCalledTimes(1); // teslim -> XP geri bildirimi tetigi
     expect(teslim).toHaveBeenCalledWith(ODEV_1, { yapilanSoru: 20 });
     expect(var_(r, 'teslim-tamam')).toBe(true);
   });

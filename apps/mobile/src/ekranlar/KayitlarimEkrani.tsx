@@ -294,7 +294,7 @@ interface SonAcilan {
  */
 export function KayitlarimEkrani() {
   const qc = useQueryClient();
-  const { adaptorler } = useServisler();
+  const { adaptorler, xp } = useServisler();
   const uyelikId = useAktif()?.uyelik.uyelikId;
   const { tz } = useSaatDilimi();
   const bugun = bugunTarihi(tz);
@@ -350,6 +350,7 @@ export function KayitlarimEkrani() {
       satiriGuncelle(k.id, { izlendi: true, izlediAt: r.izlediAt });
       setSon((s) => (s?.kayit.id === k.id ? null : s));
       setBildirim(t('mobil.kayit.izledimTamam'));
+      void xp.eylemTamam();
     } catch (e) {
       setHata(hataMesaji(e));
     }

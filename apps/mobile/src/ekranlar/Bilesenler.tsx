@@ -9,17 +9,64 @@ import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
+import { useServisler } from '../uygulama/baglam';
+import { useBenim } from '../uygulama/motivasyon';
 
 const HALLER: RuhHali[] = ['normal', 'odak', 'uykulu', 'mutlu', 'kutlama'];
 
 /** Yalnizca gelistirmede: karakter yer tutuculari (3 tur x 5 evre) ve temel bilesenler. */
 export function Bilesenler() {
   const [hal, setHal] = useState<RuhHali>('normal');
+  const { xp } = useServisler();
+  const benim = useBenim().data;
+  const onizle = (tur: 'xp' | 'seviye' | 'evrim') => {
+    if (!benim) return;
+    const asama = benim.karakter?.asama ?? 1;
+    xp.yayinla({
+      durum: benim,
+      fark: {
+        xp: tur === 'xp' ? 15 : 40,
+        seviyeAtladi: tur !== 'xp',
+        eskiSeviye: Math.max(benim.seviye - 1, 1),
+        yeniSeviye: benim.seviye,
+        evrim: tur === 'evrim',
+        eskiAsama: Math.max(asama - 1, 1),
+        yeniAsama: asama,
+        yeniRozetler: tur === 'seviye' ? ['Ödev Arı'] : [],
+      },
+    });
+  };
   return (
     <Ekran kenarlar={['left', 'right', 'bottom']}>
       <Metin varyant="altBaslik" accessibilityRole="header">
         {t('mobil.bilesenler.karakterler')}
       </Metin>
+      <Kart className="gap-3" testID="xp-onizleme">
+        <Metin varyant="ikincil">{t('mobil.motivasyon.onizleme.baslik')}</Metin>
+        <View className="flex-row flex-wrap gap-2">
+          <Dugme
+            etiket={t('mobil.motivasyon.onizleme.xp')}
+            varyant="ikincil"
+            onPress={() => {
+              onizle('xp');
+            }}
+          />
+          <Dugme
+            etiket={t('mobil.motivasyon.onizleme.seviye')}
+            varyant="ikincil"
+            onPress={() => {
+              onizle('seviye');
+            }}
+          />
+          <Dugme
+            etiket={t('mobil.motivasyon.onizleme.evrim')}
+            varyant="ikincil"
+            onPress={() => {
+              onizle('evrim');
+            }}
+          />
+        </View>
+      </Kart>
       <Kart className="gap-3">
         <Metin varyant="ikincil">{t('mobil.bilesenler.ruhHalleri')}</Metin>
         <View className="flex-row flex-wrap gap-2">

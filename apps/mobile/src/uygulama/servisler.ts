@@ -1,10 +1,12 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
+import { cevrimiciKorumaliMotivasyon } from '../api/cevrimiciMotivasyon';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { cevrimiciKorumaliOperasyon } from '../api/cevrimiciOperasyon';
 import { apiHatasiMi } from '../api/tipler';
@@ -14,10 +16,13 @@ import { guvenliDavetDeposu } from '../depo/davetDeposu';
 import { kv, webDeposuOlarak, type KvDepo } from '../depo/kv';
 import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
+import { OdakYoneticisi } from '../motivasyon/odak';
+import { XpYoneticisi } from '../motivasyon/xpYonetici';
+import { modulAcikMi } from '../nav/yapilandirma';
 import { netInfoGozlemcisi } from '../offline/ag';
 import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/geriBildirim';
 import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
-import { planIsleyicisiKaydet } from '../offline/plan';
+import { gerceklesenKuyrugaAl, planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
 import { GonderimYoneticisi } from '../yukleme/gonderim';
@@ -45,6 +50,10 @@ export interface Servisler {
   yukleme: YuklemeKuyrugu;
   /** Soru, cevap ve takip gonderimleri ("Gonderiliyor..." / "Gonderildi"). */
   gonderim: GonderimYoneticisi;
+  /** Eylem sonrasi "+N XP", seviye atlama ve evrim geri bildirimi (ogrenci). */
+  xp: XpYoneticisi;
+  /** Odak oturumu: sureyi baslangic zamanindan hesaplar, sunucu ve cevrimdisi kuyrukla esler. */
+  odak: OdakYoneticisi;
 }
 
 /** Uygulama omru boyunca tek kez kurulan servisler. */
@@ -62,6 +71,7 @@ export function servisleriKur(): Servisler {
     finans: operasyon.finans,
     ogrenme: cevrimiciKorumaliOgrenme(ham.ogrenme, () => agGozlemcisi.cevrimiciMi()),
     kayit: cevrimiciKorumaliKayit(ham.kayit, () => agGozlemcisi.cevrimiciMi()),
+    motivasyon: cevrimiciKorumaliMotivasyon(ham.motivasyon, () => agGozlemcisi.cevrimiciMi()),
   };
   const geriBildirimDeposu = new GeriBildirimDeposu(kv());
 
@@ -70,6 +80,8 @@ export function servisleriKur(): Servisler {
   const davetRef: { current: DavetYoneticisi | null } = { current: null };
   const yuklemeRef: { current: YuklemeKuyrugu | null } = { current: null };
   const gonderimRef: { current: GonderimYoneticisi | null } = { current: null };
+  const xpRef: { current: XpYoneticisi | null } = { current: null };
+  const odakRef: { current: OdakYoneticisi | null } = { current: null };
 
   const queryClient = new QueryClient({
     queryCache: new QueryCache({ onError: hataIsle }),
@@ -88,6 +100,8 @@ export function servisleriKur(): Servisler {
     adaptorler,
     temizle: () => {
       queryClient.clear();
+      xpRef.current?.sifirla();
+      odakRef.current?.sifirla();
     },
     // Paylasilan cihazda baska biri giris yapinca onceki kullanicinin daveti kabul edilmesin.
     kullaniciCikisi: () => {
@@ -129,17 +143,75 @@ export function servisleriKur(): Servisler {
     },
   );
 
+  const xp = new XpYoneticisi({
+    getir: () => adaptorler.motivasyon.benim(),
+    etkin: () => {
+      const d = oturum.depo.al();
+      return (
+        d.asama === 'giris' &&
+        d.aktif?.uyelik.rol === 'ogrenci' &&
+        modulAcikMi(d.aktif.moduller, 'oyunlastirma')
+      );
+    },
+    kaydet: (d) => {
+      const uyelikId = oturum.depo.al();
+      if (uyelikId.asama !== 'giris' || !uyelikId.aktif) return;
+      queryClient.setQueryData(['motivasyon', uyelikId.aktif.uyelik.uyelikId, 'benim'], d);
+      void queryClient.invalidateQueries({
+        queryKey: ['motivasyon', uyelikId.aktif.uyelik.uyelikId, 'seri'],
+      });
+    },
+  });
+  xpRef.current = xp;
+
   planIsleyicisiKaydet(
     kuyruk,
     () => adaptorler.ogrenme,
     () => {
       void queryClient.invalidateQueries({ queryKey: ['plan'] });
+      void xp.eylemTamam();
     },
   );
+
+  const odak = new OdakYoneticisi({
+    depo: kv(),
+    kuyruk,
+    motivasyon: () => adaptorler.motivasyon,
+    kapsam: () => {
+      const d = oturum.depo.al();
+      return d.asama === 'giris' ? (d.aktif?.uyelik.uyelikId ?? null) : null;
+    },
+    yeniId: yeniIstekId,
+    cevrimiciMi: () => agGozlemcisi.cevrimiciMi(),
+    cihaz: Platform.OS,
+    sunucu: () => {
+      const d = oturum.depo.al();
+      return d.asama === 'giris' && !!d.aktif && modulAcikMi(d.aktif.moduller, 'oyunlastirma');
+    },
+    bitti: (yuk, sonuc) => {
+      // Sure plan gorevine "gerceklesen" olarak yazilir (mevcut dakika + bu oturum), ayni is hatti.
+      if (yuk.planGorevi && sonuc.planYazildi) {
+        gerceklesenKuyrugaAl(
+          kuyruk,
+          {
+            gorevId: yuk.planGorevi.id,
+            gorevBaslik: yuk.planGorevi.baslik,
+            gun: yuk.planGorevi.gun,
+            miktar: yuk.planGorevi.mevcutDk + Math.round(sonuc.gerceklesenSn / 60),
+          },
+          `odak-plan-${yuk.istemciId}`,
+        );
+      }
+      void queryClient.invalidateQueries({ queryKey: ['motivasyon'] });
+      void xp.eylemTamam();
+    },
+  });
+  odakRef.current = odak;
 
   geriBildirimIsleyicisiKaydet(kuyruk, () => adaptorler.kayit, {
     basarili: () => {
       void queryClient.invalidateQueries({ queryKey: ['geri-bildirim'] });
+      void xp.eylemTamam();
     },
     reddedildi: (yuk) => {
       const kapsam = oturum.depo.al();
@@ -173,6 +245,7 @@ export function servisleriKur(): Servisler {
     soru: () => adaptorler.soru,
     gonderildi: () => {
       void queryClient.invalidateQueries({ queryKey: ['soru'] });
+      void xp.eylemTamam();
     },
   });
   gonderimRef.current = gonderim;
@@ -194,5 +267,7 @@ export function servisleriKur(): Servisler {
     geriBildirimDeposu,
     yukleme,
     gonderim,
+    xp,
+    odak,
   };
 }
