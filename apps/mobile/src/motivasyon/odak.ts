@@ -25,6 +25,26 @@ export const ODAK_SERBEST_ENAZ_DK = 5;
 export const ODAK_SERBEST_ENCOK_DK = 180;
 export const ODAK_SERBEST_ADIM_DK = 5;
 
+/** Odakta secilebilen dersler (i18n `mobil.brans.*`; ayri bir brans listesi ucu yok). */
+export const ODAK_BRANSLARI: readonly string[] = [
+  'matematik',
+  'geometri',
+  'fizik',
+  'kimya',
+  'biyoloji',
+  'fen_bilimleri',
+  'turkce',
+  'edebiyat',
+  'tarih',
+  'cografya',
+  'sosyal_bilgiler',
+  'inkilap_tarihi',
+  'felsefe',
+  'din_kulturu',
+  'ingilizce',
+  'almanca',
+];
+
 /** Plan gorevine "gerceklesen" yazmak icin gorevin o anki durumu. */
 export interface OdakPlanGorevi {
   id: string;
@@ -265,6 +285,8 @@ export class OdakYoneticisi {
     mod: OdakModu;
     planlananDk: number;
     planGorevi?: OdakPlanGorevi;
+    /** Plan gorevi yoksa secilen ders (brans); sunucuda beceri puani icin gider. */
+    bransKodu?: string;
   }): Promise<void> {
     if (this.durum.faz === 'calisiyor' || this.durum.faz === 'bitiyor') return;
     const kapsam = this.sec.kapsam();
@@ -276,7 +298,11 @@ export class OdakYoneticisi {
       mod: g.mod,
       planlananDk: g.planlananDk,
       baslangicAt: new Date(this.simdi()).toISOString(),
-      ...(g.planGorevi ? { bransKodu: g.planGorevi.bransKodu } : {}),
+      ...(g.planGorevi
+        ? { bransKodu: g.planGorevi.bransKodu }
+        : g.bransKodu
+          ? { bransKodu: g.bransKodu }
+          : {}),
       ...(g.planGorevi
         ? {
             planGorevi: {

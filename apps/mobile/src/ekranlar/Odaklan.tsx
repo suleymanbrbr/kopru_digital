@@ -8,12 +8,14 @@ import type { PlanGorevi } from '../api/ogrenmeTipleri';
 import { Companion } from '../karakter/Companion';
 import { bugunTarihi } from '../lib/saat';
 import {
+  ODAK_BRANSLARI,
   ODAK_MODLARI,
   ODAK_SERBEST_ADIM_DK,
   ODAK_SERBEST_ENAZ_DK,
   ODAK_SERBEST_ENCOK_DK,
   type OdakPlanGorevi,
 } from '../motivasyon/odak';
+import { bransAdi } from '../ogrenme/konu';
 import { Cip } from '../ui/Cip';
 import { Dugme } from '../ui/Dugme';
 import { Ekran } from '../ui/Ekran';
@@ -84,6 +86,7 @@ export function Odaklan() {
   const [mod, setMod] = useState<OdakModu>('25_5');
   const [serbestDk, setSerbestDk] = useState(30);
   const [gorevId, setGorevId] = useState<string | null>(null);
+  const [brans, setBrans] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
   const [baslatiyor, setBaslatiyor] = useState(false);
   const otomatikBitti = useRef<string | null>(null);
@@ -121,7 +124,12 @@ export function Odaklan() {
             bransKodu: secilenGorev.bransKodu,
           }
         : undefined;
-      await odak.baslat({ mod, planlananDk, ...(planGorevi ? { planGorevi } : {}) });
+      await odak.baslat({
+        mod,
+        planlananDk,
+        ...(planGorevi ? { planGorevi } : {}),
+        ...(!planGorevi && brans ? { bransKodu: brans } : {}),
+      });
     } catch (e) {
       setHata(hataMesaji(e));
     } finally {
@@ -361,6 +369,31 @@ export function Odaklan() {
             ))}
           </View>
           <Metin varyant="kucuk">{t('mobil.motivasyon.odak.gorevAciklama')}</Metin>
+        </View>
+      ) : null}
+      {!secilenGorev ? (
+        <View className="gap-2 self-stretch" testID="odak-branslar">
+          <Metin varyant="etiket">{t('mobil.motivasyon.odak.dersSec')}</Metin>
+          <View className="flex-row flex-wrap gap-2">
+            <Cip
+              etiket={t('mobil.motivasyon.odak.dersYok')}
+              secili={brans === null}
+              onPress={() => {
+                setBrans(null);
+              }}
+            />
+            {ODAK_BRANSLARI.map((b) => (
+              <Cip
+                key={b}
+                etiket={bransAdi(b)}
+                secili={brans === b}
+                onPress={() => {
+                  setBrans(b);
+                }}
+                testID={`odak-brans-${b}`}
+              />
+            ))}
+          </View>
         </View>
       ) : null}
       {hata ? (

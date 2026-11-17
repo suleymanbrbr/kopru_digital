@@ -323,11 +323,13 @@ describe('ogrenci Kayitlarim', () => {
 
   it('"izledim" tarayicidan donunce ya da satirdan acikca isaretlenir', async () => {
     const o = await ogrenciOrtami();
+    const xp = jest.spyOn(o.servisler.xp, 'eylemTamam');
     const r = await ac(o, <KayitlarimEkrani />);
     await testIDDokun(r, 'kayit-ac-kaynak-drive-uslu');
     await bekle(60);
     await testIDDokun(r, 'kayit-son-izledim');
     await bekle(60);
+    expect(xp).toHaveBeenCalledTimes(1); // izledim -> XP geri bildirimi tetigi
     expect(var_(r, 'kayit-izledin-mi')).toBe(false);
     expect(metinler(r)).toContain('İzledin olarak işaretlendi.');
     const k = await o.adaptorler.kayit.kayit('kaynak-drive-uslu');

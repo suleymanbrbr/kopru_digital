@@ -3547,6 +3547,8 @@ export const tr = {
         dakikaEtiketi: '{dk} dakika',
         gorevSec: 'Bu oturum hangi görev için?',
         gorevsiz: 'Görevsiz',
+        dersSec: 'Hangi ders? (isteğe bağlı)',
+        dersYok: 'Ders seçme',
         gorevAciklama: 'Süre seçtiğin görevin gerçekleşen dakikasına eklenir.',
         gorevBaslik: 'Görev',
         gorevYazildi: 'Süren göreve gerçekleşen olarak eklendi.',

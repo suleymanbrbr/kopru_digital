@@ -10,6 +10,7 @@ import { Alert } from 'react-native';
 
 import { ApiHata } from '../api/tipler';
 import type { XpOlayi } from '../motivasyon/xpYonetici';
+import { useAnladim } from '../uygulama/soru';
 import { Karakterim, kuralAdi } from './Karakterim';
 import { GrupMotivasyonEkrani, duraklatmaHatasi } from './motivasyon/GrupMotivasyonEkrani';
 import { KarakterSecimi } from './motivasyon/KarakterSecimi';
@@ -341,6 +342,18 @@ describe('odak sayaci (mock)', () => {
     expect(odakGorevleri([])).toEqual([]);
   });
 
+  it('ders (brans) secimi: plan gorevi yokken brans_kodu sunucuya gider; gorev secilince brans gizlenir', async () => {
+    const o = await ogrenciOrtami();
+    const baslat = jest.spyOn(o.adaptorler.motivasyon, 'odakBaslat');
+    const r = await ac(o, <Odaklan />);
+    expect(var_(r, 'odak-branslar')).toBe(true);
+    await testIDDokun(r, 'odak-brans-fizik');
+    await testIDDokun(r, 'odak-baslat');
+    await bekle(60);
+    expect(baslat.mock.calls[0]![0]).toMatchObject({ bransKodu: 'fizik' });
+    expect(baslat.mock.calls[0]![0].planGorevId).toBeUndefined();
+  });
+
   it('409 acik oturum: devam eden oturum surdurulur ve bilgilendirilir', async () => {
     const o = await ogrenciOrtami();
     await o.adaptorler.motivasyon.odakBaslat({
@@ -365,6 +378,28 @@ describe('odak sayaci (mock)', () => {
     expect(yeni.al().faz).toBe('calisiyor');
     const r = await ac(o, <Odaklan />);
     expect(var_(r, 'odak-sure')).toBe(true);
+  });
+});
+
+describe('XP tetikleri', () => {
+  it('soru "anladim" basarili olunca XP geri bildirimi tetiklenir', async () => {
+    const o = await ogrenciOrtami();
+    const xp = jest.spyOn(o.servisler.xp, 'eylemTamam');
+    jest.spyOn(o.adaptorler.soru, 'anladim').mockResolvedValue(undefined as never);
+    let tetik: () => void = () => undefined;
+    function Dugme() {
+      const m = useAnladim('s1');
+      tetik = () => {
+        m.mutate();
+      };
+      return null;
+    }
+    await ac(o, <Dugme />);
+    await act(async () => {
+      tetik();
+    });
+    await bekle(60);
+    expect(xp).toHaveBeenCalledTimes(1);
   });
 });
 
