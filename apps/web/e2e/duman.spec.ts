@@ -97,7 +97,8 @@ test.describe('rol ve modul duyarli navigasyon', () => {
     // Ogrenci bugunku kendi derslerini gorur (kapsam api'dedir).
     await expect(page.getByRole('heading', { name: 'Bugünkü dersler' })).toBeVisible();
     await expect(page.getByText('Matematik · Geometri tekrarı', { exact: true })).toBeVisible();
-    await expect(page.getByRole('img', { name: /Kıvılcım/ })).toBeVisible();
+    // Karakter, seri ve gunluk hedef karti (karakter secilmemisse secime davet eder).
+    await expect(page.getByRole('region', { name: 'Yol arkadaşın' })).toBeVisible();
     if (isMobile) await page.getByRole('button', { name: 'Menü' }).click();
     const menu = page.getByRole('navigation', { name: 'Ana menü' });
     for (const ad of ['Bugün', 'Görevler', 'Ödevlerim', 'Soru sor', 'Kayıtlarım', 'Karakterim']) {

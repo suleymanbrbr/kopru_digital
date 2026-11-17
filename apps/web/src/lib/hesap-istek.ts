@@ -2,9 +2,10 @@ import { t } from '@kopru/i18n';
 import type { z } from 'zod';
 
 import { bffIstek, UygulamaHatasi } from '@/lib/api';
+import { XP_OLAYI, xpOlasiMi } from '@/lib/motivasyon/xp';
 import { belirteciYenile, erisimBelirteciAl } from '@/oturum/saglayici';
 
-export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya';
+export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon';
 
 interface IstekSecenekleri<S> {
   yontem?: string;
@@ -33,11 +34,22 @@ export async function servisIstek<S extends z.ZodType>(
         : {}),
       belirtec: erisimBelirteciAl(),
     });
+  // XP kazandirmis olabilecek ogrenci eylemlerinden sonra merkezi XP geri bildirimine haber verilir.
+  const sonuc = async () => {
+    const yanit = await yap();
+    if (
+      typeof window !== 'undefined' &&
+      xpOlasiMi(servis, secenekler.yontem ?? (secenekler.govde === undefined ? 'GET' : 'POST'), yol)
+    ) {
+      window.dispatchEvent(new CustomEvent(XP_OLAYI));
+    }
+    return yanit;
+  };
   try {
-    return await yap();
+    return await sonuc();
   } catch (hata) {
     if (hata instanceof UygulamaHatasi && hata.durum === 401 && (await belirteciYenile())) {
-      return await yap();
+      return await sonuc();
     }
     throw hata;
   }
@@ -66,6 +78,14 @@ export function ogrenmeIstek<S extends z.ZodType>(
 /** Medya servisi (`/api/medya/dosyalar/*` -> `MEDYA_URL/v1/dosyalar/*`). */
 export function medyaIstek<S extends z.ZodType>(yol: string, secenekler: IstekSecenekleri<S> = {}) {
   return servisIstek('medya', yol, secenekler);
+}
+
+/** Motivasyon servisi (`/api/motivasyon/*` -> `MOTIVASYON_URL/v1/motivasyon/*`). */
+export function motivasyonIstek<S extends z.ZodType>(
+  yol: string,
+  secenekler: IstekSecenekleri<S> = {},
+) {
+  return servisIstek('motivasyon', yol, secenekler);
 }
 
 /** `content-disposition` basligindan dosya adini cikarir. */

@@ -19,6 +19,7 @@ import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { GrupMateryalleri } from '@/components/kayit/grup-materyalleri';
+import { GrupMotivasyon } from '@/components/motivasyon/grup-motivasyon';
 import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Iskelet } from '@/components/ui/kart';
 import { OnayPenceresi } from '@/components/ui/pencere';
@@ -30,7 +31,7 @@ import { izinli } from '@/lib/yetki';
 
 export function GrupDetay() {
   const { grupId } = useParams<{ grupId: string }>();
-  const { uyelik, rol } = useKurum();
+  const { uyelik, rol, acikModuller } = useKurum();
   const kurumId = uyelik.kurumId;
   const qc = useQueryClient();
   const yazabilir = izinli(rol, 'grup.yaz');
@@ -144,6 +145,9 @@ export function GrupDetay() {
         <GrupUyeleri kurumId={kurumId} grup={g} yazabilir={yazabilir} />
         <GrupAtamalari kurumId={kurumId} grup={g} yazabilir={yazabilir} />
         <GrupMateryalleri grup={g} />
+        {acikModuller.includes('oyunlastirma') ? (
+          <GrupMotivasyon kurumId={kurumId} grup={g} />
+        ) : null}
       </div>
 
       <GrupFormu

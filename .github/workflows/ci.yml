@@ -54,8 +54,11 @@ jobs:
       - name: Tip kontrolü
         run: pnpm typecheck
 
+      # Mobil (jest) testleri ayri `mobil` isinde kosar. Burada vitest paketleri ve Postgres ile ayni anda
+      # calisinca 4 cekirdekli calistiricida aclik yasiyor, zaman asimina ya da 20 dk'lik is sinirina
+      # takiliyordu (12 ve 17 Kasim). Ayni testleri iki kez kosmak yerine tek yerde kosulur.
       - name: Test
-        run: pnpm test
+        run: pnpm turbo run test --filter='!@kopru/mobile'
 
       - name: Build
         run: pnpm build

@@ -31,7 +31,7 @@ const kurumlar: Record<string, { uyelik: Uyelik; moduller: ModulKodu[] }> = {
       rol: 'yonetici',
       vurguRengi: '#0E9F8E',
     },
-    moduller: tumModuller.filter((m) => m !== 'finans' && m !== 'deneme'),
+    moduller: tumModuller.filter((m) => m !== 'finans' && m !== 'deneme' && m !== 'oyunlastirma'),
   },
   'kurum-atlas': {
     uyelik: {
