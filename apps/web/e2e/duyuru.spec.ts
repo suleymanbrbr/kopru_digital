@@ -39,7 +39,7 @@ function bugunOgleIstanbul(): Date {
   return new Date(`${gun}T12:00:00+03:00`);
 }
 
-const DUYURU_1 ='00000000-0000-4000-8000-0000000d0001';
+const DUYURU_1 = '00000000-0000-4000-8000-0000000d0001';
 
 test.describe('ogrenci: duyurular (Atlas)', () => {
   test.describe.configure({ mode: 'serial' });
