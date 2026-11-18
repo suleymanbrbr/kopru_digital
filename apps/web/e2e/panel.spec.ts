@@ -109,6 +109,22 @@ test.describe('yonetici paneli', () => {
     ).toBeVisible();
   });
 
+  test('sayiya tiklayinca alt liste kaydirilip gorunur olur ve odaklanir (asagi inmek gerekmez)', async ({
+    page,
+    isMobile,
+  }) => {
+    await panelAc(page, 'Mavi', isMobile);
+    const tablo = page.getByRole('table', { name: 'Gruplar' });
+    await tablo.getByRole('button', { name: /^Devam oranı, 9-A Sınıfı:/ }).click();
+    const liste = page.getByTestId('alt-liste');
+    const baslik = liste.getByRole('heading', { name: 'Devam oranı · 9-A Sınıfı' });
+    await expect(baslik).toBeFocused();
+    // Liste yuklenip uzadiktan sonra da baslik ve ilk satirlar ekranda kalir.
+    await expect(liste.getByRole('table')).toBeVisible();
+    await expect(baslik).toBeInViewport();
+    await expect(liste.getByRole('row').nth(1)).toBeInViewport();
+  });
+
   test('Excel indir: gercek .xlsx dosyasi iner', async ({ page, isMobile }) => {
     await panelAc(page, 'Mavi', isMobile);
     const indirme = page.waitForEvent('download');

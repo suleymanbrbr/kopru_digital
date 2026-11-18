@@ -30,6 +30,7 @@ import { hataMesaji } from '@/lib/api';
 import { hesapIstek } from '@/lib/hesap-istek';
 import { useSayfaliSorgu } from '@/lib/sayfali-sorgu';
 import { telefonBicimle } from '@/lib/telefon';
+import { useYeniParametresi } from '@/lib/yeni-parametresi';
 
 type DavetListe = z.output<typeof DavetListeYanitSema>;
 type Durum = DavetTipi['durum'];
@@ -73,6 +74,10 @@ export function DavetBolumu({
   const [sonuc, setSonuc] = useState<{ davet: DavetSonucu; baslik?: string } | null>(null);
   const [iptalEdilecek, setIptalEdilecek] = useState<DavetTipi | null>(null);
   const [bildirim, setBildirim] = useState<Bildirim>(null);
+  // Bugun ekranindaki "Ogrenci ekle" kisayolu (`?davet=1`).
+  useYeniParametresi('davet', () => {
+    setFormAcik(true);
+  });
 
   const sorgu = useSayfaliSorgu({
     anahtar: taban,

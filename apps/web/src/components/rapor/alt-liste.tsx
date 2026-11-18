@@ -47,9 +47,41 @@ export function AltListe({
   kapat: () => void;
 }) {
   const kok = useRef<HTMLElement>(null);
+  const baslikRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    // Liste acilinca gorunur olsun (jsdom'da yok).
-    kok.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Liste acilinca (ya da baska sayi secilince) gorunur ve odakli olsun; buyuk kurumda kullanici sayfanin
+    // altina inmek zorunda kalmaz. Liste yuklenirken yukseklik buyudugu icin (sayfa sonuna kisitlanan kaydirma
+    // karti ekranin altinda birakir) ilk 2 sn boyunca boyut degisince yeniden hizalanir; kullanici kendi
+    // kaydirdiysa (tekerlek/dokunma/tus) birakilir.
+    const kart = kok.current;
+    if (!kart) return;
+    let birakildi = false;
+    const hizala = () => {
+      if (!birakildi) kart.scrollIntoView({ behavior: 'auto', block: 'start' });
+    };
+    hizala();
+    baslikRef.current?.focus({ preventScroll: true });
+    const birak = () => {
+      birakildi = true;
+    };
+    const olaylar = ['wheel', 'touchmove', 'keydown'] as const;
+    for (const o of olaylar) window.addEventListener(o, birak, { passive: true, once: true });
+    const gozlemci =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => {
+            hizala();
+          });
+    gozlemci?.observe(kart);
+    const sure = setTimeout(() => {
+      birakildi = true;
+      gozlemci?.disconnect();
+    }, 2000);
+    return () => {
+      clearTimeout(sure);
+      gozlemci?.disconnect();
+      for (const o of olaylar) window.removeEventListener(o, birak);
+    };
   }, [secim.gosterge, secim.grupId, secim.ogretmenId]);
 
   const baslik = t('rapor.altListe.baslik', {
@@ -64,7 +96,7 @@ export function AltListe({
       className="mt-6 scroll-mt-20 overflow-hidden"
     >
       <div className="flex items-center justify-between gap-3 border-b border-kenar px-4 py-3">
-        <h2 id="alt-liste-baslik" className="text-base font-semibold">
+        <h2 id="alt-liste-baslik" ref={baslikRef} tabIndex={-1} className="text-base font-semibold">
           {baslik}
         </h2>
         <Dugme gorunum="hayalet" boyut="sm" onClick={kapat} aria-label={t('rapor.altListe.kapat')}>
