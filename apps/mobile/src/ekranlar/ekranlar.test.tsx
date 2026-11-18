@@ -233,7 +233,8 @@ describe('mock modda yeni ekranlar render edilir', () => {
     await o.giris(...OGRETMEN);
     const r = await ac(o, <OgretmenBugun />);
     const m = metinler(r);
-    expect(m).toContain('Yoklama bekleyen dersler');
+    expect(m).toContain('Önceki derslerin yoklaması');
+    expect(m).toContain('Yoklaması alınmadı');
     expect(m).toContain('Bugünkü dersler');
     expect(m).toContain('Elif Kaya');
     expect(m).toContain('Mert Aydın');
@@ -248,7 +249,8 @@ describe('mock modda yeni ekranlar render edilir', () => {
       aktif: { ...d.aktif, moduller: { ...d.aktif.moduller, yoklama: false } },
     });
     const r = await ac(o, <OgretmenBugun />);
-    expect(metinler(r)).not.toContain('Yoklama bekleyen dersler');
+    expect(metinler(r)).not.toContain('Önceki derslerin yoklaması');
+    expect(metinler(r)).not.toContain('Yoklaması alınmadı');
   });
 
   it('DerslerEkrani: gun seridi, liste ve "Ders ekle"', async () => {
@@ -563,6 +565,8 @@ describe('ogrenci bugun ekrani', () => {
     // Ogrenci olarak giris
     await o.giris(...OGRENCI);
     const r = await ac(o, <OgrenciBugun />);
+    // Ogretmen notlari her ders icin ayri sorgudur; kartlar bagimsiz yuklenir.
+    await bekle(100);
     const m = metinler(r);
     expect(m).toContain('Bugünkü dersler');
     expect(m).toContain('Yaklaşan dersler');

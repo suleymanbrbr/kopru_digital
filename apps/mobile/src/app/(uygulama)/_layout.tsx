@@ -49,6 +49,9 @@ export default function UygulamaDuzeni() {
           name="bildirim-tercihleri"
           options={{ title: t('mobil.bildirim.tercih.baslik') }}
         />
+        <Stack.Screen name="duyurular" options={{ title: t('mobil.duyuru.baslik') }} />
+        <Stack.Screen name="duyuru/[id]" options={{ title: t('mobil.duyuru.detayBaslik') }} />
+        <Stack.Screen name="duyuru-yaz" options={{ title: t('mobil.duyuru.yaz.baslik') }} />
         <Stack.Screen name="kurum" options={{ title: t('mobil.kurum.baslik') }} />
         <Stack.Screen name="oturumlar" options={{ title: t('mobil.oturumlar.baslik') }} />
         <Stack.Screen name="katilim" options={{ title: t('mobil.sinifKodu.baslik') }} />

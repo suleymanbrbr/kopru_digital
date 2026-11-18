@@ -6,6 +6,7 @@ import type {
   BildirimKutuOgesi,
   BildirimTercihi,
 } from './bildirimTipleri';
+import { mockDuyuru } from './mockDuyuru';
 import type { MockOperasyonSecenekleri } from './mockOperasyon';
 import { ApiHata } from './tipler';
 
@@ -129,6 +130,7 @@ export function mockBildirim(sec: MockOperasyonSecenekleri): MockBildirim {
     ]);
 
   const adaptor: BildirimAdapter = {
+    ...mockDuyuru(sec),
     async cihazKaydet(k) {
       await gecik();
       cihazlar.set(k.cihaz_kimligi, k.push_belirteci);

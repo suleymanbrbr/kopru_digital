@@ -40,6 +40,21 @@ describe('oturum yoneticisi', () => {
     expect(d.aktif?.moduller.soru_sor).toBe(false);
   });
 
+  it('soguk acilis kurum secimi onbellegi silmez; uyelikler arasi gecis ve kurum degisimi siler', async () => {
+    const { y, adaptorler, temizle } = kur();
+    await adaptorler.auth.otpDogrula('+905551110005', '123456');
+    await y.girisTamamlandi();
+    await y.kvkkKabulEt();
+    await y.uyelikSec('uyelik-ogrenci-b');
+    expect(temizle).not.toHaveBeenCalled();
+    await y.uyelikSec('uyelik-ogretmen-a');
+    expect(temizle).toHaveBeenCalledTimes(1);
+    y.kurumDegistir();
+    expect(temizle).toHaveBeenCalledTimes(2);
+    await y.uyelikSec('uyelik-ogrenci-b');
+    expect(temizle).toHaveBeenCalledTimes(2);
+  });
+
   it('kvkk metinleri durumda gelir; rizaGerekli bayat metinleri temizler, yukle yeniden doldurur', async () => {
     const { y, adaptorler } = kur();
     await adaptorler.auth.otpDogrula('+905551110001', '123456');

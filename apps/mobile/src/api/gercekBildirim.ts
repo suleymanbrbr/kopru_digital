@@ -111,5 +111,90 @@ export function bildirimAdaptoru(b: BildirimBagimliligi): BildirimAdapter {
         }),
       );
     },
+
+    async duyurularim(s) {
+      const d = veriAl(
+        await bildirim.GET('/v1/bildirim/kurumlar/{kurum_id}/duyurular', {
+          params: {
+            path: kurumYolu(),
+            query: {
+              ...(s?.limit ? { limit: s.limit } : {}),
+              ...(s?.offset ? { offset: s.offset } : {}),
+              ...(s?.okunmamis ? { okunmamis: 'true' as const } : {}),
+            },
+          },
+        }),
+      );
+      return { ogeler: d.ogeler, toplam: d.toplam };
+    },
+    async duyuru(id) {
+      return veriAl(
+        await bildirim.GET('/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}', {
+          params: { path: { ...kurumYolu(), duyuru_id: id } },
+        }),
+      );
+    },
+    async duyuruOkundu(id) {
+      veriAl(
+        await bildirim.POST('/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/okundu', {
+          params: { path: { ...kurumYolu(), duyuru_id: id } },
+          body: {} as never,
+        }),
+      );
+    },
+    async duyuruYonetim(s) {
+      const d = veriAl(
+        await bildirim.GET('/v1/bildirim/kurumlar/{kurum_id}/duyurular/yonetim', {
+          params: {
+            path: kurumYolu(),
+            query: {
+              ...(s?.durum ? { durum: s.durum } : {}),
+              ...(s?.limit ? { limit: s.limit } : {}),
+              ...(s?.offset ? { offset: s.offset } : {}),
+            },
+          },
+        }),
+      );
+      return { ogeler: d.ogeler, toplam: d.toplam };
+    },
+    async duyuruTaslak(g) {
+      return veriAl(
+        await bildirim.POST('/v1/bildirim/kurumlar/{kurum_id}/duyurular', {
+          params: { path: kurumYolu() },
+          body: g as never,
+        }),
+      );
+    },
+    async duyuruGuncelle(id, g) {
+      return veriAl(
+        await bildirim.PATCH('/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}', {
+          params: { path: { ...kurumYolu(), duyuru_id: id } },
+          body: g as never,
+        }),
+      );
+    },
+    async duyuruYayinla(id) {
+      return veriAl(
+        await bildirim.POST('/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/yayinla', {
+          params: { path: { ...kurumYolu(), duyuru_id: id } },
+          body: {} as never,
+        }),
+      );
+    },
+    async duyuruArsivle(id) {
+      return veriAl(
+        await bildirim.POST('/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/arsivle', {
+          params: { path: { ...kurumYolu(), duyuru_id: id } },
+          body: {} as never,
+        }),
+      );
+    },
+    async duyuruSil(id) {
+      veriAl(
+        await bildirim.DELETE('/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}', {
+          params: { path: { ...kurumYolu(), duyuru_id: id } },
+        }),
+      );
+    },
   };
 }

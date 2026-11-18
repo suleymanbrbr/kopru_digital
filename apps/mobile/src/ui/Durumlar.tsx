@@ -40,6 +40,34 @@ export function BosDurum({ mesaj, baslik, ikon = 'sparkles' }: BosProps) {
   );
 }
 
+/**
+ * Kart ici yukleme: kartin kendi bolumunde kucuk bir satir (tum ekran degil). Bir kartin servisi
+ * yavas ya da kapaliyken diger kartlar etkilenmez.
+ */
+export function KartYukleniyor({ etiket = t('ortak.yukleniyor') }: { etiket?: string }) {
+  const { renkler } = useTema();
+  return (
+    <View className="flex-row items-center gap-2 py-2" accessibilityLiveRegion="polite">
+      <ActivityIndicator color={renkler.birincil} accessibilityLabel={etiket} />
+      <Metin varyant="ikincil">{etiket}</Metin>
+    </View>
+  );
+}
+
+/** Kart ici hata: yalniz o kartin icerigi hata gosterir, "Tekrar dene" yalniz o karti yeniler. */
+export function KartHatasi({ mesaj, tekrar }: { mesaj: string; tekrar?: () => void }) {
+  const { renkler } = useTema();
+  return (
+    <View className="flex-row items-center gap-3 py-1" accessibilityRole="alert">
+      <Ikon ad="alert-circle-outline" boyut={22} renk={renkler.hata} />
+      <Metin varyant="ikincil" className="flex-1">
+        {mesaj}
+      </Metin>
+      {tekrar ? <Dugme etiket={t('ortak.tekrarDene')} varyant="hayalet" onPress={tekrar} /> : null}
+    </View>
+  );
+}
+
 export function HataDurumu({ mesaj, tekrar }: { mesaj: string; tekrar?: () => void }) {
   const { renkler } = useTema();
   return (

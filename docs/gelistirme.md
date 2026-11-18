@@ -292,6 +292,15 @@ Bildirim servisi çekirdeğinin (`services/bildirim`) mobil yüzü: push kaydı,
 - **Rozet:** Bugün'deki zil, etkin kurumun okunmamış sayısını gösterir ve uygulama simgesi rozetini aynı sayıya eşitler (sunucu push'ta tüm kurumların toplamını yollar).
 - **Simülatörde push denemesi:** `xcrun simctl push <udid> <bundle-id> yük.json` (yük: `{"aps":{"alert":{"title":"…","body":"…"}},"derin_baglanti":"kopru://soru/<id>","bildirim_id":"<id>"}`). Veri doğrudan gerçek APNs bildirimlerinin `userInfo`'su gibi gelir. Uçtan uca veri için `apps/mobile/scripts/bildirim-akisi.sh` (kullanım başlığında; servisler `services/bildirim/scripts/bildirim-akisi.sh` başlığındaki gibi kurulur, ayrı NATS ve portlarla).
 
+### Duyurular ve Bugün (mobil)
+
+- **Duyurular:** `src/ekranlar/duyuru/` (liste, detay, yazma, Bugün kartı), `src/uygulama/duyuru.ts` (sorgular), `src/duyuru/metin.ts` (bağlantı ayrıştırma). Adaptör `adaptorler.bildirim.duyuru*` (`gercekBildirim.ts`, mock `mockDuyuru.ts`). Rotalar `/duyurular`, `/duyuru/[id]`, `/duyuru-yaz` (`?id=` taslak düzenler). Giriş noktaları: Bugün kartı, Profil > Duyurular, bildirim kutusu başlığı. `duyuru` modülü kapalıysa hepsi gizli; `kopru://duyuru/<id>` modül kapalıysa kutuya düşer.
+- **Alıcı:** sabitler üstte, okunmamış vurgusu (renk + nokta + metin), çek-yenile, çevrimdışıyken kalıcı sorgu önbelleğinden. Detay açılınca bir kez okundu (yazar kendi duyurusunda saymaz). Gövde düz metin; yalnız `http/https` bağlantıları uygulama içi tarayıcıda açılır.
+- **Yazar:** öğretmen kendi grupları, yönetici/sahip grup ya da tüm kurum (roller: öğrenci/öğretmen). Taslak kaydet ya da onaylı yayınla; "Yazdıklarım" listesinde ve detayda "okunan / alıcı". Okuyanlar listesi (adlarla) mobilde yok.
+- **Bugün:** her kart kendi sorgusunu yönetir (`KartHatasi`/`KartYukleniyor`); bir servis yanıt vermezse yalnız o kart hata gösterir. Öğrenci: kompakt karakter+seri+hedef, hemen altında Odaklan/Soru sor, sonra duyuru, görevler, ödevler. Öğretmen: saat sıralı dersler (yoklaması alınmamış olan işaretli, birebirde tek dokunuşla "Geldi"), cevap bekleyen sorular, hızlı eylemler (ders ekle, ödev ver, öğrenci ekle), önceki derslerin yoklaması.
+- **Soğuk açılış ölçümü:** `src/lib/olcum.ts` (yalnız `__DEV__`) Metro'ya `[olcum] ...` yazar; `apps/mobile/scripts/soguk-acilis-olcumu.sh <metro-log>` uygulamayı öldürüp yeniden açar ve toplam süreyi basar. Soğuk açılışta kalıcı sorgu önbelleği artık silinmez (`uyelikSec` yalnız uyelikten uyelige geçişte temizler). Gelişmiş: Metro dosya izleyicisi bu Mac'te güvenilmez; kod değişince Metro'yu yeniden başlat.
+- **Elle deneme:** `apps/mobile/scripts/duyuru-bugun-akisi.sh` (başlıktaki kurulum: ayrı NATS, api, bildirim, motivasyon + worker'lar).
+
 ### Doğrulama
 
 ```sh

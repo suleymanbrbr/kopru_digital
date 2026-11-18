@@ -2,6 +2,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
+import { olcumIsareti } from '../lib/olcum';
 import { queryOnlineYonetiminiBagla } from '../offline/ag';
 import type { AktifBaglam, OturumDurumu } from '../oturum/yonetici';
 import { servisleriKur, type Servisler } from './servisler';
@@ -66,6 +67,9 @@ export function UygulamaSaglayicilari({ children }: { children: ReactNode }) {
     <Baglam.Provider value={servisler}>
       <PersistQueryClientProvider
         client={servisler.queryClient}
+        onSuccess={() => {
+          olcumIsareti('onbellek-geri-yuklendi');
+        }}
         persistOptions={{
           persister: servisler.persister,
           maxAge: 24 * 60 * 60 * 1000,

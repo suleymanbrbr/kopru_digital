@@ -1,10 +1,16 @@
 import { t } from '@kopru/i18n';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
 
+import type { BekleyenYoklamaDersi, Ders } from '../api/operasyonTipleri';
+import { useBugunOlcumu } from '../lib/olcum';
 import { bugunTarihi } from '../lib/saat';
 import { BekleyenSorularKarti } from '../soru/BugunKartlari';
-import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { Dugme } from '../ui/Dugme';
+import { BosDurum, KartHatasi, KartYukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
+import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useOturum } from '../uygulama/baglam';
@@ -15,35 +21,127 @@ import {
   useGunDersleri,
   useModulAcik,
   useSaatDilimi,
+  useYoklamaBekleyen,
 } from '../uygulama/operasyon';
-import { useOgretmenBugun } from '../uygulama/sorgular';
-import { BekleyenYoklamaKartlari } from './BekleyenYoklamaKartlari';
+import { BekleyenYoklamaKartlari, YoklamaEylemleri } from './BekleyenYoklamaKartlari';
 import { BildirimIzinKarti } from './bildirim/BildirimIzinKarti';
 import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
+import { DuyuruKarti } from './duyuru/DuyuruKarti';
 import { OgretmenOgrenmeKartlari } from './OgretmenOgrenmeKartlari';
 
-function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
+/**
+ * Bugunku dersin satiri: yoklamasi alinmamis (baslamis, yoklama bekleyen) ders isaretlenir ve satirin
+ * altinda tek dokunusluk yoklama eylemi gorunur (birebirde "Geldi"). "Alindi" onayi satirda kalir.
+ */
+function BugunDersi({
+  ders,
+  ad,
+  tz,
+  bekleyen,
+}: {
+  ders: Ders;
+  ad: string;
+  tz: string;
+  bekleyen: BekleyenYoklamaDersi | undefined;
+}) {
+  const [alindi, setAlindi] = useState(false);
   return (
-    <Kart className="gap-2">
+    <DersSatiri
+      ders={ders}
+      ad={ad}
+      tz={tz}
+      alt={
+        alindi ? (
+          <View
+            className="flex-row items-center gap-2"
+            accessibilityLiveRegion="polite"
+            testID={`yoklama-alindi-${ders.id}`}
+          >
+            <Ikon ad="checkmark-circle-outline" boyut={18} />
+            <Metin varyant="etiket">{t('mobil.bugun.ogretmen.yoklamaAlindi')}</Metin>
+          </View>
+        ) : bekleyen ? (
+          <View className="gap-2" testID={`yoklama-eksik-${ders.id}`}>
+            <View className="flex-row items-center gap-2 self-start rounded-tam bg-yuzeyIkincil px-3 py-1">
+              <Ikon ad="alert-circle-outline" boyut={16} />
+              <Metin varyant="kucuk">{t('mobil.bugun.ogretmen.yoklamaAlinmadi')}</Metin>
+            </View>
+            <YoklamaEylemleri
+              ders={bekleyen}
+              ad={ad}
+              alindi={() => {
+                setAlindi(true);
+              }}
+            />
+          </View>
+        ) : null
+      }
+    />
+  );
+}
+
+function HizliEylemler() {
+  const router = useRouter();
+  const takvim = useModulAcik('takvim');
+  const odev = useModulAcik('odev');
+  return (
+    <Kart className="gap-2" testID="hizli-eylemler">
       <Metin varyant="altBaslik" accessibilityRole="header">
-        {baslik}
+        {t('mobil.bugun.ogretmen.hizliEylemler')}
       </Metin>
-      {children}
+      <View className="flex-row flex-wrap gap-2">
+        {takvim ? (
+          <Dugme
+            varyant="ikincil"
+            etiket={t('mobil.bugun.ogretmen.dersEkle')}
+            testID="hizli-ders-ekle"
+            onPress={() => {
+              router.push('/ders-ekle');
+            }}
+          />
+        ) : null}
+        {odev ? (
+          <Dugme
+            varyant="ikincil"
+            etiket={t('mobil.bugun.ogretmen.odevVer')}
+            testID="hizli-odev-ver"
+            onPress={() => {
+              router.push('/odev-ver');
+            }}
+          />
+        ) : null}
+        <Dugme
+          varyant="ikincil"
+          etiket={t('mobil.bugun.ogretmen.ogrenciEkle')}
+          testID="hizli-ogrenci-ekle"
+          onPress={() => {
+            router.navigate('/ogrenciler');
+          }}
+        />
+      </View>
     </Kart>
   );
 }
 
+/**
+ * Ogretmen/yonetici "Bugun": bugunku dersler (saat sirasiyla, yoklamasi alinmamis olanlar isaretli ve
+ * tek dokunusla yoklama), cevap bekleyen sorular, hizli eylemler. Her kart kendi sorgusunu yonetir:
+ * bir servis yanit vermezse yalniz o kart hata gosterir.
+ */
 export function OgretmenBugun() {
   const oturum = useOturum();
-  const sorgu = useOgretmenBugun();
   const takvim = useModulAcik('takvim');
   const yoklama = useModulAcik('yoklama');
   const { tz } = useSaatDilimi();
   const bugun = useGunDersleri(bugunTarihi(tz));
   const gruplar = useGruplar();
+  useBugunOlcumu('ogretmen-bugun', bugun.data !== undefined, bugun.dataUpdatedAt);
+  const bekleyen = useYoklamaBekleyen();
   const ad = oturum.asama === 'giris' ? oturum.kullanici.adSoyad.split(' ')[0] : '';
+  const bekleyenler = new Map((yoklama ? (bekleyen.data ?? []) : []).map((b) => [b.id, b]));
+  const dersler = [...(bugun.data ?? [])].sort((a, b) => a.baslangic.localeCompare(b.baslangic));
 
   return (
     <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
@@ -56,29 +154,40 @@ export function OgretmenBugun() {
         </View>
         <BildirimZili />
       </View>
-      <BildirimIzinKarti />
-      {yoklama ? <BekleyenYoklamaKartlari /> : null}
-      <OgretmenOgrenmeKartlari />
       {takvim ? (
-        <Bolum baslik={t('mobil.bugun.ogretmen.bugunkuDersler')}>
-          {bugun.isPending ? <Yukleniyor /> : null}
+        <Kart className="gap-3" testID="bugunku-dersler">
+          <Metin varyant="altBaslik" accessibilityRole="header">
+            {t('mobil.bugun.ogretmen.bugunkuDersler')}
+          </Metin>
+          {bugun.isPending ? <KartYukleniyor /> : null}
+          {bugun.isError && !bugun.data ? (
+            <KartHatasi
+              mesaj={hataMesaji(bugun.error)}
+              tekrar={() => {
+                void bugun.refetch();
+              }}
+            />
+          ) : null}
           {bugun.data?.length === 0 ? (
             <BosDurum ikon="calendar-outline" mesaj={t('mobil.bugun.ogretmen.bugunkuDerslerBos')} />
           ) : null}
-          {bugun.data?.map((d) => (
-            <DersSatiri key={d.id} ders={d} ad={dersAdi(d, gruplar.data)} tz={tz} />
+          {dersler.map((d) => (
+            <BugunDersi
+              key={d.id}
+              ders={d}
+              ad={dersAdi(d, gruplar.data)}
+              tz={tz}
+              bekleyen={bekleyenler.get(d.id)}
+            />
           ))}
-        </Bolum>
+        </Kart>
       ) : null}
-      {sorgu.isPending ? <Yukleniyor /> : null}
-      {sorgu.isError ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
-      ) : null}
-      {sorgu.data ? (
-        <>
-          <BekleyenSorularKarti />
-        </>
-      ) : null}
+      <BekleyenSorularKarti />
+      <HizliEylemler />
+      {yoklama ? <BekleyenYoklamaKartlari /> : null}
+      <OgretmenOgrenmeKartlari />
+      <DuyuruKarti />
+      <BildirimIzinKarti />
     </Ekran>
   );
 }

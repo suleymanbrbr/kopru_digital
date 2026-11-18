@@ -18,6 +18,7 @@ import {
   useOkunmamisSayisi,
 } from '../../uygulama/bildirim';
 import { hataMesaji } from '../../uygulama/hatalar';
+import { useModulAcik } from '../../uygulama/operasyon';
 import { CevrimdisiSerit } from '../CevrimdisiSerit';
 
 type IkonAdi = Parameters<typeof Ikon>[0]['ad'];
@@ -107,6 +108,7 @@ export function BildirimKutusu() {
   const router = useRouter();
   const { bildirim, agGozlemcisi } = useServisler();
   const aktif = useAktif();
+  const duyuruAcik = useModulAcik('duyuru');
   const sorgu = useBildirimKutusu();
   const sayac = useOkunmamisSayisi(true);
   const { okundu, tumunuOku, arsivle } = useBildirimIslemleri();
@@ -176,6 +178,16 @@ export function BildirimKutusu() {
                   }}
                 />
               </View>
+              {duyuruAcik ? (
+                <Dugme
+                  varyant="hayalet"
+                  etiket={t('mobil.duyuru.baslik')}
+                  testID="kutu-duyurular"
+                  onPress={() => {
+                    router.push('/duyurular');
+                  }}
+                />
+              ) : null}
               <Dugme
                 varyant="hayalet"
                 etiket={t('mobil.bildirim.tercihler')}
