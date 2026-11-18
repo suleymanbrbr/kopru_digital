@@ -39,6 +39,7 @@ export interface GonderimOzeti {
 interface BekleyenSatir extends Record<string, unknown> {
   id: string;
   bildirim_id: string | null;
+  kurum_id: string;
   alici_kullanici_id: string;
   deneme_sayisi: number;
   zamanlanan_at: string;
@@ -66,7 +67,7 @@ export async function gonderimIsle(b: GonderimBagimliliklari): Promise<GonderimO
 
   await b.db.orm.transaction(async (tx) => {
     const satirlar = await tx.execute<BekleyenSatir>(sql`
-      select g.id, g.bildirim_id, g.alici_kullanici_id, g.deneme_sayisi::int as deneme_sayisi,
+      select g.id, g.bildirim_id, g.kurum_id, g.alici_kullanici_id, g.deneme_sayisi::int as deneme_sayisi,
              ${iso('g.zamanlanan_at')} as zamanlanan_at, g.baslik, g.govde, g.derin_baglanti,
              c.id as cihaz_id, c.push_belirteci, c.platform, c.aktif, c.gecersiz_at::text as gecersiz_at
         from bildirim.gonderimler g
@@ -101,7 +102,11 @@ export async function gonderimIsle(b: GonderimBagimliliklari): Promise<GonderimO
             platform: s.platform,
             title: s.baslik ?? '',
             body: s.govde ?? '',
-            data: { derin_baglanti: s.derin_baglanti, bildirim_id: s.bildirim_id },
+            data: {
+              derin_baglanti: s.derin_baglanti,
+              bildirim_id: s.bildirim_id,
+              kurum_id: s.kurum_id,
+            },
           },
         });
       }

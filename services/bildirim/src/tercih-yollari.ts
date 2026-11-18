@@ -9,6 +9,7 @@ import {
 import { AppError, withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 
+import { hatirlatmaAyariDegisti } from './ders-zamanlama.js';
 import { kimlik, type KurumKimligi } from './kimlik.js';
 import { ayarlariOku, kilitliMi, tercihMatrisi, tercihleriOku } from './tercih.js';
 
@@ -142,6 +143,16 @@ export function tercihYollari(): ServicePlugin {
               set sessiz_baslangic = excluded.sessiz_baslangic, sessiz_bitis = excluded.sessiz_bitis,
                   sessiz_gunler = excluded.sessiz_gunler, saat_dilimi = excluded.saat_dilimi,
                   ders_hatirlatma_dk = excluded.ders_hatirlatma_dk`);
+          if (yeni.ders_hatirlatma_dk !== mevcut.ders_hatirlatma_dk) {
+            // Bekleyen ders hatirlatmalari yeni degerle yeniden hesaplanir (0 = kapali).
+            await hatirlatmaAyariDegisti(
+              tx,
+              k.kurumId,
+              k.kullaniciId,
+              yeni.ders_hatirlatma_dk,
+              new Date(),
+            );
+          }
           return ayarlariOku(tx, k.kullaniciId, k.kurumId);
         });
       },

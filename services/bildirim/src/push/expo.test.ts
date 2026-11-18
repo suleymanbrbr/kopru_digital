@@ -13,7 +13,7 @@ const mesaj = (i: number, ek: Partial<PushMesaji> = {}): PushMesaji => ({
   platform: 'android',
   title: 'Başlık',
   body: 'Gövde',
-  data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1' },
+  data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1', kurum_id: 'k1' },
   ...ek,
 });
 
@@ -87,7 +87,7 @@ describe("expo saglayicisi (sahte HTTP sunucusu; gercek Expo'ya istek atilmaz)",
         to: 'ExponentPushToken[tok1]',
         title: 'Başlık',
         body: 'Gövde',
-        data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1' },
+        data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1', kurum_id: 'k1' },
         sound: 'default',
         priority: 'high',
       },
@@ -95,7 +95,7 @@ describe("expo saglayicisi (sahte HTTP sunucusu; gercek Expo'ya istek atilmaz)",
         to: 'ExponentPushToken[tok2]',
         title: 'Başlık',
         body: 'Gövde',
-        data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1' },
+        data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1', kurum_id: 'k1' },
         sound: 'default',
         priority: 'high',
         badge: 3,
@@ -195,7 +195,7 @@ describe('log saglayicisi', () => {
       title: 'Başlık',
       body: 'Gövde',
       badge: 2,
-      data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1' },
+      data: { derin_baglanti: 'kopru://soru/1', bildirim_id: 'b1', kurum_id: 'k1' },
     });
     expect(JSON.stringify(nesne)).not.toContain('tok1]');
     expect(belirtecMaskele('ExponentPushToken[abcdef]')).toBe('Exponent***ef]');
