@@ -128,8 +128,8 @@ function tohumla(kurumId: string): MockOge[] {
         false,
         'oyunlastirma',
         'seri_hatirlatma',
-        'Seriyi koru',
-        'Bugünkü hedefine az kaldı. Seriyi bozma!',
+        'Serini koru!',
+        '5 günlük serin bugün bitebilir. Küçük bir görevle devam ettir.',
         'kopru://bugun',
       ),
       oge(
@@ -191,8 +191,8 @@ function tohumla(kurumId: string): MockOge[] {
         true,
         'oyunlastirma',
         'seri_hatirlatma',
-        'Seriyi koru',
-        'Bugünkü hedefine az kaldı. Seriyi bozma!',
+        'Serini koru!',
+        '5 günlük serin bugün bitebilir. Küçük bir görevle devam ettir.',
         'kopru://bugun',
       ),
     );

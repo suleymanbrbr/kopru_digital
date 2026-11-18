@@ -86,7 +86,7 @@ test.describe('ogrenci (Atlas)', () => {
 
     // Arsivle: okunmamis oge hem listeden hem sayidan duser.
     await page
-      .getByRole('button', { name: /“Seriyi koru” bildirimini arşivle/ })
+      .getByRole('button', { name: /“Serini koru!” bildirimini arşivle/ })
       .first()
       .click();
     await expect(satirlar).toHaveCount(0);
