@@ -5,7 +5,7 @@ import { servisVekili, yolIzinliMi as ortakYolIzinliMi, type VekilTanimi } from 
 
 /**
  * `/api/bildirim/<yol>` -> `bildirim` servisinin `/v1/bildirim/<yol>` ucu: cihaz kaydi, gelen kutusu,
- * tercih matrisi ve ayarlar. Yalniz asagidaki yollar (tam eslesme) gecer; Bearer belirtec aynen iletilir.
+ * tercih matrisi, ayarlar ve duyurular. Yalniz asagidaki yollar (tam eslesme) gecer; Bearer belirtec aynen iletilir.
  */
 const K = String.raw`kurumlar\/[^/]+`;
 export const BILDIRIM_IZINLI_YOLLAR: readonly RegExp[] = [
@@ -18,6 +18,11 @@ export const BILDIRIM_IZINLI_YOLLAR: readonly RegExp[] = [
   new RegExp(`^${K}\\/kutu\\/[^/]+\\/(okundu|arsivle)$`),
   // Tercihler ve ayarlar
   new RegExp(`^${K}\\/(tercihler|ayarlar)$`),
+  // Duyurular: liste/olustur (GET, POST), yonetim listesi, tekil (GET, PATCH, DELETE) ve eylemler
+  new RegExp(`^${K}\\/duyurular$`),
+  new RegExp(`^${K}\\/duyurular\\/yonetim$`),
+  new RegExp(`^${K}\\/duyurular\\/[^/]+$`),
+  new RegExp(`^${K}\\/duyurular\\/[^/]+\\/(yayinla|arsivle|okundu|okuyanlar)$`),
 ];
 
 /** Bildirim servisinin taban adresi; gelistirmede `http://localhost:4002`. */

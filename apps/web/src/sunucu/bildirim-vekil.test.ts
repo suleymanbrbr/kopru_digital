@@ -28,6 +28,16 @@ describe('bildirim izinli yollar', () => {
       [['kurumlar', K, 'kutu', 'b1', 'arsivle'], 'POST'],
       [['kurumlar', K, 'tercihler'], 'PUT'],
       [['kurumlar', K, 'ayarlar'], 'GET'],
+      [['kurumlar', K, 'duyurular'], 'GET'],
+      [['kurumlar', K, 'duyurular'], 'POST'],
+      [['kurumlar', K, 'duyurular', 'yonetim'], 'GET'],
+      [['kurumlar', K, 'duyurular', 'd1'], 'GET'],
+      [['kurumlar', K, 'duyurular', 'd1'], 'PATCH'],
+      [['kurumlar', K, 'duyurular', 'd1'], 'DELETE'],
+      [['kurumlar', K, 'duyurular', 'd1', 'yayinla'], 'POST'],
+      [['kurumlar', K, 'duyurular', 'd1', 'arsivle'], 'POST'],
+      [['kurumlar', K, 'duyurular', 'd1', 'okundu'], 'POST'],
+      [['kurumlar', K, 'duyurular', 'd1', 'okuyanlar'], 'GET'],
     ];
     for (const [parcalar, yontem] of uclar) {
       expect(bildirimYoluIzinliMi(parcalar, yontem), parcalar.join('/')).toBe(true);
@@ -42,7 +52,10 @@ describe('bildirim izinli yollar', () => {
       ['kurumlar', K, 'kutu', 'b1', 'sil'],
       ['kurumlar', K, 'kutu', 'b1', 'okundu', 'x'],
       ['cihazlar', 'c1', 'x'],
-      ['kurumlar', K, 'duyurular'],
+      ['kurumlar', K, 'duyurular', 'd1', 'sil'],
+      ['kurumlar', K, 'duyurular', 'd1', 'okundu', 'x'],
+      ['kurumlar', K, 'duyurular', 'yonetim', 'x'],
+      ['kurumlar', K, 'duyurular', '..'],
       ['kurumlar', K, 'tercihler', 'x'],
       ['kurumlar', K, '..', 'ayarlar'],
       ['ic', 'sms'],
@@ -99,6 +112,39 @@ describe('bildirim vekili', () => {
     ).toBeUndefined();
     fetchMock.mockRejectedValue(new Error('ag'));
     expect((await bildirimVekili(istek('x'), ['kurumlar', K, 'kutu'])).status).toBe(502);
+  });
+
+  it('PATCH govdesiyle, DELETE govdesiz; govdesiz duyuru POST (yayinla) {} ile iletilir', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubEnv('NEXT_PUBLIC_API_MOCK', '0');
+    await bildirimVekili(
+      istek('x', {
+        method: 'PATCH',
+        body: JSON.stringify({ sabit: true }),
+        headers: {
+          authorization: 'Bearer tok',
+          host: 'localhost',
+          'content-type': 'application/json',
+        },
+      }),
+      ['kurumlar', K, 'duyurular', 'd1'],
+    );
+    const [adres, patch] = fetchMock.mock.calls[0] as [string, { method: string; body: string }];
+    expect(adres).toBe(`http://localhost:4002/v1/bildirim/kurumlar/${K}/duyurular/d1`);
+    expect(patch).toMatchObject({ method: 'PATCH', body: '{"sabit":true}' });
+    await bildirimVekili(istek('x', { method: 'DELETE' }), ['kurumlar', K, 'duyurular', 'd1']);
+    const silme = fetchMock.mock.calls[1] as [string, { method: string; body?: string }];
+    expect(silme[1].method).toBe('DELETE');
+    expect(silme[1].body).toBeUndefined();
+    await bildirimVekili(istek('x', { method: 'POST' }), [
+      'kurumlar',
+      K,
+      'duyurular',
+      'd1',
+      'yayinla',
+    ]);
+    expect((fetchMock.mock.calls[2] as [string, { body: string }])[1].body).toBe('{}');
   });
 
   it('mock modunda sozlesme semalarina uygun yanitlar doner', async () => {
