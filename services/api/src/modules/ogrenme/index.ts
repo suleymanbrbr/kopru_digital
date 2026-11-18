@@ -11,6 +11,8 @@ import { odevYollari } from './odev-yollari.js';
 import { planOgrenciYollari } from './plan-ogrenci-yollari.js';
 import { planSablonYollari } from './plan-sablon-yollari.js';
 import { planYollari } from './plan-yollari.js';
+import { raporExcelYollari } from './rapor-excel.js';
+import { raporYollari } from './rapor.js';
 import { soruOgretmenYollari } from './soru-ogretmen-yollari.js';
 import { soruYollari } from './soru-yollari.js';
 import { soruYonetimYollari } from './soru-yonetim-yollari.js';
@@ -37,6 +39,8 @@ export const ogrenmeModule = defineModule('ogrenme', async (app) => {
     await app.register(denemeAnalizYollari);
     await app.register(soruYollari);
     await app.register(soruOgretmenYollari);
+    await app.register(raporYollari);
+    await app.register(raporExcelYollari);
     await app.register(soruYonetimYollari);
   }
 });
