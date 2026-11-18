@@ -1,6 +1,7 @@
 import type { NextRequest, NextResponse } from 'next/server';
 
 import { hesapMock } from './hesap-mock';
+import { raporMock } from './rapor-mock';
 import { servisVekili, yolIzinliMi as ortakYolIzinliMi, type VekilTanimi } from './vekil';
 
 /**
@@ -10,6 +11,8 @@ import { servisVekili, yolIzinliMi as ortakYolIzinliMi, type VekilTanimi } from 
 export const HESAP_IZINLI_YOLLAR: readonly RegExp[] = [
   /^kurumlar\/[^/]+\/(gruplar|davetler|uyelikler|atamalar)(\/|$)/,
   /^davetler\/kabul$/,
+  // Yonetici paneli (rapor) ve modul ayarlari
+  /^kurumlar\/[^/]+\/(rapor\/(ozet|ogrenciler)|modul-ayarlari)$/,
   /^oturumlar(\/|$)/,
   /^sinif-kodu\/(katil|istekler)(\/|$)/,
 ];
@@ -23,7 +26,7 @@ const tanim: VekilTanimi = {
   servis: 'hesap',
   izinli: HESAP_IZINLI_YOLLAR,
   yalnizOkuma: HESAP_YALNIZ_OKUMA,
-  mock: hesapMock,
+  mock: (istek) => raporMock('hesap', istek) ?? hesapMock(istek),
 };
 
 export function hesapVekili(

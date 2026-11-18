@@ -153,6 +153,10 @@ export function finansDosyaAl(yol: string, yedekAd: string) {
   return servisDosyaAl('finans', yol, yedekAd);
 }
 
+export function ogrenmeDosyaAl(yol: string, yedekAd: string) {
+  return servisDosyaAl('ogrenme', yol, yedekAd);
+}
+
 /**
  * Ham dosya gonderir (ornegin `.xlsx`); yanit JSON'dur. Hata gövdesi `UygulamaHatasi`na cevrilir ve
  * `detaylar` (satir hatalari) korunur. 401'de bir kez yenileyip tekrarlar.

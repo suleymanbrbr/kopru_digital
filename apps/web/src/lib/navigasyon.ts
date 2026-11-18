@@ -11,6 +11,7 @@ import {
   GraduationCap,
   House,
   Layers,
+  LayoutDashboard,
   Library,
   ListChecks,
   MessageCircleQuestion,
@@ -70,6 +71,17 @@ export const navOgeleri: readonly NavOgesi[] = [
     roller: tumu,
     grup: 'calisma',
     mobilOncelik: 1,
+  },
+
+  // Yonetici paneli: sahip/yonetici tum kurum, ogretmen yalniz atandigi gruplar (kapsam sunucuda)
+  {
+    anahtar: 'panel',
+    yol: 'panel',
+    baslik: 'nav.panel',
+    ikon: LayoutDashboard,
+    modul: null,
+    roller: personel,
+    grup: 'calisma',
   },
 
   // Ogretmen, yonetici, sahip

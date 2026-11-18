@@ -1781,3 +1781,33 @@ Gece işi: `services/api/src/worker.ts` açılışta ve saatte bir `dersSerileri
 **İç API** (`modules/finans/index.ts`, yoklama paketi aynı işlemde çağırır): `krediVeUcretiUygula(tx, girdi)`, `dersIptalUygula(tx, girdi)`, `gecIptalSaatiBul(tx, kurumId)`. Modül kapalıysa etkisiz; aynı girdi ikinci kez çağrılırsa tekillik indeksleri nedeniyle ikinci satır oluşmaz, istisna fırlamaz; eşzamanlı çağrılar yoklama başına advisory kilidiyle serileşir. Gece işleri (`src/sistem/finans-gece-isleri.ts`, `withSistem`): özet ↔ `SUM(defter)` denetimi (uyuşmazlıkta `error` log `finans_ozet_uyusmazligi`) ve süresi dolan paketlerin `son_kullanma` satırı. Zamanlayıcı worker'da (`geceIsiZamanla`, Europe/Istanbul 03:00); pg-boss henüz depoda olmadığından basit zamanlayıcıdır, aynı fonksiyonlar pg-boss işine taşınabilir.
 
 Hata kodları: `paket_kullanilmis`, `paket_iptal_edilmis`, `tahsilat_iptal_edilmis`, `istek_cakismasi`, `makbuz_no_kullanimda`, `tarife_cakisiyor`, `odeme_gecersiz`, `paket_arsivde`, `ogrenci_modeli_paket_degil`.
+
+## Yönetici paneli ve kurum raporları
+
+Yeni tablo yoktur; göstergeler mevcut tablolardan okunur (RLS ve `withTenant` içinde). **İzin:** `rapor.oku` (çekirdek, modülden bağımsız; izin sözlüğü sürümü 9): sahip/yönetici `kurum`, öğretmen `grup` (yalnız atandığı gruplar; şube kapsamlı yönetici `sube`). Öğrenci ve veli yok. Başka kurumun `kurum_id`'si 403, kapsam dışı `grup_id`/`ogretmen_id` süzgeci boş liste döner.
+
+**Dönem:** `donem=7` (varsayılan, haftalık) ya da `30`; son N takvim günü, bugün dahil, kurumun saat dilimiyle. Yanıt `baslangic`/`bitis` (yerel gün) ve `kapsam` taşır.
+
+**Modül sınırı:** her gösterge kendi modülünde hesaplanır; panel üç özet ucu paralel çağırır, hesap bir kez yazılır, Excel aynı fonksiyonları çağırır.
+
+| Uç | Modül | Gösterge |
+| --- | --- | --- |
+| `GET /v1/hesap/kurumlar/:k/rapor/ozet`, `/rapor/ogrenciler` | hesap | aktif öğrenci; grup ve öğretmen dizini; aktif öğrenci listesi |
+| `GET /v1/ders/kurumlar/:k/rapor/ozet`, `/rapor/devam`, `/rapor/anladim` | ders | devam oranı, ders sonu "anladım" oranı ve alt listeleri |
+| `GET /v1/ogrenme/kurumlar/:k/rapor/ozet`, `/rapor/odev`, `/rapor/plan`, `/rapor/soru` | ogrenme | ödev, plan, soru süresi, etkin öğrenci ve alt listeleri |
+| `GET /v1/ogrenme/kurumlar/:k/rapor/disa-aktar?donem=` | ogrenme | `.xlsx`: Kurum özeti, Gruplar, Öğretmenler sayfaları (ders ve hesap özetini modül `index.ts`'inden alır) |
+
+Alt listeler `grup_id` ve `ogretmen_id` ile süzülür, en çok 200 satır döner (`toplam_satir` gerçek sayı). Satırlardaki öğrenci kimliği mevcut öğrenci sayfasına gider. Finans özeti için mevcut `finans/ozet/aylik` ve `ogrenciler?borclu=true` kullanılır (yalnız sahip/yönetici).
+
+**Gösterge tanımları (kodda her modülün `rapor.ts` başlık yorumuyla aynı):**
+
+- **Aktif öğrenci:** kurumda `durum='aktif'` öğrenci üyeliği (kapsamdakiler; grupsuzlar dahil). Grup: grubun etkin üyeleri; öğretmen: etkin atandığı gruplardaki farklı öğrenciler. Birden çok grupta olan öğrenci her grupta sayılır.
+- **Etkin öğrenci (son 7 gün, dönemden bağımsız):** yoklaması alınan (`geldi`/`gec`), ödev teslim eden, plan görevi tamamlayan veya soru soran öğrenci.
+- **Ödev teslim oranı:** teslim tarihi (`ogrenci_odevleri.son_teslim_at`, yoksa ödevin) dönemde ve şimdiye kadar gelmiş, taslak olmayan ödevlerin iptal edilmemiş öğrenci satırlarında teslim edilen (`teslim_edildi`/`incelendi`/`tekrar_istendi`) / toplam. Öğretmen = ödevi veren. Alt liste: hâlâ `atandi` olan satırlar.
+- **Plan tamamlama oranı:** yayındaki planların, günü dönemde olan, `devredildi` olmayan görevlerinde `tamam` / toplam; bugünün henüz `bekliyor` görevleri paydaya girmez; `kismen` tamamlanmış sayılmaz. Öğretmen = planı hazırlayan.
+- **Soru ilk cevap süresi:** dönemde sorulan sorularda `ilk_cevap_at - created_at`; ortalama ve medyan yalnız cevaplananlar üzerinden (`soru-olcum` ile aynı ölçüt). Öğretmen = ilk cevaplayan.
+- **"Anladım" oranı:** dönemde biten derslere verilmiş geri bildirimlerde `anladim` / tümü (`geri-bildirim/ozet` ile aynı ders bitiş günü ölçütü). Grup/öğretmen = dersin grubu/öğretmeni.
+- **Devam oranı:** dönemde başlayan, iptal edilmemiş derslerin yoklaması alınmış satırlarında (`geldi`+`gec`) / tümü (`geldi`, `gec`, `gelmedi`, `izinli`). Grup/öğretmen = dersin grubu/öğretmeni.
+- Öğrenci tabanlı göstergelerde grup kırılımı öğrencinin etkin grup üyeliğidir. İlgili modül (`yoklama`, `geri_bildirim`, `odev`, `haftalik_plan`, `soru_sor`) kurum düzeyinde kapalıysa gösterge `null`, alt liste `403 modul_kapali`.
+
+**Performans (1.000 öğrenci, 50 grup, 30 öğretmen, 30 günlük veri; `scripts/rapor-tohum.sql`, `src/rapor-performans.test.ts`, `scripts/panel-akisi.sh`):** donem=30 için uç medyanları 18–86 ms (hesap özet 22, ders özet 29, ogrenme özet 86, ogrenciler 18, devam 32, anladim 24, odev 26, plan 31, soru 21); üç özetin paralel toplamı 84 ms; Excel 165 ms. Gerçek HTTP (curl) hepsi < 150 ms; tarayıcıda panel açılışı (tıkla → tüm göstergeler) 548 ms. Yeni indeks gerekmedi. Not: toplu yüklemeden sonra `ANALYZE` yoksa planlayıcı istatistiksiz kalır ve uçlar 1,5–3 sn'ye çıkar; canlıda autovacuum yapar.
