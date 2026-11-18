@@ -15,6 +15,7 @@ import {
 } from '@kopru/service-kit';
 import type { NatsConnection } from 'nats';
 
+import { sonradanKatilanaDagit } from './duyuru.js';
 import { ESLEMELER } from './eslemeler/index.js';
 import {
   atamaDegisti,
@@ -78,7 +79,15 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
         case 'hesap.grup.degisti':
           return grupDegisti(tx, olay);
         case 'hesap.grup_uyesi.degisti':
-          return grupUyesiDegisti(tx, olay);
+          await grupUyesiDegisti(tx, olay);
+          // Duyuru: sonradan katilan uyeye yayindaki duyurular (push'suz kutu bildirimi).
+          await sonradanKatilanaDagit(tx, {
+            kurumId: olay.kurumId,
+            grupId: olay.data.grup_id,
+            ogrenciId: olay.data.ogrenci_id,
+            bitisTarihi: olay.data.bitis_tarihi,
+          });
+          return;
         case 'hesap.atama.degisti':
           return atamaDegisti(tx, olay);
         case 'hesap.modul_ayari.degisti':
