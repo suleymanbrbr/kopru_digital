@@ -2,6 +2,7 @@ import { createDb, runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { bakimIsi } from './bakim.js';
 import { loadServiceEnv, serviceName } from './config.js';
+import { duyuruDagitimIsi } from './duyuru-isi.js';
 import { gonderimIsle } from './gonderim.js';
 import { OUTBOX_TABLOSU } from './ortak.js';
 import { saglayiciSec } from './push/index.js';
@@ -81,6 +82,22 @@ await runWorker({
         { hemenCalistirma: false },
       ),
     );
+
+    // Duyuru dagitimi: buyuk hedeflerin kutu/push bildirimleri partiler halinde (RLS'li ayri havuz).
+    if (env.DATABASE_URL) {
+      const duyuruDb = createDb({ url: env.DATABASE_URL, max: 2 });
+      // Temizleyiciler ters sirayla calisir: once is durur, sonra havuz kapanir.
+      temizleyiciler.push(() => duyuruDb.close());
+      temizleyiciler.push(
+        periyodikIs('duyuru-dagit', 3000, log, async () => {
+          for (let tur = 0; tur < 20; tur++) {
+            const o = await duyuruDagitimIsi({ sistem: db, uygulama: duyuruDb });
+            if (o.duyuru > 0) log.info(o, 'duyuru dağıtım işi');
+            if (o.duyuru < 5) break;
+          }
+        }),
+      );
+    }
 
     return async () => {
       for (const t of temizleyiciler.reverse()) await t();

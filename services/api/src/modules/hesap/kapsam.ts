@@ -1,7 +1,7 @@
 import type { Tx } from '@kopru/service-kit';
 import { and, eq, gt, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 
-import { atamalar, grupUyeleri, gruplar } from '../../db/schema.js';
+import { atamalar, grupUyeleri, gruplar, uyelikler } from '../../db/schema.js';
 import type { YetkiBaglami } from './kimlik.js';
 
 /**
@@ -56,4 +56,54 @@ export function kapsamdakiGruplar(tx: Tx, y: YetkiBaglami) {
   const kosul = grupKapsami(tx, y);
   const sorgu = tx.select({ id: gruplar.id }).from(gruplar);
   return kosul ? sorgu.where(kosul) : sorgu;
+}
+
+/**
+ * Rolun kapsamindaki etkin ogrenci uyelikleri (alt sorgu; rapor ve panel suzgeci). `kurum` kapsaminda
+ * kurumun tum etkin ogrencileri (grupsuzlar dahil); `sube`: subedeki uyelikler ya da subedeki gruplarin
+ * etkin uyeleri; `grup`: atandigi gruplarin etkin uyeleri; `kendi`: yalniz kendisi.
+ */
+export function kapsamdakiOgrenciler(tx: Tx, y: YetkiBaglami) {
+  const grubaUyeler = () =>
+    inArray(
+      uyelikler.id,
+      tx
+        .select({ id: grupUyeleri.ogrenci_id })
+        .from(grupUyeleri)
+        .where(
+          and(
+            isNull(grupUyeleri.bitis_tarihi),
+            inArray(grupUyeleri.grup_id, kapsamdakiGruplar(tx, y)),
+          ),
+        ),
+    );
+  let kapsam: SQL | undefined;
+  switch (y.kapsam) {
+    case 'kurum':
+      kapsam = undefined;
+      break;
+    case 'sube':
+      kapsam = or(
+        eq(uyelikler.sube_id, y.subeId ?? '00000000-0000-0000-0000-000000000000'),
+        grubaUyeler(),
+      );
+      break;
+    case 'grup':
+      kapsam = grubaUyeler();
+      break;
+    case 'kendi':
+      kapsam = eq(uyelikler.id, y.uyelikId);
+      break;
+  }
+  return tx
+    .select({ id: uyelikler.id })
+    .from(uyelikler)
+    .where(
+      and(
+        eq(uyelikler.kurum_id, y.kurumId),
+        eq(uyelikler.rol, 'ogrenci'),
+        eq(uyelikler.durum, 'aktif'),
+        kapsam,
+      ),
+    );
 }
