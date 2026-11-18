@@ -115,6 +115,7 @@ describe.skipIf(dbYok())('gonderim.isle (bildirim_sistem, FOR UPDATE SKIP LOCKED
     });
     expect(gonderilenler[0]?.data.derin_baglanti).toMatch(/^kopru:\/\/soru\//);
     expect(gonderilenler[0]?.data.bildirim_id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(gonderilenler[0]?.data.kurum_id).toMatch(/^[0-9a-f-]{36}$/);
     expect(gonderilenler[0]?.badge).toBeUndefined(); // android: rozet yok
     const g = await gonderim(a);
     expect(g).toMatchObject({
