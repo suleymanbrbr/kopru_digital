@@ -177,6 +177,619 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Duyurularim (alici): sabitler uste, yayin zamanina gore yeniden eskiye; suresi gecen, arsivlenen ve silinenler gizli. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                    okunmamis?: "true" | "false";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ogeler: {
+                                baslik: string;
+                                /** Format: date-time */
+                                bitis_at: string | null;
+                                govde: string;
+                                /** Format: uuid */
+                                hedef_id: string;
+                                /** @enum {string} */
+                                hedef_turu: "grup" | "kademe" | "kurum";
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                okundu_at: string | null;
+                                sabit: boolean;
+                                /** Format: date-time */
+                                yayin_at: string;
+                                /** Format: uuid */
+                                yazar_id: string;
+                            }[];
+                            toplam: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Duyuru taslagi olusturur. Ogretmen yalniz atandigi gruba; yonetici/sahip her hedefe yazar. Yayin ayri uctadir. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik: string;
+                        /** Format: date-time */
+                        bitis_at?: string | null;
+                        govde: string;
+                        /** Format: uuid */
+                        hedef_id?: string;
+                        /**
+                         * @default [
+                         *       "ogrenci"
+                         *     ]
+                         */
+                        hedef_roller?: ("ogrenci" | "ogretmen")[];
+                        /** @enum {string} */
+                        hedef_turu: "grup" | "kademe" | "kurum";
+                        /** @default true */
+                        push_gonderildi?: boolean;
+                        /** @default false */
+                        sabit?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            alici_sayisi: number;
+                            baslik: string;
+                            /** Format: date-time */
+                            bitis_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            dagitim_tamam: boolean;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "arsiv";
+                            govde: string;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_roller: ("ogrenci" | "ogretmen")[];
+                            /** @enum {string} */
+                            hedef_turu: "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            okunan_sayisi: number;
+                            push_gonderildi: boolean;
+                            sabit: boolean;
+                            /** Format: date-time */
+                            updated_at: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tekil duyuru. Alici icin yalniz kendi (yayindaki, suresi gecmemis) duyurusu; yazar/yonetici icin her durumda, `yonetim` blogu ile. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            baslik: string;
+                            /** Format: date-time */
+                            bitis_at: string | null;
+                            govde: string;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            /** @enum {string} */
+                            hedef_turu: "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            okundu_at: string | null;
+                            sabit: boolean;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                            yonetim: {
+                                alici_sayisi: number;
+                                baslik: string;
+                                /** Format: date-time */
+                                bitis_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                dagitim_tamam: boolean;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda" | "arsiv";
+                                govde: string;
+                                /** Format: uuid */
+                                hedef_id: string;
+                                hedef_roller: ("ogrenci" | "ogretmen")[];
+                                /** @enum {string} */
+                                hedef_turu: "grup" | "kademe" | "kurum";
+                                /** Format: uuid */
+                                id: string;
+                                okunan_sayisi: number;
+                                push_gonderildi: boolean;
+                                sabit: boolean;
+                                /** Format: date-time */
+                                updated_at: string;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Duyuruyu siler (yumusak silme; kutudaki bildirimleri de gizlenir). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {boolean} */
+                            silindi: true;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Duyuruyu gunceller. Taslakta tum alanlar; yayindakinde yalniz `sabit` ve `bitis_at` (arsivde 409). */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        baslik?: string;
+                        /** Format: date-time */
+                        bitis_at?: string | null;
+                        govde?: string;
+                        /** Format: uuid */
+                        hedef_id?: string;
+                        hedef_roller?: ("ogrenci" | "ogretmen")[];
+                        /** @enum {string} */
+                        hedef_turu?: "grup" | "kademe" | "kurum";
+                        push_gonderildi?: boolean;
+                        sabit?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            alici_sayisi: number;
+                            baslik: string;
+                            /** Format: date-time */
+                            bitis_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            dagitim_tamam: boolean;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "arsiv";
+                            govde: string;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_roller: ("ogrenci" | "ogretmen")[];
+                            /** @enum {string} */
+                            hedef_turu: "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            okunan_sayisi: number;
+                            push_gonderildi: boolean;
+                            sabit: boolean;
+                            /** Format: date-time */
+                            updated_at: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/arsivle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yayindaki duyuruyu arsivler: alicilarin listesinden ve kutusundan kalkar. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            alici_sayisi: number;
+                            baslik: string;
+                            /** Format: date-time */
+                            bitis_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            dagitim_tamam: boolean;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "arsiv";
+                            govde: string;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_roller: ("ogrenci" | "ogretmen")[];
+                            /** @enum {string} */
+                            hedef_turu: "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            okunan_sayisi: number;
+                            push_gonderildi: boolean;
+                            sabit: boolean;
+                            /** Format: date-time */
+                            updated_at: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/okundu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duyuruyu okundu isaretler: okunan sayaci yalniz ilk okumada artar; kutudaki duyuru bildirimi de okundu olur. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            duyuru_id: string;
+                            /** Format: date-time */
+                            okundu_at: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/okuyanlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Duyuruyu okuyanlar (yazar/yonetici): yalniz uyelik kimlikleri, adlar istemcide api`den cozulur. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            alici_sayisi: number;
+                            okunan_sayisi: number;
+                            okuyanlar: {
+                                /** Format: uuid */
+                                alici_id: string;
+                                /** Format: date-time */
+                                okundu_at: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular/{duyuru_id}/yayinla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslagi yayinlar: alicilar cozulur (`duyuru_alicilari`), kutu bildirimi ve (`push_gonderildi` ise) genel metinli push uretilir. `duyuru` modulu kapaliysa 403 `modul_kapali`. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    duyuru_id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            alici_sayisi: number;
+                            baslik: string;
+                            /** Format: date-time */
+                            bitis_at: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            dagitim_tamam: boolean;
+                            /** @enum {string} */
+                            durum: "taslak" | "yayinda" | "arsiv";
+                            govde: string;
+                            /** Format: uuid */
+                            hedef_id: string;
+                            hedef_roller: ("ogrenci" | "ogretmen")[];
+                            /** @enum {string} */
+                            hedef_turu: "grup" | "kademe" | "kurum";
+                            /** Format: uuid */
+                            id: string;
+                            okunan_sayisi: number;
+                            push_gonderildi: boolean;
+                            sabit: boolean;
+                            /** Format: date-time */
+                            updated_at: string;
+                            /** Format: date-time */
+                            yayin_at: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bildirim/kurumlar/{kurum_id}/duyurular/yonetim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yazar/yonetici listesi (alici ve okunan sayisiyla). Ogretmen yalniz kendi duyurularini, yonetici/sahip kurumun tumunu gorur. */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "taslak" | "yayinda" | "arsiv";
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ogeler: {
+                                alici_sayisi: number;
+                                baslik: string;
+                                /** Format: date-time */
+                                bitis_at: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                dagitim_tamam: boolean;
+                                /** @enum {string} */
+                                durum: "taslak" | "yayinda" | "arsiv";
+                                govde: string;
+                                /** Format: uuid */
+                                hedef_id: string;
+                                hedef_roller: ("ogrenci" | "ogretmen")[];
+                                /** @enum {string} */
+                                hedef_turu: "grup" | "kademe" | "kurum";
+                                /** Format: uuid */
+                                id: string;
+                                okunan_sayisi: number;
+                                push_gonderildi: boolean;
+                                sabit: boolean;
+                                /** Format: date-time */
+                                updated_at: string;
+                                /** Format: date-time */
+                                yayin_at: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                            }[];
+                            toplam: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/bildirim/kurumlar/{kurum_id}/kutu": {
         parameters: {
             query?: never;

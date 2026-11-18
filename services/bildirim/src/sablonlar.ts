@@ -2,6 +2,7 @@ import { BILDIRIM_KATEGORILERI, type BildirimKategori } from '@kopru/contracts';
 import { KaliciHata } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 
+import { DUYURU_SABLONLARI } from './duyuru-sablonlari.js';
 import { yeniId, type Islem } from './ortak.js';
 
 /**
@@ -160,9 +161,15 @@ export const SABLON_TANIMLARI: readonly SablonTanimi[] = [
     govde: '{{mevcut_seri}} günlük serin bugün bitebilir. Küçük bir görevle devam ettir.',
     derinBaglanti: 'kopru://bugun',
   },
+  ...DUYURU_SABLONLARI,
 ];
 
 export const sablonlar = new SablonKaydi(SABLON_TANIMLARI);
+
+/** Yalniz `kutu` sablonlari: push uretilmeyen bildirimler (ornegin sonradan katilana duyuru) icin. */
+export const yalnizKutuSablonlari = new SablonKaydi(
+  SABLON_TANIMLARI.filter((t) => t.kanal === 'kutu'),
+);
 
 /**
  * Kodlu sablonlari `bildirim.sablonlar` tablosuna esler (worker acilisi; `bildirim_sistem` ya da tablo
