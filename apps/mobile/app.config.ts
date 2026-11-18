@@ -40,6 +40,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-dev-client',
     'expo-web-browser',
     [
+      'expo-notifications',
+      {
+        // APNs ortami: gelistirme derlemesi `development`, magaza surumu `production`.
+        mode: env('APP_PUSH_MODU') === 'production' ? 'production' : 'development',
+        color: arkaPlan,
+      },
+    ],
+    [
       'expo-audio',
       {
         microphonePermission:

@@ -44,6 +44,11 @@ export default function UygulamaDuzeni() {
           name="grup-motivasyon"
           options={{ title: t('mobil.motivasyon.grup.baslik') }}
         />
+        <Stack.Screen name="bildirimler" options={{ title: t('mobil.bildirim.baslik') }} />
+        <Stack.Screen
+          name="bildirim-tercihleri"
+          options={{ title: t('mobil.bildirim.tercih.baslik') }}
+        />
         <Stack.Screen name="kurum" options={{ title: t('mobil.kurum.baslik') }} />
         <Stack.Screen name="oturumlar" options={{ title: t('mobil.oturumlar.baslik') }} />
         <Stack.Screen name="katilim" options={{ title: t('mobil.sinifKodu.baslik') }} />

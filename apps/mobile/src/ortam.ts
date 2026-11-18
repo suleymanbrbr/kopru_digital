@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion -- process.env tipi expo-env.d.ts varligina gore degisir */
 import { Platform } from 'react-native';
 
 /**
@@ -24,6 +23,15 @@ export const ortam = {
   medyaUrl: apiUrlCoz((process.env.EXPO_PUBLIC_MEDYA_URL as string | undefined) ?? ''),
   /** Motivasyon servisi adresi (bos: api ile ayni alan adi; yerelde http://localhost:4001). */
   motivasyonUrl: apiUrlCoz((process.env.EXPO_PUBLIC_MOTIVASYON_URL as string | undefined) ?? ''),
+  /** Bildirim servisi adresi (bos: api ile ayni alan adi; yerelde http://localhost:4002). */
+  bildirimUrl: apiUrlCoz((process.env.EXPO_PUBLIC_BILDIRIM_URL as string | undefined) ?? ''),
+  /**
+   * Yalniz gelistirme: gercek Expo belirteci alinamayan ortamda (simulator, EAS projesi yok) sahte
+   * belirtecle cihaz kaydi yapar (`EXPO_PUBLIC_PUSH_SAHTE=1`). Uretim derlemesinde yok sayilir.
+   */
+  pushSahte: __DEV__ && (process.env.EXPO_PUBLIC_PUSH_SAHTE as string | undefined) === '1',
+  /** Expo push belirteci icin EAS proje kimligi (bos: `app.config` extra.eas.projectId). */
+  easProjeKimligi: (process.env.EXPO_PUBLIC_EAS_PROJE_ID as string | undefined) ?? '',
   /** Gelistirici ekranlari (Bilesenler) yalnizca gelistirme derlemesinde acilir. */
   gelistirici: __DEV__,
 } as const;

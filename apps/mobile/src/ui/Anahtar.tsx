@@ -8,10 +8,12 @@ interface Props {
   aciklama?: string;
   deger: boolean;
   onDegis: (v: boolean) => void;
+  /** Degistirilemez (ornegin kilitli bildirim tercihi). */
+  devreDisi?: boolean;
 }
 
 /** Etiketli acma/kapama anahtari (en az 44 dp yukseklik). */
-export function Anahtar({ etiket, aciklama, deger, onDegis }: Props) {
+export function Anahtar({ etiket, aciklama, deger, onDegis, devreDisi = false }: Props) {
   const { renkler } = useTema();
   return (
     <View className="min-h-dokunma flex-row items-center gap-3">
@@ -22,6 +24,7 @@ export function Anahtar({ etiket, aciklama, deger, onDegis }: Props) {
       <Switch
         value={deger}
         onValueChange={onDegis}
+        disabled={devreDisi}
         accessibilityLabel={etiket}
         trackColor={{ true: renkler.birincil, false: renkler.kenar }}
       />

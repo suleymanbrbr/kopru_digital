@@ -5,11 +5,14 @@ import { Platform } from 'react-native';
 
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
+import { cevrimiciKorumaliBildirim } from '../api/cevrimiciBildirim';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliMotivasyon } from '../api/cevrimiciMotivasyon';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { cevrimiciKorumaliOperasyon } from '../api/cevrimiciOperasyon';
 import { apiHatasiMi } from '../api/tipler';
+import { expoPushPlatformu } from '../bildirim/platform';
+import { bildirimYoneticisiOlustur, type BildirimYoneticisi } from '../bildirim/yonetici';
 import { davetYoneticisiOlustur, type DavetYoneticisi } from '../davet/yonetici';
 import { guvenliBelirtecDeposu } from '../depo/belirtecDeposu';
 import { guvenliDavetDeposu } from '../depo/davetDeposu';
@@ -24,6 +27,7 @@ import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/ger
 import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
 import { gerceklesenKuyrugaAl, planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
+import { ortam } from '../ortam';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
 import { GonderimYoneticisi } from '../yukleme/gonderim';
 import { YuklemeKuyrugu } from '../yukleme/kuyruk';
@@ -54,6 +58,8 @@ export interface Servisler {
   xp: XpYoneticisi;
   /** Odak oturumu: sureyi baslangic zamanindan hesaplar, sunucu ve cevrimdisi kuyrukla esler. */
   odak: OdakYoneticisi;
+  /** Push izni, cihaz kaydi, bildirime dokunma ve uygulama ici afis. */
+  bildirim: BildirimYoneticisi;
 }
 
 /** Uygulama omru boyunca tek kez kurulan servisler. */
@@ -72,6 +78,7 @@ export function servisleriKur(): Servisler {
     ogrenme: cevrimiciKorumaliOgrenme(ham.ogrenme, () => agGozlemcisi.cevrimiciMi()),
     kayit: cevrimiciKorumaliKayit(ham.kayit, () => agGozlemcisi.cevrimiciMi()),
     motivasyon: cevrimiciKorumaliMotivasyon(ham.motivasyon, () => agGozlemcisi.cevrimiciMi()),
+    bildirim: cevrimiciKorumaliBildirim(ham.bildirim, () => agGozlemcisi.cevrimiciMi()),
   };
   const geriBildirimDeposu = new GeriBildirimDeposu(kv());
 
@@ -82,6 +89,7 @@ export function servisleriKur(): Servisler {
   const gonderimRef: { current: GonderimYoneticisi | null } = { current: null };
   const xpRef: { current: XpYoneticisi | null } = { current: null };
   const odakRef: { current: OdakYoneticisi | null } = { current: null };
+  const bildirimRef: { current: BildirimYoneticisi | null } = { current: null };
 
   const queryClient = new QueryClient({
     queryCache: new QueryCache({ onError: hataIsle }),
@@ -98,6 +106,7 @@ export function servisleriKur(): Servisler {
 
   const oturum = oturumYoneticisiOlustur({
     adaptorler,
+    cikisOncesi: () => bildirimRef.current?.cikis() ?? Promise.resolve(),
     temizle: () => {
       queryClient.clear();
       xpRef.current?.sifirla();
@@ -113,6 +122,20 @@ export function servisleriKur(): Servisler {
     },
   });
   oturumRef.current = oturum;
+
+  const bildirim = bildirimYoneticisiOlustur({
+    platform: expoPushPlatformu(),
+    bildirim: () => adaptorler.bildirim,
+    oturum,
+    depo: kv(),
+    yeniId: yeniIstekId,
+    ...(Constants.expoConfig?.version ? { uygulamaSurumu: Constants.expoConfig.version } : {}),
+    sahteBelirtec: ortam.pushSahte,
+    degisti: () => {
+      void queryClient.invalidateQueries({ queryKey: ['bildirim'] });
+    },
+  });
+  bildirimRef.current = bildirim;
 
   const davet = davetYoneticisiOlustur({
     depo: guvenliDavetDeposu(),
@@ -269,5 +292,6 @@ export function servisleriKur(): Servisler {
     gonderim,
     xp,
     odak,
+    bildirim,
   };
 }

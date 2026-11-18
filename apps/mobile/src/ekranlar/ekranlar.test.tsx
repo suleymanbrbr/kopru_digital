@@ -14,6 +14,7 @@ import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-te
 import { mockAdaptorler } from '../api/mock';
 import { ApiHata } from '../api/tipler';
 import KurumSec from '../app/(onboarding)/kurum-sec';
+import { testBildirimYoneticisi } from '../bildirim/sahtePlatform';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
 import { OdakYoneticisi } from '../motivasyon/odak';
@@ -105,6 +106,7 @@ function ortamKur(): Ortam {
   });
   istemciler.push(queryClient);
   const servisler = {
+    bildirim: testBildirimYoneticisi(adaptorler, oturum).yonetici,
     adaptorler,
     oturum,
     queryClient,

@@ -1,6 +1,7 @@
 import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { View } from 'react-native';
 
 import type { Ders } from '../api/operasyonTipleri';
 import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
@@ -23,6 +24,8 @@ import {
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
 import { useOgrenciBugun } from '../uygulama/sorgular';
+import { BildirimIzinKarti } from './bildirim/BildirimIzinKarti';
+import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
@@ -75,9 +78,13 @@ export function OgrenciBugun() {
 
   return (
     <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
-      <Metin varyant="baslik" accessibilityRole="header">
-        {t('mobil.bugun.selam', { ad: ad ?? '' })}
-      </Metin>
+      <View className="flex-row items-center gap-2">
+        <Metin varyant="baslik" accessibilityRole="header" className="flex-1">
+          {t('mobil.bugun.selam', { ad: ad ?? '' })}
+        </Metin>
+        <BildirimZili />
+      </View>
+      <BildirimIzinKarti />
       {sorgu.isPending ? <Yukleniyor /> : null}
       {sorgu.isError ? (
         <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
