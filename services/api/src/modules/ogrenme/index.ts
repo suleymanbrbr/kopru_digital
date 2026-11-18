@@ -3,6 +3,7 @@ import { denemeAnalizYollari } from './deneme-analiz-yollari.js';
 import { denemeExcelYollari } from './deneme-excel-yollari.js';
 import { denemeKuralYollari } from './deneme-kural-yollari.js';
 import { denemeYollari } from './deneme-yollari.js';
+import { mufredatPlatformYollari } from './mufredat-platform-yollari.js';
 import { mufredatYollari } from './mufredat-yollari.js';
 import { odevOgrenciYollari } from './odev-ogrenci-yollari.js';
 import { odevSablonYollari } from './odev-sablon-yollari.js';
@@ -23,27 +24,36 @@ import { soruYonetimYollari } from './soru-yonetim-yollari.js';
  * deneme analizi ve soru sor (soru, cevap, masa, kota, bildirim, olcum). Rotalar `app.kimlik` (hesap modulu) hazirsa
  * kaydolur.
  */
-export const ogrenmeModule = defineModule('ogrenme', async (app) => {
-  if (app.hasDecorator('kimlik')) {
-    await app.register(mufredatYollari);
-    await app.register(odevYollari);
-    await app.register(odevSablonYollari);
-    await app.register(odevOgrenciYollari);
-    await app.register(odevTeslimYollari);
-    await app.register(planYollari);
-    await app.register(planSablonYollari);
-    await app.register(planOgrenciYollari);
-    await app.register(denemeKuralYollari);
-    await app.register(denemeYollari);
-    await app.register(denemeExcelYollari);
-    await app.register(denemeAnalizYollari);
-    await app.register(soruYollari);
-    await app.register(soruOgretmenYollari);
-    await app.register(raporYollari);
-    await app.register(raporExcelYollari);
-    await app.register(soruYonetimYollari);
-  }
-});
+export const ogrenmeModule = defineModule(
+  'ogrenme',
+  async (app) => {
+    if (app.hasDecorator('kimlik')) {
+      await app.register(mufredatYollari);
+      await app.register(odevYollari);
+      await app.register(odevSablonYollari);
+      await app.register(odevOgrenciYollari);
+      await app.register(odevTeslimYollari);
+      await app.register(planYollari);
+      await app.register(planSablonYollari);
+      await app.register(planOgrenciYollari);
+      await app.register(denemeKuralYollari);
+      await app.register(denemeYollari);
+      await app.register(denemeExcelYollari);
+      await app.register(denemeAnalizYollari);
+      await app.register(soruYollari);
+      await app.register(soruOgretmenYollari);
+      await app.register(raporYollari);
+      await app.register(raporExcelYollari);
+      await app.register(soruYonetimYollari);
+    }
+  },
+  {
+    // Platform uclari `/v1` oneksiz: `/platform/mufredat/...` (ADR 0004).
+    rootPlugin: async (app) => {
+      if (app.hasDecorator('kimlik')) await app.register(mufredatPlatformYollari);
+    },
+  },
+);
 
 // Plan takvimi (Europe/Istanbul haftasi) yardimcilari: testler ve diger moduller yalniz bu yuzeyi kullanir.
 export {

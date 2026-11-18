@@ -197,7 +197,7 @@ describe.skipIf(dbYok())('mufredat tablolari: RLS izolasyonu ve kisitlar', () =>
     expect(kurumKatalogLu).toMatch(/konular_kurum_chk/);
     const aralik = await hataMetni(
       sistem`insert into ogrenme.konular (id, katalog_kodu, brans_kodu, seviye, ad, gecerli_surum_baslangic, gecerli_surum_bitis)
-             values (${uuidv7()}, 'lgs', 'matematik', 'unite', 'x', 2, 2)`,
+             values (${uuidv7()}, 'lgs', 'matematik', 'unite', 'x', 2, 1)`,
     );
     expect(aralik).toMatch(/konular_surum_araligi_chk/);
     const sinif = await hataMetni(
