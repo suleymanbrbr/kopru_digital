@@ -328,6 +328,27 @@ export const tr = {
     yetkisizAciklama:
       'Rolün bu bölümü görmeye yetmiyor. Gerekli olduğunu düşünüyorsan kurum yöneticinle konuş.',
   },
+  /** Abonelik ekranı ve plan durumu (api: `/v1/abonelik`). Fiyat ve limitler yer tutucudur. */
+  abonelik: {
+    baslik: 'Abonelik',
+    durum: {
+      deneme: 'Deneme',
+      aktif: 'Aktif',
+      odeme_bekliyor: 'Ödeme bekleniyor',
+      ek_sure: 'Ek süre',
+      askida: 'Askıda',
+      iptal: 'İptal edildi',
+      sona_erdi: 'Sona erdi',
+    },
+    limit: {
+      max_ogrenci: 'Öğrenci sınırı',
+      max_ogretmen: 'Öğretmen sınırı',
+    },
+    limitDoldu: 'Planının {limit} ({ust_sinir}) doldu. Yeni eklemek için planını yükselt.',
+    askidaAciklama:
+      'Aboneliğin askıda. Verilerin duruyor; yeniden başlatana kadar yalnızca görüntüleyebilirsin.',
+    planiYukselt: 'Planı yükselt',
+  },
   hata: {
     otp_gecersiz: 'Kod hatalı veya süresi dolmuş. Kodu kontrol et ya da yeni kod iste.',
     otp_deneme_asildi: 'Çok fazla yanlış deneme yaptın. Yeni bir kod iste.',
@@ -338,6 +359,10 @@ export const tr = {
     modul_kapali: 'Bu özellik kurumunda kapalı.',
     izin_yok: 'Bu işlem için yetkin yok.',
     abonelik_gerekli: 'Kurumunun aboneliği etkin değil.',
+    plan_limiti: 'Planının sınırına ulaştın. Yeni eklemek için planını yükselt.',
+    plan_bulunamadi: 'Seçtiğin plan bulunamadı.',
+    etkin_abonelik_yok: 'Etkin bir aboneliğin yok.',
+    magaza_uzerinden_yonetilir: 'Bu abonelik App Store veya Google Play üzerinden yönetilir.',
     ag: 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.',
     bulunamadi: 'Aradığın kayıt bulunamadı. Silinmiş ya da erişim yetkin kalkmış olabilir.',
     davet_gecersiz: 'Bu davet geçersiz, süresi dolmuş ya da kullanılmış.',

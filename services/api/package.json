@@ -21,7 +21,8 @@
     "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate-cli.ts migrate",
     "db:generate": "tsx src/db/migrate-cli.ts generate",
     "platform:yonetici-ekle": "tsx --env-file-if-exists=../../.env src/platform-yonetici-ekle-cli.ts",
-    "olaylari-yeniden-yayimla": "tsx --env-file-if-exists=../../.env src/olaylari-yeniden-yayimla-cli.ts"
+    "olaylari-yeniden-yayimla": "tsx --env-file-if-exists=../../.env src/olaylari-yeniden-yayimla-cli.ts",
+    "abonelik-kurumsal": "tsx --env-file-if-exists=../../.env src/abonelik-kurumsal-cli.ts"
   },
   "dependencies": {
     "@kopru/contracts": "workspace:*",

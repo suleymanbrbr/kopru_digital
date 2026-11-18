@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 9;
+export const IZIN_SOZLUGU_SURUMU = 10;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -82,6 +82,12 @@ export const IZINLER = {
   'oyunlastirma.oku': { modul: 'oyunlastirma', aciklama: 'XP, seri ve rozetleri görme' },
   'duyuru.oku': { modul: 'duyuru', aciklama: 'Duyuruları görme' },
   'duyuru.yaz': { modul: 'duyuru', aciklama: 'Duyuru yazma' },
+  // Abonelik yalniz sahibindir; askida/sona_erdi kurumda da (kontrol sirasi adim 4 muafiyeti) calisir.
+  'abonelik.oku': { modul: null, aciklama: 'Abonelik, plan ve kullanım durumunu görme' },
+  'abonelik.yonet': {
+    modul: null,
+    aciklama: 'Fatura bilgisi, otomatik yenileme iptali ve plan değiştirme',
+  },
 } as const satisfies Record<string, { modul: ModulKodu | null; aciklama: string }>;
 
 export type IzinKodu = keyof typeof IZINLER;
@@ -101,7 +107,13 @@ const hepsi = (kapsam: Kapsam, haric: IzinKodu[] = []): Esleme =>
 export const ROL_IZINLERI: Record<Rol, Esleme> = {
   // Gerceklesen yalniz ogrencinin kendi girisidir: sahip/yonetici de yazamaz.
   sahip: hepsi('kurum', ['plan.gerceklesen.yaz']),
-  yonetici: hepsi('kurum', ['rol.yonet', 'kurum.kapat', 'plan.gerceklesen.yaz']),
+  yonetici: hepsi('kurum', [
+    'rol.yonet',
+    'kurum.kapat',
+    'plan.gerceklesen.yaz',
+    'abonelik.oku',
+    'abonelik.yonet',
+  ]),
   ogretmen: {
     'kurum.oku': 'kurum',
     'uyelik.oku': 'grup',

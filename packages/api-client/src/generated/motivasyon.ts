@@ -4,6 +4,222 @@
  */
 
 export interface paths {
+    "/platform/motivasyon/ayarlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gecerli XP kurallari/tavanlari ve surum gecmisi (yeniden eskiye). Yalniz plat=yonetici. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gecerli: {
+                                degerler: {
+                                    kurallar: {
+                                        [key: string]: {
+                                            aktif: boolean;
+                                            gec_carpani: number;
+                                            olay_basi_ust_sinir: number | null;
+                                            xp: number;
+                                        };
+                                    };
+                                    tavanlar: {
+                                        [key: string]: number;
+                                    };
+                                };
+                                surum: number;
+                            };
+                            gecmis: {
+                                /** Format: date-time */
+                                created_at: string;
+                                degerler: {
+                                    kurallar: {
+                                        [key: string]: {
+                                            aktif: boolean;
+                                            gec_carpani: number;
+                                            olay_basi_ust_sinir: number | null;
+                                            xp: number;
+                                        };
+                                    };
+                                    tavanlar: {
+                                        [key: string]: number;
+                                    };
+                                };
+                                /** Format: uuid */
+                                degistiren_kullanici_id: string | null;
+                                geri_alinan_surum: number | null;
+                                neden: string;
+                                onceki_surum: number | null;
+                                surum: number;
+                                uyarilar: {
+                                    kod: string;
+                                    mesaj: string;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /** Kismi degisiklikle yeni ayar surumu olusturur (zorunlu neden). Gecmis XP degismez, yalniz sonraki olaylar. Aralik/tutarlilik hatasi 422 ayar_gecersiz; duzenli ogrenci varsayimini bozan degisiklik reddedilmez, yanitta uyarilar doner. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        beklenen_surum?: number;
+                        kurallar?: {
+                            [key: string]: {
+                                aktif?: boolean;
+                                gec_carpani?: number;
+                                olay_basi_ust_sinir?: number | null;
+                                xp?: number;
+                            };
+                        };
+                        neden: string;
+                        tavanlar?: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            created_at: string;
+                            degerler: {
+                                kurallar: {
+                                    [key: string]: {
+                                        aktif: boolean;
+                                        gec_carpani: number;
+                                        olay_basi_ust_sinir: number | null;
+                                        xp: number;
+                                    };
+                                };
+                                tavanlar: {
+                                    [key: string]: number;
+                                };
+                            };
+                            /** Format: uuid */
+                            degistiren_kullanici_id: string | null;
+                            geri_alinan_surum: number | null;
+                            neden: string;
+                            onceki_surum: number | null;
+                            surum: number;
+                            uyarilar: {
+                                kod: string;
+                                mesaj: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/motivasyon/ayarlar/geri-al": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Eski bir surumun degerleriyle yeni surum olusturur (gecmis silinmez). Bilinmeyen surum 404; degerler zaten ayniysa 422 degisiklik_yok. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        beklenen_surum?: number;
+                        neden: string;
+                        surum: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            created_at: string;
+                            degerler: {
+                                kurallar: {
+                                    [key: string]: {
+                                        aktif: boolean;
+                                        gec_carpani: number;
+                                        olay_basi_ust_sinir: number | null;
+                                        xp: number;
+                                    };
+                                };
+                                tavanlar: {
+                                    [key: string]: number;
+                                };
+                            };
+                            /** Format: uuid */
+                            degistiren_kullanici_id: string | null;
+                            geri_alinan_surum: number | null;
+                            neden: string;
+                            onceki_surum: number | null;
+                            surum: number;
+                            uyarilar: {
+                                kod: string;
+                                mesaj: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/motivasyon/kurumlar/{kurum_id}/benim": {
         parameters: {
             query?: never;

@@ -1153,7 +1153,7 @@ Profil: `GS` + `kurum_id uuid NULL`. RLS: evet, karma politika ([README](README.
 Kısıtlar:
 - `CHECK (kurum_id IS NOT NULL OR (katalog_kodu IS NOT NULL AND gecerli_surum_baslangic IS NOT NULL))`.
 - `CHECK (kurum_id IS NULL OR (katalog_kodu IS NULL AND gecerli_surum_baslangic IS NULL AND gecerli_surum_bitis IS NULL))`.
-- `CHECK (gecerli_surum_bitis IS NULL OR gecerli_surum_bitis > gecerli_surum_baslangic)`.
+- `CHECK (gecerli_surum_bitis IS NULL OR gecerli_surum_bitis >= gecerli_surum_baslangic)` (`=`: taslakta doğup aynı taslakta kaldırılan satır, boş aralık; migration 0017).
 - Kullanımdan kaldırma `gecerli_surum_bitis` yazılarak yapılır. `DELETE` yetkisi `api_app`ten alınmıştır. Başka kayıtlar `konu_id` ile başvurmaya devam eder, geçmiş veri bozulmaz.
 - Üst-alt aynı kapsamda olmalı: kurum konusunun `ust_id`si global veya aynı kurumun konusu olabilir, global konunun üstü global olmalıdır (tetikleyici).
 Sürüm sorgusu: sürüm `v` için geçerli konular: `gecerli_surum_baslangic <= v AND (gecerli_surum_bitis IS NULL OR gecerli_surum_bitis > v)`. Yeni konular yeni sürüm numarasıyla eklenir; ad değişikliği yeni konu + eskinin `yerine_gecen_id` bağlanmasıdır. Mevcut ödev/plan/ders kayıtları eski `konu_id`yi korur; arayüz kullanımdan kalkmış konuyu rozetle gösterir ve yeni seçimde sunmaz.
@@ -1167,6 +1167,32 @@ Kurumun/kademenin/grubun hangi katalog sürümünü kullandığı (liste sabit k
 Profil: `KS`. RLS: evet. Sütunlar: `kapsam text NOT NULL` (CHECK `IN ('kurum','kademe','grup')`), `kapsam_id uuid NOT NULL`, `katalog_kodu text NOT NULL`, `surum_no int NOT NULL`. `UNIQUE (kurum_id, kapsam, kapsam_id, katalog_kodu)`. `(katalog_kodu, surum_no)` bileşik FK `mufredat_surumleri`ne. Kayıt yoksa en yüksek yayınlanmış sürüm; çözüm sırası: istenen kapsam (kademe/grup), `kurum` kapsamı, en yüksek yayınlanmış. Yalnız yayınlanmış sürüm atanır. Olaylar: yok.
 
 **Uçlar** (`/v1/ogrenme/kurumlar/:kurum_id/...`; izin `mufredat.oku` tüm roller `kurum`, `mufredat.konu.yaz` sahip/yönetici `kurum`, öğretmen `grup`): `GET /kataloglar`; `GET /konular` (`katalog_kodu`, `surum_no`, `brans_kodu`, `ust_id`, `seviye`, `sinif_seviyesi`, `kaynak`, `q`, `tumu=1`, `limit`, `imlec`; kullanımdan kalkan/arşivli konular `tumu=1` ile `kullanimdan_kalkti: true` rozetiyle); `GET /konular/:id`; `POST /konular`; `PATCH /konular/:id`; `POST /konular/:id/arsivle` ve `/arsivden-cikar`; `GET|PUT /mufredat-atamalari` (PUT yalnız `kurum` kapsamlı yazma izniyle: sahip/yönetici). Global konu yazma denemesi `403 global_konu_yazilamaz`. Kurum konusu seviye kuralı: ünite üstsüz, konu üstü ünite, alt konu üstü konu; üst aynı branşta olmalı. Yazmalar denetim kaydına girer (`konu.olustur|guncelle|arsivle|arsivden_cikar`, `mufredat.ata`). Örnek tohum: `services/api/scripts/mufredat-tohum.sql`.
+
+#### Platform müfredat editörü (`/platform/mufredat/...`, migration 0017)
+
+Platform yöneticisi (`plat = yonetici` claim'i; ön kontrol tek fonksiyonda, `platformYoneticisiGerekli`: platform kimlik paketi korumayı getirince değişecek tek nokta) katalog sürümlerini düzenler ve yayınlar. Yazmalar `api_sistem` işlemidir (`src/sistem/mufredat-editor.ts` → `withSistem`) ve her işlem `hesap.denetim_kayitlari`na `platform.mufredat.<eylem>` olarak düşer (`neden` = değişiklik notu). Okumalar RLS'li uygulama rolüyle yapılır (içerik globaldir). Rotalar `rizaMuaf`tır (platform yöneticisinin KVKK onayı kurum bağlamı değildir).
+
+**Tasarım (konu eşleme tablosu yerine).** Konu kimliği sürümler arasında sabittir; bir konu `[gecerli_surum_baslangic, gecerli_surum_bitis)` aralığındaki sürümlerde vardır. Ayrı bir `konu_eslemeleri` tablosu **eklenmedi**: eski → yeni eşleme zaten `yerine_gecen_id` ile (tek yönlü, silinmeyen satır) ve değişiklik günlüğüyle (`mufredat_degisiklikleri`) tutulur; birleştirme çoktan bire olduğundan tek sütun yeter. Kurum verisi (ödev, plan görevi, deneme konu sonuçları: hepsi FK'sız `konu_id`) eski kimlikle okunmaya devam eder: eski satır silinmez, yalnız `gecerli_surum_bitis` alır ve `kullanimdan_kalkti` rozetiyle `yerine_gecen_id`yi gösterir. Kurum alt konuları (`kurum_id` dolu, `ust_id` kapanan global konuyu gösterir) **yayın anında** halefe bağlanır (`yerine_gecen_id` zinciri izlenir; seviye ve branş aynıysa).
+
+**Taslak = yayınlanmamış sürüm `D`.** Katalogda en çok bir taslak (kısmi benzersiz indeks `mufredat_surumleri_tek_taslak_idx`). Taslak açmak satır kopyalamaz: önceki yayınlı sürümün aktif konuları (`gecerli_surum_bitis IS NULL`) `D`de de geçerlidir ("önceki sürümden kopyalama" konu kimliklerinin sabit olmasıyla sağlanır). Kurumlar yayına kadar `D`yi görmez (`surumCoz` yalnız yayınlanmışı seçer; `D`nin başlangıçlı satırları yayınlı sürüm aralığına girmez). Yayınlı sürümlerin gördüğü ağaç değişmesin diye işlemler:
+
+| İşlem | Etki |
+| --- | --- |
+| ekle | yeni satır (`baslangic = D`); seviye kuralı (ünite > konu > alt konu), aynı branş, üst taslakta aktif |
+| adlandir | taslakta doğmamış konu: eski satır `bitis = D` + `yerine_gecen_id`, yeni kimlikli kopya ve aktif alt ağacı kopyalanır; taslakta doğmuş: yerinde |
+| tasi | üst değişirse adlandir ile aynı (alt ağaçla kopya); yalnız `sira` değişirse yerinde (sunum bilgisi sürümler arası ortak, konu kimliği/geçerlilik değişmez). Kendi/alt konusunun altına taşıma `400 konu_ust_gecersiz` |
+| birlestir | kaynak ve hedef aynı branş ve seviyede, aktif; kaynağın aktif alt konuları hedefe bağlanır (gerekirse kopya), kaynak `bitis = D`, `yerine_gecen_id = hedef`. `400 birlestirme_gecersiz` |
+| kaldir | konu ve aktif alt ağacı `bitis = D` (silme yok); isteğe bağlı `yerine_gecen_id` (öneri) |
+
+Taslakta doğup aynı taslakta kapanan satır `bitis = baslangic` (boş aralık) alır; bu yüzden `konular_surum_araligi_chk` `bitis >= baslangic` olarak gevşetildi (sorgu `baslangic <= v AND bitis > v` bu satırı hiçbir sürümde döndürmez). Her işlem zorunlu `not` (1–1000 karakter) ile `ogrenme.mufredat_degisiklikleri`ne yazılır. Taslak silme/iptal yoktur (satır silme kapalı); yanlış işlem ters işlemle düzeltilir.
+
+#### `ogrenme.mufredat_degisiklikleri`
+
+Profil: `G` (RLS yok; kiracı verisi değil). Sütunlar: `id uuid`, `created_at`, `katalog_kodu`, `surum_no` (bileşik FK `mufredat_surumleri`), `tur text` (CHECK `ekle|adlandir|tasi|birlestir|kaldir`), `konu_id uuid` (FK `konular`), `hedef_konu_id uuid NULL` (yeni kopya / birleşilen konu / öneri), `ad_once`, `ad_sonra`, `ayrinti jsonb` (örn. `kopyalanan_konu`, `eski_ust_id`, `yeni_ust_id`, `yalniz_sira`, `tasinan_alt_konu`, `kaldirilan_alt_konu`), `not_metni text NOT NULL` (CHECK 1–1000), `olusturan_id uuid`. İndeks `(katalog_kodu, surum_no, created_at, id)`, `(konu_id)`. `api_app` yalnız okur; `api_sistem` yalnız ekler (UPDATE/DELETE yok). Tetikleyici `yayinli_surum_gunlugu_degismez`: yayınlanmış sürüme kayıt eklenemez. Olaylar: yok (yayın olayı sürüm düzeyinde).
+
+**Uçlar** (`plat = yonetici` değilse `403 platform_yetkisi_yok`; yetki gövde doğrulamasından önce denetlenir): `GET /platform/mufredat/kataloglar` (taslaklar dahil sürümler, `en_yuksek_yayinlanmis`, `taslak_surum_no`, değişiklik sayısı); `POST /platform/mufredat/kataloglar/:katalog_kodu/taslak` (`ad`, `aciklama?`; `409 taslak_var`); `GET .../surumler/:surum_no/agac` (sürümde geçerli konular, düz liste, taslakta yeniler `yeni: true`); `GET .../surumler/:surum_no/fark` (eklenen/yeniden adlandırılan/taşınan/birleşen/kaldırılan + notlar + özet sayılar; yayınlı sürüm için de okunur); `POST .../taslak/konular` (ekle), `POST .../taslak/konular/:id/adlandir|tasi|birlestir|kaldir`; `POST .../taslak/yayinla`. Taslak yokken işlem `404 taslak_yok`, değişiklik yokken yayın `409 degisiklik_yok`.
+
+**Yayın** (tek `api_sistem` işlemi): kurum alt konuları halefe bağlanır, `yayinlandi_at` yazılır (bundan sonra `yayinli_surum_degismez` tetikleyicisi sürümü korur), **her aktif kurum için** bir `ogrenme.mufredat.yayinlandi.v1` olayı outbox'a yazılır ([olaylar](olaylar.md): zarf `kurumId` zorunlu olduğundan global olay kurum bazında çoğaltılır; yükte yalnız katalog, sürüm no ve değişiklik sayıları). Bildirim servisi sahip/yöneticilere "Müfredat güncellendi" kutu bildirimi üretir ([bildirim](bildirim.md)). Yetki doğrulamaz: 2FA ve IP izin listesi platform kimlik paketindedir.
 
 ### Ödev
 
@@ -1750,6 +1776,55 @@ e-Arşiv faturaları. Profil: `KS`. RLS: evet.
 
 Kısıtlar: `UNIQUE (odeme_id, tur)` (bir ödemeye bir fatura), `UNIQUE (kurum_id, fatura_no) WHERE fatura_no IS NOT NULL`, `CHECK (toplam_kurus = matrah_kurus + kdv_kurus)`, `CHECK (durum <> 'kesildi' OR (fatura_no IS NOT NULL AND ettn IS NOT NULL AND kesim_at IS NOT NULL))`. Kesim, ödeme `basarili` olunca pg-boss işinde yapılır; entegratör hatasında 6 deneme, sonra `hata` ve alarm. Kesilmiş fatura silinmez/değiştirilmez; düzeltme `tur='iade'` faturasıyla. Store (Apple/Google) ödemeleri için fatura kesilmez (mağaza keser); yalnızca `iyzico` ve `kurumsal`. İndeks: `(kurum_id, kesim_at DESC)`, `(durum, created_at) WHERE durum IN ('bekliyor','hata')`.
 Olaylar: `abonelik.fatura.kesildi.v1`.
+
+### Uygulama (migration `0015`): çekirdek
+
+Bu bölüm paket A1'in (abonelik çekirdeği) şemadan ve şartnameden farklarını ve davranışını anlatır. Ödeme başlatma, webhook işleyicileri, iyzico/RevenueCat ve e-Arşiv kesimi **sonraki paketin** işidir; `OdemeSaglayici` arayüzü (`modules/abonelik/saglayici.ts`) ve geliştirme sağlayıcısı `SahteOdemeSaglayici` hazırdır.
+
+**Şemadan farklar**
+
+- `abonelikler.kaynak` CHECK'ine `'deneme'` eklendi: kart istemeden başlayan 14 günlük deneme bir ödeme sağlayıcısına bağlı değildir. `durum='deneme'` ise `kaynak='deneme'` ve `deneme_bitis_at` dolu olmalıdır (`abonelikler_deneme_chk`).
+- `abonelikler.bekleyen_plan_id` ve `bekleyen_periyot` (NULL): ücretli abonelikte plan değiştirme isteği dönem sonunda uygulanır; yükseltmenin ödemesi sonraki paketin ödeme akışındadır.
+- `abonelik_odemeleri.ters_cevrilen_id` (metinde vardı, tabloda yoktu) eklendi; `abonelik_olaylari.abonelik_id` FK, `abonelik_olaylari.updated_at` ve `abonelik_odemeleri.updated_at` eklendi.
+- Yazma yetkisi: uygulama rolü (`api_app`) `abonelikler`, `abonelik_odemeleri` ve `faturalar` tablolarına yalnız **okur**; `planlar` için yalnız okur; `abonelik_olaylari` için hiçbir yetkisi yoktur. Yazma `api_sistem` ile `src/sistem/abonelik-sistem.ts` üzerinden yapılır ve her işlem `hesap.denetim_kayitlari`na nedenle yazılır. `kurum_fatura_bilgileri` sahibin yazdığı normal kiracı tablosudur.
+- `ortak.uuid_v7_uret()` yalnız migration tohumları içindir.
+
+**Plan kataloğu tohumu (YER TUTUCU, proje sahibi onayı bekliyor)**
+
+Fiyatlar ve limitler karar verilene kadar yer tutucudur; migration ve bu tablo "onay bekliyor" diye işaretlidir. Gerçek değerler **yeni plan sürümü** (aynı kod, `surum=2`) olarak eklenir; eski satır `aktif=false` olur.
+
+| Kod | Ad | Kurum türü | Aylık (kuruş, KDV hariç) | Yıllık | `max_ogrenci` | `max_ogretmen` | `max_sube` |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `baslangic` | Başlangıç | `bireysel` | 29 900 | 299 000 | 15 | 1 | 1 |
+| `koc` | Koç | `bireysel` | 69 900 | 699 000 | 60 | 1 | 1 |
+| `ekip` | Ekip | `ekip` | 149 900 | 1 499 000 | 150 | 5 | 1 |
+| `kurum` | Kurum | `kurum` | 499 900 | 4 999 000 | 500 | 40 | 5 |
+
+Başlangıç'ın 15 öğrencisi şartnamedeki "16. öğrenci" örneğidir. Modül eşleşmesi de kararlaştırılmadı: tüm planlar bütün modülleri içerir (`moduller` tam liste). Şartnamenin üç paketi (Başlangıç / Koç / Kurum) dışında `ekip` türündeki kurumlar için bir yer tutucu `ekip` planı vardır (`kurum_turu` tek değerlidir; `bireysel` kurum Başlangıç'tan Koç'a yükselebilsin diye iki bireysel plan var). Etkin abonelik yokken geçerli **ücretsiz katman** kodda sabittir (`UCRETSIZ_KATMAN`, yer tutucu): 5 öğrenci, 1 öğretmen, 1 şube.
+
+**Deneme.** `POST /v1/hesap/kurumlar` kurum satırıyla aynı işlemde (`api_sistem`) 14 günlük `deneme` aboneliği açar (plan: bireysel -> `baslangic`, ekip -> `ekip`, kurum -> `kurum`; `fiyat_kurus=0`, `otomatik_yenileme=false`) ve `abonelik.abonelik.degisti.v1` yazar. Migration, aboneliği olmayan mevcut `aktif` kurumlara aynı 14 günlük denemeyi açar (geliştirme verisi; üretimde müşteri yoktur).
+
+**Durum makinesi.** Saf geçiş `modules/abonelik/durum-makinesi.ts` (`sonrakiGecis`, `gecisZinciri`), uygulayıcı `yazma.ts: gecisleriUygula`, zamanlayıcı `gecis-isi.ts` (worker'da saatte bir; pg-boss depoda olmadığı için finans gece işiyle aynı `setInterval` örüntüsü, ona taşınabilir). Kurallar: `deneme` -> `sona_erdi` (deneme bitti); `aktif` -> `iptal` (dönem bitti, iptal istenmişti) ya da `odeme_bekliyor` (dönem bitti, yenileme gelmedi; sağlayıcı webhook'u gecikirse güvenlik ağı); `odeme_bekliyor` -> `ek_sure` (dönem bitişinden itibaren 7 gün, `ek_sure_bitis_at` dönem bitişi + 7 gün; tam erişim sürer); `ek_sure` -> `askida` (salt okunur); `askida` -> `sona_erdi` (askıya geçişten, yani `ek_sure_bitis_at`'ten 90 gün sonra). Uzun süre kapalı kalan worker zinciri tek çalışmada tamamlar. `askida`/`sona_erdi` olunca `hesap.kurumlar.durum='askida'` yapılır ve `hesap.kurum.degisti` yayımlanır; ödeme gelince (`aboneligiAktiflestir`) `aktif`e döner (yalnız `askida` kurum geri döner; `kapali` kuruma dokunulmaz). İşler idempotenttir: vadesi gelen yoksa denetim satırı da yazılmaz; `for update skip locked` ile çoklu worker güvenlidir.
+
+**Kontrol sırası adım 4.** `requirePermission` (`hesap/yetki.ts`) yazma isteklerinde (`GET/HEAD/OPTIONS` dışı) kurum `askida`/`sona_erdi` ise `402 abonelik_gerekli` döner. "Kilitli" tanımı: etkin abonelik yok ve en son abonelik `askida`/`sona_erdi`. `abonelik.*` izinli uç noktalar muaftır; okuma her zaman açıktır. `iptal` olmuş kurum kilitli sayılmaz (ücretsiz katman). Kullanıcı düzeyi iki uç da kapıdan geçer: davet kabulü ve `POST /v1/hesap/sinif-kodu/katil` (kurum belirteçte yok, koddan çözülür) kilitli kurumda `402 abonelik_gerekli` döner.
+
+**Plan hakkı (modül).** `hesap.modul_acik_mi` artık `plan_hakki AND kurum_acik AND kademe_acik AND grup_acik` hesaplar. Plan hakkı: kurumun geçerli planının `moduller` listesi (etkin abonelik, yoksa en son `iptal` olmamış abonelik); abonelik yoksa ya da `iptal`se serbest. `modul_ayarlari` satırı yoksa varsayılan plana bağlıdır; satır plan hakkını **aşamaz**, yalnız daraltır. Diğer servislerdeki `modul_ayari_kopyalari` yalnız `hesap.modul_ayari.degisti` olaylarını izler; plan hakkı olaylarında yok. Olay yükündeki `moduller[]` ile tüketici plan hakkını kendisi çözebilir (tüketici tarafı sonraki iş).
+
+**Limitler.** `max_ogrenci` ve `max_ogretmen` (etkin `aktif` üyeliklerde `count(distinct kullanici_id)` rol başına). Dolduğunda yeni (ya da yeniden etkinleşen) öğrenci/öğretmen üyeliği `402 plan_limiti` ile reddedilir; gövde `error.details`: `{ limit: 'max_ogrenci'|'max_ogretmen', mevcut, ust_sinir }`. Denetlenen yerler: davet kabulü (işlem geri alınır, davet kullanılmamış kalır), sınıf kodu katılım isteği açma ve onay. Kurum başına advisory kilit eşzamanlı kabullerin limiti aşmasını önler. Mevcut veri asla silinmez; limit düşerse yalnız yeni ekleme engellenir. Soru kotası kancası `planAylikUstSiniri` plan limiti `soru_aylik_ogrenci`'yi (`-1` = sınırsız) okur ve kurum ayarıyla `LEAST` alınır. Diğer limitler (`max_sube`, `medya_kota_bayt`, `sms_aylik`) bu pakette uygulanmaz (ilgili modüllerin işi).
+
+**Uç noktalar** (`/v1/abonelik/kurumlar/{kurum_id}/...`, yalnız `sahip`; izinler `abonelik.oku`, `abonelik.yonet`, çekirdek; izin sözlüğü sürümü 10; yönetici dahil diğer roller `403 izin_yok`):
+
+| Uç | İzin | Açıklama |
+| --- | --- | --- |
+| `GET /planlar` | `abonelik.oku` | Kurum türüne uygun aktif planlar |
+| `GET /abonelik` | `abonelik.oku` | Etkin/son abonelik, `ucretsiz`, `yazma_kilitli`, geçerli limitler, kullanım (öğrenci/öğretmen sayısı) |
+| `GET`/`PUT /fatura-bilgileri` | `abonelik.oku` / `abonelik.yonet` | Fatura alıcı bilgisi (VKN/TCKN 10-11 hane; yoksa `null`; upsert, `surum` artar; denetim kaydı kişisel veri içermez) |
+| `POST /abonelik/iptal` | `abonelik.yonet` | Otomatik yenilemeyi iptal: dönem sonunda sona erer, o zamana kadar tam erişim; tekrar çağrı etkisiz. Mağaza aboneliği `409 magaza_uzerinden_yonetilir`, etkin abonelik yoksa `409 etkin_abonelik_yok` |
+| `POST /abonelik/plan-degistir` | `abonelik.yonet` | Denemede plan hemen değişir; ücretli abonelikte `bekleyen_plan_id` olur ve dönem sonunda uygulanır (`uygulama: hemen`/`donem_sonu`); hedef limit mevcut kullanımın altındaysa `limit_asimlari`. Tür uymayan/yok plan `404 plan_bulunamadi` |
+
+**Dış yüzey** (`modules/abonelik/index.ts`, platform paneli ve ödeme paketi için): `kurumsalAboneligiAktiflestir(sistemDb, girdi)` (teklif + fatura ile elle aktivasyon; `kaynak='kurumsal'`, sözleşme no zorunlu, `api_sistem` + denetim), `aboneligiAktiflestir(tx, girdi)` (ödeme alındı; aynı kaynakta satırı günceller, kaynak değişiminde eskisini `sona_erdi` yapıp yenisini ekler, `askida` kalıntıları sonlandırır, kurumu `aktif` yapar), `planDegistirIstegi`, `yenilemeyiIptalEt`, `gecisleriUygula`, `abonelikGecisleriCalistir`, `OdemeSaglayici` / `SahteOdemeSaglayici`.
+
+**Olay.** `abonelik.abonelik.degisti.v1` (`packages/contracts/src/abonelik/olaylar.ts`): oluşma, her durum/plan/dönem/iptal isteği değişimi; kişisel veri ve sağlayıcı kimliği yok.
 
 ## Çapraz kurallar özeti
 

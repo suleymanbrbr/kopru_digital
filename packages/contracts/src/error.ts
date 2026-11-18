@@ -26,6 +26,8 @@ export const errorCodes = {
   rizaGerekli: 'riza_gerekli',
   kurumGerekli: 'kurum_gerekli',
   abonelikGerekli: 'abonelik_gerekli',
+  /** 402: planin ogrenci/ogretmen limiti dolu; `details`: `PlanLimitiDetaySema`. */
+  planLimiti: 'plan_limiti',
   modulKapali: 'modul_kapali',
   izinYok: 'izin_yok',
   taklitSaltOkunur: 'taklit_salt_okunur',

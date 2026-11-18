@@ -44,7 +44,7 @@ describe('izin sozlugu', () => {
   });
 
   it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
-    expect(IZIN_SOZLUGU_SURUMU).toBe(9);
+    expect(IZIN_SOZLUGU_SURUMU).toBe(10);
     expect(izinKapsami('sahip', 'rapor.oku')).toBe('kurum');
     expect(izinKapsami('yonetici', 'rapor.oku')).toBe('kurum');
     expect(izinKapsami('ogretmen', 'rapor.oku')).toBe('grup');
@@ -99,5 +99,15 @@ describe('izin sozlugu', () => {
     expect(izinKapsami('yonetici', 'soru.yonet')).toBe('kurum');
     expect(izinKapsami('veli', 'soru.yonet')).toBeNull();
     expect(izinModulu('soru.yonet')).toBe('soru_sor');
+  });
+
+  it('abonelik izinleri yalniz sahibindir ve cekirdektir (kapatilamaz)', () => {
+    for (const izin of ['abonelik.oku', 'abonelik.yonet'] as const) {
+      expect(izinKapsami('sahip', izin)).toBe('kurum');
+      for (const rol of ['yonetici', 'ogretmen', 'ogrenci', 'veli'] as const) {
+        expect(izinKapsami(rol, izin)).toBeNull();
+      }
+      expect(izinModulu(izin)).toBeNull();
+    }
   });
 });
