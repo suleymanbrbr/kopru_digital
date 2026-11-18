@@ -1,7 +1,9 @@
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   index,
   integer,
+  jsonb,
   pgSchema,
   smallint,
   text,
@@ -76,3 +78,21 @@ export const mufredatAtamalari = ogrenme.table(
     unique('mufredat_atamalari_kapsam_uniq').on(t.kurum_id, t.kapsam, t.kapsam_id, t.katalog_kodu),
   ],
 );
+
+/** Platform editoru degisiklik gunlugu (migrations/0017_mufredat_editor.sql). */
+export const mufredatDegisiklikleri = ogrenme.table('mufredat_degisiklikleri', {
+  id: uuid('id').primaryKey(),
+  created_at: tstz('created_at').notNull().defaultNow(),
+  katalog_kodu: text('katalog_kodu').notNull(),
+  surum_no: integer('surum_no').notNull(),
+  tur: text('tur').notNull(),
+  konu_id: uuid('konu_id').notNull(),
+  hedef_konu_id: uuid('hedef_konu_id'),
+  ad_once: text('ad_once'),
+  ad_sonra: text('ad_sonra'),
+  ayrinti: jsonb('ayrinti')
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  not_metni: text('not_metni').notNull(),
+  olusturan_id: uuid('olusturan_id'),
+});

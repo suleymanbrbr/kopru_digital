@@ -690,6 +690,2226 @@
         ]
       }
     },
+    "/platform/mufredat/kataloglar": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kataloglar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "en_yuksek_yayinlanmis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "katalog_kodu": {
+                            "enum": [
+                              "lgs",
+                              "tyt",
+                              "ayt",
+                              "ydt",
+                              "okul"
+                            ],
+                            "type": "string"
+                          },
+                          "surumler": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "aciklama": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "ad": {
+                                  "type": "string"
+                                },
+                                "degisiklik_sayisi": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "surum_no": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "taslak": {
+                                  "type": "boolean"
+                                },
+                                "yayinlandi_at": {
+                                  "format": "date-time",
+                                  "nullable": true,
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "surum_no",
+                                "ad",
+                                "aciklama",
+                                "yayinlandi_at",
+                                "taslak",
+                                "degisiklik_sayisi"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "taslak_surum_no": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "katalog_kodu",
+                          "surumler",
+                          "en_yuksek_yayinlanmis",
+                          "taslak_surum_no"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kataloglar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Katalog ve sürüm listesi (taslaklar dahil) ile değişiklik sayıları.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/surumler/{surum_no}/agac": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "surum_no",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "type": "string"
+                    },
+                    "konular": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "brans_kodu": {
+                            "type": "string"
+                          },
+                          "gecerli_surum_baslangic": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "gecerli_surum_bitis": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kazanim_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "seviye": {
+                            "enum": [
+                              "unite",
+                              "konu",
+                              "alt_konu"
+                            ],
+                            "type": "string"
+                          },
+                          "sinif_seviyesi": {
+                            "maximum": 12,
+                            "minimum": 5,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "ust_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "yeni": {
+                            "description": "Bu sürümde eklendi (ya da eskinin yerine kopyalandı).",
+                            "type": "boolean"
+                          },
+                          "yerine_gecen_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ust_id",
+                          "brans_kodu",
+                          "seviye",
+                          "ad",
+                          "kazanim_kodu",
+                          "sira",
+                          "sinif_seviyesi",
+                          "gecerli_surum_baslangic",
+                          "gecerli_surum_bitis",
+                          "yerine_gecen_id",
+                          "yeni"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "surum": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aciklama": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad": {
+                          "type": "string"
+                        },
+                        "degisiklik_sayisi": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "surum_no": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "taslak": {
+                          "type": "boolean"
+                        },
+                        "yayinlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "surum_no",
+                        "ad",
+                        "aciklama",
+                        "yayinlandi_at",
+                        "taslak",
+                        "degisiklik_sayisi"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "katalog_kodu",
+                    "surum",
+                    "konular"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Sürümde geçerli konu ağacı (düz liste; taslakta yeni eklenenler `yeni: true`).",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/surumler/{surum_no}/fark": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "surum_no",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "birlesen": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad_once": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ad_sonra": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ayrinti": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "hedef_konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "ekle",
+                              "adlandir",
+                              "tasi",
+                              "birlestir",
+                              "kaldir"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "tur",
+                          "konu_id",
+                          "hedef_konu_id",
+                          "ad_once",
+                          "ad_sonra",
+                          "ayrinti",
+                          "not"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "eklenen": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad_once": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ad_sonra": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ayrinti": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "hedef_konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "ekle",
+                              "adlandir",
+                              "tasi",
+                              "birlestir",
+                              "kaldir"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "tur",
+                          "konu_id",
+                          "hedef_konu_id",
+                          "ad_once",
+                          "ad_sonra",
+                          "ayrinti",
+                          "not"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "kaldirilan": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad_once": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ad_sonra": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ayrinti": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "hedef_konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "ekle",
+                              "adlandir",
+                              "tasi",
+                              "birlestir",
+                              "kaldir"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "tur",
+                          "konu_id",
+                          "hedef_konu_id",
+                          "ad_once",
+                          "ad_sonra",
+                          "ayrinti",
+                          "not"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "type": "string"
+                    },
+                    "ozet": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "birlesen": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "eklenen": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "kaldirilan": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "tasinan": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "yeniden_adlandirilan": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "eklenen",
+                        "yeniden_adlandirilan",
+                        "tasinan",
+                        "birlesen",
+                        "kaldirilan"
+                      ],
+                      "type": "object"
+                    },
+                    "surum": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aciklama": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad": {
+                          "type": "string"
+                        },
+                        "degisiklik_sayisi": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "surum_no": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "taslak": {
+                          "type": "boolean"
+                        },
+                        "yayinlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "surum_no",
+                        "ad",
+                        "aciklama",
+                        "yayinlandi_at",
+                        "taslak",
+                        "degisiklik_sayisi"
+                      ],
+                      "type": "object"
+                    },
+                    "tasinan": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad_once": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ad_sonra": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ayrinti": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "hedef_konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "ekle",
+                              "adlandir",
+                              "tasi",
+                              "birlestir",
+                              "kaldir"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "tur",
+                          "konu_id",
+                          "hedef_konu_id",
+                          "ad_once",
+                          "ad_sonra",
+                          "ayrinti",
+                          "not"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "yeniden_adlandirilan": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad_once": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ad_sonra": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ayrinti": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "hedef_konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "ekle",
+                              "adlandir",
+                              "tasi",
+                              "birlestir",
+                              "kaldir"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "tur",
+                          "konu_id",
+                          "hedef_konu_id",
+                          "ad_once",
+                          "ad_sonra",
+                          "ayrinti",
+                          "not"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "katalog_kodu",
+                    "surum",
+                    "ozet",
+                    "eklenen",
+                    "yeniden_adlandirilan",
+                    "tasinan",
+                    "birlesen",
+                    "kaldirilan"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Sürüm farkı: eklenen, yeniden adlandırılan, taşınan, birleşen, kaldırılan konular ve değişiklik notları.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "aciklama": {
+                    "maxLength": 4000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ad"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "type": "string"
+                    },
+                    "surum": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aciklama": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad": {
+                          "type": "string"
+                        },
+                        "degisiklik_sayisi": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "surum_no": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "taslak": {
+                          "type": "boolean"
+                        },
+                        "yayinlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "surum_no",
+                        "ad",
+                        "aciklama",
+                        "yayinlandi_at",
+                        "taslak",
+                        "degisiklik_sayisi"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "katalog_kodu",
+                    "surum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Yeni taslak sürüm aç. Önceki yayınlı sürümün aktif konuları taslakta da geçerlidir (kimlikler sabit); katalogda tek taslak olur.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "brans_kodu": {
+                    "maxLength": 50,
+                    "pattern": "^[a-z_]+$",
+                    "type": "string"
+                  },
+                  "kazanim_kodu": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "not": {
+                    "description": "Değişiklik notu (zorunlu).",
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "seviye": {
+                    "enum": [
+                      "unite",
+                      "konu",
+                      "alt_konu"
+                    ],
+                    "type": "string"
+                  },
+                  "sinif_seviyesi": {
+                    "maximum": 12,
+                    "minimum": 5,
+                    "type": "integer"
+                  },
+                  "sira": {
+                    "maximum": 100000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "ust_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "brans_kodu",
+                  "seviye",
+                  "ad",
+                  "not"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degisiklik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ad_once": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad_sonra": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ayrinti": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "hedef_konu_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "konu_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "not": {
+                          "type": "string"
+                        },
+                        "tur": {
+                          "enum": [
+                            "ekle",
+                            "adlandir",
+                            "tasi",
+                            "birlestir",
+                            "kaldir"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "created_at",
+                        "tur",
+                        "konu_id",
+                        "hedef_konu_id",
+                        "ad_once",
+                        "ad_sonra",
+                        "ayrinti",
+                        "not"
+                      ],
+                      "type": "object"
+                    },
+                    "konu": {
+                      "additionalProperties": false,
+                      "description": "İşlem sonrası konu (adlandırma/taşımada yeni kopya).",
+                      "properties": {
+                        "ad": {
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "type": "string"
+                        },
+                        "gecerli_surum_baslangic": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "gecerli_surum_bitis": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kazanim_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "seviye": {
+                          "enum": [
+                            "unite",
+                            "konu",
+                            "alt_konu"
+                          ],
+                          "type": "string"
+                        },
+                        "sinif_seviyesi": {
+                          "maximum": 12,
+                          "minimum": 5,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "sira": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "ust_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "yeni": {
+                          "description": "Bu sürümde eklendi (ya da eskinin yerine kopyalandı).",
+                          "type": "boolean"
+                        },
+                        "yerine_gecen_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ust_id",
+                        "brans_kodu",
+                        "seviye",
+                        "ad",
+                        "kazanim_kodu",
+                        "sira",
+                        "sinif_seviyesi",
+                        "gecerli_surum_baslangic",
+                        "gecerli_surum_bitis",
+                        "yerine_gecen_id",
+                        "yeni"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "degisiklik",
+                    "konu"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Taslağa konu ekle.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/adlandir": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ad": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "not": {
+                    "description": "Değişiklik notu (zorunlu).",
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ad",
+                  "not"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degisiklik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ad_once": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad_sonra": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ayrinti": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "hedef_konu_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "konu_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "not": {
+                          "type": "string"
+                        },
+                        "tur": {
+                          "enum": [
+                            "ekle",
+                            "adlandir",
+                            "tasi",
+                            "birlestir",
+                            "kaldir"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "created_at",
+                        "tur",
+                        "konu_id",
+                        "hedef_konu_id",
+                        "ad_once",
+                        "ad_sonra",
+                        "ayrinti",
+                        "not"
+                      ],
+                      "type": "object"
+                    },
+                    "konu": {
+                      "additionalProperties": false,
+                      "description": "İşlem sonrası konu (adlandırma/taşımada yeni kopya).",
+                      "properties": {
+                        "ad": {
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "type": "string"
+                        },
+                        "gecerli_surum_baslangic": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "gecerli_surum_bitis": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kazanim_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "seviye": {
+                          "enum": [
+                            "unite",
+                            "konu",
+                            "alt_konu"
+                          ],
+                          "type": "string"
+                        },
+                        "sinif_seviyesi": {
+                          "maximum": 12,
+                          "minimum": 5,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "sira": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "ust_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "yeni": {
+                          "description": "Bu sürümde eklendi (ya da eskinin yerine kopyalandı).",
+                          "type": "boolean"
+                        },
+                        "yerine_gecen_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ust_id",
+                        "brans_kodu",
+                        "seviye",
+                        "ad",
+                        "kazanim_kodu",
+                        "sira",
+                        "sinif_seviyesi",
+                        "gecerli_surum_baslangic",
+                        "gecerli_surum_bitis",
+                        "yerine_gecen_id",
+                        "yeni"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "degisiklik",
+                    "konu"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Konuyu yeniden adlandır. Yayınlı sürümlerin görüntüsü bozulmasın diye yeni kopya açılır, eskisinin `yerine_gecen_id`si bağlanır.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/birlestir": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "hedef_id": {
+                    "description": "Kaynağın yerine geçecek konu (aynı branş ve seviye).",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "not": {
+                    "description": "Değişiklik notu (zorunlu).",
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "hedef_id",
+                  "not"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degisiklik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ad_once": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad_sonra": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ayrinti": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "hedef_konu_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "konu_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "not": {
+                          "type": "string"
+                        },
+                        "tur": {
+                          "enum": [
+                            "ekle",
+                            "adlandir",
+                            "tasi",
+                            "birlestir",
+                            "kaldir"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "created_at",
+                        "tur",
+                        "konu_id",
+                        "hedef_konu_id",
+                        "ad_once",
+                        "ad_sonra",
+                        "ayrinti",
+                        "not"
+                      ],
+                      "type": "object"
+                    },
+                    "konu": {
+                      "additionalProperties": false,
+                      "description": "İşlem sonrası konu (adlandırma/taşımada yeni kopya).",
+                      "properties": {
+                        "ad": {
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "type": "string"
+                        },
+                        "gecerli_surum_baslangic": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "gecerli_surum_bitis": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kazanim_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "seviye": {
+                          "enum": [
+                            "unite",
+                            "konu",
+                            "alt_konu"
+                          ],
+                          "type": "string"
+                        },
+                        "sinif_seviyesi": {
+                          "maximum": 12,
+                          "minimum": 5,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "sira": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "ust_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "yeni": {
+                          "description": "Bu sürümde eklendi (ya da eskinin yerine kopyalandı).",
+                          "type": "boolean"
+                        },
+                        "yerine_gecen_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ust_id",
+                        "brans_kodu",
+                        "seviye",
+                        "ad",
+                        "kazanim_kodu",
+                        "sira",
+                        "sinif_seviyesi",
+                        "gecerli_surum_baslangic",
+                        "gecerli_surum_bitis",
+                        "yerine_gecen_id",
+                        "yeni"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "degisiklik",
+                    "konu"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Konuyu (kaynak) hedef konuyla birleştir: alt konular hedefe bağlanır, kaynak kullanımdan kalkar ve `yerine_gecen_id` = hedef olur. Kurum verisi (ödev, plan, deneme, kurum alt konuları) kopmaz.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/kaldir": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "not": {
+                    "description": "Değişiklik notu (zorunlu).",
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "yerine_gecen_id": {
+                    "description": "Önerilen yeni konu (rozet için).",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "not"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degisiklik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ad_once": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad_sonra": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ayrinti": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "hedef_konu_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "konu_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "not": {
+                          "type": "string"
+                        },
+                        "tur": {
+                          "enum": [
+                            "ekle",
+                            "adlandir",
+                            "tasi",
+                            "birlestir",
+                            "kaldir"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "created_at",
+                        "tur",
+                        "konu_id",
+                        "hedef_konu_id",
+                        "ad_once",
+                        "ad_sonra",
+                        "ayrinti",
+                        "not"
+                      ],
+                      "type": "object"
+                    },
+                    "konu": {
+                      "additionalProperties": false,
+                      "description": "İşlem sonrası konu (adlandırma/taşımada yeni kopya).",
+                      "properties": {
+                        "ad": {
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "type": "string"
+                        },
+                        "gecerli_surum_baslangic": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "gecerli_surum_bitis": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kazanim_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "seviye": {
+                          "enum": [
+                            "unite",
+                            "konu",
+                            "alt_konu"
+                          ],
+                          "type": "string"
+                        },
+                        "sinif_seviyesi": {
+                          "maximum": 12,
+                          "minimum": 5,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "sira": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "ust_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "yeni": {
+                          "description": "Bu sürümde eklendi (ya da eskinin yerine kopyalandı).",
+                          "type": "boolean"
+                        },
+                        "yerine_gecen_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ust_id",
+                        "brans_kodu",
+                        "seviye",
+                        "ad",
+                        "kazanim_kodu",
+                        "sira",
+                        "sinif_seviyesi",
+                        "gecerli_surum_baslangic",
+                        "gecerli_surum_bitis",
+                        "yerine_gecen_id",
+                        "yeni"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "degisiklik",
+                    "konu"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Konuyu ve alt ağacını kullanımdan kaldır (silme yok; geçerlilik bitişi taslak sürümde başlar).",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/tasi": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "not": {
+                    "description": "Değişiklik notu (zorunlu).",
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sira": {
+                    "maximum": 100000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "ust_id": {
+                    "description": "Yeni üst konu (ünite için null).",
+                    "format": "uuid",
+                    "nullable": true,
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ust_id",
+                  "not"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degisiklik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ad_once": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad_sonra": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ayrinti": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "hedef_konu_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "konu_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "not": {
+                          "type": "string"
+                        },
+                        "tur": {
+                          "enum": [
+                            "ekle",
+                            "adlandir",
+                            "tasi",
+                            "birlestir",
+                            "kaldir"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "created_at",
+                        "tur",
+                        "konu_id",
+                        "hedef_konu_id",
+                        "ad_once",
+                        "ad_sonra",
+                        "ayrinti",
+                        "not"
+                      ],
+                      "type": "object"
+                    },
+                    "konu": {
+                      "additionalProperties": false,
+                      "description": "İşlem sonrası konu (adlandırma/taşımada yeni kopya).",
+                      "properties": {
+                        "ad": {
+                          "type": "string"
+                        },
+                        "brans_kodu": {
+                          "type": "string"
+                        },
+                        "gecerli_surum_baslangic": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "gecerli_surum_bitis": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "kazanim_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "seviye": {
+                          "enum": [
+                            "unite",
+                            "konu",
+                            "alt_konu"
+                          ],
+                          "type": "string"
+                        },
+                        "sinif_seviyesi": {
+                          "maximum": 12,
+                          "minimum": 5,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "sira": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "ust_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "yeni": {
+                          "description": "Bu sürümde eklendi (ya da eskinin yerine kopyalandı).",
+                          "type": "boolean"
+                        },
+                        "yerine_gecen_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ust_id",
+                        "brans_kodu",
+                        "seviye",
+                        "ad",
+                        "kazanim_kodu",
+                        "sira",
+                        "sinif_seviyesi",
+                        "gecerli_surum_baslangic",
+                        "gecerli_surum_bitis",
+                        "yerine_gecen_id",
+                        "yeni"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "degisiklik",
+                    "konu"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Konuyu taşı (üst konu ve/veya sıra). Üst değişirse alt ağacıyla birlikte kopyalanır; yalnız sıra değişimi yerinde yapılır.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/yayinla": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "katalog_kodu",
+            "required": true,
+            "schema": {
+              "enum": [
+                "lgs",
+                "tyt",
+                "ayt",
+                "ydt",
+                "okul"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "not": {
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bildirilen_kurum_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "katalog_kodu": {
+                      "enum": [
+                        "lgs",
+                        "tyt",
+                        "ayt",
+                        "ydt",
+                        "okul"
+                      ],
+                      "type": "string"
+                    },
+                    "ozet": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "birlesen": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "eklenen": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "kaldirilan": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "tasinan": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "yeniden_adlandirilan": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "eklenen",
+                        "yeniden_adlandirilan",
+                        "tasinan",
+                        "birlesen",
+                        "kaldirilan"
+                      ],
+                      "type": "object"
+                    },
+                    "surum": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aciklama": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "ad": {
+                          "type": "string"
+                        },
+                        "degisiklik_sayisi": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "surum_no": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "taslak": {
+                          "type": "boolean"
+                        },
+                        "yayinlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "surum_no",
+                        "ad",
+                        "aciklama",
+                        "yayinlandi_at",
+                        "taslak",
+                        "degisiklik_sayisi"
+                      ],
+                      "type": "object"
+                    },
+                    "yeniden_baglanan_kurum_konusu": {
+                      "description": "Kurum alt konularından yeni üst konuya bağlananların sayısı.",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "katalog_kodu",
+                    "surum",
+                    "ozet",
+                    "bildirilen_kurum_sayisi",
+                    "yeniden_baglanan_kurum_konusu"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Taslağı yayınla: sürüm değişmez olur, kurum alt konuları yeni üst konulara bağlanır, her aktif kuruma `ogrenme.mufredat.yayinlandi.v1` olayı (outbox) yazılır.",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
     "/v1/abonelik/kurumlar/{kurum_id}/abonelik": {
       "get": {
         "parameters": [

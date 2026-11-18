@@ -9,6 +9,7 @@ import { karakterEvrildiEsleme } from './motivasyon-karakter.js';
 import { rozetKazanildiEsleme } from './motivasyon-rozet.js';
 import { seriBozuldiEsleme, seriKilometreTasiEsleme } from './motivasyon-seri.js';
 import { seviyeAtladiEsleme } from './motivasyon-seviye.js';
+import { mufredatYayinlandiEsleme } from './mufredat-yayinlandi.js';
 import { odevIncelendiEsleme } from './odev-incelendi.js';
 import { odevTeslimEsleme } from './odev-teslim.js';
 import { odevYayinlandiEsleme } from './odev-yayinlandi.js';
@@ -43,4 +44,5 @@ export const ESLEMELER: readonly Esleme[] = [
   tahsilatAlindiEsleme,
   paketSatildiEsleme,
   davetKabulEsleme,
+  mufredatYayinlandiEsleme,
 ];

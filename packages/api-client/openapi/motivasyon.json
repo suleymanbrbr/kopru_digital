@@ -8,6 +8,580 @@
   },
   "openapi": "3.0.3",
   "paths": {
+    "/platform/motivasyon/ayarlar": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "gecerli": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "degerler": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "kurallar": {
+                              "additionalProperties": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "aktif": {
+                                    "type": "boolean"
+                                  },
+                                  "gec_carpani": {
+                                    "type": "number"
+                                  },
+                                  "olay_basi_ust_sinir": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "nullable": true,
+                                    "type": "integer"
+                                  },
+                                  "xp": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "xp",
+                                  "olay_basi_ust_sinir",
+                                  "gec_carpani",
+                                  "aktif"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "object"
+                            },
+                            "tavanlar": {
+                              "additionalProperties": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "kurallar",
+                            "tavanlar"
+                          ],
+                          "type": "object"
+                        },
+                        "surum": {
+                          "maximum": 9007199254740991,
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "surum",
+                        "degerler"
+                      ],
+                      "type": "object"
+                    },
+                    "gecmis": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "degerler": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "kurallar": {
+                                "additionalProperties": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "aktif": {
+                                      "type": "boolean"
+                                    },
+                                    "gec_carpani": {
+                                      "type": "number"
+                                    },
+                                    "olay_basi_ust_sinir": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -9007199254740991,
+                                      "nullable": true,
+                                      "type": "integer"
+                                    },
+                                    "xp": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -9007199254740991,
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "xp",
+                                    "olay_basi_ust_sinir",
+                                    "gec_carpani",
+                                    "aktif"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "object"
+                              },
+                              "tavanlar": {
+                                "additionalProperties": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "kurallar",
+                              "tavanlar"
+                            ],
+                            "type": "object"
+                          },
+                          "degistiren_kullanici_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "geri_alinan_surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "neden": {
+                            "type": "string"
+                          },
+                          "onceki_surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "uyarilar": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "kod": {
+                                  "type": "string"
+                                },
+                                "mesaj": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kod",
+                                "mesaj"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "surum",
+                          "degerler",
+                          "onceki_surum",
+                          "geri_alinan_surum",
+                          "degistiren_kullanici_id",
+                          "neden",
+                          "uyarilar",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "gecerli",
+                    "gecmis"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Gecerli XP kurallari/tavanlari ve surum gecmisi (yeniden eskiye). Yalniz plat=yonetici.",
+        "tags": [
+          "platform-motivasyon"
+        ]
+      },
+      "put": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "beklenen_surum": {
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "kurallar": {
+                    "additionalProperties": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aktif": {
+                          "type": "boolean"
+                        },
+                        "gec_carpani": {
+                          "type": "number"
+                        },
+                        "olay_basi_ust_sinir": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "xp": {
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "object"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 3,
+                    "type": "string"
+                  },
+                  "tavanlar": {
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "degerler": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kurallar": {
+                          "additionalProperties": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "aktif": {
+                                "type": "boolean"
+                              },
+                              "gec_carpani": {
+                                "type": "number"
+                              },
+                              "olay_basi_ust_sinir": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "xp": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "xp",
+                              "olay_basi_ust_sinir",
+                              "gec_carpani",
+                              "aktif"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "object"
+                        },
+                        "tavanlar": {
+                          "additionalProperties": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "kurallar",
+                        "tavanlar"
+                      ],
+                      "type": "object"
+                    },
+                    "degistiren_kullanici_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "geri_alinan_surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "neden": {
+                      "type": "string"
+                    },
+                    "onceki_surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "uyarilar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "kod": {
+                            "type": "string"
+                          },
+                          "mesaj": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kod",
+                          "mesaj"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "surum",
+                    "degerler",
+                    "onceki_surum",
+                    "geri_alinan_surum",
+                    "degistiren_kullanici_id",
+                    "neden",
+                    "uyarilar",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kismi degisiklikle yeni ayar surumu olusturur (zorunlu neden). Gecmis XP degismez, yalniz sonraki olaylar. Aralik/tutarlilik hatasi 422 ayar_gecersiz; duzenli ogrenci varsayimini bozan degisiklik reddedilmez, yanitta uyarilar doner.",
+        "tags": [
+          "platform-motivasyon"
+        ]
+      }
+    },
+    "/platform/motivasyon/ayarlar/geri-al": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "beklenen_surum": {
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 3,
+                    "type": "string"
+                  },
+                  "surum": {
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "surum",
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "degerler": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kurallar": {
+                          "additionalProperties": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "aktif": {
+                                "type": "boolean"
+                              },
+                              "gec_carpani": {
+                                "type": "number"
+                              },
+                              "olay_basi_ust_sinir": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "xp": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "xp",
+                              "olay_basi_ust_sinir",
+                              "gec_carpani",
+                              "aktif"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "object"
+                        },
+                        "tavanlar": {
+                          "additionalProperties": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "kurallar",
+                        "tavanlar"
+                      ],
+                      "type": "object"
+                    },
+                    "degistiren_kullanici_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "geri_alinan_surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "neden": {
+                      "type": "string"
+                    },
+                    "onceki_surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "uyarilar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "kod": {
+                            "type": "string"
+                          },
+                          "mesaj": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kod",
+                          "mesaj"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "surum",
+                    "degerler",
+                    "onceki_surum",
+                    "geri_alinan_surum",
+                    "degistiren_kullanici_id",
+                    "neden",
+                    "uyarilar",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Eski bir surumun degerleriyle yeni surum olusturur (gecmis silinmez). Bilinmeyen surum 404; degerler zaten ayniysa 422 degisiklik_yok.",
+        "tags": [
+          "platform-motivasyon"
+        ]
+      }
+    },
     "/v1/motivasyon/kurumlar/{kurum_id}/benim": {
       "get": {
         "parameters": [

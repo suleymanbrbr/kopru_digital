@@ -23,4 +23,5 @@ export * from './motivasyon/api.js';
 export * from './motivasyon/olaylar.js';
 export * from './motivasyon/seri.js';
 export * from './motivasyon/odak-karakter.js';
+export * from './motivasyon/platform.js';
 export * from './bildirim/index.js';

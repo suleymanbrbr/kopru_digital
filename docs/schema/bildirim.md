@@ -296,6 +296,7 @@ Kurum başına aylık SMS sayacı. Profil: `K` (UUID `id` yok). PK `(kurum_id, d
 | `abonelik.odeme.islendi.v1` | Kurum `sahip` | `abonelik`: ödeme başarısız |
 | `abonelik.fatura.kesildi.v1` | Kurum `sahip` | `abonelik`: e-posta ile fatura bağlantısı |
 | `hesap.davet.kabul_edildi.v1` | Davet eden | `sistem` |
+| `ogrenme.mufredat.yayinlandi.v1` | Kurum `sahip` ve `yonetici` | `duyuru`: "Müfredat güncellendi" (yalnız kutu) |
 | `hesap.*` kopya olayları | | Kopya upsert |
 | `hesap.kullanici.silindi.v1` | | Veri temizliği |
 
@@ -317,6 +318,7 @@ Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya
 | `motivasyon.seviye.atladi`, `rozet.kazanildi`, `karakter.evrildi`, `seri.kilometre_tasi`, `seri.bozuldu` | öğrenci | `seviye_atladi`, `rozet_kazanildi`, `karakter_evrildi`, `seri_kilometre_tasi`, `seri_bozuldu`/`seri_onarilabilir` (`oyunlastirma`) |
 | `finans.kredi.azaldi`, `tahsilat.alindi`, `paket.satildi` | öğrenci | `kredi_azaliyor`, `tahsilat_alindi`, `paket_satildi` (`finans`) |
 | `hesap.davet.kabul_edildi` | `davet_eden_id` | `davet_kabul_edildi` (`sistem`) / `davet_kabul_edildi:{davet_id}` |
+| `ogrenme.mufredat.yayinlandi` | kurumun etkin `sahip` ve `yonetici` üyelikleri (`uyelik_kopyalari`; kopya henüz yoksa `YenidenDene`: uyelik olayı başka tüketicide, sıra garantisi yok) | `mufredat_guncellendi` (`duyuru`, **yalnız kutu, push yok**) / `mufredat_guncellendi:{katalog_kodu}:{surum_no}` |
 
 Parçalı olaylarda (`parca_no`) her parça kendi alıcılarını işler; ortak alıcılar (öğretmen) `tekil_anahtar` ile tekillenir. **Alıcı kimlikleri** (`ogrenci_id`, `ogretmen_id`, `veren_id`, `ekleyen_id`, `davet_eden_id`, `alici_idleri`...) hepsi `hesap.uyelikler.id`'dir ([api.md](api.md)); doğrudan `bildirimUret`in `aliciUyelikIdleri`ne verilir. **Finans kararı:** şartname "push metinlerinde ücret, not veya hassas bilgi yer almaz" der; **tutar, yöntem ve makbuz no ne push'ta ne kutuda yazılır** (kutuda yalnız ders sayısı: kalan kredi, paket kredisi). Kişisel/serbest metin (ad, not, ödev başlığı, rozet adı) hiçbir bildirimde yoktur; ayrıntı derin bağlantıdadır (`kopru://ders/{id}`, `odev/{id}`, `soru/{id}`, `kayit/{id}`, `bugun`).
 

@@ -511,3 +511,43 @@ Hafta Pazartesi 04:00 (kurum saati). Öğretmen için sayım `pg_advisory_xact_l
 - Kuşan: karakter seçilmemişse 422 `karakter_secilmemis`; sahip olunmayan (ya da bilinmeyen) kozmetik 422 `kozmetik_sahip_degil`; slot uyuşmazlığı 422 `kozmetik_slot_uyusmuyor`. Çıkarma boş slot için de başarılıdır.
 - `benim.karakter` zaten kuşanımları içerir (çekirdekte); `tur_degistirme_hakki` gibi ek alanlar `GET /karakter`'dedir.
 - Betik: `services/motivasyon/scripts/odak-karakter-akisi.sh`.
+
+## Platform ayarları (paket P3: XP kuralları ve tavanların platformdan yönetimi)
+
+Kod: `services/motivasyon/src/{platform-ayar,platform-yollari,platform-yetki}.ts`; migration `0007_platform_ayarlari.sql`; API şemaları `packages/contracts/src/motivasyon/platform.ts`; betik `services/motivasyon/scripts/motivasyon-ayar-akisi.sh`.
+
+### Veri modeli
+
+- **Geçerli değerler** `xp_kurallari` (`xp`, `olay_basi_ust_sinir`, `gec_carpani`, `aktif`) ve `xp_tavanlari` (`gunluk_ust_sinir`) tablolarında kalır; XP işleyicisi her olay işleminde buradan okurken **önbellek yoktur**, bu yüzden değişiklik herhangi bir worker'da bir sonraki olay işleminde etkilidir (gecikme yok). Yapısal alanlar (`olay_turu`, `kosul`, `birim`, `tavan_grubu`, `genel_tavana_tabi`) platformdan değişmez.
+- **`motivasyon.platform_ayar_surumleri`** (yeni, global, kiracısız, RLS yok, yalnızca ekleme): `id uuid PK`, `surum int UNIQUE` (1'den, ardışık), `degerler jsonb` (tam kopya: `{"kurallar": {kod: {xp, olay_basi_ust_sinir, gec_carpani, aktif}}, "tavanlar": {kod: sayı}}`), `onceki_surum`, `geri_alinan_surum` (FK, geri almada hedef), `degistiren_kullanici_id uuid NULL` (tohum: boş), `neden text NOT NULL` (1..500), `uyarilar jsonb`, `created_at`. Surum 1 = tohum. `UPDATE/DELETE` tetikleyiciyle engellenir; `motivasyon_app` yazamaz, `motivasyon_sistem` yalnız ekler. Kişisel veri ve `kurum_id` içermez.
+- Her değişiklik ayrıca anahtar bazında `yapilandirma_gecmisi`ne (`tablo`, `anahtar`, `once`, `sonra`, kullanıcı, neden) yazılır; ikisi ve ayar uygulaması tek işlemde, global advisory kilidi altındadır (eş zamanlı iki değişiklik sıralanır, surumler benzersiz). Servis `api` veritabanına dokunmaz; denetim bu servisin kendi tablolarındadır.
+
+### Uçlar (`/platform/motivasyon/ayarlar`)
+
+| Yöntem | Yol | Açıklama |
+| --- | --- | --- |
+| GET | `/platform/motivasyon/ayarlar?limit=` | `gecerli` (`surum`, `degerler`) ve `gecmis` (yeniden eskiye, varsayılan 20) |
+| PUT | `/platform/motivasyon/ayarlar` | Kısmi değişiklik (`kurallar`, `tavanlar`) + zorunlu `neden` (3..500) + isteğe bağlı `beklenen_surum`; yeni sürümü döner (`uyarilar` dahil) |
+| POST | `/platform/motivasyon/ayarlar/geri-al` | `{surum, neden}`: eski sürümün değerleriyle **yeni** sürüm (201); geçmiş silinmez |
+
+Yetki (`platformYoneticisiGerekli`, tek fonksiyon): JWT'de `plat = yonetici`; `imp` (taklit) varsa 403 `taklit_salt_okunur`; `plat` yok/`destek` 403 `izin_yok`; istemci IP'si `PLATFORM_IP_IZINLI` (IP ya da CIDR listesi; boşsa geliştirmede açık, `NODE_ENV=production`'da herkes 403) listesinde değilse 403. Belirteç kurumsuz olabilir; JWT doğrulayıcı `allowNoKurum` ile kurulur (kurum uçları kurumsuz belirteci zaten 403 `kurum_gerekli` ile reddeder). Okuma ve yazma `motivasyon_sistem` bağlantısıyla (`DATABASE_SISTEM_URL`) yapılır; tanımlı değilse uçlar 503. Her uç yalnızca bu servisin sistem veritabanına yazar. **İki adımlı doğrulama kanıtı** (claim adı) api platform çekirdeğinde (P1) belirlenir, `platformYoneticisiGerekli`ye eklenecektir.
+
+### Doğrulama (422 `ayar_gecersiz`, `details.hatalar: [{alan, mesaj}]`)
+
+- `xp` 0..500 tam sayı; `olay_basi_ust_sinir` 1..500 tam sayı ya da `null`; `gec_carpani` 0..1 (en çok 2 ondalık); günlük tavan 1..2000 tam sayı; bilinmeyen kural/tavan kodu.
+- **Tutarlılık:** alt tavanlar (`plan`, `odak`, `soru`, `kayit`) `genel` tavanını aşamaz; birimsiz kuralın XP'si ve herhangi bir kuralın `olay_basi_ust_sinir`'i tabi olduğu en dar tavanı (kural grubu tavanı ve `genel`, tabiyse) aşamaz; birimli kuralda (`net`) birim XP'si olay başı üst sınırı aşamaz. Gerçek değişiklik yoksa 422 `degisiklik_yok`; `beklenen_surum` son sürümden farklıysa 409 `surum_catismasi`.
+
+### Düzenli öğrenci uyarıları (reddetmez; yanıtta ve sürümde `uyarilar`)
+
+`duzenli-ogrenci.ts` modeli yeni değerlerle yeniden hesaplanır ve tohum modelle (haftalık 393 XP; seviye 5/12/25/40 için 7/59/134/356. gün) kıyaslanır:
+`haftalik_xp_degisti` (haftalık XP tohumdan %10'dan fazla sapar), `seviye_hedefi_kaydi` (herhangi bir seviye hedefi %25'ten fazla kayar), `ilk_gun_hedefi` (tipik ilk gün XP'si seviye 3 eşiğinin (60) altında kalır), `genel_tavan_dar` (genel tavan tipik ders gününü kırpar), `kural_kapatildi` (kural kapatılır ya da XP'si 0 olur). Kapalı kural modelde 0 XP sayılır.
+
+### Davranış
+
+Değişiklik yalnızca sonraki olayları etkiler; `xp_hareketleri` defteri ve `toplam_xp` değişmez (testlerle doğrulandı: 20 XP'lik eski yoklama kaydı 25'e dönmez, sonraki olay 25 verir; tavan düşürülünce sonraki olay kırpılır ve `kismi=true` olur). Geri alma de yeni bir sürümdür.
+
+### Sapmalar
+
+- Şema notundaki `PUT /platform/motivasyon/*` tek kaynağa (`/platform/motivasyon/ayarlar`, kural + tavan) indirgendi; seri eşikleri, `motivasyon_ayarlari`, seviye eğrisi, rozet, branş eşlemesi platform ucunda yoktur (ürün ihtiyacı çıkınca aynı sürümleme kalıbıyla eklenir; `yapilandirma_gecmisi` kalıbı hazırdır).
+- "Önbellekli okuma" yerine **önbelleksiz** okuma seçildi: değerler küçük tablolarda ve XP işlemi zaten bu tablolara bakıyordu; önbellek yalnız bayatlık riski getirirdi.
+- Surum 1 satırının `id`'si sabit bir UUIDv7 biçimli sabittir (PostgreSQL 17'de `uuidv7()` yok).

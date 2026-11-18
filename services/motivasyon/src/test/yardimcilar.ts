@@ -24,7 +24,8 @@ export const natsYok = () => {
 // --- JWT -------------------------------------------------------------------------------------
 const anahtar = await generateKeyPair('EdDSA');
 const keySet = () => Promise.resolve(anahtar.publicKey);
-export const kullaniciDogrulayici: VerifyJwt = createJwtVerifier({ keySet });
+// Platform yoneticisi belirteci kurumsuz olabilir (uretimdeki dogrulayici da `allowNoKurum` ile kurulur).
+export const kullaniciDogrulayici: VerifyJwt = createJwtVerifier({ keySet, allowNoKurum: true });
 
 export interface Kimlik {
   kullaniciId: string;
@@ -49,6 +50,20 @@ export async function kullaniciTokeni(k: Kimlik): Promise<string> {
     .sign(anahtar.privateKey);
 }
 
+/** Platform belirteci: kurum/uyelik yok, `plat` claim'i (`yonetici`/`destek`), istege bagli `imp`. */
+export async function platformTokeni(
+  plat: 'yonetici' | 'destek' | null,
+  ek: Record<string, unknown> = {},
+  kullaniciId: string = uuidv7(),
+): Promise<string> {
+  return new SignJWT({ ...(plat ? { plat } : {}), sid: uuidv7(), ...ek })
+    .setProtectedHeader({ alg: 'EdDSA' })
+    .setSubject(kullaniciId)
+    .setIssuedAt()
+    .setExpirationTime('10m')
+    .sign(anahtar.privateKey);
+}
+
 export function yetki(token: string) {
   return { authorization: `Bearer ${token}` };
 }
@@ -66,6 +81,7 @@ export function testServisi(
     AUTH_ENABLED: 'true',
     JWKS_URL: 'http://localhost/.well-known/jwks.json',
     DATABASE_URL: db.appUrl,
+    DATABASE_SISTEM_URL: db.sistemUrl,
     ...ek,
   });
   return buildService(env, {

@@ -465,6 +465,849 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/platform/mufredat/kataloglar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Katalog ve sürüm listesi (taslaklar dahil) ile değişiklik sayıları. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kataloglar: {
+                                en_yuksek_yayinlanmis: number | null;
+                                /** @enum {string} */
+                                katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                                surumler: {
+                                    aciklama: string | null;
+                                    ad: string;
+                                    degisiklik_sayisi: number;
+                                    surum_no: number;
+                                    taslak: boolean;
+                                    /** Format: date-time */
+                                    yayinlandi_at: string | null;
+                                }[];
+                                taslak_surum_no: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/surumler/{surum_no}/agac": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sürümde geçerli konu ağacı (düz liste; taslakta yeni eklenenler `yeni: true`). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                    surum_no: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                            konular: {
+                                ad: string;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kazanim_kodu: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** @description Bu sürümde eklendi (ya da eskinin yerine kopyalandı). */
+                                yeni: boolean;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            }[];
+                            surum: {
+                                aciklama: string | null;
+                                ad: string;
+                                degisiklik_sayisi: number;
+                                surum_no: number;
+                                taslak: boolean;
+                                /** Format: date-time */
+                                yayinlandi_at: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/surumler/{surum_no}/fark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sürüm farkı: eklenen, yeniden adlandırılan, taşınan, birleşen, kaldırılan konular ve değişiklik notları. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                    surum_no: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            birlesen: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            }[];
+                            eklenen: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            }[];
+                            kaldirilan: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            }[];
+                            /** @enum {string} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                            ozet: {
+                                birlesen: number;
+                                eklenen: number;
+                                kaldirilan: number;
+                                tasinan: number;
+                                yeniden_adlandirilan: number;
+                            };
+                            surum: {
+                                aciklama: string | null;
+                                ad: string;
+                                degisiklik_sayisi: number;
+                                surum_no: number;
+                                taslak: boolean;
+                                /** Format: date-time */
+                                yayinlandi_at: string | null;
+                            };
+                            tasinan: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            }[];
+                            yeniden_adlandirilan: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yeni taslak sürüm aç. Önceki yayınlı sürümün aktif konuları taslakta da geçerlidir (kimlikler sabit); katalogda tek taslak olur. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        aciklama?: string;
+                        ad: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                            surum: {
+                                aciklama: string | null;
+                                ad: string;
+                                degisiklik_sayisi: number;
+                                surum_no: number;
+                                taslak: boolean;
+                                /** Format: date-time */
+                                yayinlandi_at: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslağa konu ekle. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        brans_kodu: string;
+                        kazanim_kodu?: string;
+                        /** @description Değişiklik notu (zorunlu). */
+                        not: string;
+                        /** @enum {string} */
+                        seviye: "unite" | "konu" | "alt_konu";
+                        sinif_seviyesi?: number;
+                        sira?: number;
+                        /** Format: uuid */
+                        ust_id?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degisiklik: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            };
+                            /** @description İşlem sonrası konu (adlandırma/taşımada yeni kopya). */
+                            konu: {
+                                ad: string;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kazanim_kodu: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** @description Bu sürümde eklendi (ya da eskinin yerine kopyalandı). */
+                                yeni: boolean;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/adlandir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Konuyu yeniden adlandır. Yayınlı sürümlerin görüntüsü bozulmasın diye yeni kopya açılır, eskisinin `yerine_gecen_id`si bağlanır. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ad: string;
+                        /** @description Değişiklik notu (zorunlu). */
+                        not: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degisiklik: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            };
+                            /** @description İşlem sonrası konu (adlandırma/taşımada yeni kopya). */
+                            konu: {
+                                ad: string;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kazanim_kodu: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** @description Bu sürümde eklendi (ya da eskinin yerine kopyalandı). */
+                                yeni: boolean;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/birlestir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Konuyu (kaynak) hedef konuyla birleştir: alt konular hedefe bağlanır, kaynak kullanımdan kalkar ve `yerine_gecen_id` = hedef olur. Kurum verisi (ödev, plan, deneme, kurum alt konuları) kopmaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Kaynağın yerine geçecek konu (aynı branş ve seviye).
+                         */
+                        hedef_id: string;
+                        /** @description Değişiklik notu (zorunlu). */
+                        not: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degisiklik: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            };
+                            /** @description İşlem sonrası konu (adlandırma/taşımada yeni kopya). */
+                            konu: {
+                                ad: string;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kazanim_kodu: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** @description Bu sürümde eklendi (ya da eskinin yerine kopyalandı). */
+                                yeni: boolean;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/kaldir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Konuyu ve alt ağacını kullanımdan kaldır (silme yok; geçerlilik bitişi taslak sürümde başlar). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Değişiklik notu (zorunlu). */
+                        not: string;
+                        /**
+                         * Format: uuid
+                         * @description Önerilen yeni konu (rozet için).
+                         */
+                        yerine_gecen_id?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degisiklik: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            };
+                            /** @description İşlem sonrası konu (adlandırma/taşımada yeni kopya). */
+                            konu: {
+                                ad: string;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kazanim_kodu: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** @description Bu sürümde eklendi (ya da eskinin yerine kopyalandı). */
+                                yeni: boolean;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/konular/{id}/tasi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Konuyu taşı (üst konu ve/veya sıra). Üst değişirse alt ağacıyla birlikte kopyalanır; yalnız sıra değişimi yerinde yapılır. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Değişiklik notu (zorunlu). */
+                        not: string;
+                        sira?: number;
+                        /**
+                         * Format: uuid
+                         * @description Yeni üst konu (ünite için null).
+                         */
+                        ust_id: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degisiklik: {
+                                ad_once: string | null;
+                                ad_sonra: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                };
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                hedef_konu_id: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                konu_id: string;
+                                not: string;
+                                /** @enum {string} */
+                                tur: "ekle" | "adlandir" | "tasi" | "birlestir" | "kaldir";
+                            };
+                            /** @description İşlem sonrası konu (adlandırma/taşımada yeni kopya). */
+                            konu: {
+                                ad: string;
+                                brans_kodu: string;
+                                gecerli_surum_baslangic: number;
+                                gecerli_surum_bitis: number | null;
+                                /** Format: uuid */
+                                id: string;
+                                kazanim_kodu: string | null;
+                                /** @enum {string} */
+                                seviye: "unite" | "konu" | "alt_konu";
+                                sinif_seviyesi: number | null;
+                                sira: number;
+                                /** Format: uuid */
+                                ust_id: string | null;
+                                /** @description Bu sürümde eklendi (ya da eskinin yerine kopyalandı). */
+                                yeni: boolean;
+                                /** Format: uuid */
+                                yerine_gecen_id: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mufredat/kataloglar/{katalog_kodu}/taslak/yayinla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslağı yayınla: sürüm değişmez olur, kurum alt konuları yeni üst konulara bağlanır, her aktif kuruma `ogrenme.mufredat.yayinlandi.v1` olayı (outbox) yazılır. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        not?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bildirilen_kurum_sayisi: number;
+                            /** @enum {string} */
+                            katalog_kodu: "lgs" | "tyt" | "ayt" | "ydt" | "okul";
+                            ozet: {
+                                birlesen: number;
+                                eklenen: number;
+                                kaldirilan: number;
+                                tasinan: number;
+                                yeniden_adlandirilan: number;
+                            };
+                            surum: {
+                                aciklama: string | null;
+                                ad: string;
+                                degisiklik_sayisi: number;
+                                surum_no: number;
+                                taslak: boolean;
+                                /** Format: date-time */
+                                yayinlandi_at: string | null;
+                            };
+                            /** @description Kurum alt konularından yeni üst konuya bağlananların sayısı. */
+                            yeniden_baglanan_kurum_konusu: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/abonelik/kurumlar/{kurum_id}/abonelik": {
         parameters: {
             query?: never;
