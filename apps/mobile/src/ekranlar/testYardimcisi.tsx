@@ -15,6 +15,11 @@ import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { mockAdaptorler } from '../api/mock';
 import { mockMedya } from '../api/mockMedya';
+import {
+  sahtePlatform,
+  testBildirimYoneticisi,
+  type SahtePlatform,
+} from '../bildirim/sahtePlatform';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
 import { OdakYoneticisi } from '../motivasyon/odak';
@@ -50,6 +55,8 @@ export interface Ortam {
   queryClient: QueryClient;
   gonderim: GonderimYoneticisi;
   yukleme: YuklemeKuyrugu;
+  /** Bildirim yoneticisinin sahte isletim sistemi katmani. */
+  push: SahtePlatform;
 }
 
 export const OGRETMEN = ['+905551110001', 'uyelik-ogretmen-a'] as const;
@@ -136,7 +143,14 @@ export function ortamKur(): Ortam {
     yeniId: () => `00000000-0000-7000-b000-${String(Math.random()).slice(2, 14).padEnd(12, '0')}`,
     cevrimiciMi: () => cevrimici.deger,
   });
+  const push = sahtePlatform();
+  const { yonetici: bildirim } = testBildirimYoneticisi(adaptorler, oturum, push, {
+    degisti: () => {
+      void queryClient.invalidateQueries({ queryKey: ['bildirim'] });
+    },
+  });
   const servisler = {
+    bildirim,
     adaptorler,
     oturum,
     queryClient,
@@ -160,6 +174,7 @@ export function ortamKur(): Ortam {
     queryClient,
     gonderim,
     yukleme,
+    push,
     giris: async (telefon, uyelikId) => {
       await adaptorler.auth.otpDogrula(telefon, '123456');
       await oturum.girisTamamlandi();

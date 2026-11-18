@@ -118,6 +118,19 @@ function baglanmamisAdaptorler(): Adaptorler {
       duraklatmaIptal: hata,
       grupOgrencileri: hata,
     },
+    bildirim: {
+      cihazKaydet: hata,
+      cihazSil: hata,
+      kutu: hata,
+      okunmamisSayisi: hata,
+      okundu: hata,
+      tumunuOku: hata,
+      arsivle: hata,
+      tercihler: hata,
+      tercihGuncelle: hata,
+      ayarlar: hata,
+      ayarGuncelle: hata,
+    },
     medya: { izinAl: hata, yukle: hata, tamam: hata, durum: hata, yerelBilgi: hata },
     hesap: {
       sinifKoduKatil: hata,
@@ -147,6 +160,7 @@ export function adaptorleriOlustur(depo: BelirtecDeposu): Adaptorler {
       apiUrl: ortam.apiUrl,
       ...(ortam.medyaUrl ? { medyaUrl: ortam.medyaUrl } : {}),
       ...(ortam.motivasyonUrl ? { motivasyonUrl: ortam.motivasyonUrl } : {}),
+      ...(ortam.bildirimUrl ? { bildirimUrl: ortam.bildirimUrl } : {}),
       depo,
       kaynak: Platform.OS === 'android' ? 'android' : Platform.OS === 'ios' ? 'ios' : 'web',
     });

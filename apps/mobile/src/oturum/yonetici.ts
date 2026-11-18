@@ -42,6 +42,11 @@ export interface OturumYoneticisiBagimliliklari {
   temizle?: () => void;
   /** Kullanici bilerek cikis yaptiginda (401 ile oturum dusmesi degil) cagrilir. */
   kullaniciCikisi?: () => void;
+  /**
+   * Cikista sunucuya `auth.cikis` gitmeden once beklenir (belirtec hala gecerliyken: ornegin push
+   * cihaz kaydinin silinmesi). Hata cikisi engellemez.
+   */
+  cikisOncesi?: () => Promise<void>;
 }
 
 /**
@@ -52,6 +57,7 @@ export function oturumYoneticisiOlustur({
   adaptorler,
   temizle,
   kullaniciCikisi,
+  cikisOncesi,
 }: OturumYoneticisiBagimliliklari) {
   const depo = depoOlustur<OturumDurumu>({ asama: 'baslatiliyor' });
   const { auth } = adaptorler;
@@ -132,6 +138,7 @@ export function oturumYoneticisiOlustur({
       depo.ayarla(() => ({ asama: 'cikis' }));
     },
     async cikis() {
+      await cikisOncesi?.().catch(() => undefined);
       kullaniciCikisi?.();
       try {
         await auth.cikis();

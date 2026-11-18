@@ -1,3 +1,4 @@
+import type { BildirimAdapter } from './bildirimTipleri';
 import type { KayitAdapter } from './kayitTipleri';
 import type { MedyaAdapter } from './medyaTipleri';
 import type { MotivasyonAdapter } from './motivasyonTipleri';
@@ -90,4 +91,6 @@ export interface Adaptorler {
   medya: MedyaAdapter;
   /** XP, seri, odak, karakter (motivasyon servisi). */
   motivasyon: MotivasyonAdapter;
+  /** Push cihaz kaydi, gelen kutusu, tercihler (bildirim servisi). */
+  bildirim: BildirimAdapter;
 }
