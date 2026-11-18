@@ -310,7 +310,7 @@ export function uyarilariHesapla(
       kod: 'haftalik_xp_degisti',
       mesaj:
         `Düzenli çalışan öğrencinin haftalık XP'si varsayımdaki ${ozet(referans)} yerine ${ozet(haftalik)} ` +
-        `olur (%${ozet(sapma * 100)}).`,
+        `olur (%${ozet(Math.abs(sapma) * 100)} ${sapma < 0 ? 'azalır' : 'artar'}).`,
     });
   }
 
