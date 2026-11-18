@@ -281,7 +281,7 @@ describe.skipIf(dbYok())('platform mufredat editoru API', () => {
     });
     expect(sira.statusCode, sira.body).toBe(200);
     expect(sira.json<Islem>().konu).toMatchObject({ id: M, sira: 1 });
-    expect(sira.json<Islem>().degisiklik.ayrinti['yalniz_sira']).toBe(true);
+    expect(sira.json<Islem>().degisiklik.ayrinti.yalniz_sira).toBe(true);
     expect(
       (await istek('POST', `/taslak/konular/${M}/tasi`, { ust_id: U, sira: 1, not: 'n' }))
         .statusCode,

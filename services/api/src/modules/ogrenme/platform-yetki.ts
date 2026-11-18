@@ -10,7 +10,7 @@ import type { FastifyRequest } from 'fastify';
 export function platformYoneticisiGerekli(request: Pick<FastifyRequest, 'auth'>): string {
   const auth = request.auth;
   if (!auth) throw new AppError(401, errorCodes.unauthorized, 'Oturum açmanız gerekiyor.');
-  if (auth.claims['plat'] !== 'yonetici') {
+  if (auth.claims.plat !== 'yonetici') {
     throw new AppError(
       403,
       mufredatEditorHataKodlari.platformYetkisiYok,

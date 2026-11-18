@@ -248,7 +248,7 @@ export const ESLEME_SABLONLARI: readonly SablonTanimi[] = [
     kategori: 'duyuru',
     baslik: 'Müfredat güncellendi',
     push: 'Müfredat güncellendi.',
-    kutu: '{{katalog_ad}} müfredatının yeni sürümü ({{surum_no}}) yayınlandı: {{eklenen}} konu eklendi, {{tasinan}} konu taşındı ya da yeniden adlandırıldı, {{birlesen}} konu birleştirildi, {{kaldirilan}} konu kullanımdan kaldırıldı. Mevcut ödev ve planların bozulmaz.',
+    kutu: '{{katalog_ad}} müfredatının yeni sürümü ({{surum_no}}) yayınlandı: {{eklenen}} konu eklendi, {{tasinan}} konu taşındı ya da yeniden adlandırıldı, {{birlesen}} konu birleştirildi, {{kaldirilan}} konu kullanımdan kaldırıldı. Mevcut ödev ve planların etkilenmez.',
     derinBaglanti: 'kopru://kutu',
     yalnizKutu: true,
   }),

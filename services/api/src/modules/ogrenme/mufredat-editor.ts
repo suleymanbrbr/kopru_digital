@@ -612,7 +612,7 @@ export async function taslakYayinla(
   let yenidenBaglanan = 0;
   for (const r of kapananlar) {
     const h = halef(kapananHarita, aktifler, r);
-    if (!h || h.seviye !== r.seviye || h.brans_kodu !== r.brans_kodu) continue;
+    if (h?.seviye !== r.seviye || h.brans_kodu !== r.brans_kodu) continue;
     const guncel = await tx
       .update(konular)
       .set({ ust_id: h.id })

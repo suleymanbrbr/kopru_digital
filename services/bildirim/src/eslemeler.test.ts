@@ -767,10 +767,14 @@ describe.skipIf(dbYok())('olay eslemeleri (bildirim_app, kurum baglami)', () => 
       expect(await bildirimler(sahip.kurumId, 'mufredat_guncellendi')).toHaveLength(4);
     });
 
-    it('etkin sahip/yonetici kopyasi olmayan kurumda bildirim uretilmez', async () => {
+    it('etkin sahip/yonetici kopyasi henuz yoksa yeniden denenir (bildirim kaybolmaz), kopya gelince uretilir', async () => {
       const hoca = await aliciKur(o, { rol: 'ogretmen' });
-      await calistir(hoca.kurumId, olay(hoca.kurumId));
+      await expect(calistir(hoca.kurumId, olay(hoca.kurumId))).rejects.toThrow(/henüz yok/);
       expect(await bildirimler(hoca.kurumId, 'mufredat_guncellendi')).toHaveLength(0);
+      const sahip = await aliciKur(o, { kurumId: hoca.kurumId, rol: 'sahip' });
+      await calistir(hoca.kurumId, olay(hoca.kurumId));
+      const b = await bildirimler(hoca.kurumId, 'mufredat_guncellendi');
+      expect(b.map((x) => x.alici_id)).toEqual([sahip.uyelikId]);
     });
   });
 

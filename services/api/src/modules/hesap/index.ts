@@ -39,6 +39,9 @@ export {
   type YetkiBaglami,
 } from './kimlik.js';
 export { servisBelirteciUret, type ServisBelirteciIstegi } from './servis-belirteci.js';
+// Gelistirme araclari (scripts/platform-belirteci.ts): JWT imza anahtari deposu ve audience.
+export { AnahtarDeposu } from './anahtarlar.js';
+export { JWT_AUDIENCE } from './erisim-belirteci.js';
 export { modulAcikMi, type ModulBaglami } from './modul-ayarlari.js';
 export {
   LogSmsGonderici,
