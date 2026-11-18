@@ -1,6 +1,7 @@
 import { createDb, islenmisOlaylariTemizle, runWorker, startTelemetry } from '@kopru/service-kit';
 
 import { loadServiceEnv, serviceName } from './config.js';
+import { abonelikGecisIsiZamanla } from './modules/abonelik/index.js';
 import { geceIsiZamanla } from './modules/finans/index.js';
 import { kaynakSuresiniDoldur } from './sistem/ders-kaynak-sure-sonu.js';
 import { dersSaatlikIs } from './sistem/ders-seri-uret.js';
@@ -85,7 +86,10 @@ await runWorker({
     void gunluk();
     const gunlukZamanlayici = setInterval(() => void gunluk(), GUNLUK_ARALIK_MS);
     const finansIsleriniDurdur = geceIsiZamanla(db, log);
+    // Abonelik durum makinesi (saatlik): deneme/ek sure/askida gecisleri ve kurum durumu esitleme.
+    const abonelikIsiniDurdur = abonelikGecisIsiZamanla(db, log);
     return async () => {
+      await abonelikIsiniDurdur();
       clearInterval(zamanlayici);
       clearInterval(gunlukZamanlayici);
       await finansIsleriniDurdur();

@@ -166,6 +166,7 @@ describe.skipIf(dbYok())('hesap: KVKK, kurum, uyelik, modul, izin, outbox', () =
       >`select subject from ortak.outbox where kurum_id = ${k.kurumId} order by created_at`;
       expect(olaylar.map((o) => o.subject)).toEqual([
         'evt.hesap.kurum.degisti.v1',
+        'evt.abonelik.abonelik.degisti.v1',
         'evt.hesap.uyelik.degisti.v1',
         'evt.hesap.uyelik.degisti.v1',
       ]);

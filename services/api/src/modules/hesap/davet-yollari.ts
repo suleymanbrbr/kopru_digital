@@ -34,6 +34,7 @@ import {
   subeler,
   uyelikler,
 } from '../../db/schema.js';
+import { planLimitiniDenetle, yazmaKapisi } from '../abonelik/index.js';
 import { type EpostaGonderici } from './eposta.js';
 import { birebirGrupOlustur, grubaOgrenciEkle } from './grup-deposu.js';
 import { atananGruplar } from './kapsam.js';
@@ -546,6 +547,8 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
         };
 
         return withTenant(db, { kurumId: c.kurum_id, kullaniciId, roller: [] }, async (tx) => {
+          // Kontrol sirasi adim 4: askida/sona_erdi kurumda davet kabul edilemez (402 abonelik_gerekli).
+          await yazmaKapisi(tx, c.kurum_id);
           // Atomik tuketim: yaris durumunda ikinci kabul 0 satir alir.
           const [d] = await tx
             .update(davetler)
@@ -583,6 +586,19 @@ export const davetYollari = (eposta?: EpostaGonderici): ServicePlugin =>
                 eq(uyelikler.rol, rol),
               ),
             );
+
+          // Plan limiti: yeni (ya da yeniden etkinlesen) ogrenci/ogretmen uyeligi icin; asilirsa tum islem
+          // geri alinir (davet kullanilmamis kalir) ve 402 plan_limiti doner. Mevcut veri silinmez.
+          if (
+            (!mevcut || mevcut.durum === 'ayrildi') &&
+            (rol === 'ogrenci' || rol === 'ogretmen')
+          ) {
+            await planLimitiniDenetle(
+              tx,
+              c.kurum_id,
+              rol === 'ogrenci' ? 'max_ogrenci' : 'max_ogretmen',
+            );
+          }
 
           let uyelikId: string;
           let yeniUyelik = false;
