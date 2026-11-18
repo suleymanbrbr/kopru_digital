@@ -12,6 +12,19 @@ const base = createEnvSchema({ defaultPort: 4001 });
 export const envSchema = base.safeExtend({
   /** `motivasyon_sistem` rolu baglantisi (BYPASSRLS): zamanlanmis isler ve outbox relay. */
   DATABASE_SISTEM_URL: z.string().min(1).optional(),
+  /**
+   * `/platform/*` uclarina izin verilen istemci IP'leri (virgullu IP ya da IP/onek). Bos: gelistirmede
+   * herkese acik, uretimde (`NODE_ENV=production`) hepsi reddedilir.
+   */
+  PLATFORM_IP_IZINLI: z
+    .string()
+    .default('')
+    .transform((v) =>
+      v
+        .split(',')
+        .map((x) => x.trim())
+        .filter((x) => x.length > 0),
+    ),
   /** Haftalik `bu_hafta_xp` sifirlama kontrol araligi (ms); varsayilan 10 dakika. */
   HAFTALIK_ARALIK_MS: z.coerce
     .number()

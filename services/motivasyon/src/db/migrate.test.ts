@@ -36,6 +36,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
       '0003_ogrenci_xp.sql',
       '0004_seri_rozet_karakter_odak.sql',
       '0006_odak_karakter.sql',
+      '0007_platform_ayarlari.sql',
     ]);
     expect(await migrate({ url: ownerUrl })).toEqual([]);
     owner = postgres(ownerUrl, { max: 2, onnotice: () => undefined });
@@ -59,6 +60,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
     expect(await sayi('brans_beceri_eslemesi')).toBe(16);
     expect(await sayi('kozmetik_tanimlari')).toBe(12);
     expect(await sayi('motivasyon_ayarlari')).toBe(12);
+    expect(await sayi('platform_ayar_surumleri')).toBe(1);
   });
 
   it('degistirilmis migration reddedilir', async () => {
