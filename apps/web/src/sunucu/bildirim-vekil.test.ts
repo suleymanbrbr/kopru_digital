@@ -1,6 +1,7 @@
 import {
   BildirimAyarlariSema,
   BildirimKutuListesiSema,
+  BildirimOkunmamisSayisiSema,
   BildirimTercihListesiSema,
 } from '@kopru/contracts';
 import { NextRequest } from 'next/server';
@@ -107,6 +108,6 @@ describe('bildirim vekili', () => {
     BildirimKutuListesiSema.parse(await al(['kurumlar', K, 'kutu']));
     BildirimTercihListesiSema.parse(await al(['kurumlar', K, 'tercihler']));
     BildirimAyarlariSema.parse(await al(['kurumlar', K, 'ayarlar']));
-    expect(await al(['kurumlar', K, 'kutu', 'okunmamis-sayisi'])).toEqual({ okunmamis: 0 });
+    BildirimOkunmamisSayisiSema.parse(await al(['kurumlar', K, 'kutu', 'okunmamis-sayisi']));
   });
 });

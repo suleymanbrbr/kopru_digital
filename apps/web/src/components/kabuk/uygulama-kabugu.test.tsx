@@ -11,6 +11,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 vi.mock('next-themes', () => ({ useTheme: () => ({ theme: 'light', setTheme: vi.fn() }) }));
+vi.mock('@/components/bildirim/bildirim-zili', () => ({ BildirimZili: () => null }));
 vi.mock('@/oturum/saglayici', () => ({ useOturum: () => ({ cikis: vi.fn() }) }));
 
 function goster(rol: KurumBaglami['rol'], acikModuller: ModulKodu[]) {
