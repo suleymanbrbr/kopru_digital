@@ -1,5 +1,6 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { mockBildirim } from './mockBildirim';
 import { mockKayit } from './mockKayit';
 import { mockMedya } from './mockMedya';
 import { mockMotivasyon } from './mockMotivasyon';
@@ -255,6 +256,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   const soru = mockSoru(operasyonSecenekleri);
   const medya = mockMedya({ gecikmeMs: Math.min(gecikmeMs, 200), isle: 300 });
   const motivasyon = mockMotivasyon(operasyonSecenekleri);
+  const bildirim = mockBildirim(operasyonSecenekleri);
 
   /** Eylem basariyla bitince mock motivasyon XP yazar (gercekte olay hatti yapar). */
   function xpKancali<T>(hedef: T, kancalar: Record<string, (sonuc: unknown) => void>): T {
@@ -303,6 +305,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
     soru: soruXp,
     medya,
     motivasyon: motivasyon.adaptor,
+    bildirim: bildirim.adaptor,
     auth: {
       async otpIste(tel) {
         await bekle(gecikmeMs);

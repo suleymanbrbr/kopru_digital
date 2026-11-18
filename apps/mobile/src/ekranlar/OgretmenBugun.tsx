@@ -18,6 +18,8 @@ import {
 } from '../uygulama/operasyon';
 import { useOgretmenBugun } from '../uygulama/sorgular';
 import { BekleyenYoklamaKartlari } from './BekleyenYoklamaKartlari';
+import { BildirimIzinKarti } from './bildirim/BildirimIzinKarti';
+import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { OgretmenOgrenmeKartlari } from './OgretmenOgrenmeKartlari';
@@ -45,12 +47,16 @@ export function OgretmenBugun() {
 
   return (
     <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
-      <View>
-        <Metin varyant="baslik" accessibilityRole="header">
-          {t('mobil.sekmeler.bugun')}
-        </Metin>
-        <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
+      <View className="flex-row items-center gap-2">
+        <View className="flex-1">
+          <Metin varyant="baslik" accessibilityRole="header">
+            {t('mobil.sekmeler.bugun')}
+          </Metin>
+          <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
+        </View>
+        <BildirimZili />
       </View>
+      <BildirimIzinKarti />
       {yoklama ? <BekleyenYoklamaKartlari /> : null}
       <OgretmenOgrenmeKartlari />
       {takvim ? (

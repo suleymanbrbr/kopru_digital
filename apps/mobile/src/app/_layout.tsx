@@ -13,6 +13,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { BildirimAfisi } from '../ekranlar/bildirim/BildirimAfisi';
+import { BildirimYonlendirici } from '../ekranlar/bildirim/BildirimYonlendirici';
 import { DavetBildirimi } from '../ekranlar/DavetBildirimi';
 import { kvkkOnayliMi } from '../oturum/yonetici';
 import { TemaSaglayici, useTema } from '../tema/TemaSaglayici';
@@ -83,6 +85,8 @@ export default function KokDuzen() {
         <VurguluTema>
           <Acilis>
             <Yonlendirme />
+            <BildirimYonlendirici />
+            <BildirimAfisi />
             <DavetBildirimi />
           </Acilis>
         </VurguluTema>

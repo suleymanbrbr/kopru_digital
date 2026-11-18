@@ -3,6 +3,7 @@ import { MODUL_KODLARI, type ModulDurumu } from '@kopru/contracts';
 
 import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { bildirimAdaptoru } from './gercekBildirim';
 import { kayitAdaptoru } from './gercekKayit';
 import { medyaAdaptoru } from './gercekMedya';
 import { motivasyonAdaptoru } from './gercekMotivasyon';
@@ -30,6 +31,8 @@ export interface GercekAdaptorSecenekleri {
   medyaUrl?: string;
   /** Motivasyon servisi taban adresi; canlida api ile ayni alan adi (varsayilan `apiUrl`). */
   motivasyonUrl?: string;
+  /** Bildirim servisi taban adresi; canlida api ile ayni alan adi (varsayilan `apiUrl`). */
+  bildirimUrl?: string;
   depo: BelirtecDeposu;
   /** Test icin fetch degistirme; varsayilan `globalThis.fetch` (her cagrida okunur). */
   fetch?: typeof globalThis.fetch;
@@ -217,11 +220,13 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     api: yetkili,
     medya: medyaIstemcisi,
     motivasyon: motivasyonIstemcisi,
+    bildirim: bildirimIstemcisi,
   } = createServisIstemcileri({
     adresler: {
       api: sec.apiUrl,
       medya: sec.medyaUrl ?? sec.apiUrl,
       motivasyon: sec.motivasyonUrl ?? sec.apiUrl,
+      bildirim: sec.bildirimUrl ?? sec.apiUrl,
     },
     tokenAl: erisimAl,
     fetch: yenilemeliFetch,
@@ -317,6 +322,8 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     veriAl,
   });
 
+  const bildirim = bildirimAdaptoru({ bildirim: bildirimIstemcisi, etkinKurum, veriAl });
+
   return {
     ...operasyon,
     ogrenme,
@@ -324,6 +331,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     soru,
     medya,
     motivasyon,
+    bildirim,
     auth: {
       async otpIste(telefon) {
         otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));

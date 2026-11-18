@@ -31,7 +31,13 @@ function Satir({
 }: {
   etiket: string;
   onPress: () => void;
-  ikon: 'business' | 'swap-horizontal' | 'apps' | 'phone-portrait-outline' | 'key-outline';
+  ikon:
+    | 'business'
+    | 'swap-horizontal'
+    | 'apps'
+    | 'phone-portrait-outline'
+    | 'key-outline'
+    | 'notifications-outline';
 }) {
   return (
     <Pressable
@@ -106,6 +112,13 @@ export function Profil() {
             }}
           />
         ) : null}
+        <Satir
+          ikon="notifications-outline"
+          etiket={t('mobil.profil.bildirimTercihleri')}
+          onPress={() => {
+            router.push('/bildirim-tercihleri');
+          }}
+        />
         <Satir
           ikon="phone-portrait-outline"
           etiket={t('mobil.profil.oturumlarim')}

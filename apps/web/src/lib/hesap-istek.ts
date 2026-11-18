@@ -5,7 +5,7 @@ import { bffIstek, UygulamaHatasi } from '@/lib/api';
 import { XP_OLAYI, xpOlasiMi } from '@/lib/motivasyon/xp';
 import { belirteciYenile, erisimBelirteciAl } from '@/oturum/saglayici';
 
-export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon';
+export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon' | 'bildirim';
 
 interface IstekSecenekleri<S> {
   yontem?: string;
@@ -78,6 +78,14 @@ export function ogrenmeIstek<S extends z.ZodType>(
 /** Medya servisi (`/api/medya/dosyalar/*` -> `MEDYA_URL/v1/dosyalar/*`). */
 export function medyaIstek<S extends z.ZodType>(yol: string, secenekler: IstekSecenekleri<S> = {}) {
   return servisIstek('medya', yol, secenekler);
+}
+
+/** Bildirim servisi (`/api/bildirim/*` -> `BILDIRIM_URL/v1/bildirim/*`). */
+export function bildirimIstek<S extends z.ZodType>(
+  yol: string,
+  secenekler: IstekSecenekleri<S> = {},
+) {
+  return servisIstek('bildirim', yol, secenekler);
 }
 
 /** Motivasyon servisi (`/api/motivasyon/*` -> `MOTIVASYON_URL/v1/motivasyon/*`). */

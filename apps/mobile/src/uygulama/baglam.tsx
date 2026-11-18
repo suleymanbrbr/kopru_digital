@@ -40,6 +40,7 @@ export function UygulamaSaglayicilari({ children }: { children: ReactNode }) {
     void servisler.davet.yukle().then(() => {
       if (!kapandi) davetAboneligi = servisler.davet.baglan();
     });
+    const bildirimAboneligi = servisler.bildirim.baslat();
     const kuyrukAboneligi = servisler.kuyruk.baglan(servisler.agGozlemcisi);
     const yuklemeAboneligi = servisler.yukleme.baglan(servisler.agGozlemcisi);
     // Uygulama one gelince (arka planda biten PUT'lar dahil) yukleme ve gonderim kaldigi yerden surer.
@@ -48,9 +49,12 @@ export function UygulamaSaglayicilari({ children }: { children: ReactNode }) {
       void servisler.yukleme.calistir();
       servisler.gonderim.ilerlet();
       void servisler.kuyruk.bosalt();
+      void servisler.bildirim.onePlana();
+      void servisler.queryClient.invalidateQueries({ queryKey: ['bildirim'] });
     });
     return () => {
       durumAboneligi.remove();
+      bildirimAboneligi();
       yuklemeAboneligi();
       kapandi = true;
       davetAboneligi?.();
