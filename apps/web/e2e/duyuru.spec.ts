@@ -34,7 +34,12 @@ async function yatayTasmaYok(page: Page) {
   expect(tasma).toBeLessThanOrEqual(1);
 }
 
-const DUYURU_1 = '00000000-0000-4000-8000-0000000d0001';
+function bugunOgleIstanbul(): Date {
+  const gun = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date());
+  return new Date(`${gun}T12:00:00+03:00`);
+}
+
+const DUYURU_1 ='00000000-0000-4000-8000-0000000d0001';
 
 test.describe('ogrenci: duyurular (Atlas)', () => {
   test.describe.configure({ mode: 'serial' });
@@ -43,6 +48,9 @@ test.describe('ogrenci: duyurular (Atlas)', () => {
   test('Bugun: duyuru karti, buyuk dugmeler ve "Bugun ne yapmaliyim" kaydirmadan gorunur', async ({
     page,
   }) => {
+    // Mock'un "bugun her zaman var" dersi 20:00'de (Istanbul) biter; aksam kosuda "Siradaki" rozeti kalmaz.
+    // Tarayici saatini bugunun ogle saatine kur: tarih sunucuyla ayni kalir, test gunun saatinden bagimsiz olur.
+    await page.clock.install({ time: bugunOgleIstanbul() });
     await girisYap(page, 'Atlas Etüt Merkezi');
     const kart = page.getByTestId('bugun-duyuru-karti');
     await expect(kart).toContainText('Deneme sınavı takvimi açıklandı');
