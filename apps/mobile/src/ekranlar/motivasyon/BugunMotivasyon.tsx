@@ -79,13 +79,15 @@ export function BugunMotivasyon() {
           {d.karakter ? (
             <View className="flex-1 gap-2">
               <View
-                className="flex-row items-center gap-2 self-start rounded-tam bg-yuzeyIkincil px-3 py-1"
+                className="flex-row items-center gap-2 rounded-tam bg-yuzeyIkincil px-3 py-1"
                 accessible
                 accessibilityLabel={`${t('mobil.bugun.ogrenci.seri')}: ${seriBasligi(mevcutSeri)}`}
                 testID="bugun-seri"
               >
                 <Ikon ad="flame" renk={mevcutSeri > 0 ? '#FF8A3D' : undefined} />
-                <Metin varyant="etiket">{seriBasligi(mevcutSeri)}</Metin>
+                <Metin varyant="etiket" className="shrink">
+                  {seriBasligi(mevcutSeri)}
+                </Metin>
               </View>
               {yakin ? (
                 <View

@@ -114,8 +114,12 @@ export function oturumYoneticisiOlustur({
       if (d.asama !== 'giris') return;
       const b: UyelikBaglami = await auth.uyelikSec(uyelikId);
       if (!mobilUyelikMi(b.uyelik)) return;
+      const onceki = d.aktif;
       depo.ayarla({ aktif: { uyelik: b.uyelik, moduller: b.moduller, vurgu: b.vurgu } });
-      temizle?.();
+      // Soguk acilista (`aktif` bos) kalici sorgu onbellegi silinmez: anahtarlar uyelik kapsamlidir,
+      // cikis ve `kurumDegistir` zaten temizler. Boylece Bugun onbellekten hemen dolar. Yalniz bir
+      // uyelikten digerine dogrudan gecis onbellegi sifirlar.
+      if (onceki && onceki.uyelik.uyelikId !== b.uyelik.uyelikId) temizle?.();
     },
     kurumDegistir() {
       if (depo.al().asama !== 'giris') return;

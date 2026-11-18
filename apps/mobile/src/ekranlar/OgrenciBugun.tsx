@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import type { Ders } from '../api/operasyonTipleri';
+import { olcumIsareti, useBugunOlcumu } from '../lib/olcum';
 import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import { modulAcikMi } from '../nav/yapilandirma';
 import { CevaplananSorularKarti } from '../soru/BugunKartlari';
@@ -15,6 +16,7 @@ import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useAktif, useOturum } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
+import { useGorevlerim } from '../uygulama/ogrenme';
 import {
   dersAdi,
   useAralikDersleri,
@@ -89,6 +91,7 @@ function OgrenciEylemleri({ soru }: { soru: boolean }) {
  * motivasyon) yanit vermezse yalniz o kart hata gosterir, ekranin geri kalani calisir.
  */
 export function OgrenciBugun() {
+  olcumIsareti('bugun-ilk-render');
   const oturum = useOturum();
   const aktif = useAktif();
   const ad = oturum.asama === 'giris' ? oturum.kullanici.adSoyad.split(' ')[0] : '';
@@ -102,6 +105,8 @@ export function OgrenciBugun() {
   const kart = useOgrenciKarti(aktif?.uyelik.uyelikId);
   // Ogrenci yalnizca kalan dersini gorur; fiyat/borc/tahsilat bu ekranda hicbir kosulda yoktur.
   const kalan = kart.data?.gorunum === 'ogrenci' ? kart.data.kalanKredi : null;
+  const gorevler = useGorevlerim(bugun);
+  useBugunOlcumu('ogrenci-bugun', gorevler.data !== undefined, gorevler.dataUpdatedAt);
   const [simdi] = useState(() => Date.now());
   const tumu = dersler.data ?? [];
   const bugunku = tumu.filter((x) => yerelTarih(x.baslangic, tz) === bugun);
@@ -124,6 +129,7 @@ export function OgrenciBugun() {
       </View>
       {oyun ? <BugunMotivasyon /> : null}
       <OgrenciEylemleri soru={soru} />
+      <DuyuruKarti en={1} />
       <OgrenciBugunOgrenme />
       {takvim ? (
         <Kart className="gap-3" testID="siradaki-ders">
@@ -147,7 +153,6 @@ export function OgrenciBugun() {
           ) : null}
         </Kart>
       ) : null}
-      <DuyuruKarti />
       {soru ? <CevaplananSorularKarti /> : null}
       <GeriBildirimKartlari />
       <KayitlarimGirisi />

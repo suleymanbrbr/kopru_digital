@@ -2719,6 +2719,7 @@ export const tr = {
       kartBaslik: 'Duyurular',
       yeniSayisi: '{n} yeni duyuru',
       tumu: 'Tüm duyurular',
+      tumuKisa: 'Tümü',
       sekmeGelen: 'Gelenler',
       sekmeYazdiklarim: 'Yazdıklarım',
       sekmeler: 'Duyuru listesi',

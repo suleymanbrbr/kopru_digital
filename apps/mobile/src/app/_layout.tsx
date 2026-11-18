@@ -16,10 +16,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BildirimAfisi } from '../ekranlar/bildirim/BildirimAfisi';
 import { BildirimYonlendirici } from '../ekranlar/bildirim/BildirimYonlendirici';
 import { DavetBildirimi } from '../ekranlar/DavetBildirimi';
+import { olcumIsareti } from '../lib/olcum';
 import { kvkkOnayliMi } from '../oturum/yonetici';
 import { TemaSaglayici, useTema } from '../tema/TemaSaglayici';
 import { UygulamaSaglayicilari, useOturum } from '../uygulama/baglam';
 
+olcumIsareti('js-basladi');
 void SplashScreen.preventAutoHideAsync();
 
 export { ErrorBoundary } from 'expo-router';
@@ -72,7 +74,10 @@ function Acilis({ children }: { children: React.ReactNode }) {
   const hazir = (yazilarHazir || yaziHatasi !== null) && oturum.asama !== 'baslatiliyor';
 
   useEffect(() => {
-    if (hazir) void SplashScreen.hideAsync();
+    if (hazir) {
+      olcumIsareti('oturum-ve-yazilar-hazir');
+      void SplashScreen.hideAsync();
+    }
   }, [hazir]);
 
   return hazir ? children : null;

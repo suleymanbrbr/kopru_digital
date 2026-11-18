@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import type { BekleyenYoklamaDersi, Ders } from '../api/operasyonTipleri';
+import { useBugunOlcumu } from '../lib/olcum';
 import { bugunTarihi } from '../lib/saat';
 import { BekleyenSorularKarti } from '../soru/BugunKartlari';
 import { Dugme } from '../ui/Dugme';
@@ -136,6 +137,7 @@ export function OgretmenBugun() {
   const { tz } = useSaatDilimi();
   const bugun = useGunDersleri(bugunTarihi(tz));
   const gruplar = useGruplar();
+  useBugunOlcumu('ogretmen-bugun', bugun.data !== undefined, bugun.dataUpdatedAt);
   const bekleyen = useYoklamaBekleyen();
   const ad = oturum.asama === 'giris' ? oturum.kullanici.adSoyad.split(' ')[0] : '';
   const bekleyenler = new Map((yoklama ? (bekleyen.data ?? []) : []).map((b) => [b.id, b]));

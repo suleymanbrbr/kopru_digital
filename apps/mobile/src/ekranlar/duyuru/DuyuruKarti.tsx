@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { duyuruOnizleme } from '../../duyuru/metin';
-import { Dugme } from '../../ui/Dugme';
 import { KartHatasi } from '../../ui/Durumlar';
 import { Ikon } from '../../ui/Ikon';
 import { Kart } from '../../ui/Kart';
@@ -20,7 +19,7 @@ const ONIZLEME = 2;
  * hic cizilmez; hic duyuru yokken de cizilmez (Bugun'u gereksiz uzatmaz, liste Profil'den acilir).
  * Servis yanit vermezse yalniz bu kart hata gosterir.
  */
-export function DuyuruKarti() {
+export function DuyuruKarti({ en = ONIZLEME }: { en?: number }) {
   const router = useRouter();
   const acik = useModulAcik('duyuru');
   const sorgu = useDuyurularim();
@@ -29,7 +28,7 @@ export function DuyuruKarti() {
   const okunmamis = ogeler.filter((o) => o.okundu_at === null);
   const gosterilen = (okunmamis.length > 0 ? okunmamis : ogeler.filter((o) => o.sabit)).slice(
     0,
-    ONIZLEME,
+    en,
   );
   if (sorgu.isPending) return null;
   if (sorgu.isError && ogeler.length === 0) {
@@ -56,6 +55,20 @@ export function DuyuruKarti() {
         <Metin varyant="altBaslik" accessibilityRole="header" className="flex-1">
           {yeni > 0 ? t('mobil.duyuru.yeniSayisi', { n: yeni }) : t('mobil.duyuru.kartBaslik')}
         </Metin>
+        <Pressable
+          testID="bugun-duyurular-tumu"
+          accessibilityRole="button"
+          accessibilityLabel={t('mobil.duyuru.tumu')}
+          hitSlop={8}
+          onPress={() => {
+            router.push('/duyurular');
+          }}
+          className="min-h-dokunma justify-center px-2 active:opacity-70"
+        >
+          <Metin varyant="etiket" className="text-birincil">
+            {t('mobil.duyuru.tumuKisa')}
+          </Metin>
+        </Pressable>
       </View>
       {gosterilen.map((o) => (
         <Pressable
@@ -81,14 +94,6 @@ export function DuyuruKarti() {
           </Metin>
         </Pressable>
       ))}
-      <Dugme
-        varyant="hayalet"
-        etiket={t('mobil.duyuru.tumu')}
-        testID="bugun-duyurular-tumu"
-        onPress={() => {
-          router.push('/duyurular');
-        }}
-      />
     </Kart>
   );
 }
