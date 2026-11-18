@@ -25,6 +25,7 @@ describe.skipIf(dbYok())('bildirim veritabani: roller, sema ve RLS (bildirim_app
   const KIRACI_TABLOLARI = [
     'atama_kopyalari',
     'bildirimler',
+    'ders_planlari',
     'duyuru_alicilari',
     'duyurular',
     'gonderimler',
@@ -67,6 +68,8 @@ describe.skipIf(dbYok())('bildirim veritabani: roller, sema ve RLS (bildirim_app
                      values (${uuidv7()}, ${kurum}, ${bildirimId}, ${kull}, 'push', 'x', 'c1')`;
       await o.sistem`insert into bildirim.zamanlanmis_bildirimler (id, kurum_id, kaynak_turu, kaynak_id, alici_id, sablon_kodu, gonderim_at)
                      values (${uuidv7()}, ${kurum}, 'ders', ${uuidv7()}, ${uy}, 'ders_hatirlatma', now())`;
+      await o.sistem`insert into bildirim.ders_planlari (ders_id, kurum_id, ogretmen_id, baslangic_at, bitis_at, durum, son_olay_at, son_olay_id)
+                     values (${uuidv7()}, ${kurum}, ${uy}, now(), now() + interval '1 hour', 'planli', now(), ${uuidv7()})`;
       await o.sistem`insert into bildirim.duyurular (id, kurum_id, baslik, govde, hedef_turu, hedef_id, yazar_id)
                      values (${duyuru}, ${kurum}, 'D', 'G', 'kurum', ${kurum}, ${uy})`;
       await o.sistem`insert into bildirim.duyuru_alicilari (id, kurum_id, duyuru_id, alici_id)

@@ -3,6 +3,7 @@ import { KaliciHata } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 
 import { yeniId, type Islem } from './ortak.js';
+import { ESLEME_SABLONLARI } from './sablonlar-eslemeler.js';
 
 /**
  * Bildirim sablonlari. KAYNAK KODDUR (surum kodla birlikte dagitilir); worker acilista
@@ -160,6 +161,8 @@ export const SABLON_TANIMLARI: readonly SablonTanimi[] = [
     govde: '{{mevcut_seri}} günlük serin bugün bitebilir. Küçük bir görevle devam ettir.',
     derinBaglanti: 'kopru://bugun',
   },
+  // Olay eslemelerinin sablonlari (paket B2).
+  ...ESLEME_SABLONLARI,
 ];
 
 export const sablonlar = new SablonKaydi(SABLON_TANIMLARI);
