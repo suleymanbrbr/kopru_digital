@@ -136,7 +136,7 @@ function Kart({ kurumId, genis }: { kurumId: string; genis: boolean }) {
                       ) : null}
                       {saatAraligi(d.baslangic_at, d.bitis_at, saatDilimi)}
                     </p>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 basis-40">
                       <p className="truncate font-medium">
                         {ad}
                         {d.baslik ? ` · ${d.baslik}` : ''}

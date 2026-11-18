@@ -187,7 +187,9 @@ test.describe('ogretmen (Ege)', () => {
     expect(await hedef(/Yoklama bekliyor/)).toBe('/kurum-ege/yoklama');
     expect(await hedef(/Ödev teslim edildi/)).toBe('/kurum-ege/odevler');
     expect(await hedef(/Düşük ders kredisi/)).toBe('/kurum-ege/finans');
-    expect(await hedef(/Yeni duyuru/)).toBe('/kurum-ege/bildirimler');
+    expect(await hedef(/Yeni duyuru/)).toBe(
+      '/kurum-ege/duyurular/00000000-0000-4000-8000-0000000d0001',
+    );
 
     await page.getByRole('link', { name: /Yeni soru geldi/ }).click();
     await expect(page).toHaveURL(/\/kurum-ege\/sorular\/[0-9a-f-]{36}$/);
