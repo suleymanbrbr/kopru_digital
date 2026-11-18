@@ -3904,6 +3904,31 @@ export const tr = {
     hata: {
       tercih_kilitli: 'Bu bildirim kapatılamaz.',
     },
+    // --- Duyurular (bildirim servisi) ---
+    duyuru: {
+      baslik: 'Duyurular',
+      yeni: 'Yeni duyuru',
+      bos: 'Henüz duyuru yok.',
+      sabit: 'Sabit',
+      sabitle: 'Üste sabitle',
+      bitis: 'Bitiş zamanı',
+      yayinla: 'Yayınla',
+      arsivle: 'Arşivle',
+      sil: 'Sil',
+      pushGonder: 'Anlık bildirim gönder',
+      okuyanlar: 'Okuyanlar',
+      okunanOzeti: '{okunan} / {alici} kişi okudu',
+      durum: { taslak: 'Taslak', yayinda: 'Yayında', arsiv: 'Arşiv' },
+      hedef: { grup: 'Grup', kademe: 'Kademe', kurum: 'Tüm kurum' },
+      rol: { ogrenci: 'Öğrenciler', ogretmen: 'Öğretmenler' },
+      hata: {
+        modul_kapali: 'Duyuru özelliği bu hedefte kapalı.',
+        izin_yok: 'Duyuru yazma yetkin yok.',
+        yasak: 'Bu hedefe duyuru yapma yetkin yok.',
+        cakisma: 'Duyuru bu durumda değiştirilemez.',
+        bulunamadi: 'Duyuru bulunamadı.',
+      },
+    },
   },
 } as const;
 
