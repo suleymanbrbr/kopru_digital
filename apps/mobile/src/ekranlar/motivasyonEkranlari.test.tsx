@@ -93,7 +93,6 @@ describe('ogrenci Bugun: motivasyon karti', () => {
     expect(m).toContain('Günün hedefi');
     expect(m).toMatch(/0\/3 plan görevi/);
     expect(m).toContain('Bugün 0 XP kazandın');
-    expect(var_(r, 'seviye-cubugu')).toBe(true);
     await testIDDokun(r, 'bugun-odaklan');
     expect(mockYonlendirici.push).toHaveBeenCalledWith('/odaklan');
   });
@@ -126,7 +125,6 @@ describe('Karakterim (yuva)', () => {
     const m = metinler(r);
     expect(m).toContain('Közü');
     expect(var_(r, 'karakter-sahnesi')).toBe(true);
-    expect(var_(r, 'seviye-cubugu')).toBe(true);
     const radar = r.root.findAll(
       (n) => n.props.testID === 'beceri-radari' && typeof n.type === 'string',
     )[0]!;

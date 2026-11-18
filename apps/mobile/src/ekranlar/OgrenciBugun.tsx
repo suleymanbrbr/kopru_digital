@@ -8,7 +8,7 @@ import { bugunTarihi, kisaZaman, tarihEkle, yerelTarih } from '../lib/saat';
 import { modulAcikMi } from '../nav/yapilandirma';
 import { CevaplananSorularKarti } from '../soru/BugunKartlari';
 import { Dugme } from '../ui/Dugme';
-import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { BosDurum, KartHatasi, KartYukleniyor } from '../ui/Durumlar';
 import { Ekran } from '../ui/Ekran';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
@@ -23,11 +23,11 @@ import {
   useSaatDilimi,
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
-import { useOgrenciBugun } from '../uygulama/sorgular';
 import { BildirimIzinKarti } from './bildirim/BildirimIzinKarti';
 import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
+import { DuyuruKarti } from './duyuru/DuyuruKarti';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
 import { KayitlarimGirisi } from './KayitlarimGirisi';
 import { BugunMotivasyon } from './motivasyon/BugunMotivasyon';
@@ -49,15 +49,51 @@ function OgretmenNotu({ ders, tz }: { ders: Ders; tz: string }) {
   );
 }
 
-export function OgrenciBugun() {
+/** Buyuk "Odaklan" ve "Soru sor" dugmeleri: yan yana, ilk ekranda. */
+function OgrenciEylemleri({ soru }: { soru: boolean }) {
   const router = useRouter();
+  return (
+    <View className="flex-row gap-3" testID="bugun-eylemler">
+      <View className="flex-1">
+        <Dugme
+          etiket={t('mobil.bugun.ogrenci.odaklan')}
+          varyant="birincil"
+          buyuk
+          testID="bugun-odaklan"
+          onPress={() => {
+            router.push('/odaklan');
+          }}
+        />
+      </View>
+      {soru ? (
+        <View className="flex-1">
+          <Dugme
+            etiket={t('mobil.bugun.ogrenci.soruSor')}
+            varyant="vurgu"
+            buyuk
+            testID="bugun-soru-sor"
+            onPress={() => {
+              router.push('/(uygulama)/soru-yeni');
+            }}
+          />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * Ogrenci "Bugun": ustte kompakt karakter + seri + gunun hedefi, hemen altinda Odaklan / Soru sor,
+ * sonra bugunun plan gorevleri ve yaklasan odevler ("Bugun ne yapmaliyim?" kaydirmadan gorunur),
+ * sirada ders, duyurular, cevaplanan sorular. Her kart kendi sorgusunu yonetir: bir servis (ornegin
+ * motivasyon) yanit vermezse yalniz o kart hata gosterir, ekranin geri kalani calisir.
+ */
+export function OgrenciBugun() {
   const oturum = useOturum();
   const aktif = useAktif();
-  const sorgu = useOgrenciBugun();
   const ad = oturum.asama === 'giris' ? oturum.kullanici.adSoyad.split(' ')[0] : '';
   const oyun = !!aktif && modulAcikMi(aktif.moduller, 'oyunlastirma');
   const soru = !!aktif && modulAcikMi(aktif.moduller, 'soru_sor');
-  const d = sorgu.data;
   const takvim = useModulAcik('takvim');
   const finans = useModulAcik('finans');
   const { tz } = useSaatDilimi();
@@ -67,11 +103,13 @@ export function OgrenciBugun() {
   // Ogrenci yalnizca kalan dersini gorur; fiyat/borc/tahsilat bu ekranda hicbir kosulda yoktur.
   const kalan = kart.data?.gorunum === 'ogrenci' ? kart.data.kalanKredi : null;
   const [simdi] = useState(() => Date.now());
-  const bugunku = (dersler.data ?? []).filter((x) => yerelTarih(x.baslangic, tz) === bugun);
-  const yaklasan = (dersler.data ?? [])
+  const tumu = dersler.data ?? [];
+  const bugunku = tumu.filter((x) => yerelTarih(x.baslangic, tz) === bugun);
+  const yaklasan = tumu
     .filter((x) => x.durum === 'planli' && yerelTarih(x.baslangic, tz) > bugun)
     .slice(0, 5);
-  const gecmis = (dersler.data ?? [])
+  const siradaki = tumu.find((x) => x.durum === 'planli' && Date.parse(x.bitis) >= simdi);
+  const gecmis = tumu
     .filter((x) => x.durum !== 'iptal' && Date.parse(x.baslangic) < simdi)
     .slice(-3)
     .reverse();
@@ -84,85 +122,74 @@ export function OgrenciBugun() {
         </Metin>
         <BildirimZili />
       </View>
-      <BildirimIzinKarti />
-      {sorgu.isPending ? <Yukleniyor /> : null}
-      {sorgu.isError ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
-      ) : null}
       {oyun ? <BugunMotivasyon /> : null}
-      {d ? (
+      <OgrenciEylemleri soru={soru} />
+      <OgrenciBugunOgrenme />
+      {takvim ? (
+        <Kart className="gap-3" testID="siradaki-ders">
+          <Metin varyant="altBaslik" accessibilityRole="header">
+            {t('mobil.bugun.ogrenci.siradakiDers')}
+          </Metin>
+          {dersler.isPending ? <KartYukleniyor /> : null}
+          {dersler.isError && !dersler.data ? (
+            <KartHatasi
+              mesaj={hataMesaji(dersler.error)}
+              tekrar={() => {
+                void dersler.refetch();
+              }}
+            />
+          ) : null}
+          {dersler.data && !siradaki ? (
+            <BosDurum ikon="calendar-outline" mesaj={t('mobil.bugun.ogrenci.yaklasanBos')} />
+          ) : null}
+          {siradaki ? (
+            <DersSatiri ders={siradaki} ad={dersAdi(siradaki, undefined)} tz={tz} />
+          ) : null}
+        </Kart>
+      ) : null}
+      <DuyuruKarti />
+      {soru ? <CevaplananSorularKarti /> : null}
+      <GeriBildirimKartlari />
+      <KayitlarimGirisi />
+      {finans && kalan !== null ? (
+        <Kart className="flex-row items-center gap-3" testID="kalan-ders">
+          <Ikon ad="ticket-outline" />
+          <Metin varyant="altBaslik">{t('mobil.finans.ogrenciKalan', { n: kalan })}</Metin>
+        </Kart>
+      ) : null}
+      {takvim ? (
         <>
-          <GeriBildirimKartlari />
-          <KayitlarimGirisi />
-          {finans && kalan !== null ? (
-            <Kart className="flex-row items-center gap-3" testID="kalan-ders">
-              <Ikon ad="ticket-outline" />
-              <Metin varyant="altBaslik">{t('mobil.finans.ogrenciKalan', { n: kalan })}</Metin>
-            </Kart>
-          ) : null}
-          {takvim ? (
-            <>
-              <Kart className="gap-3">
-                <Metin varyant="altBaslik" accessibilityRole="header">
-                  {t('mobil.bugun.ogrenci.bugunkuDersler')}
-                </Metin>
-                {dersler.isPending ? <Yukleniyor /> : null}
-                {dersler.isError && !dersler.data ? (
-                  <HataDurumu
-                    mesaj={hataMesaji(dersler.error)}
-                    tekrar={() => void dersler.refetch()}
-                  />
-                ) : null}
-                {dersler.data && bugunku.length === 0 ? (
-                  <BosDurum
-                    ikon="calendar-outline"
-                    mesaj={t('mobil.bugun.ogrenci.bugunkuDerslerBos')}
-                  />
-                ) : null}
-                {bugunku.map((x) => (
-                  <DersSatiri key={x.id} ders={x} ad={dersAdi(x, undefined)} tz={tz} />
-                ))}
-              </Kart>
-              <Kart className="gap-3">
-                <Metin varyant="altBaslik" accessibilityRole="header">
-                  {t('mobil.bugun.ogrenci.yaklasanDersler')}
-                </Metin>
-                {dersler.data && yaklasan.length === 0 ? (
-                  <BosDurum ikon="calendar-outline" mesaj={t('mobil.bugun.ogrenci.yaklasanBos')} />
-                ) : null}
-                {yaklasan.map((x) => (
-                  <DersSatiri key={x.id} ders={x} ad={dersAdi(x, undefined)} tz={tz} />
-                ))}
-              </Kart>
-              {gecmis.map((x) => (
-                <OgretmenNotu key={x.id} ders={x} tz={tz} />
-              ))}
-            </>
-          ) : null}
-          <OgrenciBugunOgrenme />
+          <Kart className="gap-3">
+            <Metin varyant="altBaslik" accessibilityRole="header">
+              {t('mobil.bugun.ogrenci.bugunkuDersler')}
+            </Metin>
+            {dersler.data && bugunku.length === 0 ? (
+              <BosDurum
+                ikon="calendar-outline"
+                mesaj={t('mobil.bugun.ogrenci.bugunkuDerslerBos')}
+              />
+            ) : null}
+            {bugunku.map((x) => (
+              <DersSatiri key={x.id} ders={x} ad={dersAdi(x, undefined)} tz={tz} />
+            ))}
+          </Kart>
+          <Kart className="gap-3">
+            <Metin varyant="altBaslik" accessibilityRole="header">
+              {t('mobil.bugun.ogrenci.yaklasanDersler')}
+            </Metin>
+            {dersler.data && yaklasan.length === 0 ? (
+              <BosDurum ikon="calendar-outline" mesaj={t('mobil.bugun.ogrenci.yaklasanBos')} />
+            ) : null}
+            {yaklasan.map((x) => (
+              <DersSatiri key={x.id} ders={x} ad={dersAdi(x, undefined)} tz={tz} />
+            ))}
+          </Kart>
+          {gecmis.map((x) => (
+            <OgretmenNotu key={x.id} ders={x} tz={tz} />
+          ))}
         </>
       ) : null}
-      {oyun ? null : (
-        <Dugme
-          etiket={t('mobil.bugun.ogrenci.odaklan')}
-          varyant="birincil"
-          buyuk
-          onPress={() => {
-            router.push('/odaklan');
-          }}
-        />
-      )}
-      {soru ? <CevaplananSorularKarti /> : null}
-      {soru ? (
-        <Dugme
-          etiket={t('mobil.bugun.ogrenci.soruSor')}
-          varyant="vurgu"
-          buyuk
-          onPress={() => {
-            router.push('/(uygulama)/soru-yeni');
-          }}
-        />
-      ) : null}
+      <BildirimIzinKarti />
     </Ekran>
   );
 }

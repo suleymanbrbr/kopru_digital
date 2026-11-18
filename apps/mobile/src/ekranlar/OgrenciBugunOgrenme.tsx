@@ -8,7 +8,7 @@ import { PLAN_GERCEKLESEN_TURU, type PlanGerceklesenYuku } from '../offline/plan
 import { gorevSayilari } from '../ogrenme/hafta';
 import { bransAdi } from '../ogrenme/konu';
 import { odevGecikmisMi, odevleriBol } from '../ogrenme/odev';
-import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { BosDurum, KartHatasi, KartYukleniyor } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
@@ -43,9 +43,9 @@ export function BugunkuGorevler() {
           </Metin>
         ) : null}
       </View>
-      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isPending ? <KartYukleniyor /> : null}
       {sorgu.isError && !sorgu.data ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+        <KartHatasi mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data && gorevler.length === 0 ? (
         <Kart>
@@ -81,9 +81,9 @@ export function YaklasanOdevler() {
       <Metin varyant="altBaslik" accessibilityRole="header">
         {t('mobil.ogrenme.odev.yaklasanBaslik')}
       </Metin>
-      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isPending ? <KartYukleniyor /> : null}
       {sorgu.isError && !sorgu.data ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+        <KartHatasi mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data && liste.length === 0 ? (
         <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.ogrenme.odev.bosListe')} />

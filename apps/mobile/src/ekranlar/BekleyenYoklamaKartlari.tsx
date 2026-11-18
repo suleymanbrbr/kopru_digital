@@ -5,10 +5,10 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import type { BekleyenYoklamaDersi } from '../api/operasyonTipleri';
-import { kisaZaman, saatAraligi } from '../lib/saat';
+import { bugunTarihi, kisaZaman, saatAraligi, yerelTarih } from '../lib/saat';
 import { yoklamaKuyrugaAl, type YoklamaYuku } from '../offline/yoklama';
 import { Dugme } from '../ui/Dugme';
-import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { BosDurum, KartHatasi, KartYukleniyor } from '../ui/Durumlar';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useAktif, useServisler } from '../uygulama/baglam';
@@ -22,15 +22,17 @@ import {
   useYoklamaKatilimcilari,
 } from '../uygulama/operasyon';
 
-function Kart1({
+/**
+ * Bir dersin yoklama eylemleri: birebir derste tek dokunusla "Geldi" (cevrimdisi kuyruga alinir),
+ * ayrica yoklama ekranini acan dugme. Bugun'un ders satirlarinda ve onceki dersler kartinda ortak.
+ */
+export function YoklamaEylemleri({
   ders,
   ad,
-  tz,
   alindi,
 }: {
   ders: BekleyenYoklamaDersi;
   ad: string;
-  tz: string;
   alindi: (id: string, ad: string) => void;
 }) {
   const router = useRouter();
@@ -67,6 +69,37 @@ function Kart1({
     );
   }
 
+  return (
+    <View className="flex-row gap-2">
+      {birebir ? (
+        <Dugme
+          className="flex-1"
+          etiket={t('mobil.yoklama.geldi')}
+          accessibilityLabel={t('mobil.yoklama.hizliGeldi', { ad })}
+          onPress={hizliGeldi}
+        />
+      ) : null}
+      <Dugme
+        className="flex-1"
+        varyant={birebir ? 'ikincil' : 'birincil'}
+        etiket={birebir ? t('mobil.yoklama.diger') : t('mobil.yoklama.kartBaslik')}
+        onPress={ac}
+      />
+    </View>
+  );
+}
+
+function Kart1({
+  ders,
+  ad,
+  tz,
+  alindi,
+}: {
+  ders: BekleyenYoklamaDersi;
+  ad: string;
+  tz: string;
+  alindi: (id: string, ad: string) => void;
+}) {
   const zaman = `${kisaZaman(ders.baslangic, tz)}, ${saatAraligi(ders.baslangic, ders.bitis, tz)}`;
   return (
     <Kart className="gap-3" testID={`yoklama-kart-${ders.id}`}>
@@ -79,22 +112,7 @@ function Kart1({
         <Metin varyant="ikincil">{zaman}</Metin>
         <Metin varyant="kucuk">{t('mobil.yoklama.eksik', { n: ders.yoklamasiEksikSayisi })}</Metin>
       </View>
-      <View className="flex-row gap-2">
-        {birebir ? (
-          <Dugme
-            className="flex-1"
-            etiket={t('mobil.yoklama.geldi')}
-            accessibilityLabel={t('mobil.yoklama.hizliGeldi', { ad })}
-            onPress={hizliGeldi}
-          />
-        ) : null}
-        <Dugme
-          className="flex-1"
-          varyant={birebir ? 'ikincil' : 'birincil'}
-          etiket={birebir ? t('mobil.yoklama.diger') : t('mobil.yoklama.kartBaslik')}
-          onPress={ac}
-        />
-      </View>
+      <YoklamaEylemleri ders={ders} ad={ad} alindi={alindi} />
     </Kart>
   );
 }
@@ -112,16 +130,21 @@ export function BekleyenYoklamaKartlari() {
   // Iyimser: "alindi" gosterilen dersler sunucu esleseye kadar (ve sonra da) onay satiri olarak kalir.
   const [alinan, setAlinan] = useState<{ id: string; ad: string }[]>([]);
   const alinanIdler = new Set(alinan.map((a) => a.id));
-  const liste = (sorgu.data ?? []).filter((d) => !kuyrukta.has(d.id) && !alinanIdler.has(d.id));
+  const bugun = bugunTarihi(tz);
+  // Bugunun dersleri "Bugunku dersler" kartinda satir icinde; burada yalniz onceki gunlerin eksikleri.
+  const liste = (sorgu.data ?? []).filter(
+    (d) => !kuyrukta.has(d.id) && !alinanIdler.has(d.id) && yerelTarih(d.baslangic, tz) < bugun,
+  );
+  if (sorgu.data && liste.length === 0 && alinan.length === 0) return null;
 
   return (
     <Kart className="gap-3" testID="yoklama-bekleyen">
       <Metin varyant="altBaslik" accessibilityRole="header">
         {t('mobil.yoklama.bekleyenBaslik')}
       </Metin>
-      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isPending ? <KartYukleniyor /> : null}
       {sorgu.isError && !sorgu.data ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+        <KartHatasi mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data && liste.length === 0 && alinan.length === 0 ? (
         <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.yoklama.bekleyenBos')} />

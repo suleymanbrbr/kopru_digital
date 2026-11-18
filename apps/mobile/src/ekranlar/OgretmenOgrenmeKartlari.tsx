@@ -6,7 +6,7 @@ import type { BekleyenTeslim } from '../api/ogrenmeTipleri';
 import { kisaZaman } from '../lib/saat';
 import { netBicimle } from '../ogrenme/net';
 import { Dugme } from '../ui/Dugme';
-import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
+import { BosDurum, KartHatasi, KartYukleniyor } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
@@ -32,9 +32,9 @@ function BekleyenTeslimler() {
         {t('mobil.ogrenme.odev.incelemeBekleyen')}
         {liste.length > 0 ? ` (${String(liste.length)})` : ''}
       </Metin>
-      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isPending ? <KartYukleniyor /> : null}
       {sorgu.isError && !sorgu.data ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+        <KartHatasi mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data && liste.length === 0 ? (
         <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.ogrenme.odev.incelemeBos')} />
@@ -84,9 +84,9 @@ function OnayBekleyenDenemeler() {
         {t('mobil.ogrenme.deneme.onayBekleyen')}
         {liste.length > 0 ? ` (${String(liste.length)})` : ''}
       </Metin>
-      {sorgu.isPending ? <Yukleniyor /> : null}
+      {sorgu.isPending ? <KartYukleniyor /> : null}
       {sorgu.isError && !sorgu.data ? (
-        <HataDurumu mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
+        <KartHatasi mesaj={hataMesaji(sorgu.error)} tekrar={() => void sorgu.refetch()} />
       ) : null}
       {sorgu.data && liste.length === 0 ? (
         <BosDurum ikon="checkmark-circle-outline" mesaj={t('mobil.ogrenme.deneme.onayBos')} />
@@ -132,7 +132,6 @@ function OnayBekleyenDenemeler() {
  * denemeler ve "Odev ver" hizli eylemi. Her kart kendi modulu kapaliysa hic cizilmez.
  */
 export function OgretmenOgrenmeKartlari() {
-  const router = useRouter();
   const odev = useModulAcik('odev');
   const deneme = useModulAcik('deneme');
   if (!odev && !deneme) return null;
@@ -140,12 +139,6 @@ export function OgretmenOgrenmeKartlari() {
     <>
       {odev ? (
         <>
-          <Dugme
-            etiket={t('mobil.ogrenme.odev.odevVer')}
-            onPress={() => {
-              router.push('/odev-ver');
-            }}
-          />
           <BekleyenTeslimler />
         </>
       ) : null}

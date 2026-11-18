@@ -4,10 +4,11 @@ import { View } from 'react-native';
 
 import { kisaZaman } from '../lib/saat';
 import { Dugme } from '../ui/Dugme';
-import { BosDurum } from '../ui/Durumlar';
+import { BosDurum, KartHatasi } from '../ui/Durumlar';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
+import { hataMesaji } from '../uygulama/hatalar';
 import { useSaatDilimi } from '../uygulama/operasyon';
 import {
   useGelenSorular,
@@ -37,6 +38,14 @@ export function BekleyenSorularKarti() {
       <Metin varyant="altBaslik" accessibilityRole="header">
         {t('mobil.soru.ogretmen.bekleyenBaslik', { n })}
       </Metin>
+      {sayi.isError && !sayi.data ? (
+        <KartHatasi
+          mesaj={hataMesaji(sayi.error)}
+          tekrar={() => {
+            void sayi.refetch();
+          }}
+        />
+      ) : null}
       {n === 0 && sayi.data ? (
         <BosDurum ikon="chatbubbles-outline" mesaj={t('mobil.soru.ogretmen.bekleyenBos')} />
       ) : null}
@@ -88,6 +97,14 @@ export function CevaplananSorularKarti() {
           {t('mobil.soru.ogrenci.cevaplanan')}
         </Metin>
       </View>
+      {sorgu.isError && !sorgu.data ? (
+        <KartHatasi
+          mesaj={hataMesaji(sorgu.error)}
+          tekrar={() => {
+            void sorgu.refetch();
+          }}
+        />
+      ) : null}
       {sorgu.data && sorular.length === 0 ? (
         <Metin varyant="ikincil">{t('mobil.soru.ogrenci.cevaplananBos')}</Metin>
       ) : null}
