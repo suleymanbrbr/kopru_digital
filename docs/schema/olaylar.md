@@ -87,6 +87,8 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | `abonelik.odeme.islendi.v1` | K | Abonelik ödemesi sonuçlanınca (başarılı, başarısız, iade). | `odeme_id`, `abonelik_id`, `durum`, `tutar_kurus`, `donem_bitis_at`, `hata_kodu` | `bildirim` |
 | `abonelik.fatura.kesildi.v1` | K | e-Arşiv fatura kesilince. | `fatura_id`, `odeme_id`, `fatura_no`, `toplam_kurus`, `pdf_dosya_id` | `bildirim` |
 
+> **Uygulama notu (abonelik).** `abonelik.abonelik.degisti.v1` Zod tanımı `packages/contracts/src/abonelik/olaylar.ts` içindedir (paket A1). Yayıncılar: kurum oluşturma (deneme), zamanlayıcı geçişleri, kurumsal aktivasyon/ödeme (`aboneligiAktiflestir`), sahibin iptal isteği ve denemede plan değişimi. Yük alanları tablodaki gibidir; kişisel veri ve sağlayıcı kimliği taşımaz. `abonelik.odeme.islendi.v1` ve `abonelik.fatura.kesildi.v1` sonraki pakettedir (henüz tanımlı değil). Abonelik `askida`/`sona_erdi` olunca ayrıca `hesap.kurum.degisti.v1` (`durum='askida'`) yayımlanır.
+
 ## `api` / ortak
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |

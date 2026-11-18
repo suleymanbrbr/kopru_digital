@@ -7,6 +7,13 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { dbYok, hataMetni, rastgeleTelefon, testDb } from './test/yardimcilar.js';
 
+/** Tek satir bekleyen sorgu sonucu (yoksa test hatasi). */
+function tek<T>(satirlar: T[]): T {
+  const satir = satirlar[0];
+  if (satir === undefined) throw new Error('beklenen satır yok');
+  return satir;
+}
+
 const KIRACI_TABLOLARI = [
   'abonelikler',
   'abonelik_odemeleri',
@@ -215,9 +222,11 @@ describe.skipIf(dbYok())('abonelik tablolari: RLS izolasyonu, yetkiler ve kisitl
       select (limitler->>'max_ogrenci')::int max_ogrenci, kurum_turu, moduller from abonelik.planlar where kod = 'baslangic' and surum = 1`;
     expect(b).toMatchObject({ max_ogrenci: 15, kurum_turu: 'bireysel' });
     // Plan kataloguna yazilan moduller sozlesmedeki kodlarla sinirlidir (modul_ayarlari ile ayni kume)
-    const [{ gecersiz }] = await sistem<{ gecersiz: number }[]>`
+    const { gecersiz } = tek(
+      await sistem<{ gecersiz: number }[]>`
       select count(*)::int gecersiz from abonelik.planlar p, unnest(p.moduller) m
-      where m <> all(${[...MODUL_KODLARI]}::text[])`;
+      where m <> all(${[...MODUL_KODLARI]}::text[])`,
+    );
     expect(gecersiz).toBe(0);
   });
 });

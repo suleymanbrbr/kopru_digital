@@ -1,5 +1,5 @@
-import { uuidv7 } from 'uuidv7';
 import postgres from 'postgres';
+import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { kurumsalAboneligiAktiflestir } from './modules/abonelik/index.js';
@@ -14,6 +14,13 @@ import {
   type KurumluKullanici,
   type TestServisi,
 } from './test/yardimcilar.js';
+
+/** Tek satir bekleyen sorgu sonucu (yoksa test hatasi). */
+function tek<T>(satirlar: T[]): T {
+  const satir = satirlar[0];
+  if (satir === undefined) throw new Error('beklenen satır yok');
+  return satir;
+}
 
 /** Ortak `tokenAl`, istek basina IP hiz sinirina takilir: burada her cagri ayri IP'den gelir. */
 async function tokenAl(
@@ -240,8 +247,10 @@ describe.skipIf(dbYok())('abonelik: deneme, plan limiti, 402 ve sahip uc noktala
       const [davet] = await sistem<{ durum: string; kullanim_sayisi: number }[]>`
         select durum, kullanim_sayisi from hesap.davetler where kurum_id = ${k.kurumId} order by created_at desc limit 1`;
       expect(davet).toEqual({ durum: 'bekliyor', kullanim_sayisi: 0 });
-      const [{ n }] = await sistem<{ n: number }[]>`
-        select count(*)::int n from hesap.uyelikler where kurum_id = ${k.kurumId} and rol = 'ogrenci'`;
+      const { n } = tek(
+        await sistem<{ n: number }[]>`
+        select count(*)::int n from hesap.uyelikler where kurum_id = ${k.kurumId} and rol = 'ogrenci'`,
+      );
       expect(n).toBe(2);
 
       // Limit yukselince ayni davet kabul edilir.
@@ -335,8 +344,10 @@ describe.skipIf(dbYok())('abonelik: deneme, plan limiti, 402 ve sahip uc noktala
       });
       expect(onay.statusCode).toBe(402);
       expect(onay.json<Hata>().error.code).toBe('plan_limiti');
-      const [{ durum }] = await sistem<{ durum: string }[]>`
-        select durum from hesap.sinif_katilim_istekleri where id = ${istek.json<{ id: string }>().id}`;
+      const { durum } = tek(
+        await sistem<{ durum: string }[]>`
+        select durum from hesap.sinif_katilim_istekleri where id = ${istek.json<{ id: string }>().id}`,
+      );
       expect(durum).toBe('bekliyor');
     });
 
@@ -449,8 +460,10 @@ describe.skipIf(dbYok())('abonelik: deneme, plan limiti, 402 ve sahip uc noktala
         { durum: string }[]
       >`select durum from hesap.kurumlar where id = ${k.kurumId}`;
       expect(kurum?.durum).toBe('aktif');
-      const [{ n }] = await sistem<{ n: number }[]>`
-        select count(*)::int n from abonelik.abonelikler where kurum_id = ${k.kurumId} and durum in ('deneme','aktif','odeme_bekliyor','ek_sure')`;
+      const { n } = tek(
+        await sistem<{ n: number }[]>`
+        select count(*)::int n from abonelik.abonelikler where kurum_id = ${k.kurumId} and durum in ('deneme','aktif','odeme_bekliyor','ek_sure')`,
+      );
       expect(n).toBe(1);
       // askida kayit sona erdi
       const kalan = await sistem<{ durum: string }[]>`
@@ -613,8 +626,10 @@ describe.skipIf(dbYok())('abonelik: deneme, plan limiti, 402 ve sahip uc noktala
       });
       expect(guncelle.statusCode).toBe(200);
       expect(guncelle.json<{ fatura_bilgisi: { surum: number } }>().fatura_bilgisi.surum).toBe(2);
-      const [{ n }] = await sistem<{ n: number }[]>`
-        select count(*)::int n from abonelik.kurum_fatura_bilgileri where kurum_id = ${k.kurumId}`;
+      const { n } = tek(
+        await sistem<{ n: number }[]>`
+        select count(*)::int n from abonelik.kurum_fatura_bilgileri where kurum_id = ${k.kurumId}`,
+      );
       expect(n).toBe(1);
 
       for (const kotu of [
@@ -675,8 +690,10 @@ describe.skipIf(dbYok())('abonelik: deneme, plan limiti, 402 ve sahip uc noktala
       expect(r2.json<{ abonelik: { iptal_istendi_at: string } }>().abonelik.iptal_istendi_at).toBe(
         a1.iptal_istendi_at,
       );
-      const [{ n }] = await sistem<{ n: number }[]>`
-        select count(*)::int n from ortak.outbox where kurum_id = ${k.kurumId} and subject = 'evt.abonelik.abonelik.degisti.v1'`;
+      const { n } = tek(
+        await sistem<{ n: number }[]>`
+        select count(*)::int n from ortak.outbox where kurum_id = ${k.kurumId} and subject = 'evt.abonelik.abonelik.degisti.v1'`,
+      );
       expect(n).toBe(2); // deneme baslangici + iptal istegi (tekrar yeni olay yazmaz)
       // denetim
       const [d] = await sistem<{ eylem: string; neden: string }[]>`

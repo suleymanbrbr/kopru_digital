@@ -7,6 +7,13 @@ import { abonelikGecisleriCalistir, aboneligiAktiflestir } from './modules/abone
 import { abonelikSistemIslemi } from './sistem/abonelik-sistem.js';
 import { dbYok, rastgeleTelefon, testDb } from './test/yardimcilar.js';
 
+/** Tek satir bekleyen sorgu sonucu (yoksa test hatasi). */
+function tek<T>(satirlar: T[]): T {
+  const satir = satirlar[0];
+  if (satir === undefined) throw new Error('beklenen satır yok');
+  return satir;
+}
+
 const GUN = 24 * 60 * 60 * 1000;
 
 describe.skipIf(dbYok())('abonelik: saatlik durum gecisleri (api_sistem)', () => {
@@ -45,7 +52,7 @@ describe.skipIf(dbYok())('abonelik: saatlik durum gecisleri (api_sistem)', () =>
     const an = (g: number | null | undefined) => (g == null ? null : new Date(simdi + g * GUN));
     await sistem`insert into hesap.kullanicilar (id, telefon_e164) values (${kullaniciId}, ${rastgeleTelefon()})`;
     await sistem`insert into hesap.kurumlar (id, ad, tur, olusturan_kullanici_id) values (${kurumId}, 'Geçiş Kurumu', 'kurum', ${kullaniciId})`;
-    const donemBitis = an(ek.donem ?? 30) as Date;
+    const donemBitis = new Date(simdi + (ek.donem ?? 30) * GUN);
     const abonelikId = uuidv7();
     await sistem`insert into abonelik.abonelikler
       (id, kurum_id, plan_id, kaynak, durum, donem_baslangic_at, donem_bitis_at, deneme_bitis_at, ek_sure_bitis_at,
@@ -113,13 +120,17 @@ describe.skipIf(dbYok())('abonelik: saatlik durum gecisleri (api_sistem)', () =>
 
     // Idempotent: ayni kayitlar icin ikinci calisma olay/denetim yazmaz.
     const once = await olaylar(deneme.kurumId);
-    const [{ n: denetimOnce }] = await sistem<{ n: number }[]>`
-      select count(*)::int n from hesap.denetim_kayitlari where eylem = 'sistem.abonelik_gecisleri' and created_at > now() - interval '1 minute'`;
+    const { n: denetimOnce } = tek(
+      await sistem<{ n: number }[]>`
+      select count(*)::int n from hesap.denetim_kayitlari where eylem = 'sistem.abonelik_gecisleri' and created_at > now() - interval '1 minute'`,
+    );
     const ikinci = await abonelikGecisleriCalistir(sistemDb);
     expect(ikinci.gecis).toBe(0);
     expect(await olaylar(deneme.kurumId)).toEqual(once);
-    const [{ n: denetimSonra }] = await sistem<{ n: number }[]>`
-      select count(*)::int n from hesap.denetim_kayitlari where eylem = 'sistem.abonelik_gecisleri' and created_at > now() - interval '1 minute'`;
+    const { n: denetimSonra } = tek(
+      await sistem<{ n: number }[]>`
+      select count(*)::int n from hesap.denetim_kayitlari where eylem = 'sistem.abonelik_gecisleri' and created_at > now() - interval '1 minute'`,
+    );
     expect(denetimSonra).toBe(denetimOnce);
     expect(denetimOnce).toBeGreaterThanOrEqual(1);
 
@@ -179,8 +190,10 @@ describe.skipIf(dbYok())('abonelik: saatlik durum gecisleri (api_sistem)', () =>
           correlationId: uuidv7(),
         }),
     );
-    const [{ n }] = await sistem<{ n: number }[]>`
-      select count(*)::int n from abonelik.abonelikler where kurum_id = ${k.kurumId}`;
+    const { n } = tek(
+      await sistem<{ n: number }[]>`
+      select count(*)::int n from abonelik.abonelikler where kurum_id = ${k.kurumId}`,
+    );
     expect(n).toBe(2);
   });
 
