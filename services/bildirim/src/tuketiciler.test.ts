@@ -27,9 +27,29 @@ async function bekle<T>(oku: () => Promise<T | undefined | false>, ms = 20_000):
 }
 
 describe('eslemeler kayit listesi', () => {
-  it('iki ornek esleme kayitli ve olay turleri benzersiz', () => {
+  it('Faz 1 eslemeleri kayitli ve olay turleri benzersiz', () => {
     const turler = ESLEMELER.map((e) => e.olay.subject);
-    expect(turler).toEqual(['evt.ogrenme.soru_mesaji.eklendi.v1', 'evt.motivasyon.seri.risk.v1']);
+    expect(turler).toEqual([
+      'evt.ogrenme.soru_mesaji.eklendi.v1',
+      'evt.motivasyon.seri.risk.v1',
+      'evt.ders.ders.degisti.v1',
+      'evt.ders.yoklama.kaydedildi.v1',
+      'evt.ders.kaynak.eklendi.v1',
+      'evt.ders.kaynak.sorun_bildirildi.v1',
+      'evt.ogrenme.odev.yayinlandi.v1',
+      'evt.ogrenme.odev.teslim_edildi.v1',
+      'evt.ogrenme.odev.incelendi.v1',
+      'evt.ogrenme.soru.sorildi.v1',
+      'evt.motivasyon.seviye.atladi.v1',
+      'evt.motivasyon.rozet.kazanildi.v1',
+      'evt.motivasyon.karakter.evrildi.v1',
+      'evt.motivasyon.seri.kilometre_tasi.v1',
+      'evt.motivasyon.seri.bozuldu.v1',
+      'evt.finans.kredi.azaldi.v1',
+      'evt.finans.tahsilat.alindi.v1',
+      'evt.finans.paket.satildi.v1',
+      'evt.hesap.davet.kabul_edildi.v1',
+    ]);
     expect(new Set(turler).size).toBe(turler.length);
   });
 });
@@ -208,7 +228,7 @@ describe.skipIf(natsYok())('olay tuketicileri (gercek PostgreSQL + NATS)', () =>
     expect(await gonderimler(kurumId)).toHaveLength(1);
   });
 
-  it('takip mesaji ve ogrencinin kendi mesaji bildirim uretmez', async () => {
+  it('yazarin kendisine giden takip mesaji ve ogrencinin kendi cevap mesaji bildirim uretmez', async () => {
     const kurumId = uuidv7();
     const ogrenciUyelik = uuidv7();
     const ogrenciKullanici = uuidv7();
@@ -222,7 +242,7 @@ describe.skipIf(natsYok())('olay tuketicileri (gercek PostgreSQL + NATS)', () =>
         tur: 'takip',
         yazar_id: ogrenciUyelik,
         ogrenci_id: ogrenciUyelik,
-        alici_idleri: [uuidv7()],
+        alici_idleri: [ogrenciUyelik],
       },
     });
     const kendi = ogrenmeSoruMesajiEklendiV1.create({
