@@ -4,6 +4,7 @@ import { grupYollari } from './grup-yollari.js';
 import { hesapYollari } from './hesap-yollari.js';
 import { kimlikYollari } from './kimlik-yollari.js';
 import { oturumYollari } from './oturum-yollari.js';
+import { raporYollari } from './rapor.js';
 import { sinifKatilimKullaniciYollari } from './sinif-katilim-kullanici-yollari.js';
 import { sinifKatilimYollari } from './sinif-katilim-yollari.js';
 
@@ -19,6 +20,7 @@ export const hesapModule = defineModule(
       await app.register(grupYollari);
       await app.register(davetYollari());
       await app.register(oturumYollari);
+      await app.register(raporYollari);
       await app.register(sinifKatilimYollari);
       await app.register(sinifKatilimKullaniciYollari);
     }
@@ -54,4 +56,11 @@ export {
 } from './eposta.js';
 export { birebirGrupOlustur, grupEtkinOgrencileri } from './grup-deposu.js';
 export { gorunenAdlar, grupOlayVerisi, grupUyesiOlayVerisi } from './grup-deposu.js';
-export { atananGruplar, grupKapsami, kapsamdakiGruplar, uyeOlunanGruplar } from './kapsam.js';
+export {
+  atananGruplar,
+  grupKapsami,
+  kapsamdakiGruplar,
+  kapsamdakiOgrenciler,
+  uyeOlunanGruplar,
+} from './kapsam.js';
+export { donemAlani, hesapRaporOzeti, raporDonemi, type RaporDonemBilgisi } from './rapor.js';

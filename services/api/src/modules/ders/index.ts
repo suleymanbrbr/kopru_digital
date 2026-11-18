@@ -4,6 +4,7 @@ import { dersYollari } from './ders-yollari.js';
 import { geriBildirimYollari } from './geri-bildirim-yollari.js';
 import { kayitlarimYollari } from './kayitlarim-yollari.js';
 import { kaynakYollari } from './kaynak-yollari.js';
+import { raporYollari } from './rapor.js';
 import { yoklamaYollari } from './yoklama-yollari.js';
 
 /**
@@ -20,6 +21,7 @@ export const dersModule = defineModule('ders', async (app) => {
     await app.register(geriBildirimYollari);
     await app.register(kaynakYollari);
     await app.register(kayitlarimYollari);
+    await app.register(raporYollari);
   }
 });
 
@@ -32,3 +34,4 @@ export {
   type EsitlemeKapsami,
   type EsitlemeSonucu,
 } from './katilimci-esitle.js';
+export { dersRaporOzeti, oranHesapla, yoklamasiAlinanOgrenciler } from './rapor.js';

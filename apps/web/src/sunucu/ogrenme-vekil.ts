@@ -1,6 +1,7 @@
 import type { NextRequest, NextResponse } from 'next/server';
 
 import { ogrenmeMock } from './ogrenme-mock';
+import { raporMock } from './rapor-mock';
 import { soruMock } from './soru-mock';
 import {
   servisVekili,
@@ -40,6 +41,8 @@ export const OGRENME_IZINLI_YOLLAR: readonly RegExp[] = [
   new RegExp(`^${K}\\/soru-bildirimleri\\/[^/]+\\/kapat$`),
   new RegExp(`^${K}\\/soru-masalari(\\/[^/]+(\\/uyeler(\\/[^/]+)?)?)?$`),
   new RegExp(`^${K}\\/yonetim\\/sorular$`),
+  // Yonetici paneli (Excel dahil)
+  new RegExp(`^${K}\\/rapor\\/(ozet|odev|plan|soru|disa-aktar)$`),
 ];
 
 export function ogrenmeYoluIzinliMi(parcalar: readonly string[], yontem = 'GET'): boolean {
@@ -47,7 +50,8 @@ export function ogrenmeYoluIzinliMi(parcalar: readonly string[], yontem = 'GET')
 }
 
 /** Once "soru sor" mock'u, ilgilenmezse mufredat/odev/plan/deneme mock'u. */
-const mock = (istek: MockIstek) => soruMock(istek) ?? ogrenmeMock(istek);
+const mock = (istek: MockIstek) =>
+  raporMock('ogrenme', istek) ?? soruMock(istek) ?? ogrenmeMock(istek);
 
 const tanim: VekilTanimi = { servis: 'ogrenme', izinli: OGRENME_IZINLI_YOLLAR, mock };
 
