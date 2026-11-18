@@ -1,13 +1,14 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { ArrowLeftRight, LogOut, Menu, MonitorSmartphone } from 'lucide-react';
+import { ArrowLeftRight, BellRing, LogOut, Menu, MonitorSmartphone } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 
 import { AltMenuHucresi, NavSatiri } from './nav-baglantisi';
 
+import { BildirimZili } from '@/components/bildirim/bildirim-zili';
 import { MarkaAdi, MarkaIsareti } from '@/components/marka';
 import { TemaAnahtari } from '@/components/tema-anahtari';
 import { Cekmece } from '@/components/ui/cekmece';
@@ -92,6 +93,14 @@ function KullaniciAlani({ tiklandi }: { tiklandi?: () => void }) {
         <TemaAnahtari />
       </div>
       <Link
+        href={`/${uyelik.kurumId}/ayarlar/bildirimler`}
+        onClick={tiklandi}
+        className="flex h-11 items-center gap-3 rounded-orta px-3 text-sm font-medium text-metin-ikincil transition-colors hover:bg-yuzey-ikincil hover:text-metin lg:h-10"
+      >
+        <BellRing className="size-[1.125rem]" aria-hidden />
+        {t('bildirim.tercihler')}
+      </Link>
+      <Link
         href={`/${uyelik.kurumId}/oturumlar`}
         onClick={tiklandi}
         className="flex h-11 items-center gap-3 rounded-orta px-3 text-sm font-medium text-metin-ikincil transition-colors hover:bg-yuzey-ikincil hover:text-metin lg:h-10"
@@ -143,7 +152,13 @@ export function UygulamaKabugu({ children }: { children: ReactNode }) {
             {t(`roller.${uyelik.rol}`)}
           </span>
         </Link>
+        <BildirimZili className="-mr-2" />
       </header>
+
+      {/* Masaustu: ince ust cubuk (bildirim zili) */}
+      <div className="sticky top-0 z-20 hidden h-14 items-center justify-end border-b border-kenar bg-yuzey/95 px-10 backdrop-blur lg:flex">
+        <BildirimZili />
+      </div>
 
       <main
         id="icerik"
