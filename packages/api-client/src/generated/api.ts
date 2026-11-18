@@ -2893,6 +2893,226 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ders/kurumlar/{kurum_id}/rapor/anladim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ders sonu geri bildirim alt listesi: ogrenci bazinda anladim/kismen/anlamadim, en dusuk "anladim" orani once; en cok 200 satir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                    /** @description Yalnız bu grubun satırları. */
+                    grup_id?: string;
+                    /** @description Yalnız bu öğretmenin satırları. */
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            satirlar: {
+                                ayrinti: {
+                                    [key: string]: number;
+                                };
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                oran: number | null;
+                                pay: number;
+                                payda: number;
+                            }[];
+                            toplam_satir: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/rapor/devam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Devam orani alt listesi: ogrenci bazinda geldi/gec/gelmedi/izinli, en dusuk devam once; en cok 200 satir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                    /** @description Yalnız bu grubun satırları. */
+                    grup_id?: string;
+                    /** @description Yalnız bu öğretmenin satırları. */
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            satirlar: {
+                                ayrinti: {
+                                    [key: string]: number;
+                                };
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                oran: number | null;
+                                pay: number;
+                                payda: number;
+                            }[];
+                            toplam_satir: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ders/kurumlar/{kurum_id}/rapor/ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yonetici paneli: devam orani ve ders sonu "anladim" orani; kurum, grup ve ogretmen kirilimi. Ogretmen yalniz atandigi gruplari gorur. Modul kapaliysa gosterge `null`. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Format: date
+                             * @description Kurum yerel günü, dahil.
+                             */
+                            baslangic: string;
+                            /**
+                             * Format: date
+                             * @description Kurum yerel günü, dahil (bugün).
+                             */
+                            bitis: string;
+                            donem_gun: number;
+                            gruplar: {
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                anladim: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                devam: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** Format: uuid */
+                                grup_id: string;
+                            }[];
+                            /**
+                             * @description Yanıtı daraltan izin kapsamı (öğretmen: `grup`).
+                             * @enum {string}
+                             */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            kurum: {
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                anladim: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                devam: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                            };
+                            ogretmenler: {
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                anladim: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                devam: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ders/kurumlar/{kurum_id}/seriler": {
         parameters: {
             query?: never;
@@ -6625,6 +6845,136 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/rapor/ogrenciler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktif ogrenci listesi (panelde sayiya tiklaninca): grup ve/veya ogretmen suzgeci; en cok 200 satir, `toplam_satir` gercek sayi. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                    /** @description Yalnız bu grubun satırları. */
+                    grup_id?: string;
+                    /** @description Yalnız bu öğretmenin satırları. */
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            satirlar: {
+                                gorunen_ad: string | null;
+                                gruplar: string[];
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                            }[];
+                            toplam_satir: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/rapor/ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yonetici paneli: aktif ogrenci sayisi ile grup ve ogretmen dizini. Ogretmen yalniz atandigi gruplari gorur. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Format: date
+                             * @description Kurum yerel günü, dahil.
+                             */
+                            baslangic: string;
+                            /**
+                             * Format: date
+                             * @description Kurum yerel günü, dahil (bugün).
+                             */
+                            bitis: string;
+                            donem_gun: number;
+                            gruplar: {
+                                ad: string;
+                                aktif_ogrenci: number;
+                                /** Format: uuid */
+                                grup_id: string;
+                                tur: string;
+                            }[];
+                            /**
+                             * @description Yanıtı daraltan izin kapsamı (öğretmen: `grup`).
+                             * @enum {string}
+                             */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            kurum: {
+                                aktif_ogrenci: number;
+                                grup_sayisi: number;
+                                ogretmen_sayisi: number;
+                            };
+                            ogretmenler: {
+                                aktif_ogrenci: number;
+                                gorunen_ad: string | null;
+                                grup_sayisi: number;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -12051,6 +12401,351 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/rapor/disa-aktar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Panel gostergelerini gercek .xlsx olarak indir: kurum ozeti, grup ve ogretmen kirilim sayfalari. Sayilar panelle ayni fonksiyonlardan gelir; kapsam rolun izin kapsamina gore daralir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/rapor/odev": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teslim edilmeyen odev satirlari (teslim tarihi donemde gelmis, hala `atandi`); en eski teslim tarihi once; en cok 200 satir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                    /** @description Yalnız bu grubun satırları. */
+                    grup_id?: string;
+                    /** @description Yalnız bu öğretmenin satırları. */
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            satirlar: {
+                                baslik: string;
+                                durum: string;
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                odev_id: string;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                ogrenci_odev_id: string;
+                                /** Format: date-time */
+                                son_teslim_at: string;
+                            }[];
+                            toplam_satir: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/rapor/ozet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yonetici paneli: odev teslim orani, plan tamamlama orani, soru ilk cevap suresi (ortalama/medyan) ve etkin ogrenci; kurum, grup ve ogretmen kirilimi. Ogretmen yalniz atandigi gruplari gorur. Modul kapaliysa gosterge `null`. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Format: date
+                             * @description Kurum yerel günü, dahil.
+                             */
+                            baslangic: string;
+                            /**
+                             * Format: date
+                             * @description Kurum yerel günü, dahil (bugün).
+                             */
+                            bitis: string;
+                            donem_gun: number;
+                            gruplar: {
+                                etkin_ogrenci: number;
+                                /** Format: uuid */
+                                grup_id: string;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                odev: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                plan: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                soru: {
+                                    cevaplanan: number;
+                                    medyan_ilk_cevap_sn: number | null;
+                                    ortalama_ilk_cevap_sn: number | null;
+                                    soru_sayisi: number;
+                                } | null;
+                            }[];
+                            /**
+                             * @description Yanıtı daraltan izin kapsamı (öğretmen: `grup`).
+                             * @enum {string}
+                             */
+                            kapsam: "kendi" | "grup" | "sube" | "kurum";
+                            kurum: {
+                                /** @description Son 7 günde yoklaması alınan, ödev teslim eden, plan görevi tamamlayan veya soru soran öğrenci. */
+                                etkin_ogrenci: number;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                odev: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                plan: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                soru: {
+                                    cevaplanan: number;
+                                    medyan_ilk_cevap_sn: number | null;
+                                    ortalama_ilk_cevap_sn: number | null;
+                                    soru_sayisi: number;
+                                } | null;
+                            };
+                            ogretmenler: {
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                odev: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** Format: uuid */
+                                ogretmen_id: string;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                plan: {
+                                    oran: number | null;
+                                    pay: number;
+                                    payda: number;
+                                } | null;
+                                /** @description Modül kurumda kapalıysa `null`. */
+                                soru: {
+                                    cevaplanan: number;
+                                    medyan_ilk_cevap_sn: number | null;
+                                    ortalama_ilk_cevap_sn: number | null;
+                                    soru_sayisi: number;
+                                } | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/rapor/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan tamamlama alt listesi: ogrenci bazinda tamam/kismen/yapilmadi/bekliyor, en dusuk oran once; en cok 200 satir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                    /** @description Yalnız bu grubun satırları. */
+                    grup_id?: string;
+                    /** @description Yalnız bu öğretmenin satırları. */
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            satirlar: {
+                                ayrinti: {
+                                    [key: string]: number;
+                                };
+                                gorunen_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                oran: number | null;
+                                pay: number;
+                                payda: number;
+                            }[];
+                            toplam_satir: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/rapor/soru": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Donemde sorulan sorular: cevap bekleyenler ve en uzun ilk cevap suresi once; en cok 200 satir. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Son N gün (kurum saat dilimiyle, bugün dahil). */
+                    donem?: "7" | "30";
+                    /** @description Yalnız bu grubun satırları. */
+                    grup_id?: string;
+                    /** @description Yalnız bu öğretmenin satırları. */
+                    ogretmen_id?: string;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            satirlar: {
+                                brans_kodu: string;
+                                durum: string;
+                                gorunen_ad: string | null;
+                                /** @description Cevap beklemede ise `null`. */
+                                ilk_cevap_sn: number | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: uuid */
+                                soru_id: string;
+                                /** Format: date-time */
+                                sorulma_at: string;
+                            }[];
+                            toplam_satir: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

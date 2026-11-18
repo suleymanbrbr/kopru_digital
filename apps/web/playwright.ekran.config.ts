@@ -8,7 +8,7 @@ export default defineConfig({
   testDir: './ekran',
   workers: 1,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${String(process.env.E2E_MOCK_PORT ?? 3000)}`,
     locale: 'tr-TR',
     timezoneId: 'Europe/Istanbul',
     ...kullan,

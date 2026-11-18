@@ -2,6 +2,7 @@ import type { NextRequest, NextResponse } from 'next/server';
 
 import { dersMock } from './ders-mock';
 import { kayitMock } from './kayit-mock';
+import { raporMock } from './rapor-mock';
 import {
   servisVekili,
   yolIzinliMi as ortakYolIzinliMi,
@@ -24,6 +25,8 @@ export const DERS_IZINLI_YOLLAR: readonly RegExp[] = [
   // Geri bildirim: bekleyenler, ozet ve ogrenci gecmisi (ders bazli uclar `dersler` altindadir).
   /^kurumlar\/[^/]+\/geri-bildirim\/(bekleyen|ozet)$/,
   /^kurumlar\/[^/]+\/ogrenciler\/[^/]+\/geri-bildirimler$/,
+  // Yonetici paneli
+  /^kurumlar\/[^/]+\/rapor\/(ozet|devam|anladim)$/,
 ];
 
 export function dersYoluIzinliMi(parcalar: readonly string[]): boolean {
@@ -32,7 +35,7 @@ export function dersYoluIzinliMi(parcalar: readonly string[]): boolean {
 
 /** Once kayit/geri bildirim mock'u, ilgilenmezse takvim/yoklama mock'u. */
 function mock(istek: MockIstek) {
-  return kayitMock(istek) ?? dersMock(istek);
+  return raporMock('ders', istek) ?? kayitMock(istek) ?? dersMock(istek);
 }
 
 const tanim: VekilTanimi = { servis: 'ders', izinli: DERS_IZINLI_YOLLAR, mock };

@@ -18,6 +18,7 @@ describe('navigasyon yapilandirmasi', () => {
   it('ogretmen menusu belirtilen sirayla gelir', () => {
     expect(yollar('ogretmen')).toEqual([
       'bugun',
+      'panel',
       'takvim',
       'yoklama',
       'ogrenciler',
@@ -30,6 +31,17 @@ describe('navigasyon yapilandirmasi', () => {
       'kayitlar',
       'finans',
     ]);
+  });
+
+  it('panel: ogretmen, yonetici ve sahipte vardir, ogrencide yoktur; modul kapaliyken de gorunur', () => {
+    for (const rol of ['ogretmen', 'yonetici', 'sahip'] as const) {
+      expect(yollar(rol, [])).toContain('panel');
+      expect(bolumDurumu('panel', { rol, acikModuller: [] }).durum).toBe('acik');
+    }
+    expect(yollar('ogrenci')).not.toContain('panel');
+    expect(bolumDurumu('panel', { rol: 'ogrenci', acikModuller: tumModuller }).durum).toBe(
+      'yetkisiz',
+    );
   });
 
   it('ogrenci menusu belirtilen sirayla gelir', () => {
