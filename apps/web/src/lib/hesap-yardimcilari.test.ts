@@ -57,7 +57,12 @@ describe('BFF izinli yollar', () => {
     expect(yolIzinliMi(['davetler', 'kabul'])).toBe(true);
     expect(yolIzinliMi(['oturumlar', 'tumunu-kapat'])).toBe(true);
     expect(yolIzinliMi(['sinif-kodu', 'katil'])).toBe(true);
-    expect(yolIzinliMi(['kurumlar', 'k1', 'modul-ayarlari'])).toBe(false);
+    // Modul ayarlari ve yonetici paneli (rapor) uclari: yetki api'de (`modul.ayar.yaz`, `rapor.oku`) denetlenir.
+    expect(yolIzinliMi(['kurumlar', 'k1', 'modul-ayarlari'], 'PUT')).toBe(true);
+    expect(yolIzinliMi(['kurumlar', 'k1', 'rapor', 'ozet'])).toBe(true);
+    expect(yolIzinliMi(['kurumlar', 'k1', 'rapor', 'ogrenciler'])).toBe(true);
+    expect(yolIzinliMi(['kurumlar', 'k1', 'rapor', 'baska'])).toBe(false);
+    expect(yolIzinliMi(['kurumlar', 'k1', 'modul-ayarlari', 'x'])).toBe(false);
     expect(yolIzinliMi(['ben'])).toBe(false);
     expect(yolIzinliMi(['kurumlar', '..', 'gruplar'])).toBe(false);
     expect(yolIzinliMi([])).toBe(false);
