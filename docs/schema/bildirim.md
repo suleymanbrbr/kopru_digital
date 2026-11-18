@@ -28,6 +28,7 @@ erDiagram
   duyuru_alicilari }o--|| uyelik_kopyalari : "alici"
   sablonlar ||--o{ bildirimler : "sablon"
   zamanlanmis_bildirimler ||--o| bildirimler : "uretir"
+  ders_planlari ||--o{ zamanlanmis_bildirimler : "ders"
   sms_kullanimlari }o--|| kurum_kopyalari : "kota"
   uyelik_kopyalari ||--o{ grup_uyesi_kopyalari : "uye"
 ```
@@ -209,9 +210,16 @@ Profil: `K`. RLS: evet.
 | `gonderim_at` | timestamptz | hayır | | `ders.baslangic_at - hatirlatma_dk` (alıcının `ders_hatirlatma_dk`'ı) |
 | `veri` | jsonb | hayır | | |
 | `iptal_at` | timestamptz | evet | | |
+| `iptal_nedeni` | text | evet | | **Sapma (migration 0003).** `ders`, `yoklama`, `teslim`, `gun` kalıcı; `ayar` (kullanıcı hatırlatmayı kapattı) ve `gecmis` (zamanı geçti) **geri alınabilir**: ayar açılınca ya da erteleme yeni zamanı geleceğe taşıyınca satır yeniden etkinleşir. |
 | `uretildi_at` | timestamptz | evet | | |
 
-Kısıtlar: `UNIQUE (kurum_id, kaynak_turu, kaynak_id, alici_id, sablon_kodu)`. `ders.ders.degisti.v1` geldiğinde: iptalse `iptal_at`; ertelendiyse `gonderim_at` yeniden hesaplanır (`UPDATE`, `uretildi_at` NULL'a döner); planlandıysa eklenir. Dakikalık iş `gonderim_at <= now() AND iptal_at IS NULL AND uretildi_at IS NULL` satırlarını `bildirimler`e dönüştürür. İndeks: `(gonderim_at) WHERE iptal_at IS NULL AND uretildi_at IS NULL`, `(kurum_id, kaynak_id)`. Olaylar: yok.
+`kaynak_turu` değerleri: `ders` (`kaynak_id` = ders; şablonlar `ders_hatirlatma`, `ders_geri_bildirim`), `odev` (`odev_teslim_yaklasiyor`), `ogretmen_gun` (`ogretmen_sabah`; `kaynak_id` = `(ogretmen_id, yerel gün)`'den türetilmiş belirlenimci UUID). Kısıtlar: `UNIQUE (kurum_id, kaynak_turu, kaynak_id, alici_id, sablon_kodu)`. `ders.ders.degisti.v1` geldiğinde: iptalse `iptal_at`; ertelendiyse `gonderim_at` yeniden hesaplanır (`UPDATE`, `uretildi_at` NULL'a döner); planlandıysa eklenir. İş (`zamanlanmis.uret`, **sapma: dakikalık değil, 30 sn**, `BILDIRIM_ZAMANLANMIS_ARALIK_MS`) `gonderim_at <= now() AND iptal_at IS NULL AND uretildi_at IS NULL` satırlarını kurum başına RLS'li işlemde `FOR UPDATE SKIP LOCKED` ile `bildirimUret`e verir. Geçmişte kalmış hatırlatma **eklenmez** (var olan satır `gecmis` ile iptal); 24 saati aşan gecikmiş satır iptal edilir. İndeks: `(gonderim_at) WHERE iptal_at IS NULL AND uretildi_at IS NULL`, `(kurum_id, kaynak_id)`. Olaylar: yok.
+
+### `bildirim.ders_planlari`
+
+**Eklendi (migration 0003).** `ders.ders.degisti.v1`'den beslenen küçük yerel kopya (ders başına tek satır). Öğretmen sabah özeti (günün ders sayısı ve ilk dersi) ve ders sonu geri bildirimi (ders `tamamlandi` mı?) için gerekir; ders olayında olmayan bir bilgi taşımaz, kişisel veri yoktur.
+
+Profil: `K` (UUID `id` yok; PK `ders_id`). RLS: evet. Sütunlar: `ders_id uuid` PK, `kurum_id`, `ogretmen_id uuid` (üyelik), `baslangic_at`, `bitis_at` (`timestamptz`), `durum` (`planli`/`tamamlandi`/`iptal`), `son_olay_at`, `son_olay_id` (kopya sıralaması: daha eski ve **farklı durumlu** olay yeni durumu ezmez; aynı durumun parçaları her sırada uygulanır). İndeks: `(kurum_id, ogretmen_id, baslangic_at) WHERE durum <> 'iptal'`. Olaylar: yok.
 
 ## Duyurular
 
@@ -284,7 +292,33 @@ Kurum başına aylık SMS sayacı. Profil: `K` (UUID `id` yok). PK `(kurum_id, d
 | `hesap.*` kopya olayları | | Kopya upsert |
 | `hesap.kullanici.silindi.v1` | | Veri temizliği |
 
-Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya` (kopyalar). **Uygulananlar (paket B1):** kopya olayları (kurum, kademe, üyelik, grup, grup üyesi, atama, modül ayarı); `ogrenme.soru_mesaji.eklendi.v1` (`tur = cevap`, öğrenciye `soru_cevaplandi`, `tekil_anahtar = soru_cevaplandi:{mesaj_id}`); `motivasyon.seri.risk.v1` (öğrenciye `seri_hatirlatma`, `gecerlilik_bitis_at = gun_bitis_at`). Diğer eşlemeler `src/eslemeler/` altına eklenir. `hesap.kullanici.degisti/silindi.v1` sözleşmeleri henüz yok (kullanıcı kopyası ve veri temizliği bekliyor).
+Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya` (kopyalar). **Uygulananlar (paket B1):** kopya olayları (kurum, kademe, üyelik, grup, grup üyesi, atama, modül ayarı); `ogrenme.soru_mesaji.eklendi.v1` (`tur = cevap`, öğrenciye `soru_cevaplandi`, `tekil_anahtar = soru_cevaplandi:{mesaj_id}`); `motivasyon.seri.risk.v1` (öğrenciye `seri_hatirlatma`, `gecerlilik_bitis_at = gun_bitis_at`). **Uygulananlar (paket B2):** aşağıdaki tüm Faz 1 eşlemeleri (`src/eslemeler/`, şablonlar `src/sablonlar-eslemeler.ts`):
+
+| Olay | Alıcı | Şablon (kategori) / `tekil_anahtar` |
+| --- | --- | --- |
+| `ders.ders.degisti` `iptal_edildi` | katılımcı öğrenciler; `iptal_kaynagi <> 'ogretmen'` ise ders öğretmeni | `ders_iptal`, `ders_iptal_ogretmen` (`ders`) / `ders_iptal:{ders_id}` |
+| `ders.ders.degisti` `ertelendi` | öğrenciler (öğretmene yok: erteleyen odur) | `ders_ertelendi` (`ders`) / `ders_ertelendi:{ders_id}:{baslangic_ms}` |
+| `ders.ders.degisti` `planlandi` + `telafi` | öğrenciler | `telafi_planlandi` (`ders`) / `telafi_planlandi:{ders_id}` |
+| `ders.yoklama.kaydedildi` `gelmedi`/`gec` | öğrenci | `yoklama_gelmedi`, `yoklama_gec` (`yoklama`) / `{kod}:{yoklama_id}:{yoklama_surumu}` |
+| `ders.kaynak.eklendi` | öğrenciler (parçalı) | `kayit_eklendi`, `materyal_eklendi` (`kayit`) / `kaynak_eklendi:{kaynak_id}` |
+| `ders.kaynak.sorun_bildirildi` | `ekleyen_id` | `kaynak_sorun` (`kayit`) / `kaynak_sorun:{sorun_id}` |
+| `ogrenme.odev.yayinlandi` | öğrenciler (parçalı) | `odev_yayinlandi` (`odev`) / `odev_yayinlandi:{odev_id}` |
+| `ogrenme.odev.teslim_edildi` | `veren_id` | `odev_teslim_edildi` (`odev`) / `odev_teslim_edildi:{ogrenci_odev_id}` (yeniden teslimde `:{olay_id}` eklenir) |
+| `ogrenme.odev.incelendi` | öğrenci | `odev_incelendi` (`odev`) / `odev_incelendi:{ogrenci_odev_id}:{sonuc}` |
+| `ogrenme.soru.sorildi` | `hedef_ogretmen_idleri` (boşsa yok) | `yeni_soru` (`soru`) / `yeni_soru:{soru_id}` |
+| `ogrenme.soru_mesaji.eklendi` `takip` | `alici_idleri` (yazar hariç) | `soru_takip` (`soru`) / `soru_takip:{mesaj_id}` (`cevap` B1'de) |
+| `motivasyon.seviye.atladi`, `rozet.kazanildi`, `karakter.evrildi`, `seri.kilometre_tasi`, `seri.bozuldu` | öğrenci | `seviye_atladi`, `rozet_kazanildi`, `karakter_evrildi`, `seri_kilometre_tasi`, `seri_bozuldu`/`seri_onarilabilir` (`oyunlastirma`) |
+| `finans.kredi.azaldi`, `tahsilat.alindi`, `paket.satildi` | öğrenci | `kredi_azaliyor`, `tahsilat_alindi`, `paket_satildi` (`finans`) |
+| `hesap.davet.kabul_edildi` | `davet_eden_id` | `davet_kabul_edildi` (`sistem`) / `davet_kabul_edildi:{davet_id}` |
+
+Parçalı olaylarda (`parca_no`) her parça kendi alıcılarını işler; ortak alıcılar (öğretmen) `tekil_anahtar` ile tekillenir. **Alıcı kimlikleri** (`ogrenci_id`, `ogretmen_id`, `veren_id`, `ekleyen_id`, `davet_eden_id`, `alici_idleri`...) hepsi `hesap.uyelikler.id`'dir ([api.md](api.md)); doğrudan `bildirimUret`in `aliciUyelikIdleri`ne verilir. **Finans kararı:** şartname "push metinlerinde ücret, not veya hassas bilgi yer almaz" der; **tutar, yöntem ve makbuz no ne push'ta ne kutuda yazılır** (kutuda yalnız ders sayısı: kalan kredi, paket kredisi). Kişisel/serbest metin (ad, not, ödev başlığı, rozet adı) hiçbir bildirimde yoktur; ayrıntı derin bağlantıdadır (`kopru://ders/{id}`, `odev/{id}`, `soru/{id}`, `kayit/{id}`, `bugun`).
+
+**Zamanlanmış bildirimler** (`src/ders-zamanlama.ts`, `src/zamanlama.ts`, iş `src/zamanlanmis.ts`):
+
+- **Ders hatırlatma** (`ders_hatirlatma`, yalnız öğrenci): ders planlanınca/ertelenince/güncellenince öğrenci başına `gonderim_at = baslangic_at - ders_hatirlatma_dk` (varsayılan 60; `0` = kapalı: satır `iptal_nedeni='ayar'` ile yazılır). Erteleme `gonderim_at`ı yeniden hesaplar ve `uretildi_at`ı sıfırlar; önceki zamanda üretilmiş hatırlatma kutuda gizlenir (`tekil_anahtar` = `ders_hatirlatma:{ders_id}:{baslangic_ms}`). İptalde bekleyen satırlar `iptal_at` (`ders`), üretilmiş hatırlatma gizlenir. `gecerlilik_bitis_at = bitis_at`. Üretim anında `ertelenemez` = başlangıca <= 30 dk kalmış **ya da** sessiz saat dersin başlangıcından sonra bitiyor (ertelemek anlamsız) -> sessiz saatte push `atlandi (sessiz_saat)`, kutu yazılır. Kullanıcı `PUT .../ayarlar` ile `ders_hatirlatma_dk` değiştirince bekleyen satırlar aynı işlemde yeniden hesaplanır (0 -> iptal, sonra açılırsa yeniden etkin).
+- **Öğretmen sabah bildirimi** (`ogretmen_sabah`, `ders` kategorisi, tercihle kapatılabilir): öğretmenin yerel günü için tek satır; `gonderim_at = günün ilk dersi - 30 dk`; ders eklenince/iptal/ertelenince (eski ve yeni gün) `ders_planlari`ndan yeniden hesaplanır; ders kalmazsa `iptal (gun)`. Metin: "Bugün N dersin var. İlki saat HH:MM'de." (N iptal olmayan ders sayısı). 30 dk kala olduğundan sessiz saatte ertelenmez (atlanır).
+- **Ders sonu geri bildirimi** (`ders_geri_bildirim`, `ders` kategorisi): planlanınca öğrenci başına `bitis_at + 10 dk`; **yalnız ders `tamamlandi` (yoklama alındı) olunca** üretilir (planlı derste iş satırı seçmez; 48 saat sonra iptal); `gelmedi`/`izinli` öğrencinin satırı iptal (`yoklama`), sonradan `geldi`/`gec`e düzeltilirse yeniden etkin; ders iptalinde iptal; `gecerlilik_bitis_at = bitis_at + 24 saat` (API'nin güncelleme penceresi).
+- **Ödev teslim yaklaşıyor** (`odev_teslim_yaklasiyor`): `ogrenme.odev.yayinlandi` ile `son_teslim_at - 24 saat` (geçmişse/`son_teslim_at` yoksa eklenmez); o öğrencinin `teslim_edildi` olayı satırı iptal eder (`teslim`) ve üretilmişse kutuda gizler; `gecerlilik_bitis_at = son_teslim_at`. `hesap.kullanici.degisti/silindi.v1` sözleşmeleri henüz yok (kullanıcı kopyası ve veri temizliği bekliyor).
 
 ## Üretilen olaylar
 

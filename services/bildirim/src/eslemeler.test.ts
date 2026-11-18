@@ -546,6 +546,18 @@ describe.skipIf(dbYok())('olay eslemeleri (bildirim_app, kurum baglami)', () => 
       expect(z?.gonderim_at.getTime()).toBe(yarin(12).getTime() - 30 * DK_MS);
     });
 
+    it('ayni ogretmenin iki dersi eszamanli islenirse ozet yine 2 dersi sayar (ogretmen kilidi)', async () => {
+      const k = await kurumKur(1);
+      const olaylar = [
+        dersOlayi(k, { baslangic_at: iso(yarin(10)) }),
+        dersOlayi(k, { baslangic_at: iso(yarin(15)) }),
+      ];
+      await Promise.all(olaylar.map((e) => calistir(k.kurumId, e)));
+      const [z] = await zamanlanmis(k.kurumId, 'ogretmen_sabah');
+      expect(z?.veri.ders_sayisi).toBe(2);
+      expect(z?.gonderim_at.getTime()).toBe(yarin(10).getTime() - 30 * DK_MS);
+    });
+
     it('is uretir: kutuda sayi ve ilk saat; tum dersler iptal edilince satir iptal', async () => {
       const k = await kurumKur(1);
       const d1 = uuidv7();

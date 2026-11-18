@@ -320,6 +320,9 @@ export async function sabahiYenile(
 ): Promise<void> {
   const o = await ogretmenBilgisi(tx, kurumId, ogretmenId);
   if (!o?.aktif) return;
+  // Ayni ogretmenin ders olaylari eszamanli islenirse (tuketici paralelligi) her islem digerinin henuz
+  // islenmemis dersini goremez: ogretmen basina islem kilidi ve kilit sonrasi (yeni anlik goruntu) sayim.
+  await tx.execute(sql`select pg_advisory_xact_lock(727005, hashtext(${ogretmenId}))`);
   const gunler = new Map<string, { yil: number; ay: number; gun: number }>();
   for (const an of anlar) {
     const y = yerelParcalar(an, o.saatDilimi);
