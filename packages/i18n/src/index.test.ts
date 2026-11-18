@@ -2,6 +2,8 @@ import {
   BILDIRIM_KANALLARI,
   BILDIRIM_KATEGORILERI,
   MODUL_KODLARI,
+  PLATFORM_ROLLERI,
+  PlatformMesajOnemSema,
   type ModulKodu,
 } from '@kopru/contracts';
 import { describe, expect, it } from 'vitest';
@@ -30,5 +32,14 @@ describe('bildirim adlari', () => {
   it('kategori ve kanal anahtarlari @kopru/contracts ile birebir ayni', () => {
     expect(Object.keys(tr.bildirim.kategori).sort()).toEqual([...BILDIRIM_KATEGORILERI].sort());
     expect(Object.keys(tr.bildirim.kanal).sort()).toEqual([...BILDIRIM_KANALLARI].sort());
+  });
+});
+
+describe('platform adlari', () => {
+  it('rol ve mesaj onemi anahtarlari @kopru/contracts ile birebir ayni', () => {
+    expect(Object.keys(tr.platform.rol).sort()).toEqual([...PLATFORM_ROLLERI].sort());
+    expect(Object.keys(tr.platform.mesajOnem).sort()).toEqual(
+      [...PlatformMesajOnemSema.options].sort(),
+    );
   });
 });

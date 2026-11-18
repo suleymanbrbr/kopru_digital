@@ -26,6 +26,21 @@ export const tr = {
     oyunlastirma: 'Oyunlaştırma',
     duyuru: 'Duyuru',
   },
+  /** Platform yonetimi (`/platform/*`) ve herkese acik bakim/duyuru mesaji. Anahtarlar `@kopru/contracts` ile ayni (test). */
+  platform: {
+    rol: { destek: 'Destek', yonetici: 'Yönetici' },
+    mesajOnem: { bilgi: 'Bilgi', uyari: 'Uyarı', kritik: 'Kritik' },
+    mesaj: {
+      baslik: 'Duyuru',
+      kapat: 'Anladım',
+    },
+    ikinciAdim: {
+      baslik: 'İki adımlı doğrulama',
+      kodEtiketi: 'Doğrulama kodu',
+      yedekKod: 'Yedek kod kullan',
+      gerekli: 'Platform işlemleri için iki adımlı doğrulamayı tamamlayın.',
+    },
+  },
   giris: {
     baslik: 'Hoş geldin',
     telefon: 'Telefon numaran',
