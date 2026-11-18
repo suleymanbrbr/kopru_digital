@@ -12,6 +12,7 @@ import {
   motivasyonSeriBozuldiV1,
   motivasyonSeriKilometreTasiV1,
   motivasyonSeviyeAtladiV1,
+  ogrenmeMufredatYayinlandiV1,
   ogrenmeOdevIncelendiV1,
   ogrenmeOdevTeslimEdildiV1,
   ogrenmeOdevYayinlandiV1,
@@ -712,6 +713,64 @@ describe.skipIf(dbYok())('olay eslemeleri (bildirim_app, kurum baglami)', () => 
           },
         });
       }
+    });
+  });
+
+  // --- platform mufredat duyurusu -------------------------------------------------------------
+  describe('ogrenme.mufredat.yayinlandi', () => {
+    const olay = (kurumId: string, surumNo = 2) =>
+      ogrenmeMufredatYayinlandiV1.create({
+        ...zarf(kurumId),
+        data: {
+          katalog_kodu: 'tyt',
+          surum_no: surumNo,
+          eklenen: 3,
+          yeniden_adlandirilan: 1,
+          tasinan: 1,
+          birlesen: 2,
+          kaldirilan: 4,
+        },
+      });
+
+    it('kurumun etkin sahip ve yoneticilerine yalniz kutu bildirimi; ogretmen/ogrenci/askidaki uye almaz; tekrar tekil', async () => {
+      const sahip = await aliciKur(o, { rol: 'sahip' });
+      const yonetici = await aliciKur(o, { kurumId: sahip.kurumId, rol: 'yonetici' });
+      const askida = await aliciKur(o, {
+        kurumId: sahip.kurumId,
+        rol: 'yonetici',
+        durum: 'askida',
+      });
+      const hoca = await aliciKur(o, { kurumId: sahip.kurumId, rol: 'ogretmen' });
+      const ogr = await aliciKur(o, { kurumId: sahip.kurumId, rol: 'ogrenci' });
+      for (const a of [sahip, yonetici, hoca, ogr]) await cihazEkle(o, a.kullaniciId);
+
+      const e = olay(sahip.kurumId);
+      await calistir(sahip.kurumId, e);
+      await calistir(sahip.kurumId, e);
+      const b = await bildirimler(sahip.kurumId, 'mufredat_guncellendi');
+      expect(b.map((x) => x.alici_id).sort()).toEqual([sahip.uyelikId, yonetici.uyelikId].sort());
+      expect(b.map((x) => x.alici_id)).not.toContain(askida.uyelikId);
+      expect(b[0]).toMatchObject({
+        kategori: 'duyuru',
+        baslik: 'Müfredat güncellendi',
+        derin_baglanti: 'kopru://kutu',
+        tekil_anahtar: 'mufredat_guncellendi:tyt:2',
+      });
+      expect(b[0]?.govde).toMatch(/TYT müfredatının yeni sürümü \(2\)/);
+      expect(b[0]?.govde).toMatch(/3 konu eklendi, 2 konu taşındı/);
+      expect(b[0]?.veri).toEqual({ katalog_kodu: 'tyt', surum_no: 2 });
+      // Push yok: bu bildirim icin gonderim satiri uretilmez.
+      expect(await gonderimler(sahip.kurumId)).toHaveLength(0);
+
+      // Yeni surum yeni bildirim uretir.
+      await calistir(sahip.kurumId, olay(sahip.kurumId, 3));
+      expect(await bildirimler(sahip.kurumId, 'mufredat_guncellendi')).toHaveLength(4);
+    });
+
+    it('etkin sahip/yonetici kopyasi olmayan kurumda bildirim uretilmez', async () => {
+      const hoca = await aliciKur(o, { rol: 'ogretmen' });
+      await calistir(hoca.kurumId, olay(hoca.kurumId));
+      expect(await bildirimler(hoca.kurumId, 'mufredat_guncellendi')).toHaveLength(0);
     });
   });
 

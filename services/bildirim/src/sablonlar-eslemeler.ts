@@ -242,4 +242,14 @@ export const ESLEME_SABLONLARI: readonly SablonTanimi[] = [
     push: 'Gönderdiğin davet kabul edildi.',
     derinBaglanti: 'kopru://kutu',
   }),
+  // --- platform duyurusu (yalniz kutu) ---
+  ...cift({
+    kod: 'mufredat_guncellendi',
+    kategori: 'duyuru',
+    baslik: 'Müfredat güncellendi',
+    push: 'Müfredat güncellendi.',
+    kutu: '{{katalog_ad}} müfredatının yeni sürümü ({{surum_no}}) yayınlandı: {{eklenen}} konu eklendi, {{tasinan}} konu taşındı ya da yeniden adlandırıldı, {{birlesen}} konu birleştirildi, {{kaldirilan}} konu kullanımdan kaldırıldı. Mevcut ödev ve planların bozulmaz.',
+    derinBaglanti: 'kopru://kutu',
+    yalnizKutu: true,
+  }),
 ];
