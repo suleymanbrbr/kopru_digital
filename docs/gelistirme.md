@@ -197,6 +197,27 @@ pnpm --filter @kopru/motivasyon egri         # seviye egrisi ve hedef tablosu (m
   ```
 - **Uçtan uca deneme:** `services/motivasyon/scripts/xp-akisi.sh` (api + motivasyon + worker'lar; ayrıntı betiğin başında).
 
+## bildirim: gelen kutusu ve push
+
+`services/bildirim`: olaylardan bildirim üreten çekirdek (kutu + push), cihaz/tercih/ayar API'si ve gönderim işi. Şema, kurallar ve sapmalar: [docs/schema/bildirim.md](schema/bildirim.md). Olay eşlemeleri `src/eslemeler/` altındadır (yeni olay = bir dosya + `index.ts` kaydı + `src/sablonlar.ts` şablonu).
+
+```sh
+pnpm --filter @kopru/bildirim db:migrate   # BILDIRIM_DATABASE_OWNER_URL (db sahibi) ile; roller yoksa olusturulur
+pnpm --filter @kopru/bildirim dev          # API (4002): /v1/bildirim/cihazlar, .../kurumlar/{kurum_id}/kutu|tercihler|ayarlar
+pnpm --filter @kopru/bildirim dev:worker   # tuketiciler (bildirim.kopya, bildirim.uretim), gonderim.isle (5 sn), bakim, outbox relay
+```
+
+- `pnpm dev` yalnız servis API'sini başlatır (turbo `dev`); worker her serviste olduğu gibi ayrıca `dev:worker` ile çalışır.
+- **Roller:** `bildirim_owner` (nologin), `bildirim_app` (NOBYPASSRLS; API ve olay tüketicileri), `bildirim_sistem` (BYPASSRLS; gönderim işi, bakım, outbox relay). Var olan Postgres'te init betiği yeniden çalışmaz; `db:migrate` rolleri süper kullanıcı bağlantısıyla oluşturur.
+- **Ortam:** `BILDIRIM_DATABASE_URL` / `BILDIRIM_DATABASE_SISTEM_URL` / `BILDIRIM_DATABASE_OWNER_URL`, `BILDIRIM_AUTH_ENABLED=true` + `JWKS_URL`, `NATS_URL`; `BILDIRIM_PUSH_SAGLAYICI=log|expo` (varsayılan `log`: gönderimi loga yazar, `push gönderimi (log sağlayıcı)` satırı), `BILDIRIM_EXPO_ERISIM_BELIRTECI`, `BILDIRIM_GONDERIM_ARALIK_MS`. Web BFF: `BILDIRIM_URL` (varsayılan `http://localhost:4002`).
+- **Tüketiciler:** `bildirim.uretim` alıcı üyelik kopyası yoksa gecikmeli yeniden dener (`YenidenDene`); hesap verisini kopyalara doldurmak için api'nin `olaylari-yeniden-yayimla` komutu kullanılır. Aynı NATS'a bağlı iki farklı veritabanı aynı adlı tüketiciyi paylaşır, yerel denemede ayrı NATS kullanın.
+- **Testler:** `DATABASE_URL` (süper kullanıcı) ile veritabanı/RLS/üretim/gönderim/API testleri, `NATS_URL` ile tüketici testleri (rastgele sonekli tüketici adları, `baslangic: 'yeni'`):
+  ```sh
+  DATABASE_URL=postgres://postgres:postgres@localhost:5433/postgres NATS_URL=nats://localhost:4222 \
+  pnpm --filter @kopru/bildirim test
+  ```
+- **Uçtan uca deneme:** `services/bildirim/scripts/bildirim-akisi.sh` (api + bildirim + worker'lar + NATS; ayrıntı betiğin başında).
+
 ## Outbox ve olay akışı
 
 - Tablo şablonu: `packages/service-kit/migrations/outbox.sql` (api'de `ortak.outbox`, migration içinde `-- @outbox-sablonu ortak` satırıyla eklenir) (`renderOutboxMigration(schema)` ile şema adı doldurulur). Her servis bunu kendi migration'larına dahil eder.

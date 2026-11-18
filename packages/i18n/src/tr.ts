@@ -4004,6 +4004,41 @@ export const tr = {
       },
     },
   },
+  /**
+   * Bildirim tercih ve gelen kutusu arayuzu metinleri. Anahtarlar `@kopru/contracts` BILDIRIM_KATEGORILERI ve
+   * BILDIRIM_KANALLARI ile birebir aynidir (test). Bildirim ICERIGI (baslik/govde) servis sablonlarindan gelir.
+   */
+  bildirim: {
+    baslik: 'Bildirimler',
+    bos: 'Henüz bildirimin yok.',
+    tumunuOku: 'Tümünü okundu say',
+    arsivle: 'Arşivle',
+    tercihler: 'Bildirim tercihleri',
+    sessizSaat: 'Sessiz saatler',
+    sessizSaatAciklama: 'Bu saatlerde anlık bildirim göndermeyiz; bildirimlerin kutunda birikir.',
+    kilitli: 'Bu bildirim kapatılamaz.',
+    kategori: {
+      ders: 'Ders',
+      yoklama: 'Yoklama',
+      odev: 'Ödev',
+      soru: 'Soru sor',
+      kayit: 'Ders kayıtları',
+      duyuru: 'Duyurular',
+      finans: 'Finans',
+      oyunlastirma: 'Seri ve rozetler',
+      abonelik: 'Abonelik',
+      sistem: 'Hesap ve güvenlik',
+    },
+    kanal: {
+      kutu: 'Gelen kutusu',
+      push: 'Anlık bildirim',
+      eposta: 'E-posta',
+      sms: 'SMS',
+    },
+    hata: {
+      tercih_kilitli: 'Bu bildirim kapatılamaz.',
+    },
+  },
 } as const;
 
 type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };

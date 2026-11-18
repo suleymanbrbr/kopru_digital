@@ -34,7 +34,7 @@ export interface MockYanit {
 }
 
 export interface VekilTanimi {
-  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon';
+  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon' | 'bildirim';
   /** Hedef adres; verilmezse `api` servisi (`<API_URL>/v1/<servis>/<yol>`). */
   hedef?: (yol: string) => string;
   /** Yol parcalarinin (birlestirilmis) eslesmesi gereken desenler. */

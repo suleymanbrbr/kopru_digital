@@ -13,6 +13,8 @@ Tek şema: `bildirim` (+ `ortak`). Roller: `bildirim_owner`, `bildirim_app`, `bi
 - **İletişim bilgisi saklanmaz.** Telefon, e-posta ve ad olaylarda taşınmaz ve bu serviste kopyalanmaz. Gönderim işi `sms`/`eposta` kanalında, gönderim anında `api`dan `GET /ic/kullanicilar/:id/iletisim` ile (servis JWT'si, `aud=api`) alır; yanıt `{gorunen_ad, telefon_e164, eposta, dil}`; bellekte tutulur, yazılmaz. `api` yanıtı vermezse (`5xx`/zaman aşımı) gönderim geçici hata sayılır ve yeniden denenir; kullanıcı silinmişse (`404`) `atlandi`. `gonderimler.hedef_anahtar` HMAC özetidir, düz adres günlüğe yazılmaz.
 - **Gizli içerik** (OTP, davet bağlantısı) olaydan değil, iç uç noktadan gelir: `POST /ic/sms` (servis JWT'si, `aud=bildirim`). Bu içerik `gonderimler.govde`ye yazılmaz (yalnızca `sablon_kodu` ve maske).
 - Tercihler ve kota tüketici tarafında uygulanır. Kullanıcı tercihi kapalı kategorilerde `kutu` yazılır, diğer kanallar atlanır (`atlandi`).
+- **Üretim hattı** (`src/uretim.ts` `bildirimUret`, olaydan bağımsız çekirdek): `olay -> kategori -> şablon -> alıcı (uyelik) -> bildirimler (kutu) -> süzgeç -> gonderimler (push)`. Süzgeç sırası: kurum askıda/kapalı (`kurum_askida`) -> tercih kapalı (`tercih`) -> etkin cihaz yok (`cihaz_yok`) -> günlük üst sınır (`kota`) -> sessiz saat (ertele / `sessiz_saat` / `bayat`). Tüm "atlandı" nedenleri **kullanıcı düzeyindedir** ve tek satır yazar (`hedef_anahtar = '-'`); gönderilecek bildirim **cihaz başına** bir satır yazar (`hedef_anahtar = cihaz id`). Olay eşlemeleri `src/eslemeler/` altındadır (bir dosya + `index.ts` kayıt listesi); eşleme yalnız alıcıyı ve şablon değişkenlerini çıkarıp `bildirimUret`i çağırır.
+- **Günlük push üst sınırı:** `ogrenci` rolündeki alıcıya, kullanıcının yerel gününde (`kullanici_ayarlari.saat_dilimi`, varsayılan `Europe/Istanbul`; gün sınırı yerel 00:00) en çok **5** push; `atlandi` olmayan, `sistem` dışı kategorideki ayrık `bildirim_id` sayısı sayılır. Aşan `atlandi (kota)`. Sayım kurum içidir (RLS); kullanıcı başına işlem kilidiyle yarışsızdır. `sistem` kategorisi sınırdan muaftır ve sayılmaz.
 - Duyuru: içeriğin sahibi bu servistir (`api`da duyuru tablosu yoktur).
 
 ```mermaid
@@ -72,7 +74,7 @@ Profil: `G` (+ `kullanici_id`). RLS: evet, `kullanici_id = ortak.aktif_kullanici
 | `gecersiz_at` | timestamptz | evet | | Sağlayıcı `DeviceNotRegistered` döndürünce |
 | `son_gorulme_at` | timestamptz | hayır | now() | Her açılışta güncellenir |
 
-Kısıtlar: `UNIQUE (push_belirteci)`, `UNIQUE (kullanici_id, cihaz_kimligi)`. Aynı belirteç başka kullanıcıya geçerse (cihaz el değiştirdi) eski satır `aktif=false` yapılır. 60 gündür görülmeyen cihaz pasife alınır. İndeks: `(kullanici_id) WHERE aktif`. Olaylar: yok.
+Kısıtlar: `UNIQUE (kullanici_id, cihaz_kimligi)`, **kısmi** `UNIQUE (push_belirteci) WHERE aktif` (sapma: belirteç benzersizliği yalnız etkin satırlar içindir; el değiştiren cihazın eski kaydı pasif olarak kalır). Aynı belirteç başka kullanıcıya geçerse (cihaz el değiştirdi) eski satır `aktif=false` yapılır. Eski satırın pasiflenmesi RLS'i atlamadan yapılır: belirteci sunan istek `app.devir_belirteci` oturum değişkenini ayarlar; `cihaz_devri_okuma`/`cihaz_devri_pasiflestirme` politikaları yalnız o belirteçli satırı görmeye ve **yalnız pasiflemeye** izin verir. `cihazlar_sahip_degismez_trg` satırın `kullanici_id`sini değiştirilemez kılar. Üretim hattı (kurum bağlamı) cihazları okurken `app.kullanici_id`yi kısa süreliğine alıcıya ayarlar ve geri alır. Çıkışta kayıt silinir (`DELETE`). 60 gündür görülmeyen cihaz pasife alınır. İndeks: `(kullanici_id) WHERE aktif`. Olaylar: yok.
 
 ### `bildirim.tercihler`
 
@@ -102,22 +104,22 @@ Sessiz saatler ve genel ayarlar. Profil: `K` (UUID `id` yok). PK `(kullanici_id,
 | `saat_dilimi` | text | hayır | `'Europe/Istanbul'` | |
 | `ders_hatirlatma_dk` | smallint | hayır | 60 | Ders öncesi hatırlatma (0 = kapalı). CHECK `IN (0,15,30,60,120,1440)` |
 
-Kısıtlar: `CHECK ((sessiz_baslangic IS NULL) = (sessiz_bitis IS NULL))`. **Sessiz saat kuralı:** `push` ve `sms` gönderimleri sessiz aralığa denk gelirse `gonderimler.durum='ertelendi'`, `zamanlanan_at = sessiz_bitis` olur. `kutu` etkilenmez. `sistem` kategorisi ve `ders` kategorisinde başlangıcına 30 dk kalmış hatırlatma sessiz saati **delmez**; bunlar `atlandi (sessiz_saat)` olur. Erteleme 12 saati aşarsa gönderim iptal edilir (bayat). Olaylar: yok.
+Kısıtlar: `CHECK ((sessiz_baslangic IS NULL) = (sessiz_bitis IS NULL))`, `CHECK (sessiz_gunler <@ {1..7})`. **Varsayılanlar kodda uygulanır** (`src/tercih.ts`): kayıt yoksa ya da `sessiz_baslangic/bitis` NULL ise sessiz saat **22:00-08:00**, `Europe/Istanbul`, her gün, `ders_hatirlatma_dk = 60`. `sessiz_gunler = '{}'` sessiz saati **kapatır** (API'de başlangıç = bitiş reddedilir). `sessiz_gunler`, sessiz aralığın **başladığı** günü belirtir (22:00-08:00 aralığında Salı 03:00 için başlangıç günü Pazartesi'dir). **Sessiz saat kuralı:** `push` ve `sms` gönderimleri sessiz aralığa denk gelirse `gonderimler.durum='ertelendi'`, `zamanlanan_at = sessiz_bitis` olur. `kutu` etkilenmez. `sistem` kategorisi ve `ders` kategorisinde başlangıcına 30 dk kalmış hatırlatma sessiz saati **delmez**; bunlar `atlandi (sessiz_saat)` olur. Erteleme 12 saati aşarsa gönderim iptal edilir (`atlandi (bayat)`; ayrıca gönderim işi, planlanan zamandan 12 saatten fazla gecikmiş satırı da `bayat` yapar). Olaylar: yok.
 
 ## Okuma kopyaları
 
-Yalnızca olay tüketicisi yazar. RLS: evet (`kurum_id`), `kullanici_kopyalari` hariç.
+Yalnızca olay tüketicisi yazar. RLS: evet (`kurum_id`), `kullanici_kopyalari` hariç. **Sıralama (sapma):** olay zarfında özne sürümü olmadığından `surum` yerine `(son_olay_at, son_olay_id)` ikilisi (olayın `occurredAt` ve UUIDv7 kimliği) tutulur; daha eski olay kopyayı ezmez, eşit zamanda büyük kimlik kazanır, aynı durumun yeniden yayımı etkisizdir (`motivasyon` ile aynı).
 
 | Tablo | Kaynak olay | Sütunlar | Neden gerekli |
 | --- | --- | --- | --- |
-| `kullanici_kopyalari` | `hesap.kullanici.degisti.v1` | `kullanici_id` PK, `dil`, `durum`, `surum` | Dil ve hesap durumu. **İletişim bilgisi (telefon, e-posta, ad) kopyalanmaz.** RLS yok (kullanıcı düzeyi). Silme olayında satır silinir. |
-| `kurum_kopyalari` | `hesap.kurum.degisti.v1`, `abonelik.abonelik.degisti.v1` | `kurum_id` PK, `ad`, `durum`, `saat_dilimi`, `plan_kodu`, `abonelik_durumu`, `sms_aylik_limit`, `surum`, `abonelik_surumu` | Kurum adı (e-posta), SMS kotası, askıdaki kurumda gönderim durdurma |
-| `uyelik_kopyalari` | `hesap.uyelik.degisti.v1` | `uyelik_id` PK, `kurum_id`, `kullanici_id`, `rol`, `durum`, `kademe_id`, `surum` | Alıcı çözümü (uyelik -> kullanici) ve rol bazlı hedefleme |
-| `kademe_kopyalari` | `hesap.kademe.degisti.v1` | `kademe_id` PK, `kurum_id`, `ad`, `arsivlendi`, `surum` | Duyuru hedefi `kademe` |
-| `grup_kopyalari` | `hesap.grup.degisti.v1` | `grup_id` PK, `kurum_id`, `kademe_id`, `tur`, `ad`, `durum`, `surum` | Duyuru hedefi `grup`, modül çözümü |
-| `grup_uyesi_kopyalari` | `hesap.grup_uyesi.degisti.v1` | PK `(grup_id, ogrenci_id)`, `baslangic_tarihi`, `bitis_tarihi`, `surum` | Grup/kademe duyuru alıcı listesi |
-| `atama_kopyalari` | `hesap.atama.degisti.v1` | `atama_id` PK, `grup_id`, `ogretmen_id`, `brans_kodu`, `bitis_tarihi`, `surum` | Öğretmenin duyuru hedefleme yetkisi (yalnızca atandığı gruplar); soru yönlendirme bildirimi |
-| `modul_ayari_kopyalari` | `hesap.modul_ayari.degisti.v1` | PK `(kurum_id, modul_kodu, kapsam, kapsam_id)`, `acik`, `surum` | `duyuru` modülü kapalıysa duyuru yayını reddedilir |
+| `kullanici_kopyalari` | `hesap.kullanici.degisti.v1` | `kullanici_id` PK, `dil`, `durum`, `son_olay_at`, `son_olay_id` | Dil ve hesap durumu. **İletişim bilgisi (telefon, e-posta, ad) kopyalanmaz.** RLS yok (kullanıcı düzeyi). Silme olayında satır silinir. **Henüz doldurulmaz:** `hesap.kullanici.degisti.v1` sözleşmesi `@kopru/contracts`ta yok; yokken varsayılanlar (`tr`, `aktif`) uygulanır. |
+| `kurum_kopyalari` | `hesap.kurum.degisti.v1`, `abonelik.abonelik.degisti.v1` | `kurum_id` PK, `ad`, `durum`, `saat_dilimi`, `plan_kodu`, `abonelik_durumu`, `sms_aylik_limit`, `son_olay_at`, `son_olay_id`, `abonelik_son_olay_at`, `abonelik_son_olay_id` (abonelik alanları abonelik olayları gelene kadar NULL) | Kurum adı (e-posta), SMS kotası, askıdaki kurumda gönderim durdurma |
+| `uyelik_kopyalari` | `hesap.uyelik.degisti.v1` | `uyelik_id` PK, `kurum_id`, `kullanici_id`, `rol`, `durum`, `kademe_id`, `son_olay_at`, `son_olay_id` | Alıcı çözümü (uyelik -> kullanici) ve rol bazlı hedefleme |
+| `kademe_kopyalari` | `hesap.kademe.degisti.v1` | `kademe_id` PK, `kurum_id`, `ad`, `arsivlendi`, `son_olay_at`, `son_olay_id` | Duyuru hedefi `kademe` |
+| `grup_kopyalari` | `hesap.grup.degisti.v1` | `grup_id` PK, `kurum_id`, `kademe_id`, `tur`, `ad`, `durum`, `son_olay_at`, `son_olay_id` | Duyuru hedefi `grup`, modül çözümü |
+| `grup_uyesi_kopyalari` | `hesap.grup_uyesi.degisti.v1` | PK `(grup_id, ogrenci_id)`, `baslangic_tarihi`, `bitis_tarihi`, `son_olay_at`, `son_olay_id` | Grup/kademe duyuru alıcı listesi |
+| `atama_kopyalari` | `hesap.atama.degisti.v1` | `atama_id` PK, `grup_id`, `ogretmen_id`, `brans_kodu`, `bitis_tarihi`, `son_olay_at`, `son_olay_id` | Öğretmenin duyuru hedefleme yetkisi (yalnızca atandığı gruplar); soru yönlendirme bildirimi |
+| `modul_ayari_kopyalari` | `hesap.modul_ayari.degisti.v1` | PK `(kurum_id, modul_kodu, kapsam, kapsam_id)`, `acik`, `son_olay_at`, `son_olay_id` | `duyuru` modülü kapalıysa duyuru yayını reddedilir |
 
 Kopya ve olay sırası: kopya henüz oluşmamışken gelen bildirim olayı `nak` ile gecikmeli yeniden denenir ([ADR 0002](../adr/0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)). `hesap.kullanici.silindi.v1` gelince `kullanici_kopyalari` satırı, `cihazlar`, `tercihler`, `kullanici_ayarlari` silinir; `bildirimler`/`gonderimler` içindeki alıcı bağlantısı kalır ama `hedef_maske` temizlenir.
 
@@ -138,7 +140,7 @@ Bildirim şablonları. Profil: `GS`. RLS: hayır (global). Tohum verisidir.
 | `derin_baglanti` | text | evet | | Ör. `kopru://odev/{{odev_id}}` |
 | `kisisel_veri_iceriyor` | boolean | hayır | false | `true` ise `push` ve `sms` kanalında kullanılamaz (CHECK) |
 
-Kısıtlar: `CHECK (NOT kisisel_veri_iceriyor OR kanal IN ('kutu','eposta'))`. Şablon sürümü kodla birlikte dağıtılır.
+Kısıtlar: `CHECK (NOT kisisel_veri_iceriyor OR kanal IN ('kutu','eposta'))`. **Kaynak koddur** (`src/sablonlar.ts`; sürüm kodla birlikte dağıtılır): üretim hattı şablonu bellekteki kayıttan okur, worker açılışta tabloya `ON CONFLICT (kod, kanal, dil) DO UPDATE` ile eşler (ayna; içerik değişince `surum` artar). Kayıt yüklenirken doğrulanır: kişisel veri içeren şablon push/sms'te tanımlanamaz; push metninde `ad`, `telefon`, `eposta`, `not`, `ucret`, `tutar`, `bakiye`, `mesaj`... gibi değişken adları yasaktır. `{{degisken}}` yalnız çağıranın verdiği değişkenlerle doldurulur, eksik değişken kalıcı hata sayılır. Bir `kod` için `kutu` şablonu zorunlu, `push` şablonu isteğe bağlıdır (kategorileri aynı olmalı).
 
 ### `bildirim.bildirimler`
 
@@ -186,8 +188,11 @@ Profil: `K`. RLS: evet. Aylık bölümlenir; 180 gün saklanır.
 | `zamanlanan_at` | timestamptz | hayır | now() | Ertelemede sessiz saat bitişi |
 | `gonderildi_at` | timestamptz | evet | | |
 | `maliyet_kurus` | int | evet | | SMS maliyeti |
+| `baslik` | text | evet | | **Sapma.** Push başlığı (kişisel veri içermez). Gizli içerik (OTP, davet) buraya yazılmaz. |
+| `govde` | text | evet | | **Sapma.** Push gövdesi (kişisel veri içermez). |
+| `derin_baglanti` | text | evet | | **Sapma.** Push derin bağlantısı. |
 
-Kısıtlar: `UNIQUE (bildirim_id, kanal, hedef_anahtar) WHERE bildirim_id IS NOT NULL` (aynı bildirim aynı hedefe iki kez gitmez; tüketici yeniden denemesi güvenli). İş: dakikalık `gonderim.isle` işi `durum IN ('beklemede','ertelendi') AND zamanlanan_at <= now()` olan satırları `FOR UPDATE SKIP LOCKED` ile çeker. Hata sınıfları: geçici (zaman aşımı, 5xx) -> `deneme_sayisi+1`, `zamanlanan_at` üstel bekleme (1, 5, 30, 120 dk); kalıcı (`DeviceNotRegistered`, geçersiz numara) -> `basarisiz`, cihaz `gecersiz_at`. İndeks: `(durum, zamanlanan_at) WHERE durum IN ('beklemede','ertelendi')`, `(kurum_id, alici_kullanici_id, created_at DESC)`, `(kurum_id, bildirim_id)`. Olaylar: yok.
+Kısıtlar: `UNIQUE (bildirim_id, kanal, hedef_anahtar) WHERE bildirim_id IS NOT NULL` (aynı bildirim aynı hedefe iki kez gitmez; tüketici yeniden denemesi güvenli), `CHECK ((durum = 'atlandi') = (atlama_nedeni IS NOT NULL))`, `CHECK (deneme_sayisi BETWEEN 0 AND 5)`; `(kurum_id, bildirim_id)` bileşik FK `ON DELETE SET NULL (bildirim_id)` (bildirim 90 günde silinse de gönderim 180 güne kadar kalır). Push metni sütunları (`baslik`, `govde`, `derin_baglanti`) sayesinde gönderim işi `bildirimler`e bakmaz. İş: `gonderim.isle` işi (**sapma: dakikalık değil, 5 sn aralık**, `BILDIRIM_GONDERIM_ARALIK_MS`; olaydan push'a p95 < 30 sn hedefi için) `durum IN ('beklemede','ertelendi') AND zamanlanan_at <= now()` olan satırları `FOR UPDATE SKIP LOCKED` ile çeker. Hata sınıfları: geçici (zaman aşımı, 5xx) -> `deneme_sayisi+1`, `zamanlanan_at` üstel bekleme (1, 5, 30, 120 dk); kalıcı (`DeviceNotRegistered`, geçersiz numara) -> `basarisiz`, cihaz `aktif=false` ve `gecersiz_at`; 5. başarısız denemede `basarisiz`. Garanti en az bir kezdir (gönderim sonrası commit öncesi çökmede aynı push tekrar gidebilir). iOS rozeti = kullanıcının tüm kurumlardaki okunmamış, arşivlenmemiş, geçerli bildirim sayısı. Push sağlayıcısı `BILDIRIM_PUSH_SAGLAYICI=log|expo` ile seçilir (`log`: gönderimi yapılandırılmış log'a yazar ve başarılı sayar; `expo`: 100'lük paketlerle Expo Push API). İndeks: `(durum, zamanlanan_at) WHERE durum IN ('beklemede','ertelendi')`, `(kurum_id, alici_kullanici_id, created_at DESC)`, `(kurum_id, bildirim_id)`. Olaylar: yok.
 
 ### `bildirim.zamanlanmis_bildirimler`
 
@@ -279,11 +284,27 @@ Kurum başına aylık SMS sayacı. Profil: `K` (UUID `id` yok). PK `(kurum_id, d
 | `hesap.*` kopya olayları | | Kopya upsert |
 | `hesap.kullanici.silindi.v1` | | Veri temizliği |
 
-Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya` (kopyalar).
+Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya` (kopyalar). **Uygulananlar (paket B1):** kopya olayları (kurum, kademe, üyelik, grup, grup üyesi, atama, modül ayarı); `ogrenme.soru_mesaji.eklendi.v1` (`tur = cevap`, öğrenciye `soru_cevaplandi`, `tekil_anahtar = soru_cevaplandi:{mesaj_id}`); `motivasyon.seri.risk.v1` (öğrenciye `seri_hatirlatma`, `gecerlilik_bitis_at = gun_bitis_at`). Diğer eşlemeler `src/eslemeler/` altına eklenir. `hesap.kullanici.degisti/silindi.v1` sözleşmeleri henüz yok (kullanıcı kopyası ve veri temizliği bekliyor).
 
 ## Üretilen olaylar
 
 Faz 1'de yoktur. `ortak.outbox` tablosu şemada bulunur (ileride `bildirim.gonderim.basarisiz` gibi olaylar için).
+
+## Kullanıcı API'si (JWT; `/v1/bildirim`)
+
+Sözleşmeler `packages/contracts/src/bildirim/`dadır; kurum bağlamlı uçlar `/v1/bildirim/kurumlar/{kurum_id}/...` (başka kurum `403`).
+
+| Uç | İş |
+| --- | --- |
+| `PUT /v1/bildirim/cihazlar` | Cihaz kaydı/güncelleme (her açılışta); aynı belirteç başka kullanıcıdaysa onunki pasiflenir |
+| `DELETE /v1/bildirim/cihazlar/{cihaz_kimligi}` | Çıkışta kaydı siler (idempotent) |
+| `GET .../kutu?okunmamis=true&imlec=&limit=` | Gelen kutusu: `alici_id = istekteki üyelik`, yeniden eskiye, imleçli (`created_at`, `id`); arşivli ve `gecerlilik_bitis_at` geçmiş gizli |
+| `GET .../kutu/okunmamis-sayisi` | Okunmamış sayısı |
+| `POST .../kutu/{id}/okundu`, `POST .../kutu/tumunu-oku`, `POST .../kutu/{id}/arsivle` | Başkasının bildirimi `404` |
+| `GET/PUT .../tercihler` | 10 kategori x 4 kanal matrisi (varsayılanlar uygulanmış, `sistem` ve `kutu` `kilitli`); kilitli hücreyi değiştirmek `400 tercih_kilitli` |
+| `GET/PUT .../ayarlar` | Sessiz saat, saat dilimi, `ders_hatirlatma_dk` (kayıt yoksa varsayılanlar) |
+
+Web BFF: `/api/bildirim/*` -> `BILDIRIM_URL/v1/bildirim/*` (`apps/web/src/sunucu/bildirim-vekil.ts`).
 
 ## İç çağrılar (olay değil)
 
