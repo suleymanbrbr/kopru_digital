@@ -30,7 +30,12 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
 
   it('bos veritabaninda uygulanir, ikinci calistirma bir sey yapmaz', async () => {
     const ilk = await migrate({ url: ownerUrl });
-    expect(ilk).toEqual(['0001_temel.sql', '0002_bildirim.sql', '0003_duyuru_dagitim.sql']);
+    expect(ilk).toEqual([
+      '0001_temel.sql',
+      '0002_bildirim.sql',
+      '0003_duyuru_dagitim.sql',
+      '0004_ders_planlari.sql',
+    ]);
     expect(await migrate({ url: ownerUrl })).toEqual([]);
     owner = postgres(ownerUrl, { max: 2, onnotice: () => undefined });
   });
@@ -48,6 +53,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
         'atama_kopyalari',
         'bildirimler',
         'cihazlar',
+        'ders_planlari',
         'duyuru_alicilari',
         'duyurular',
         'gonderimler',

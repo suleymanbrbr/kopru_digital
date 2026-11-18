@@ -51,6 +51,22 @@ async function ihlaller(page: Page) {
   );
 }
 
+/**
+ * Bugunun gorevi tamamlaninca XP gelir; mock seviye atlatabilir ve kutlama penceresi acilir (diger
+ * gunlerde bugunun gorevi tamamlanmadigi icin acilmaz). Pencere kapatilir ve "+N XP" animasyonu
+ * (gecis sirasinda opaklik dusuk, axe kontrasti yanlis olcer) bitene kadar beklenir.
+ */
+async function kutlamayiKapat(page: Page) {
+  const harika = page.getByRole('button', { name: 'Harika' });
+  try {
+    await harika.waitFor({ state: 'visible', timeout: 2000 });
+    await harika.click();
+  } catch {
+    // Kutlama yok (bugunun gorevi degil ya da seviye atlanmadi).
+  }
+  await expect(page.locator('.xp-uc')).toHaveCount(0, { timeout: 6000 });
+}
+
 /** Acik ve koyu temada axe ihlali olmamali. */
 async function axeIkiTema(page: Page) {
   for (const tema of ['light', 'dark'] as const) {
@@ -292,6 +308,7 @@ test.describe('haftalik plan', () => {
     // Ders bazinda ozet.
     const ozet = page.getByRole('table', { name: 'Ders bazında planlanan ve gerçekleşen' });
     await expect(ozet.getByRole('row', { name: /Matematik/ })).toContainText('/');
+    await kutlamayiKapat(page);
     await axeIkiTema(page);
 
     // Bugun: bugunku gorevler.

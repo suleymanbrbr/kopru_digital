@@ -8,6 +8,7 @@ import { OUTBOX_TABLOSU } from './ortak.js';
 import { saglayiciSec } from './push/index.js';
 import { sablonlariYukle } from './sablonlar.js';
 import { tuketicileriBaslat } from './tuketiciler.js';
+import { zamanlanmisUret } from './zamanlanmis.js';
 import { istanbulSaati, periyodikIs } from './zamanlayici.js';
 
 const env = loadServiceEnv();
@@ -52,6 +53,20 @@ await runWorker({
         }
       }),
     );
+
+    // Zamanlanmis bildirimler: zamani gelen hatirlatma/ozet/geri bildirim satirlari bildirime cevrilir
+    // (RLS'e tabi `bildirim_app` ile kurum baglaminda; kurumlari `bildirim_sistem` bulur).
+    if (env.DATABASE_URL) {
+      const zamanDb = createDb({ url: env.DATABASE_URL, max: env.DATABASE_POOL_MAX });
+      // Kapanista ters sirayla: once is durur, sonra baglanti kapanir.
+      temizleyiciler.push(async () => zamanDb.close());
+      temizleyiciler.push(
+        periyodikIs('zamanlanmis-uret', env.ZAMANLANMIS_ARALIK_MS, log, async () => {
+          const o = await zamanlanmisUret({ sistem: db, app: zamanDb, log });
+          if (o.uretildi + o.iptal > 0) log.info(o, 'zamanlanmış bildirim işi');
+        }),
+      );
+    }
 
     // Gece bakimi (Istanbul 03:00): pasif cihaz, saklama silmeleri, processed_events.
     temizleyiciler.push(

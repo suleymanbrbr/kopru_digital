@@ -11,7 +11,8 @@ export interface PushMesaji {
   platform: 'ios' | 'android' | 'web';
   title: string;
   body: string;
-  data: { derin_baglanti: string | null; bildirim_id: string | null };
+  /** Mobil, bildirime dokununca bu kuruma gecer (birden cok kurumlu kullanici). */
+  data: { derin_baglanti: string | null; bildirim_id: string | null; kurum_id: string };
   /** iOS rozet sayisi (okunmamis bildirim sayisi). */
   badge?: number;
 }

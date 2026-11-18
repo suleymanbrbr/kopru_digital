@@ -23,6 +23,8 @@ export const envSchema = base.safeExtend({
    * (kismi indeks) ve en kotu durumda ~5 sn gecikme ekler.
    */
   GONDERIM_ARALIK_MS: z.coerce.number().int().min(100).default(5000),
+  /** `zamanlanmis.uret` isi (ders hatirlatma, sabah ozeti, geri bildirim, odev teslim hatirlatmasi) araligi (ms). */
+  ZAMANLANMIS_ARALIK_MS: z.coerce.number().int().min(100).default(30_000),
 });
 
 export type Env = z.output<typeof envSchema>;
