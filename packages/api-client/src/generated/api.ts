@@ -465,6 +465,837 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/platform/ben": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform kimliğim ve ikinci adım durumum */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ikinci_adim: {
+                                kurulu: boolean;
+                                oturumda_dogrulandi: boolean;
+                                yedek_kod_kalan: number;
+                            };
+                            /** Format: uuid */
+                            kullanici_id: string;
+                            /** @enum {string} */
+                            platform_rolu: "destek" | "yonetici";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/denetim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Denetim kayıtları (filtre: kurum, aktör, eylem, tarih; imleçli)
+         * @description `eylem` tam ad veya `onek.*` olabilir. Sıralama `created_at, id` azalan; `sonraki_imlec` bir sonraki sayfa içindir.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    aktor_id?: string;
+                    baslangic?: string;
+                    bitis?: string;
+                    /** @description Tam eylem adı (ör. `platform.modul_ayarla`) veya `onek.*`. */
+                    eylem?: string;
+                    imlec?: string;
+                    kurum_id?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kayitlar: {
+                                /** Format: uuid */
+                                aktor_kullanici_id: string | null;
+                                ayrinti: {
+                                    [key: string]: unknown;
+                                } | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                eylem: string;
+                                /** Format: uuid */
+                                hedef_id: string | null;
+                                hedef_turu: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                ip: string | null;
+                                /** Format: uuid */
+                                kurum_id: string | null;
+                                neden: string | null;
+                                /** Format: uuid */
+                                taklit_kayit_id: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/ikinci-adim/dogrula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Oturumu ikinci adım koduyla (veya yedek kodla) doğrula
+         * @description Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        kod?: string;
+                        yedek_kod?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            dogrulandi: true;
+                            yedek_kod_kalan: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/ikinci-adim/kur": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * İki adımlı doğrulamayı kur (otpauth URI + yedek kodlar)
+         * @description Sır ve yedek kodlar yalnız bu yanıtta gösterilir. Kurulum `onayla` ile bir kodla onaylanana kadar etkin değildir; onaylanmış kurulum yeniden yapılamaz (409). Sıfırlama yalnız `platform:yonetici-ekle --2fa-sifirla` betiğiyle.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            otpauth_uri: string;
+                            /** @description Base32 sır; QR okutulamazsa elle girilir. */
+                            sir: string;
+                            /** @description Tek kullanımlık yedek kodlar; yalnız bu yanıtta gösterilir. */
+                            yedek_kodlar: string[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/ikinci-adim/onayla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kurulumu ilk kodla onayla (oturumu da doğrulanmış sayar) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        kod: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            dogrulandi: true;
+                            yedek_kod_kalan: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kurum listesi ve arama (ad, kurum kimliği, sahip telefonu/e-postası)
+         * @description Sahip iletişim bilgisi yalnız maskeli döner. Telefon ve e-posta aramasında tam değer gerekir (öneklerle arama yoktur).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    durum?: "aktif" | "askida" | "kapali";
+                    imlec?: string;
+                    limit?: number;
+                    /** @description Kurum adı, kurum kimliği, sahibin telefonu (tam) veya e-postası (tam). */
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kurumlar: {
+                                ad: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** @enum {string} */
+                                durum: "aktif" | "askida" | "kapali";
+                                /** Format: uuid */
+                                id: string;
+                                sahipler: {
+                                    eposta_maskeli: string | null;
+                                    /** Format: uuid */
+                                    kullanici_id: string;
+                                    telefon_maskeli: string | null;
+                                }[];
+                                /** @enum {string} */
+                                tur: "bireysel" | "ekip" | "kurum";
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum detayı: üye sayıları, durum, modül ayarları, beta özellikleri */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ad: string;
+                            beta_ozellikleri: {
+                                acik: boolean;
+                                ozellik_kodu: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                            }[];
+                            /** Format: date-time */
+                            created_at: string;
+                            /** @enum {string} */
+                            durum: "aktif" | "askida" | "kapali";
+                            /** Format: uuid */
+                            id: string;
+                            moduller: {
+                                /** @description Kademe/grup düzeyinde kapatılan ayar sayısı. */
+                                alt_duzey_kapali_sayisi: number;
+                                /** @description Kurum düzeyinde etkin değer (kayıt yoksa true). */
+                                kurum_acik: boolean;
+                                kurum_ayari_var: boolean;
+                                /** @enum {string} */
+                                modul_kodu: "takvim" | "yoklama" | "geri_bildirim" | "kayitlar" | "finans" | "odev" | "haftalik_plan" | "deneme" | "soru_sor" | "oyunlastirma" | "duyuru";
+                            }[];
+                            saat_dilimi: string;
+                            sahipler: {
+                                eposta_maskeli: string | null;
+                                /** Format: uuid */
+                                kullanici_id: string;
+                                telefon_maskeli: string | null;
+                            }[];
+                            /** @enum {string} */
+                            tur: "bireysel" | "ekip" | "kurum";
+                            uye_sayilari: {
+                                aktif_toplam: number;
+                                diger_durumlar: number;
+                                rollere_gore: {
+                                    [key: string]: number;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/beta/{ozellik_kodu}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Kuruma özel beta özellik bayrağı aç/kapat; acik=null bayrağı siler */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ozellik_kodu: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description null: bayrağı sil. */
+                        acik: boolean | null;
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            acik: boolean | null;
+                            ozellik_kodu: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/moduller/{modul_kodu}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Kuruma özel modül aç/kapat (kurum düzeyi); acik=null varsayılana döner
+         * @description `hesap.modul_ayari.degisti.v1` olayı aynı işlemde yayımlanır; diğer servislerin kopyaları güncellenir. Neden denetime yazılır.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    modul_kodu: "takvim" | "yoklama" | "geri_bildirim" | "kayitlar" | "finans" | "odev" | "haftalik_plan" | "deneme" | "soru_sor" | "oyunlastirma" | "duyuru";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description null: kuruma özel ayarı sil (varsayılana dön). */
+                        acik: boolean | null;
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kurum_acik: boolean;
+                            kurum_ayari_var: boolean;
+                            /** @enum {string} */
+                            modul_kodu: "takvim" | "yoklama" | "geri_bildirim" | "kayitlar" | "finans" | "odev" | "haftalik_plan" | "deneme" | "soru_sor" | "oyunlastirma" | "duyuru";
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mesajlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bakım/duyuru mesajları (son 50) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            mesajlar: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_at: string | null;
+                                metin: string;
+                                /** @enum {string} */
+                                onem: "bilgi" | "uyari" | "kritik";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Tüm kullanıcılara görünen bakım/duyuru mesajı yayınla
+         * @description Mesaj `GET /v1/platform-mesaji` ile kimliksiz okunur. Kişisel veri koymayın; metin denetime girmez (yalnız kimlik ve önem).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date-time
+                         * @description Boşsa şimdi.
+                         */
+                        baslangic_at?: string;
+                        baslik: string;
+                        /** Format: date-time */
+                        bitis_at: string;
+                        metin: string;
+                        /**
+                         * @default bilgi
+                         * @enum {string}
+                         */
+                        onem?: "bilgi" | "uyari" | "kritik";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            baslangic_at: string;
+                            baslik: string;
+                            /** Format: date-time */
+                            bitis_at: string;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            iptal_at: string | null;
+                            metin: string;
+                            /** @enum {string} */
+                            onem: "bilgi" | "uyari" | "kritik";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/mesajlar/{mesaj_id}/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mesajı erkenden kaldır */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    mesaj_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            iptal_edildi: true;
+                            /** Format: uuid */
+                            mesaj_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/sistem-sagligi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sistem sağlığı: outbox birikimi, kuyruk derinlikleri, son 1 saat 5xx oranı
+         * @description Yalnız api servisinin kendi verisi. HTTP sayacı süreç içidir (bu api kopyasının gördüğü istekler). pg-boss henüz kurulu değilse `pgboss_kurulu: false` döner.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            http: {
+                                hata_5xx: number;
+                                istek: number;
+                                /** @enum {string} */
+                                kaynak: "surec_ici";
+                                /** @description 0..1; istek yoksa 0. */
+                                oran_5xx: number;
+                                pencere_dk: number;
+                            };
+                            kuyruklar: {
+                                basarisiz: number;
+                                derinlikler: {
+                                    durum: string;
+                                    kuyruk: string;
+                                    sayi: number;
+                                }[];
+                                pgboss_kurulu: boolean;
+                            };
+                            outbox: {
+                                /** @description Henüz yayımlanmamış olay sayısı. */
+                                bekleyen: number;
+                                en_eski_yas_sn: number | null;
+                                /** @description En az bir kez denenip yayımlanamayan olay sayısı. */
+                                hatali: number;
+                            };
+                            /** Format: date-time */
+                            uretildi_at: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/taklit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kullanıcıyı salt okunur taklit et (15 dk, yenilenemez) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        hedef_kullanici_id: string;
+                        /** Format: uuid */
+                        kurum_id: string;
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            access_token: string;
+                            /** Format: date-time */
+                            bitis_at: string;
+                            expires_in: number;
+                            /** Format: uuid */
+                            hedef_kullanici_id: string;
+                            /** Format: uuid */
+                            kurum_id: string;
+                            /** @enum {string} */
+                            rol: "sahip" | "yonetici" | "ogretmen" | "ogrenci" | "veli";
+                            /** Format: uuid */
+                            taklit_id: string;
+                            /** @enum {string} */
+                            token_type: "Bearer";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/taklit/{taklit_id}/sonlandir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Taklidi erken sonlandır (belirteç hemen 401 olur)
+         * @description Taklidi başlatan platform kullanıcısı veya platform yöneticisi çağırabilir. Zaten bitmiş taklitte de 200 döner.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taklit_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            sonlandirildi: true;
+                            /** Format: uuid */
+                            taklit_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ders/kurumlar/{kurum_id}/dersler": {
         parameters: {
             query?: never;
@@ -14680,6 +15511,55 @@ export interface paths {
                                 /** @enum {string} */
                                 yonlendirme: "atanan_ogretmen" | "masa" | "yonetici";
                             }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/platform-mesaji": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Etkin bakım/duyuru mesajı (kimliksiz) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            mesaj: {
+                                /** Format: date-time */
+                                baslangic_at: string;
+                                baslik: string;
+                                /** Format: date-time */
+                                bitis_at: string;
+                                /** Format: uuid */
+                                id: string;
+                                metin: string;
+                                /** @enum {string} */
+                                onem: "bilgi" | "uyari" | "kritik";
+                            } | null;
                         };
                     };
                 };
