@@ -17,6 +17,7 @@ import { uuidv7 } from 'uuidv7';
 import { z } from 'zod';
 
 import { denetimKayitlari, grupUyeleri, soruAyarlari, uyelikler } from '../../db/schema.js';
+import { planAylikUstSiniri } from '../abonelik/index.js';
 import { modulAcikMi, requirePermission, type YetkiBaglami } from '../hesap/index.js';
 
 /**
@@ -156,14 +157,7 @@ export async function ayarOku(tx: Tx, kurumId: string): Promise<EtkinAyar> {
   };
 }
 
-/**
- * Abonelik plan ust siniri kancasi: `abonelik` blogu gelince plan limiti (`soru_aylik_ogrenci`) burada
- * okunur ve `etkinAylikLimit` ile `LEAST` alinir. Su an plan yok: `null` (sinirsiz).
- */
-export function planAylikUstSiniri(_tx: Tx, _kurumId: string): Promise<number | null> {
-  return Promise.resolve(null);
-}
-
+/** Kurum ayari ile planin ogrenci basina aylik soru limiti (`planAylikUstSiniri`; `null` = sinirsiz) `LEAST` alinir. */
 export async function etkinAylikLimit(tx: Tx, kurumId: string, ayar: EtkinAyar) {
   const plan = await planAylikUstSiniri(tx, kurumId);
   if (ayar.aylik === null) return plan;

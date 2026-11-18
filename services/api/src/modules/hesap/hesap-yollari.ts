@@ -43,6 +43,7 @@ import {
   uyelikler,
 } from '../../db/schema.js';
 import { kurumOlusturSistem } from '../../sistem/kurum-olustur.js';
+import { denemeBaslat } from '../abonelik/index.js';
 import { kurucuRolleri, kurumYaniti, VARSAYILAN_KADEMELER } from './kurum-deposu.js';
 import { modulAcikMi, modulDurumlari } from './modul-ayarlari.js';
 import { olayYaz, type OlayBaglami } from './olaylar.js';
@@ -203,6 +204,15 @@ export const hesapYollari: ServicePlugin = (app) => {
             tur: girdi.tur,
             saat_dilimi: kurum.saat_dilimi,
             durum: 'aktif',
+          });
+
+          // 14 gunluk deneme (kart istemeden): ayni islemde, boylece kurumun hic abonelik kaydi olmayan an yok.
+          await denemeBaslat(tx, {
+            kurumId,
+            kurumTuru: girdi.tur,
+            kullaniciId,
+            actor,
+            correlationId: request.correlationId,
           });
 
           // Tek sube varsayilani

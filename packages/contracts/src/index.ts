@@ -4,6 +4,8 @@ export * from './hesap/api.js';
 export * from './hesap/izinler.js';
 export * from './hesap/moduller.js';
 export * from './hesap/olaylar.js';
+export * from './abonelik/api.js';
+export * from './abonelik/olaylar.js';
 export * from './ders/index.js';
 export * from './finans/api.js';
 export * from './finans/olaylar.js';

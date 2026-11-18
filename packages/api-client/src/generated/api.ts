@@ -1308,6 +1308,468 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/abonelik/kurumlar/{kurum_id}/abonelik": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurumun aboneligi, gecerli limitleri ve kullanimi (ogrenci/ogretmen sayisi). Etkin abonelik yoksa ucretsiz katman. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            } | null;
+                            kullanim: {
+                                ogrenci: {
+                                    mevcut: number;
+                                    ust_sinir: number | null;
+                                };
+                                ogretmen: {
+                                    mevcut: number;
+                                    ust_sinir: number | null;
+                                };
+                            };
+                            limitler: {
+                                max_ogrenci: number;
+                                max_ogretmen: number;
+                                max_sube: number;
+                                medya_kota_bayt: number;
+                                sms_aylik: number;
+                                soru_aylik_ogrenci: number;
+                            };
+                            ucretsiz: boolean;
+                            yazma_kilitli: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/abonelik/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Otomatik yenilemeyi iptal et: abonelik donem sonunda sona erer, o zamana kadar tam erisim surer. Tekrar cagri etkisizdir. Magaza aboneligi 409 magaza_uzerinden_yonetilir; etkin abonelik yoksa 409 etkin_abonelik_yok. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/abonelik/plan-degistir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Plan degistirme istegi. Deneme sirasinda plan hemen degisir; ucretli abonelikte hedef plan donem sonunda uygulanir (odeme baslatma ayri). Hedef planin limiti mevcut kullanimin altindaysa `limit_asimlari` doner; veri silinmez. Kurum turune uymayan plan 404 plan_bulunamadi; etkin abonelik yoksa 409 etkin_abonelik_yok. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        periyot?: "aylik" | "yillik";
+                        plan_kodu: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            limit_asimlari: {
+                                /** @enum {string} */
+                                limit: "max_ogrenci" | "max_ogretmen";
+                                mevcut: number;
+                                ust_sinir: number;
+                            }[];
+                            /** @enum {string} */
+                            uygulama: "hemen" | "donem_sonu";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/fatura-bilgileri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fatura alici bilgileri (yoksa `fatura_bilgisi: null`). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            fatura_bilgisi: {
+                                adres: {
+                                    il: string;
+                                    ilce: string;
+                                    posta_kodu?: string;
+                                    satir: string;
+                                };
+                                e_fatura_mukellefi: boolean;
+                                /** Format: email */
+                                eposta: string;
+                                surum: number;
+                                unvan: string;
+                                vergi_dairesi: string | null;
+                                vergi_no: string;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** Fatura alici bilgilerini yaz (kurum basina tek kayit; yoksa olusturur). Vergi no 10 haneli VKN veya 11 haneli TCKN. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        adres: {
+                            il: string;
+                            ilce: string;
+                            posta_kodu?: string;
+                            satir: string;
+                        };
+                        /** @default false */
+                        e_fatura_mukellefi?: boolean;
+                        /** Format: email */
+                        eposta: string;
+                        unvan: string;
+                        /** @default null */
+                        vergi_dairesi?: string | null;
+                        vergi_no: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            fatura_bilgisi: {
+                                adres: {
+                                    il: string;
+                                    ilce: string;
+                                    posta_kodu?: string;
+                                    satir: string;
+                                };
+                                e_fatura_mukellefi: boolean;
+                                /** Format: email */
+                                eposta: string;
+                                surum: number;
+                                unvan: string;
+                                vergi_dairesi: string | null;
+                                vergi_no: string;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/planlar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum turune uygun aktif planlari listele (plan yukseltme/dusurme secenekleri). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            planlar: {
+                                ad: string;
+                                aylik_fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                kdv_orani: number;
+                                kod: string;
+                                /** @enum {string} */
+                                kurum_turu: "bireysel" | "ekip" | "kurum";
+                                limitler: {
+                                    max_ogrenci: number;
+                                    max_ogretmen: number;
+                                    max_sube: number;
+                                    medya_kota_bayt: number;
+                                    sms_aylik: number;
+                                    soru_aylik_ogrenci: number;
+                                };
+                                moduller: string[];
+                                surum: number;
+                                yillik_fiyat_kurus: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ders/kurumlar/{kurum_id}/dersler": {
         parameters: {
             query?: never;
