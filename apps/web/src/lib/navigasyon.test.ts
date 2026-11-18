@@ -18,6 +18,7 @@ describe('navigasyon yapilandirmasi', () => {
   it('ogretmen menusu belirtilen sirayla gelir', () => {
     expect(yollar('ogretmen')).toEqual([
       'bugun',
+      'duyurular',
       'panel',
       'takvim',
       'yoklama',
@@ -47,6 +48,7 @@ describe('navigasyon yapilandirmasi', () => {
   it('ogrenci menusu belirtilen sirayla gelir', () => {
     expect(yollar('ogrenci')).toEqual([
       'bugun',
+      'duyurular',
       'takvim',
       'gorevler',
       'odevlerim',

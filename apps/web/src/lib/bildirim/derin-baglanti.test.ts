@@ -68,9 +68,17 @@ describe('derinBaglantiyiCoz', () => {
     expect(coz('kopru://oturumlar', 'ogretmen')).toBe(`/${K}/oturumlar`);
   });
 
-  it('duyuru ve bilinmeyen baglantilar bildirimler sayfasinda kalir', () => {
-    expect(coz('kopru://duyuru/x', 'ogrenci')).toBe(BILDIRIMLER);
-    expect(coz('kopru://duyurular', 'ogretmen')).toBe(BILDIRIMLER);
+  it('duyuru: tum roller duyurular sayfasina (kimlikliyse ayrintiya) gider', () => {
+    expect(coz('kopru://duyuru/x', 'ogrenci')).toBe(`/${K}/duyurular/x`);
+    expect(coz('kopru://duyuru/x', 'ogretmen')).toBe(`/${K}/duyurular/x`);
+    expect(coz('kopru://duyuru/x', 'sahip')).toBe(`/${K}/duyurular/x`);
+    expect(coz('kopru://duyurular', 'ogretmen')).toBe(`/${K}/duyurular`);
+    expect(coz('kopru://duyuru', 'ogrenci')).toBe(`/${K}/duyurular`);
+    expect(coz('kopru://duyuru/../x', 'ogrenci')).toBe(BILDIRIMLER);
+    expect(coz('kopru://duyuru/a b', 'ogrenci')).toBe(BILDIRIMLER);
+  });
+
+  it('bilinmeyen baglantilar bildirimler sayfasinda kalir', () => {
     expect(coz('kopru://bilinmeyen/yol', 'ogrenci')).toBe(BILDIRIMLER);
     expect(coz('kopru://', 'ogrenci')).toBe(BILDIRIMLER);
   });

@@ -34,6 +34,7 @@ import { ogrenmeIstek } from '@/lib/hesap-istek';
 import { ogrenmeYetkileri } from '@/lib/ogrenme/rol';
 import { useOdevler, useOdevSablonlari, useOgrenciler, useOgrenmeYenile } from '@/lib/ogrenme/veri';
 import { useGruplar } from '@/lib/operasyon-verisi';
+import { useYeniParametresi } from '@/lib/yeni-parametresi';
 
 export function OdevlerEkrani() {
   return (
@@ -59,6 +60,10 @@ function OdevlerIcerigi() {
   const formAc = (baslangic?: Parameters<typeof OdevFormu>[0]['baslangic']) => {
     setForm(baslangic ? { baslangic } : {});
   };
+  // Bugun ekranindaki "Odev ver" kisayolu (`?yeni=1`); yalniz yazma yetkisi olan rolde.
+  useYeniParametresi('yeni', () => {
+    if (yetki.yazabilir) formAc();
+  });
 
   return (
     <>

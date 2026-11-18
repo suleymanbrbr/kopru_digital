@@ -1,3 +1,4 @@
+import { duyuruMock, duyuruMockSifirla, mockDuyuruKimligi } from './duyuru-mock';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -160,7 +161,7 @@ function tohumla(kurumId: string): MockOge[] {
         'duyuru_yeni',
         'Yeni duyuru',
         'Kurumdan yeni bir duyuru var.',
-        `kopru://duyuru/${uid()}`,
+        `kopru://duyuru/${mockDuyuruKimligi(1)}`,
       ),
       oge(
         n,
@@ -248,7 +249,7 @@ function tohumla(kurumId: string): MockOge[] {
         'duyuru_yeni',
         'Yeni duyuru',
         'Kurumdan yeni bir duyuru var.',
-        `kopru://duyuru/${uid()}`,
+        `kopru://duyuru/${mockDuyuruKimligi(1)}`,
       ),
     ];
   }
@@ -271,7 +272,7 @@ function tohumla(kurumId: string): MockOge[] {
       'duyuru_yeni',
       'Yeni duyuru',
       'Kurumdan yeni bir duyuru var.',
-      `kopru://duyuru/${uid()}`,
+      `kopru://duyuru/${mockDuyuruKimligi(1)}`,
     ),
   ];
 }
@@ -283,6 +284,7 @@ const depolar = (genel.__kopruBildirimMock ??= new Map<string, KurumDeposu>());
 /** Testler icin: tum kurum durumunu tohum verisine dondurur. */
 export function bildirimMockSifirla(): void {
   depolar.clear();
+  duyuruMockSifirla();
 }
 
 function depo(kurumId: string): KurumDeposu {
@@ -330,6 +332,8 @@ export function bildirimMock(istek: MockIstek): MockYanit {
   if (parcalar[0] !== 'kurumlar' || !parcalar[1]) return bulunamadi();
   const d = depo(parcalar[1]);
   const [, , alan, a, b] = parcalar;
+
+  if (alan === 'duyurular') return duyuruMock(parcalar[1], parcalar, istek);
 
   if (alan === 'kutu') {
     if (a === undefined && istek.yontem === 'GET') {

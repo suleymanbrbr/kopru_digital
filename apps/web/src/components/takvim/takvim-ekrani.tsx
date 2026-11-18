@@ -37,6 +37,7 @@ import {
   yerelTarih,
 } from '@/lib/saat';
 import { yenidenDene } from '@/lib/sayfali-sorgu';
+import { useYeniParametresi } from '@/lib/yeni-parametresi';
 import { izinli } from '@/lib/yetki';
 
 export function TakvimEkrani() {
@@ -92,6 +93,10 @@ function TakvimIcerigi() {
     setFormTarih(tarih);
     setFormAcik(true);
   };
+  // Bugun ekranindaki "Ders ekle" kisayolu (`?yeni=1`).
+  useYeniParametresi('yeni', () => {
+    dersEkle(bugun);
+  });
 
   return (
     <>

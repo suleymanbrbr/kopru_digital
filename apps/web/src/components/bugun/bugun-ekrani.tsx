@@ -6,8 +6,10 @@ import Link from 'next/link';
 
 import { BolumKarti } from './bolum-karti';
 import { BugunDersleriKarti } from './bugun-dersleri';
+import { BugunHizliEylemler, BugunOgrenciDugmeleri } from './bugun-eylemleri';
 
 import { BosDurum } from '@/components/bos-durum';
+import { BugunDuyuruKarti } from '@/components/duyuru/bugun-karti';
 import { BugunGeriBildirimKarti } from '@/components/geri-bildirim/bugun-karti';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { BugunMotivasyonKarti } from '@/components/motivasyon/bugun-karti';
@@ -16,6 +18,7 @@ import {
   BugunOdevKarti,
   BugunPlanKarti,
 } from '@/components/ogrenme/bugun-kartlari';
+import { BugunCevaplananKarti } from '@/components/soru/bugun-cevaplanan';
 import { BugunSoruKarti } from '@/components/soru/bugun-karti';
 import { dugmeStili } from '@/components/ui/button';
 import { BugunYoklamaKarti } from '@/components/yoklama/bugun-karti';
@@ -62,10 +65,13 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
         aciklama={yonetim ? t('bugun.yoneticiAciklama') : t('bugun.ogretmenAciklama')}
       />
       <div className="grid gap-4 md:grid-cols-2">
+        <div className="md:col-span-2 empty:hidden">
+          <BugunDuyuruKarti />
+        </div>
         <BugunDersleriKarti />
         <BugunSoruKarti />
-        <BugunYoklamaKarti />
         <BugunBekleyenKarti />
+        <BugunYoklamaKarti />
         {yonetim ? (
           <div className="md:col-span-2">
             <BolumKarti
@@ -82,6 +88,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
             </BolumKarti>
           </div>
         ) : null}
+        <BugunHizliEylemler />
       </div>
     </>
   );
@@ -96,34 +103,42 @@ function OgrenciBugun() {
   return (
     <>
       <BugunBasligi aciklama={t('bugun.ogrenciAciklama')} />
-      <div className="grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
-        {acikModuller.includes('geri_bildirim') ? <BugunGeriBildirimKarti /> : null}
-        <BugunDersleriKarti />
-        {acikModuller.includes('haftalik_plan') ? (
-          <BugunPlanKarti />
-        ) : (
-          <BolumKarti
-            baslik={t('bugun.gorevler')}
-            yukleniyor={veri.isPending}
-            hata={veri.isError}
-            tekrarDene={() => void veri.refetch()}
-          >
-            {veri.data?.gorevler.length ? null : (
-              <BosDurum
-                ikon={Sparkles}
-                baslik={t('bugun.gorevBos')}
-                aciklama={t('bugun.gorevBosAciklama')}
+      <div className="flex flex-col gap-4">
+        <BugunDuyuruKarti />
+        <BugunOgrenciDugmeleri />
+        <div className="grid items-start gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+          <div className="flex min-w-0 flex-col gap-4">
+            {acikModuller.includes('haftalik_plan') ? (
+              <BugunPlanKarti />
+            ) : (
+              <BolumKarti
+                baslik={t('bugun.gorevler')}
+                yukleniyor={veri.isPending}
+                hata={veri.isError}
+                tekrarDene={() => void veri.refetch()}
               >
-                <Link href={`${kok}/odevlerim`} className={dugmeStili({ gorunum: 'ikincil' })}>
-                  {t('bugun.gorevBosEylem')}
-                </Link>
-              </BosDurum>
+                {veri.data?.gorevler.length ? null : (
+                  <BosDurum
+                    ikon={Sparkles}
+                    baslik={t('bugun.gorevBos')}
+                    aciklama={t('bugun.gorevBosAciklama')}
+                  >
+                    <Link href={`${kok}/odevlerim`} className={dugmeStili({ gorunum: 'ikincil' })}>
+                      {t('bugun.gorevBosEylem')}
+                    </Link>
+                  </BosDurum>
+                )}
+              </BolumKarti>
             )}
-          </BolumKarti>
-        )}
-        {acikModuller.includes('odev') ? <BugunOdevKarti /> : null}
-
-        {karakterVar ? <BugunMotivasyonKarti /> : null}
+            <BugunDersleriKarti genis={false} />
+            {acikModuller.includes('odev') ? <BugunOdevKarti /> : null}
+          </div>
+          <div className="flex min-w-0 flex-col gap-4">
+            {karakterVar ? <BugunMotivasyonKarti /> : null}
+            {acikModuller.includes('geri_bildirim') ? <BugunGeriBildirimKarti /> : null}
+            <BugunCevaplananKarti />
+          </div>
+        </div>
       </div>
     </>
   );

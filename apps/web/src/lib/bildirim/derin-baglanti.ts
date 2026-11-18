@@ -26,7 +26,8 @@ import type { Rol } from '@/lib/navigasyon';
  * - `abonelik`                               -> sahip `abonelik`
  * - `davet/:belirtec`                        -> `/davet/:belirtec` (kurum disi sayfa)
  * - `oturumlar`, `hesap`                     -> `oturumlar`
- * - `bildirimler`, `duyuru[/:id]`, `duyurular` -> `bildirimler`
+ * - `duyuru[/:id]`, `duyurular[/:id]`         -> `duyurular[/:id]` (tum roller)
+ * - `bildirimler`                           -> `bildirimler`
  * - bilinmeyen / bos / gecersiz              -> `bildirimler`
  */
 const KIMLIK = /^[A-Za-z0-9_-]{1,80}$/;
@@ -114,6 +115,9 @@ export function derinBaglantiyiCoz(baglanti: string | null | undefined, baglam: 
       return baglam.rol === 'sahip' ? `${k}/abonelik` : varsayilan;
     case 'davet':
       return kimlik ? `/davet/${kimlik}` : varsayilan;
+    case 'duyuru':
+    case 'duyurular':
+      return kimlikli('duyurular');
     case 'oturumlar':
     case 'hesap':
       return `${k}/oturumlar`;

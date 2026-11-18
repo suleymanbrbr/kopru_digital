@@ -15,6 +15,7 @@ import {
   Library,
   ListChecks,
   MessageCircleQuestion,
+  Megaphone,
   NotebookPen,
   PawPrint,
   Puzzle,
@@ -71,6 +72,16 @@ export const navOgeleri: readonly NavOgesi[] = [
     roller: tumu,
     grup: 'calisma',
     mobilOncelik: 1,
+  },
+  // Duyurular: herkes alir; yazma yetkisi (duyuru.yaz) sayfada ayrica denetlenir
+  {
+    anahtar: 'duyurular',
+    yol: 'duyurular',
+    baslik: 'nav.duyurular',
+    ikon: Megaphone,
+    modul: 'duyuru',
+    roller: tumu,
+    grup: 'calisma',
   },
 
   // Yonetici paneli: sahip/yonetici tum kurum, ogretmen yalniz atandigi gruplar (kapsam sunucuda)
