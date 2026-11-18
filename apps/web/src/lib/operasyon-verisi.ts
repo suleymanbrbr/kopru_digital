@@ -36,6 +36,8 @@ export interface GrupSecenegi {
   id: string;
   tur: GrupTipi['tur'];
   etiket: string;
+  /** Etkin ogrenci sayisi (duyuru onayinda "yaklasik N kisiye gidecek"). */
+  uyeSayisi: number;
 }
 
 /** Aktif gruplar (en cok 200) ve birebir gruplarin ogrenci adlari; ders formunda ve takvimde etiket olur. */
@@ -70,6 +72,7 @@ export function useGruplar(kurumId: string, etkin = true) {
       return {
         id: g.id,
         tur: g.tur,
+        uyeSayisi: g.uye_sayisi,
         etiket:
           g.tur === 'birebir' ? t('operasyon.takvim.birebirEtiket', { ad: ad ?? g.ad }) : g.ad,
       };
