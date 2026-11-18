@@ -16,6 +16,7 @@ const HEPSI: ModulDurumu = {
   odev: true,
   soru_sor: true,
   oyunlastirma: true,
+  duyuru: true,
 };
 const ogrenci = (moduller: ModulDurumu = HEPSI): BaglantiBaglami => ({ rol: 'ogrenci', moduller });
 const hoca = (moduller: ModulDurumu = HEPSI): BaglantiBaglami => ({ rol: 'ogretmen', moduller });
@@ -103,12 +104,22 @@ describe('baglantiRotasi', () => {
     });
   });
 
-  it('bugun, duyuru, bilinmeyen ve bos baglanti', () => {
+  it('duyuru: modul aciksa detay (her rol), kapaliysa ya da kimliksizse kutu', () => {
+    const detay = { pathname: '/duyuru/[id]', params: { id: ID } };
+    expect(baglantiRotasi(`kopru://duyuru/${ID}`, ogrenci())).toEqual(detay);
+    expect(baglantiRotasi(`kopru://duyuru/${ID}`, hoca())).toEqual(detay);
+    expect(baglantiRotasi(`kopru://duyuru/${ID}`, ogrenci({ ...HEPSI, duyuru: false }))).toBe(
+      KUTU_ROTASI,
+    );
+    expect(baglantiRotasi('kopru://duyuru', ogrenci())).toBe(KUTU_ROTASI);
+    expect(baglantiRotasi('kopru://duyuru/../x', ogrenci())).toBe(KUTU_ROTASI);
+  });
+
+  it('bugun, bilinmeyen ve bos baglanti', () => {
     expect(baglantiRotasi('kopru://bugun', ogrenci())).toEqual({
       pathname: '/bugun',
       navigate: true,
     });
-    expect(baglantiRotasi(`kopru://duyuru/${ID}`, ogrenci())).toBe(KUTU_ROTASI);
     expect(baglantiRotasi('kopru://yepyeni/ozellik', ogrenci())).toBe(KUTU_ROTASI);
     expect(baglantiRotasi('https://ornek.com/x', ogrenci())).toBe(KUTU_ROTASI);
     expect(baglantiRotasi(null, ogrenci())).toBe(KUTU_ROTASI);

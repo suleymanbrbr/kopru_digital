@@ -13,6 +13,7 @@ import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
 import { useAktif, useOturum, useServisler } from '../uygulama/baglam';
+import { useModulAcik } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
 const TEMALAR: {
@@ -37,7 +38,8 @@ function Satir({
     | 'apps'
     | 'phone-portrait-outline'
     | 'key-outline'
-    | 'notifications-outline';
+    | 'notifications-outline'
+    | 'megaphone-outline';
 }) {
   return (
     <Pressable
@@ -60,6 +62,7 @@ export function Profil() {
   const aktif = useAktif();
   const t_ = tercihler.kullan();
   const { renkler } = useTema();
+  const duyuruAcik = useModulAcik('duyuru');
   if (durum.asama !== 'giris' || !aktif) return null;
   const rol = aktif.uyelik.rol;
 
@@ -109,6 +112,15 @@ export function Profil() {
             etiket={t('mobil.profil.sinifKoduKatil')}
             onPress={() => {
               router.push('/katilim');
+            }}
+          />
+        ) : null}
+        {duyuruAcik ? (
+          <Satir
+            ikon="megaphone-outline"
+            etiket={t('mobil.profil.duyurular')}
+            onPress={() => {
+              router.push('/duyurular');
             }}
           />
         ) : null}
