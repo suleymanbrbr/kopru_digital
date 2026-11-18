@@ -4,6 +4,7 @@ import { grupYollari } from './grup-yollari.js';
 import { hesapYollari } from './hesap-yollari.js';
 import { kimlikYollari } from './kimlik-yollari.js';
 import { oturumYollari } from './oturum-yollari.js';
+import { platformYollari } from './platform/index.js';
 import { raporYollari } from './rapor.js';
 import { sinifKatilimKullaniciYollari } from './sinif-katilim-kullanici-yollari.js';
 import { sinifKatilimYollari } from './sinif-katilim-yollari.js';
@@ -27,7 +28,11 @@ export const hesapModule = defineModule(
   },
   {
     rootPlugin: async (app) => {
-      if (app.hasDecorator('kimlik')) await app.register(kimlikYollari);
+      if (app.hasDecorator('kimlik')) {
+        await app.register(kimlikYollari);
+        // /platform/* ve kimliksiz GET /v1/platform-mesaji (ADR 0004 "Platform yoneticisi ve taklit").
+        await app.register(platformYollari);
+      }
     },
   },
 );
@@ -46,6 +51,9 @@ export {
   type SmsGonderici,
   type SmsMesaji,
 } from './sms.js';
+export { telefonuNormallestir } from './telefon.js';
+// Platform 2FA (testler ve betikler icin TOTP yardimcilari).
+export { base32Coz, sayacHesapla, totpKodu } from './platform/totp.js';
 export { requirePermission, type IzinSecenekleri } from './yetki.js';
 export {
   LogEpostaGonderici,
