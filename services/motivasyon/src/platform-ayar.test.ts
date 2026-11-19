@@ -126,6 +126,7 @@ describe('platform yetki kontrolu (saf)', () => {
     claims,
   });
   const acik = { izinliIpler: [], uretim: false };
+  const ikinciAdim = { plat_2fa_exp: Math.floor(Date.now() / 1000) + 3600 };
 
   it('yalniz plat=yonetici; imp ve destek reddedilir', () => {
     expect(() => platformYoneticisiGerekli(null, '1.1.1.1', acik)).toThrow(/Oturum/);
@@ -135,16 +136,33 @@ describe('platform yetki kontrolu (saf)', () => {
     );
     expect(() =>
       platformYoneticisiGerekli(
-        auth({ plat: 'yonetici', imp: { taklit_id: 'x' } }),
+        auth({ plat: 'yonetici', ...ikinciAdim, imp: { taklit_id: 'x' } }),
         '1.1.1.1',
         acik,
       ),
     ).toThrow(/Taklit/);
-    expect(platformYoneticisiGerekli(auth({ plat: 'yonetici' }), '1.1.1.1', acik)).toBeTruthy();
+    expect(
+      platformYoneticisiGerekli(auth({ plat: 'yonetici', ...ikinciAdim }), '1.1.1.1', acik),
+    ).toBeTruthy();
+  });
+
+  it('ikinci adim kaniti (plat_2fa_exp) zorunlu: yok, suresi dolmus ya da sayi degil -> 403', () => {
+    const kod = (claims: Record<string, unknown>) => {
+      try {
+        platformYoneticisiGerekli(auth({ plat: 'yonetici', ...claims }), '1.1.1.1', acik);
+        return 'gecti';
+      } catch (err) {
+        return (err as { code?: string }).code;
+      }
+    };
+    expect(kod({})).toBe('ikinci_adim_gerekli');
+    expect(kod({ plat_2fa_exp: Math.floor(Date.now() / 1000) - 5 })).toBe('ikinci_adim_gerekli');
+    expect(kod({ plat_2fa_exp: 'yarin' })).toBe('ikinci_adim_gerekli');
+    expect(kod(ikinciAdim)).toBe('gecti');
   });
 
   it('IP izin listesi: bos liste gelistirmede acik, uretimde kapali; CIDR ve tek IP', () => {
-    const yon = auth({ plat: 'yonetici' });
+    const yon = auth({ plat: 'yonetici', ...ikinciAdim });
     expect(() =>
       platformYoneticisiGerekli(yon, '1.1.1.1', { izinliIpler: [], uretim: true }),
     ).toThrow(/adresten/);

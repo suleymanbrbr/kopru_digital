@@ -840,10 +840,17 @@ export const tr = {
     modul_kapali: 'Bu özellik kurumunda kapalı.',
     izin_yok: 'Bu işlem için yetkin yok.',
     abonelik_gerekli: 'Kurumunun aboneliği etkin değil.',
+    kurum_askida: 'Kurumunun hesabı askıya alındı. Destek ekibiyle iletişime geç.',
     plan_limiti: 'Planının sınırına ulaştın. Yeni eklemek için planını yükselt.',
     plan_bulunamadi: 'Seçtiğin plan bulunamadı.',
     etkin_abonelik_yok: 'Etkin bir aboneliğin yok.',
     magaza_uzerinden_yonetilir: 'Bu abonelik App Store veya Google Play üzerinden yönetilir.',
+    abonelik_baska_kanalda:
+      'Aboneliğin başka bir kanalda (App Store, Google Play ya da kurumsal) etkin. Web üzerinden ikinci bir abonelik başlatılamaz.',
+    abonelik_zaten_aktif:
+      'Aboneliğin zaten aktif. Plan değiştirmek için plan değiştirme seçeneğini kullan.',
+    fatura_bilgisi_gerekli: 'Ödeme başlatmak için önce fatura bilgilerini gir.',
+    odeme_kanali_kapali: 'Web ödemesi şu anda kullanılamıyor. Biraz sonra tekrar dene.',
     ag: 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.',
     bulunamadi: 'Aradığın kayıt bulunamadı. Silinmiş ya da erişim yetkin kalkmış olabilir.',
     davet_gecersiz: 'Bu davet geçersiz, süresi dolmuş ya da kullanılmış.',

@@ -11,7 +11,7 @@ import { AppError, withTenant } from '@kopru/service-kit';
 import { and, eq } from 'drizzle-orm';
 import type { FastifyRequest, preHandlerAsyncHookHandler } from 'fastify';
 
-import { uyelikler } from '../../db/schema.js';
+import { kurumlar, uyelikler } from '../../db/schema.js';
 import { abonelikGerekli, yazmaKilitliMi } from '../abonelik/index.js';
 import type { YetkiBaglami } from './kimlik.js';
 import { modulAcikMi, type ModulBaglami } from './modul-ayarlari.js';
@@ -31,6 +31,7 @@ const yasak = (kod: string, mesaj: string) => new AppError(403, kod, mesaj);
  * Kiraci rotalari icin yetki kapisi. ADR 0004 kontrol sirasi: kimlik (service-kit) ve riza (kimlik
  * plugin'i) bu middleware'den once calisir; burada sirayla kiraci -> taklit -> modul -> izin -> kapsam.
  * Basarili olursa `request.yetki` doldurulur (etkin kapsam uyelik `sube_id` ile daraltilir).
+ * Platform askisi: askidaki kurumun kullanicilari 403 `kurum_askida` alir (taklit okumasi haric).
  * Abonelik durumu (adim 4): `askida`/`sona_erdi` kurumda yazma istekleri `402 abonelik_gerekli`; okuma ve
  * `abonelik.*` izinli uc noktalar (sahibin plan ekrani, yeni abonelik) acik kalir.
  */
@@ -68,7 +69,7 @@ export function requirePermission(
     const baglam = options.modulBaglami?.(request) ?? {};
     // 4. Abonelik durumu: yalniz yazma istekleri ve abonelik disi izinler icin sorgulanir.
     const yazmaKapisiGerekli = !YAZMA_OLMAYAN.has(request.method) && !izin.startsWith('abonelik.');
-    const { uye, acik, kilitli } = await withTenant(
+    const { uye, acik, kilitli, platformAskida } = await withTenant(
       db,
       { kurumId, kullaniciId, roller: auth.roller },
       async (tx) => {
@@ -78,9 +79,26 @@ export function requirePermission(
           .select({ rol: uyelikler.rol, durum: uyelikler.durum, sube_id: uyelikler.sube_id })
           .from(uyelikler)
           .where(and(eq(uyelikler.id, uyelikId), eq(uyelikler.kullanici_id, kullaniciId)));
-        return { uye: satir, acik: acikMi, kilitli: kilitliMi };
+        // Platform askisi (0018): kurumu platform yoneticisi elle askiya almis (abonelik askisindan ayri).
+        const [kurum] = await tx
+          .select({ askida: kurumlar.platform_askida_at })
+          .from(kurumlar)
+          .where(eq(kurumlar.id, kurumId));
+        return {
+          uye: satir,
+          acik: acikMi,
+          kilitli: kilitliMi,
+          platformAskida: kurum?.askida != null,
+        };
       },
     );
+    // Taklit okumasi (destek) platform askisindaki kurumu da gorebilir; kurum kullanicilari goremez.
+    if (platformAskida && auth.claims.imp === undefined) {
+      throw yasak(
+        errorCodes.kurumAskida,
+        'Kurumunuzun hesabı askıya alındı. Destek ekibiyle iletişime geçin.',
+      );
+    }
     if (kilitli) throw abonelikGerekli();
     if (!acik) throw yasak(errorCodes.modulKapali, 'Bu özellik kurumunuzda kapalı.');
 

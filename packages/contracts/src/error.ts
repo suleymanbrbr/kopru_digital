@@ -36,6 +36,8 @@ export const errorCodes = {
   platformIpYasak: 'platform_ip_yasak',
   platformYetkisiYok: 'platform_yetkisi_yok',
   platformIzinYok: 'platform_izin_yok',
+  /** 403: kurum platform yoneticisi tarafindan askiya alinmis (ADR 0004, 2026-11-19). */
+  kurumAskida: 'kurum_askida',
   ikinciAdimKurulu: 'ikinci_adim_kurulu',
   ustDuzeyKapali: 'ust_duzey_kapali',
   gecersizTelefon: 'gecersiz_telefon',

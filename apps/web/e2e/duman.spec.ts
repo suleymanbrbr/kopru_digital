@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, test } from './yardimcilar';
 
 test.describe('giris akisi', () => {
   test('oturumsuz kullanici girise yonlenir', async ({ page }) => {

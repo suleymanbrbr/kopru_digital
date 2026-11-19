@@ -593,7 +593,7 @@ export interface paths {
         put?: never;
         /**
          * Oturumu ikinci adım koduyla (veya yedek kodla) doğrula
-         * @description Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.
+         * @description Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. Diğer servislerin platform uçları için `POST /auth/token` ile yeni belirteç alın (`plat_2fa_exp` claim'i). 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.
          */
         post: {
             parameters: {
@@ -686,7 +686,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Kurulumu ilk kodla onayla (oturumu da doğrulanmış sayar) */
+        /**
+         * Kurulumu ilk kodla onayla (oturumu da doğrulanmış sayar)
+         * @description Başarıdan sonra `POST /auth/token` ile yeni erişim belirteci alın: belirteçteki `plat_2fa_exp` claim'i diğer servislerin (motivasyon) platform uçlarını açar.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -794,7 +797,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kurum detayı: üye sayıları, durum, modül ayarları, beta özellikleri */
+        /** Kurum detayı: üye sayıları, durum, platform askısı, abonelik özeti, modül ayarları, beta özellikleri */
         get: {
             parameters: {
                 query?: never;
@@ -813,6 +816,55 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            abonelik: {
+                                abonelik: {
+                                    /** @enum {string|null} */
+                                    bekleyen_periyot: "aylik" | "yillik" | null;
+                                    bekleyen_plan_kodu: string | null;
+                                    /** Format: date-time */
+                                    deneme_bitis_at: string | null;
+                                    /** Format: date-time */
+                                    donem_baslangic_at: string;
+                                    /** Format: date-time */
+                                    donem_bitis_at: string;
+                                    /** @enum {string} */
+                                    durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                    /** Format: date-time */
+                                    ek_sure_bitis_at: string | null;
+                                    fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: date-time */
+                                    iptal_istendi_at: string | null;
+                                    /** @enum {string} */
+                                    kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                    otomatik_yenileme: boolean;
+                                    /** @enum {string} */
+                                    periyot: "aylik" | "yillik";
+                                    plan: {
+                                        ad: string;
+                                        aylik_fiyat_kurus: number;
+                                        /** Format: uuid */
+                                        id: string;
+                                        kdv_orani: number;
+                                        kod: string;
+                                        /** @enum {string} */
+                                        kurum_turu: "bireysel" | "ekip" | "kurum";
+                                        limitler: {
+                                            max_ogrenci: number;
+                                            max_ogretmen: number;
+                                            max_sube: number;
+                                            medya_kota_bayt: number;
+                                            sms_aylik: number;
+                                            soru_aylik_ogrenci: number;
+                                        };
+                                        moduller: string[];
+                                        surum: number;
+                                        yillik_fiyat_kurus: number | null;
+                                    };
+                                } | null;
+                                yazma_kilitli: boolean;
+                            };
                             ad: string;
                             beta_ozellikleri: {
                                 acik: boolean;
@@ -835,6 +887,13 @@ export interface paths {
                                 /** @enum {string} */
                                 modul_kodu: "takvim" | "yoklama" | "geri_bildirim" | "kayitlar" | "finans" | "odev" | "haftalik_plan" | "deneme" | "soru_sor" | "oyunlastirma" | "duyuru";
                             }[];
+                            platform_aski: {
+                                /** @description Platform yöneticisi kurumu elle askıya aldı. */
+                                askida: boolean;
+                                /** Format: date-time */
+                                askida_at: string | null;
+                                neden: string | null;
+                            };
                             saat_dilimi: string;
                             sahipler: {
                                 eposta_maskeli: string | null;
@@ -858,6 +917,899 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurum aboneliği: güncel durum, abonelik geçmişi ve ödemeler */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            } | null;
+                            /** @description Tüm abonelik kayıtları, yeniden eskiye (en çok 50). */
+                            gecmis: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            }[];
+                            /** @description Ödemeler, yeniden eskiye (en çok 50). */
+                            odemeler: {
+                                /** Format: uuid */
+                                abonelik_id: string;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "basarili" | "basarisiz" | "iade";
+                                hata_kodu: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                kdv_kurus: number;
+                                /** Format: date-time */
+                                odeme_at: string;
+                                tutar_kurus: number;
+                            }[];
+                            yazma_kilitli: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik/askiya-al": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aboneliği askıya al (platform kurum askısından ayrı)
+         * @description Etkin abonelik `askida` olur: kurum yazma isteklerinde `402 abonelik_gerekli` alır. Platform kurum askısı için `/kurumlar/:id/askiya-al`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            /** @enum {string} */
+                            kurum_durumu: "aktif" | "askida" | "kapali";
+                            platform_askida: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik/deneme-uzat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deneme süresini uzat
+         * @description Etkin deneme `gun` kadar uzar; bitmiş (`sona_erdi`) deneme yeniden açılır.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        gun: number;
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            /** @enum {string} */
+                            kurum_durumu: "aktif" | "askida" | "kapali";
+                            platform_askida: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik/ek-sure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ek süre ver
+         * @description Ödemesi bekleyen / ek süredeki / askıdaki (ücretli) abonelik `ek_sure` durumuna alınır ve tam erişim `gun` kadar sürer.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        gun: number;
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            /** @enum {string} */
+                            kurum_durumu: "aktif" | "askida" | "kapali";
+                            platform_askida: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik/iptal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aboneliği iptal et
+         * @description `hemen=false` (varsayılan): yenileme iptal edilir, dönem sonunda biter. `hemen=true`: abonelik şimdi `iptal` olur.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description true: abonelik hemen `iptal` olur; false: yenileme iptal edilir, dönem sonunda biter.
+                         * @default false
+                         */
+                        hemen?: boolean;
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            /** @enum {string} */
+                            kurum_durumu: "aktif" | "askida" | "kapali";
+                            platform_askida: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik/kurumsal-aktivasyon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kurumsal (elle) aboneliği etkinleştir
+         * @description Teklif + fatura sözleşme numarasıyla kurum aboneliği `kurumsal` kaynakla `aktif` olur; deneme/askıdaki abonelik sona erer. Platform askısındaki kurum bu işlemle açılmaz.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date-time
+                         * @description Varsayılan: şimdi.
+                         */
+                        donem_baslangic_at?: string;
+                        /**
+                         * Format: date-time
+                         * @description Varsayılan: periyoda göre 30 / 365 gün.
+                         */
+                        donem_bitis_at?: string;
+                        /** @description Anlaşılan fiyat; varsayılan plan fiyatı. */
+                        fiyat_kurus?: number;
+                        neden: string;
+                        /**
+                         * @default aylik
+                         * @enum {string}
+                         */
+                        periyot?: "aylik" | "yillik";
+                        plan_kodu: string;
+                        sozlesme_no: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            /** @enum {string} */
+                            kurum_durumu: "aktif" | "askida" | "kapali";
+                            platform_askida: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/abonelik/plan-degistir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Planı değiştir
+         * @description `hemen=true` (varsayılan) plan/periyodu anında değiştirir; `false` sahip akışıyla aynı biçimde dönem sonunda uygular.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description false: ücretli abonelikte hedef plan dönem sonunda uygulanır (sahip akışıyla aynı).
+                         * @default true
+                         */
+                        hemen?: boolean;
+                        neden: string;
+                        /** @enum {string} */
+                        periyot?: "aylik" | "yillik";
+                        plan_kodu: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik: {
+                                /** @enum {string|null} */
+                                bekleyen_periyot: "aylik" | "yillik" | null;
+                                bekleyen_plan_kodu: string | null;
+                                /** Format: date-time */
+                                deneme_bitis_at: string | null;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "deneme" | "aktif" | "odeme_bekliyor" | "ek_sure" | "askida" | "iptal" | "sona_erdi";
+                                /** Format: date-time */
+                                ek_sure_bitis_at: string | null;
+                                fiyat_kurus: number;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                iptal_istendi_at: string | null;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                otomatik_yenileme: boolean;
+                                /** @enum {string} */
+                                periyot: "aylik" | "yillik";
+                                plan: {
+                                    ad: string;
+                                    aylik_fiyat_kurus: number;
+                                    /** Format: uuid */
+                                    id: string;
+                                    kdv_orani: number;
+                                    kod: string;
+                                    /** @enum {string} */
+                                    kurum_turu: "bireysel" | "ekip" | "kurum";
+                                    limitler: {
+                                        max_ogrenci: number;
+                                        max_ogretmen: number;
+                                        max_sube: number;
+                                        medya_kota_bayt: number;
+                                        sms_aylik: number;
+                                        soru_aylik_ogrenci: number;
+                                    };
+                                    moduller: string[];
+                                    surum: number;
+                                    yillik_fiyat_kurus: number | null;
+                                };
+                            };
+                            /** @enum {string} */
+                            kurum_durumu: "aktif" | "askida" | "kapali";
+                            platform_askida: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/ac": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Platform askısını kaldır
+         * @description Abonelik de kilitliyse (`askida`/`sona_erdi`) kurum `askida` kalır (`abonelik_kilitli=true`); abonelik askısını platform bu uçla açmaz (ek süre veya kurumsal aktivasyon kullanın).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik_kilitli: boolean;
+                            /** @description false: kurum zaten istenen durumdaydı. */
+                            degisti: boolean;
+                            /** @enum {string} */
+                            durum: "aktif" | "askida" | "kapali";
+                            /** Format: uuid */
+                            kurum_id: string;
+                            platform_aski: {
+                                /** @description Platform yöneticisi kurumu elle askıya aldı. */
+                                askida: boolean;
+                                /** Format: date-time */
+                                askida_at: string | null;
+                                neden: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/platform/kurumlar/{kurum_id}/askiya-al": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kurumu platform olarak askıya al (abonelik askısından ayrı)
+         * @description Kurum üyeleri kiracı uçlarında `403 kurum_askida` alır (taklit okuması hariç). `hesap.kurum.degisti.v1` yayımlanır. Abonelik/ödeme işi bu askıyı kaldıramaz; yalnız `/ac` kaldırır. Zaten askıdaysa değişiklik yapılmaz (`degisti=false`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        neden: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            abonelik_kilitli: boolean;
+                            /** @description false: kurum zaten istenen durumdaydı. */
+                            degisti: boolean;
+                            /** @enum {string} */
+                            durum: "aktif" | "askida" | "kapali";
+                            /** Format: uuid */
+                            kurum_id: string;
+                            platform_aski: {
+                                /** @description Platform yöneticisi kurumu elle askıya aldı. */
+                                askida: boolean;
+                                /** Format: date-time */
+                                askida_at: string | null;
+                                neden: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -2541,6 +3493,186 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/abonelik/kurumlar/{kurum_id}/faturalar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** e-Arsiv fatura gecmisi (meta). PDF dosyasi hazir degilse `pdf_dosya_id` null doner; en yeni ustte. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            faturalar: {
+                                /** @enum {string} */
+                                durum: "bekliyor" | "kesildi" | "hata" | "iptal";
+                                fatura_no: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                kdv_kurus: number;
+                                kdv_orani: number;
+                                /** Format: date-time */
+                                kesim_at: string | null;
+                                matrah_kurus: number;
+                                /** Format: uuid */
+                                odeme_id: string;
+                                /** Format: uuid */
+                                pdf_dosya_id: string | null;
+                                toplam_kurus: number;
+                                /** @enum {string} */
+                                tur: "e_arsiv" | "iade";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/odeme/baslat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Web odemesi (iyzico yinelenen abonelik) baslat: saglayicinin odeme sayfasi adresi ya da gomulecek form doner. Fatura bilgisi yoksa 422 fatura_bilgisi_gerekli; baska kanalda (magaza, kurumsal) etkin ucretli abonelik varsa 409 abonelik_baska_kanalda; iyzico aboneligi zaten aktifse 409 abonelik_zaten_aktif; kanal yapilandirilmamissa 503 odeme_kanali_kapali. Deneme sirasinda ucretliye gecis cift abonelik sayilmaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default aylik
+                         * @enum {string}
+                         */
+                        periyot?: "aylik" | "yillik";
+                        plan_kodu: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            form_icerigi: string | null;
+                            /** @enum {string} */
+                            kaynak: "iyzico";
+                            kdv_kurus: number;
+                            /** Format: uuid */
+                            oturum_id: string;
+                            tutar_kurus: number;
+                            yonlendirme_url: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/odemeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Abonelik odeme gecmisi (basarili, basarisiz, iade); en yeni ustte. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            odemeler: {
+                                /** Format: uuid */
+                                abonelik_id: string;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "basarili" | "basarisiz" | "iade";
+                                hata_kodu: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                kdv_kurus: number;
+                                /** Format: date-time */
+                                odeme_at: string;
+                                /** Format: uuid */
+                                ters_cevrilen_id: string | null;
+                                tutar_kurus: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/abonelik/kurumlar/{kurum_id}/planlar": {
         parameters: {
             query?: never;
@@ -2595,6 +3727,118 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/odeme/iyzico/donus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** iyzico odeme sayfasi donusu (callback; form govdesinde `token`). Sonucu isler ve web uygulamasina 303 ile yonlendirir (`/abonelik?odeme=basarili|basarisiz|bekliyor|hata`). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/webhook/iyzico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** iyzico abonelik webhook (kimliksiz; imza basligi dogrulanir). Ham govde saklanir, hemen 200 doner, isleme arka planda yapilir. Imza gecersizse 401; kanal kapaliysa 503. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            durum: "alindi" | "tekrar" | "yoksayildi";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/webhook/revenuecat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RevenueCat (App Store / Google Play) webhook (kimliksiz; Authorization basligi paylasilan sirla dogrulanir). `app_user_id` kurum kimligidir. Ham govde saklanir, hemen 200 doner. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            durum: "alindi" | "tekrar" | "yoksayildi";
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

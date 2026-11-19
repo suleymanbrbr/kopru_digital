@@ -938,7 +938,7 @@
     },
     "/platform/ikinci-adim/dogrula": {
       "post": {
-        "description": "Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.",
+        "description": "Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. Diğer servislerin platform uçları için `POST /auth/token` ile yeni belirteç alın (`plat_2fa_exp` claim'i). 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1041,6 +1041,7 @@
     },
     "/platform/ikinci-adim/onayla": {
       "post": {
+        "description": "Başarıdan sonra `POST /auth/token` ile yeni erişim belirteci alın: belirteçteki `plat_2fa_exp` claim'i diğer servislerin (motivasyon) platform uçlarını açar.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1271,6 +1272,232 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "abonelik": {
+                          "additionalProperties": false,
+                          "nullable": true,
+                          "properties": {
+                            "bekleyen_periyot": {
+                              "enum": [
+                                "aylik",
+                                "yillik"
+                              ],
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "bekleyen_plan_kodu": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "deneme_bitis_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string"
+                            },
+                            "donem_baslangic_at": {
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string"
+                            },
+                            "donem_bitis_at": {
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string"
+                            },
+                            "durum": {
+                              "enum": [
+                                "deneme",
+                                "aktif",
+                                "odeme_bekliyor",
+                                "ek_sure",
+                                "askida",
+                                "iptal",
+                                "sona_erdi"
+                              ],
+                              "type": "string"
+                            },
+                            "ek_sure_bitis_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string"
+                            },
+                            "fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "iptal_istendi_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string"
+                            },
+                            "kaynak": {
+                              "enum": [
+                                "deneme",
+                                "iyzico",
+                                "apple",
+                                "google",
+                                "kurumsal"
+                              ],
+                              "type": "string"
+                            },
+                            "otomatik_yenileme": {
+                              "type": "boolean"
+                            },
+                            "periyot": {
+                              "enum": [
+                                "aylik",
+                                "yillik"
+                              ],
+                              "type": "string"
+                            },
+                            "plan": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "ad": {
+                                  "type": "string"
+                                },
+                                "aylik_fiyat_kurus": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                  "type": "string"
+                                },
+                                "kdv_orani": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "kod": {
+                                  "type": "string"
+                                },
+                                "kurum_turu": {
+                                  "enum": [
+                                    "bireysel",
+                                    "ekip",
+                                    "kurum"
+                                  ],
+                                  "type": "string"
+                                },
+                                "limitler": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "max_ogrenci": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -1,
+                                      "type": "integer"
+                                    },
+                                    "max_ogretmen": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -1,
+                                      "type": "integer"
+                                    },
+                                    "max_sube": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -1,
+                                      "type": "integer"
+                                    },
+                                    "medya_kota_bayt": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -1,
+                                      "type": "integer"
+                                    },
+                                    "sms_aylik": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -1,
+                                      "type": "integer"
+                                    },
+                                    "soru_aylik_ogrenci": {
+                                      "maximum": 9007199254740991,
+                                      "minimum": -1,
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "max_ogrenci",
+                                    "max_ogretmen",
+                                    "max_sube",
+                                    "medya_kota_bayt",
+                                    "sms_aylik",
+                                    "soru_aylik_ogrenci"
+                                  ],
+                                  "type": "object"
+                                },
+                                "moduller": {
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array"
+                                },
+                                "surum": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "yillik_fiyat_kurus": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "nullable": true,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "kod",
+                                "surum",
+                                "ad",
+                                "kurum_turu",
+                                "aylik_fiyat_kurus",
+                                "yillik_fiyat_kurus",
+                                "kdv_orani",
+                                "limitler",
+                                "moduller"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "plan",
+                            "kaynak",
+                            "durum",
+                            "periyot",
+                            "donem_baslangic_at",
+                            "donem_bitis_at",
+                            "deneme_bitis_at",
+                            "ek_sure_bitis_at",
+                            "otomatik_yenileme",
+                            "iptal_istendi_at",
+                            "fiyat_kurus",
+                            "bekleyen_plan_kodu",
+                            "bekleyen_periyot"
+                          ],
+                          "type": "object"
+                        },
+                        "yazma_kilitli": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "abonelik",
+                        "yazma_kilitli"
+                      ],
+                      "type": "object"
+                    },
                     "ad": {
                       "type": "string"
                     },
@@ -1361,6 +1588,31 @@
                       },
                       "type": "array"
                     },
+                    "platform_aski": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "askida": {
+                          "description": "Platform yöneticisi kurumu elle askıya aldı.",
+                          "type": "boolean"
+                        },
+                        "askida_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "neden": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "askida",
+                        "neden",
+                        "askida_at"
+                      ],
+                      "type": "object"
+                    },
                     "saat_dilimi": {
                       "type": "string"
                     },
@@ -1444,6 +1696,8 @@
                     "created_at",
                     "sahipler",
                     "saat_dilimi",
+                    "platform_aski",
+                    "abonelik",
                     "uye_sayilari",
                     "moduller",
                     "beta_ozellikleri"
@@ -1455,7 +1709,2550 @@
             "description": "Default Response"
           }
         },
-        "summary": "Kurum detayı: üye sayıları, durum, modül ayarları, beta özellikleri",
+        "summary": "Kurum detayı: üye sayıları, durum, platform askısı, abonelik özeti, modül ayarları, beta özellikleri",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "gecmis": {
+                      "description": "Tüm abonelik kayıtları, yeniden eskiye (en çok 50).",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "bekleyen_periyot": {
+                            "enum": [
+                              "aylik",
+                              "yillik"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "bekleyen_plan_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "deneme_bitis_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "donem_baslangic_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "donem_bitis_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "durum": {
+                            "enum": [
+                              "deneme",
+                              "aktif",
+                              "odeme_bekliyor",
+                              "ek_sure",
+                              "askida",
+                              "iptal",
+                              "sona_erdi"
+                            ],
+                            "type": "string"
+                          },
+                          "ek_sure_bitis_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "fiyat_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "iptal_istendi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "kaynak": {
+                            "enum": [
+                              "deneme",
+                              "iyzico",
+                              "apple",
+                              "google",
+                              "kurumsal"
+                            ],
+                            "type": "string"
+                          },
+                          "otomatik_yenileme": {
+                            "type": "boolean"
+                          },
+                          "periyot": {
+                            "enum": [
+                              "aylik",
+                              "yillik"
+                            ],
+                            "type": "string"
+                          },
+                          "plan": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "ad": {
+                                "type": "string"
+                              },
+                              "aylik_fiyat_kurus": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "kdv_orani": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "kod": {
+                                "type": "string"
+                              },
+                              "kurum_turu": {
+                                "enum": [
+                                  "bireysel",
+                                  "ekip",
+                                  "kurum"
+                                ],
+                                "type": "string"
+                              },
+                              "limitler": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "max_ogrenci": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -1,
+                                    "type": "integer"
+                                  },
+                                  "max_ogretmen": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -1,
+                                    "type": "integer"
+                                  },
+                                  "max_sube": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -1,
+                                    "type": "integer"
+                                  },
+                                  "medya_kota_bayt": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -1,
+                                    "type": "integer"
+                                  },
+                                  "sms_aylik": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -1,
+                                    "type": "integer"
+                                  },
+                                  "soru_aylik_ogrenci": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -1,
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "max_ogrenci",
+                                  "max_ogretmen",
+                                  "max_sube",
+                                  "medya_kota_bayt",
+                                  "sms_aylik",
+                                  "soru_aylik_ogrenci"
+                                ],
+                                "type": "object"
+                              },
+                              "moduller": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "surum": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "yillik_fiyat_kurus": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "kod",
+                              "surum",
+                              "ad",
+                              "kurum_turu",
+                              "aylik_fiyat_kurus",
+                              "yillik_fiyat_kurus",
+                              "kdv_orani",
+                              "limitler",
+                              "moduller"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "plan",
+                          "kaynak",
+                          "durum",
+                          "periyot",
+                          "donem_baslangic_at",
+                          "donem_bitis_at",
+                          "deneme_bitis_at",
+                          "ek_sure_bitis_at",
+                          "otomatik_yenileme",
+                          "iptal_istendi_at",
+                          "fiyat_kurus",
+                          "bekleyen_plan_kodu",
+                          "bekleyen_periyot"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "odemeler": {
+                      "description": "Ödemeler, yeniden eskiye (en çok 50).",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "abonelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "donem_baslangic_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "donem_bitis_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "durum": {
+                            "enum": [
+                              "basarili",
+                              "basarisiz",
+                              "iade"
+                            ],
+                            "type": "string"
+                          },
+                          "hata_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak": {
+                            "enum": [
+                              "deneme",
+                              "iyzico",
+                              "apple",
+                              "google",
+                              "kurumsal"
+                            ],
+                            "type": "string"
+                          },
+                          "kdv_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "odeme_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "tutar_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "abonelik_id",
+                          "kaynak",
+                          "durum",
+                          "tutar_kurus",
+                          "kdv_kurus",
+                          "donem_baslangic_at",
+                          "donem_bitis_at",
+                          "odeme_at",
+                          "hata_kodu"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "yazma_kilitli": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "yazma_kilitli",
+                    "gecmis",
+                    "odemeler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurum aboneliği: güncel durum, abonelik geçmişi ve ödemeler",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik/askiya-al": {
+      "post": {
+        "description": "Etkin abonelik `askida` olur: kurum yazma isteklerinde `402 abonelik_gerekli` alır. Platform kurum askısı için `/kurumlar/:id/askiya-al`.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "kurum_durumu": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "platform_askida": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "kurum_durumu",
+                    "platform_askida"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Aboneliği askıya al (platform kurum askısından ayrı)",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik/deneme-uzat": {
+      "post": {
+        "description": "Etkin deneme `gun` kadar uzar; bitmiş (`sona_erdi`) deneme yeniden açılır.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "gun": {
+                    "maximum": 90,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "gun",
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "kurum_durumu": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "platform_askida": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "kurum_durumu",
+                    "platform_askida"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Deneme süresini uzat",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik/ek-sure": {
+      "post": {
+        "description": "Ödemesi bekleyen / ek süredeki / askıdaki (ücretli) abonelik `ek_sure` durumuna alınır ve tam erişim `gun` kadar sürer.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "gun": {
+                    "maximum": 60,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "gun",
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "kurum_durumu": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "platform_askida": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "kurum_durumu",
+                    "platform_askida"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ek süre ver",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik/iptal": {
+      "post": {
+        "description": "`hemen=false` (varsayılan): yenileme iptal edilir, dönem sonunda biter. `hemen=true`: abonelik şimdi `iptal` olur.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "hemen": {
+                    "default": false,
+                    "description": "true: abonelik hemen `iptal` olur; false: yenileme iptal edilir, dönem sonunda biter.",
+                    "type": "boolean"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "kurum_durumu": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "platform_askida": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "kurum_durumu",
+                    "platform_askida"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Aboneliği iptal et",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik/kurumsal-aktivasyon": {
+      "post": {
+        "description": "Teklif + fatura sözleşme numarasıyla kurum aboneliği `kurumsal` kaynakla `aktif` olur; deneme/askıdaki abonelik sona erer. Platform askısındaki kurum bu işlemle açılmaz.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "donem_baslangic_at": {
+                    "description": "Varsayılan: şimdi.",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string"
+                  },
+                  "donem_bitis_at": {
+                    "description": "Varsayılan: periyoda göre 30 / 365 gün.",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string"
+                  },
+                  "fiyat_kurus": {
+                    "description": "Anlaşılan fiyat; varsayılan plan fiyatı.",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  },
+                  "periyot": {
+                    "default": "aylik",
+                    "enum": [
+                      "aylik",
+                      "yillik"
+                    ],
+                    "type": "string"
+                  },
+                  "plan_kodu": {
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  },
+                  "sozlesme_no": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plan_kodu",
+                  "sozlesme_no",
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "kurum_durumu": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "platform_askida": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "kurum_durumu",
+                    "platform_askida"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurumsal (elle) aboneliği etkinleştir",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/abonelik/plan-degistir": {
+      "post": {
+        "description": "`hemen=true` (varsayılan) plan/periyodu anında değiştirir; `false` sahip akışıyla aynı biçimde dönem sonunda uygular.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "hemen": {
+                    "default": true,
+                    "description": "false: ücretli abonelikte hedef plan dönem sonunda uygulanır (sahip akışıyla aynı).",
+                    "type": "boolean"
+                  },
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  },
+                  "periyot": {
+                    "enum": [
+                      "aylik",
+                      "yillik"
+                    ],
+                    "type": "string"
+                  },
+                  "plan_kodu": {
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plan_kodu",
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bekleyen_periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "bekleyen_plan_kodu": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "deneme_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_baslangic_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "donem_bitis_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "durum": {
+                          "enum": [
+                            "deneme",
+                            "aktif",
+                            "odeme_bekliyor",
+                            "ek_sure",
+                            "askida",
+                            "iptal",
+                            "sona_erdi"
+                          ],
+                          "type": "string"
+                        },
+                        "ek_sure_bitis_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "fiyat_kurus": {
+                          "maximum": 9007199254740991,
+                          "minimum": -9007199254740991,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "iptal_istendi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "kaynak": {
+                          "enum": [
+                            "deneme",
+                            "iyzico",
+                            "apple",
+                            "google",
+                            "kurumsal"
+                          ],
+                          "type": "string"
+                        },
+                        "otomatik_yenileme": {
+                          "type": "boolean"
+                        },
+                        "periyot": {
+                          "enum": [
+                            "aylik",
+                            "yillik"
+                          ],
+                          "type": "string"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ad": {
+                              "type": "string"
+                            },
+                            "aylik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "kdv_orani": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "kod": {
+                              "type": "string"
+                            },
+                            "kurum_turu": {
+                              "enum": [
+                                "bireysel",
+                                "ekip",
+                                "kurum"
+                              ],
+                              "type": "string"
+                            },
+                            "limitler": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "max_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_ogretmen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "max_sube": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "medya_kota_bayt": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "sms_aylik": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                },
+                                "soru_aylik_ogrenci": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -1,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "max_ogrenci",
+                                "max_ogretmen",
+                                "max_sube",
+                                "medya_kota_bayt",
+                                "sms_aylik",
+                                "soru_aylik_ogrenci"
+                              ],
+                              "type": "object"
+                            },
+                            "moduller": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "surum": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yillik_fiyat_kurus": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kod",
+                            "surum",
+                            "ad",
+                            "kurum_turu",
+                            "aylik_fiyat_kurus",
+                            "yillik_fiyat_kurus",
+                            "kdv_orani",
+                            "limitler",
+                            "moduller"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "plan",
+                        "kaynak",
+                        "durum",
+                        "periyot",
+                        "donem_baslangic_at",
+                        "donem_bitis_at",
+                        "deneme_bitis_at",
+                        "ek_sure_bitis_at",
+                        "otomatik_yenileme",
+                        "iptal_istendi_at",
+                        "fiyat_kurus",
+                        "bekleyen_plan_kodu",
+                        "bekleyen_periyot"
+                      ],
+                      "type": "object"
+                    },
+                    "kurum_durumu": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "platform_askida": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "abonelik",
+                    "kurum_durumu",
+                    "platform_askida"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Planı değiştir",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/ac": {
+      "post": {
+        "description": "Abonelik de kilitliyse (`askida`/`sona_erdi`) kurum `askida` kalır (`abonelik_kilitli=true`); abonelik askısını platform bu uçla açmaz (ek süre veya kurumsal aktivasyon kullanın).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik_kilitli": {
+                      "type": "boolean"
+                    },
+                    "degisti": {
+                      "description": "false: kurum zaten istenen durumdaydı.",
+                      "type": "boolean"
+                    },
+                    "durum": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "kurum_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "platform_aski": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "askida": {
+                          "description": "Platform yöneticisi kurumu elle askıya aldı.",
+                          "type": "boolean"
+                        },
+                        "askida_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "neden": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "askida",
+                        "neden",
+                        "askida_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "kurum_id",
+                    "durum",
+                    "platform_aski",
+                    "abonelik_kilitli",
+                    "degisti"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Platform askısını kaldır",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/platform/kurumlar/{kurum_id}/askiya-al": {
+      "post": {
+        "description": "Kurum üyeleri kiracı uçlarında `403 kurum_askida` alır (taklit okuması hariç). `hesap.kurum.degisti.v1` yayımlanır. Abonelik/ödeme işi bu askıyı kaldıramaz; yalnız `/ac` kaldırır. Zaten askıdaysa değişiklik yapılmaz (`degisti=false`).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "neden": {
+                    "maxLength": 500,
+                    "minLength": 10,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "neden"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abonelik_kilitli": {
+                      "type": "boolean"
+                    },
+                    "degisti": {
+                      "description": "false: kurum zaten istenen durumdaydı.",
+                      "type": "boolean"
+                    },
+                    "durum": {
+                      "enum": [
+                        "aktif",
+                        "askida",
+                        "kapali"
+                      ],
+                      "type": "string"
+                    },
+                    "kurum_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "platform_aski": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "askida": {
+                          "description": "Platform yöneticisi kurumu elle askıya aldı.",
+                          "type": "boolean"
+                        },
+                        "askida_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "neden": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "askida",
+                        "neden",
+                        "askida_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "kurum_id",
+                    "durum",
+                    "platform_aski",
+                    "abonelik_kilitli",
+                    "degisti"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurumu platform olarak askıya al (abonelik askısından ayrı)",
         "tags": [
           "platform"
         ]
@@ -5649,6 +8446,373 @@
         ]
       }
     },
+    "/v1/abonelik/kurumlar/{kurum_id}/faturalar": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "faturalar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "bekliyor",
+                              "kesildi",
+                              "hata",
+                              "iptal"
+                            ],
+                            "type": "string"
+                          },
+                          "fatura_no": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kdv_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "kdv_orani": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "kesim_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "matrah_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "odeme_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "pdf_dosya_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "toplam_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "tur": {
+                            "enum": [
+                              "e_arsiv",
+                              "iade"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "odeme_id",
+                          "tur",
+                          "durum",
+                          "fatura_no",
+                          "matrah_kurus",
+                          "kdv_kurus",
+                          "toplam_kurus",
+                          "kdv_orani",
+                          "kesim_at",
+                          "pdf_dosya_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "faturalar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "e-Arsiv fatura gecmisi (meta). PDF dosyasi hazir degilse `pdf_dosya_id` null doner; en yeni ustte.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/kurumlar/{kurum_id}/odeme/baslat": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "periyot": {
+                    "default": "aylik",
+                    "enum": [
+                      "aylik",
+                      "yillik"
+                    ],
+                    "type": "string"
+                  },
+                  "plan_kodu": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plan_kodu"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "form_icerigi": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "iyzico"
+                      ],
+                      "type": "string"
+                    },
+                    "kdv_kurus": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "oturum_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "tutar_kurus": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "yonlendirme_url": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "oturum_id",
+                    "kaynak",
+                    "yonlendirme_url",
+                    "form_icerigi",
+                    "tutar_kurus",
+                    "kdv_kurus"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Web odemesi (iyzico yinelenen abonelik) baslat: saglayicinin odeme sayfasi adresi ya da gomulecek form doner. Fatura bilgisi yoksa 422 fatura_bilgisi_gerekli; baska kanalda (magaza, kurumsal) etkin ucretli abonelik varsa 409 abonelik_baska_kanalda; iyzico aboneligi zaten aktifse 409 abonelik_zaten_aktif; kanal yapilandirilmamissa 503 odeme_kanali_kapali. Deneme sirasinda ucretliye gecis cift abonelik sayilmaz.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/kurumlar/{kurum_id}/odemeler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "odemeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "abonelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "donem_baslangic_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "donem_bitis_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "durum": {
+                            "enum": [
+                              "basarili",
+                              "basarisiz",
+                              "iade"
+                            ],
+                            "type": "string"
+                          },
+                          "hata_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak": {
+                            "enum": [
+                              "deneme",
+                              "iyzico",
+                              "apple",
+                              "google",
+                              "kurumsal"
+                            ],
+                            "type": "string"
+                          },
+                          "kdv_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "odeme_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "ters_cevrilen_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "tutar_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "abonelik_id",
+                          "kaynak",
+                          "durum",
+                          "tutar_kurus",
+                          "kdv_kurus",
+                          "donem_baslangic_at",
+                          "donem_bitis_at",
+                          "odeme_at",
+                          "hata_kodu",
+                          "ters_cevrilen_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "odemeler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Abonelik odeme gecmisi (basarili, basarisiz, iade); en yeni ustte.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
     "/v1/abonelik/kurumlar/{kurum_id}/planlar": {
       "get": {
         "parameters": [
@@ -5793,6 +8957,87 @@
           }
         },
         "summary": "Kurum turune uygun aktif planlari listele (plan yukseltme/dusurme secenekleri).",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/odeme/iyzico/donus": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "iyzico odeme sayfasi donusu (callback; form govdesinde `token`). Sonucu isler ve web uygulamasina 303 ile yonlendirir (`/abonelik?odeme=basarili|basarisiz|bekliyor|hata`).",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/webhook/iyzico": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "durum": {
+                      "enum": [
+                        "alindi",
+                        "tekrar",
+                        "yoksayildi"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "durum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "iyzico abonelik webhook (kimliksiz; imza basligi dogrulanir). Ham govde saklanir, hemen 200 doner, isleme arka planda yapilir. Imza gecersizse 401; kanal kapaliysa 503.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/webhook/revenuecat": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "durum": {
+                      "enum": [
+                        "alindi",
+                        "tekrar",
+                        "yoksayildi"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "durum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "RevenueCat (App Store / Google Play) webhook (kimliksiz; Authorization basligi paylasilan sirla dogrulanir). `app_user_id` kurum kimligidir. Ham govde saklanir, hemen 200 doner.",
         "tags": [
           "abonelik"
         ]

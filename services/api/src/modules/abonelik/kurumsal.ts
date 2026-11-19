@@ -1,5 +1,5 @@
 import type { Periyot } from '@kopru/contracts';
-import type { Database } from '@kopru/service-kit';
+import type { Database, Tx } from '@kopru/service-kit';
 import { uuidv7 } from 'uuidv7';
 
 import { abonelikSistemIslemi } from '../../sistem/abonelik-sistem.js';
@@ -34,9 +34,6 @@ export function kurumsalAboneligiAktiflestir(
   sistemDb: Database | null,
   girdi: KurumsalAktivasyonGirdisi,
 ): Promise<AbonelikVePlan> {
-  const periyot = girdi.periyot ?? 'aylik';
-  const baslangic = girdi.donemBaslangicAt ?? new Date();
-  const bitis = girdi.donemBitisAt ?? gunEkle(baslangic, periyot === 'yillik' ? 365 : 30);
   return abonelikSistemIslemi(
     sistemVeritabani(sistemDb),
     {
@@ -45,22 +42,36 @@ export function kurumsalAboneligiAktiflestir(
       kurumId: girdi.kurumId,
       aktorKullaniciId: girdi.aktorKullaniciId,
       ...(girdi.istekId ? { istekId: girdi.istekId } : {}),
-      ayrinti: { plan_kodu: girdi.planKodu, periyot, sozlesme_no: girdi.sozlesmeNo },
+      ayrinti: {
+        plan_kodu: girdi.planKodu,
+        periyot: girdi.periyot ?? 'aylik',
+        sozlesme_no: girdi.sozlesmeNo,
+      },
     },
-    (tx) =>
-      aboneligiAktiflestir(tx, {
-        kurumId: girdi.kurumId,
-        planKodu: girdi.planKodu,
-        kaynak: 'kurumsal',
-        periyot,
-        donemBaslangicAt: baslangic,
-        donemBitisAt: bitis,
-        ...(girdi.fiyatKurus === undefined ? {} : { fiyatKurus: girdi.fiyatKurus }),
-        otomatikYenileme: false,
-        kurumsalSozlesmeNo: girdi.sozlesmeNo,
-        kullaniciId: girdi.aktorKullaniciId,
-        actor: { tur: 'kullanici', id: girdi.aktorKullaniciId },
-        correlationId: girdi.istekId ?? uuidv7(),
-      }),
+    (tx) => kurumsalAktivasyonIslemi(tx, girdi),
   );
+}
+
+/** Aktivasyonun islem govdesi (cagiran `api_sistem` islemini ve denetimi yonetir; platform ucu da kullanir). */
+export function kurumsalAktivasyonIslemi(
+  tx: Tx,
+  girdi: KurumsalAktivasyonGirdisi,
+): Promise<AbonelikVePlan> {
+  const periyot = girdi.periyot ?? 'aylik';
+  const baslangic = girdi.donemBaslangicAt ?? new Date();
+  const bitis = girdi.donemBitisAt ?? gunEkle(baslangic, periyot === 'yillik' ? 365 : 30);
+  return aboneligiAktiflestir(tx, {
+    kurumId: girdi.kurumId,
+    planKodu: girdi.planKodu,
+    kaynak: 'kurumsal',
+    periyot,
+    donemBaslangicAt: baslangic,
+    donemBitisAt: bitis,
+    ...(girdi.fiyatKurus === undefined ? {} : { fiyatKurus: girdi.fiyatKurus }),
+    otomatikYenileme: false,
+    kurumsalSozlesmeNo: girdi.sozlesmeNo,
+    kullaniciId: girdi.aktorKullaniciId,
+    actor: { tur: 'kullanici', id: girdi.aktorKullaniciId },
+    correlationId: girdi.istekId ?? uuidv7(),
+  });
 }

@@ -34,18 +34,18 @@ import { planDegistirIstegi, yenilemeyiIptalEt, type OlayBaglami } from './yazma
 
 type FaturaBilgisiYaniti = z.infer<typeof FaturaBilgisiYanitSema>;
 
-function yetkiAl(request: { yetki: YetkiBaglami | null }): YetkiBaglami {
+export function yetkiAl(request: { yetki: YetkiBaglami | null }): YetkiBaglami {
   if (!request.yetki) throw new AppError(403, errorCodes.izinYok, 'Bu işlem için yetkiniz yok.');
   return request.yetki;
 }
 
-const kiraci = (y: YetkiBaglami) => ({
+export const kiraci = (y: YetkiBaglami) => ({
   kurumId: y.kurumId,
   kullaniciId: y.kullaniciId,
   roller: [y.rol],
 });
 
-const olayBaglami = (y: YetkiBaglami, correlationId: string): OlayBaglami => ({
+export const olayBaglami = (y: YetkiBaglami, correlationId: string): OlayBaglami => ({
   actor: { tur: 'kullanici', id: y.kullaniciId },
   correlationId,
 });
@@ -237,6 +237,15 @@ export const abonelikYollari: ServicePlugin = (app) => {
         },
         (tx) => yenilemeyiIptalEt(tx, y.kurumId, olayBaglami(y, request.correlationId)),
       );
+      // iyzico aboneliginde saglayicidaki otomatik yenileme de durdurulur (en iyi cabayla: hata iptali bozmaz;
+      // yerel `otomatik_yenileme=false` kaydi donem sonunda aboneligi zaten bitirir).
+      if (satir.abonelik.kaynak === 'iyzico' && satir.abonelik.dis_abonelik_id) {
+        try {
+          await app.abonelikOdeme.iyzico?.yenilemeyiDurdur?.(satir.abonelik.dis_abonelik_id);
+        } catch (err) {
+          request.log.warn({ err: String(err) }, 'abonelik_iyzico_yenileme_durdurulamadi');
+        }
+      }
       return withTenant(veritabani(), kiraci(y), async (tx) => ({
         abonelik: await abonelikYanitiUret(tx, satir),
       }));
@@ -288,6 +297,6 @@ export const abonelikYollari: ServicePlugin = (app) => {
 };
 
 /** Denetim `istek_id` kolonu UUID ister; korelasyon kimligi UUID degilse yok sayilir. */
-function istekKimligi(correlationId: string): string | undefined {
+export function istekKimligi(correlationId: string): string | undefined {
   return correlationId.length === 36 ? correlationId : undefined;
 }

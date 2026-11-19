@@ -7,7 +7,12 @@ import { inject } from 'vitest';
 import { buildService } from '../app.js';
 import { loadServiceEnv } from '../config.js';
 import { migrate } from '../db/migrate.js';
-import { YakalayanSmsGonderici } from '../modules/hesap/index.js';
+import {
+  YakalayanSmsGonderici,
+  base32Coz,
+  sayacHesapla,
+  totpKodu,
+} from '../modules/hesap/index.js';
 import {
   TEST_APP_PASSWORD,
   TEST_SISTEM_PASSWORD,
@@ -110,6 +115,48 @@ export async function tokenAl(
   if (res.statusCode !== 200) throw new Error(`token: ${res.body}`);
   const j = res.json<TokenSonucu['govde'] & { access_token: string }>();
   return { accessToken: j.access_token, govde: j };
+}
+
+export interface HazirPlatformKullanicisi extends GirisSonucu {
+  rol: 'destek' | 'yonetici';
+  /** Kurulumdan ve oturumda 2FA dogrulamasindan SONRA alinmis belirtec (`plat_2fa_exp` claim'li). */
+  token: string;
+  sir: string;
+}
+
+/**
+ * Platform kullanicisi hazirlar: OTP girisi, `platform_rolu`, 2FA kurulumu + onayi ve yeni erisim belirteci.
+ * `ikinciAdim=false` ise 2FA yapilmaz (belirtec yalniz `plat` claim'i tasir).
+ */
+export async function hazirPlatformKullanicisi(
+  servis: TestServisi,
+  sistem: postgres.Sql,
+  rol: 'destek' | 'yonetici',
+  ikinciAdim = true,
+  remoteAddress?: string,
+): Promise<HazirPlatformKullanicisi> {
+  const giris = await otpIleGiris(servis);
+  await sistem`update hesap.kullanicilar set platform_rolu = ${rol} where id = ${giris.kullaniciId}`;
+  let { accessToken } = await tokenAl(servis, giris.oturum);
+  let sir = '';
+  if (ikinciAdim) {
+    const cagri = (url: string, payload: object) =>
+      servis.service.app.inject({
+        method: 'POST',
+        url,
+        headers: bearer(accessToken),
+        payload,
+        ...(remoteAddress ? { remoteAddress } : {}),
+      });
+    const kur = await cagri('/platform/ikinci-adim/kur', {});
+    if (kur.statusCode !== 200) throw new Error(`2fa kur: ${kur.body}`);
+    sir = kur.json<{ sir: string }>().sir;
+    const kod = totpKodu(base32Coz(sir), sayacHesapla(new Date()));
+    const onay = await cagri('/platform/ikinci-adim/onayla', { kod });
+    if (onay.statusCode !== 200) throw new Error(`2fa onayla: ${onay.body}`);
+    accessToken = (await tokenAl(servis, giris.oturum)).accessToken;
+  }
+  return { ...giris, rol, token: accessToken, sir };
 }
 
 export const bearer = (token: string) => ({ authorization: `Bearer ${token}` });

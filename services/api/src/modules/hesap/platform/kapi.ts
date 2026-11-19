@@ -1,5 +1,5 @@
 import { errorCodes } from '@kopru/contracts';
-import { AppError } from '@kopru/service-kit';
+import { AppError, istegiSaltOkunurYap } from '@kopru/service-kit';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 
 import { platformDenetimYaz } from '../../../sistem/platform-denetim.js';
@@ -93,6 +93,8 @@ export function platformKokKancalari(app: FastifyInstance, kimlik: KimlikHizmeti
       kurumId: auth.kurumId,
       hedefKullaniciId: auth.kullaniciId,
     };
+    // Son guvence (ADR 0004 adim 8): bu istegin tum veritabani islemleri `READ ONLY` baslar.
+    istegiSaltOkunurYap();
     // Canli dogrulama: sonlandirilmis, suresi dolmus veya baska hedefe ait kayit -> 401.
     const gecersiz = () => new AppError(401, errorCodes.unauthorized, 'Taklit oturumu sona ermiş.');
     if (typeof taklitId !== 'string' || !uuidMi(taklitId) || !auth.kurumId) throw gecersiz();

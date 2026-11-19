@@ -1,10 +1,14 @@
+import { randomUUID } from 'node:crypto';
+
 import { createDb, withTenant, type Database } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { kurumsalAboneligiAktiflestir } from './modules/abonelik/index.js';
 import { base32Coz, sayacHesapla, totpKodu } from './modules/hesap/index.js';
 import { platformYoneticiEkle } from './sistem/platform-yonetici.js';
+import { dersYardimcilari } from './test/ders-yardimcilar.js';
 import {
   bearer,
   dbYok,
@@ -161,6 +165,34 @@ describe.skipIf(dbYok())('platform yönetimi çekirdeği (/platform/*)', () => {
         Buffer.from(kurum.token.split('.')[1] ?? '', 'base64url').toString('utf8'),
       ) as Record<string, unknown>;
       expect(digerPayload.plat).toBeUndefined();
+    });
+
+    it('plat_2fa_exp: yalnız oturumda taze 2FA varsa ve yeni belirteç alındıktan sonra; taklit/kurum belirtecinde yok', async () => {
+      const claim = (jwt: string) =>
+        JSON.parse(Buffer.from(jwt.split('.')[1] ?? '', 'base64url').toString('utf8')) as Record<
+          string,
+          unknown
+        >;
+      const k = await platformKullanicisi('yonetici');
+      // 2FA'dan once: yalniz `plat`.
+      expect(claim(k.token).plat).toBe('yonetici');
+      expect(claim(k.token).plat_2fa_exp).toBeUndefined();
+      await ikinciAdimTamamla(k);
+      // Eski belirtec degismez; istemci /auth/token ile yenisini alir.
+      expect(claim(k.token).plat_2fa_exp).toBeUndefined();
+      const yeni = (await tokenAl(t, k.oturum)).accessToken;
+      const exp = claim(yeni).plat_2fa_exp as number;
+      const beklenen = Math.floor(Date.now() / 1000) + 8 * 3600;
+      expect(Math.abs(exp - beklenen)).toBeLessThan(120);
+      // Baska (2FA'siz) oturum claim almaz; platform kullanicisi olmayan da.
+      const digerOturum = await otpIleGiris(t, k.telefon);
+      expect(
+        claim((await tokenAl(t, digerOturum.oturum)).accessToken).plat_2fa_exp,
+      ).toBeUndefined();
+      expect(claim(kurum.token).plat_2fa_exp).toBeUndefined();
+      // Dogrulama suresi (PLATFORM_IKINCI_ADIM_OMRU_SN) dolmus oturum claim almaz.
+      await sistem`update hesap.oturumlar set ikinci_adim_at = now() - interval '9 hours' where id in (select id from hesap.oturumlar where kullanici_id = ${k.kullaniciId} and ikinci_adim_at is not null)`;
+      expect(claim((await tokenAl(t, k.oturum)).accessToken).plat_2fa_exp).toBeUndefined();
     });
 
     it('2FA tamamlanmamış platform kullanıcısı /platform/* çağıramaz (yalnız ikinci adım uçları açık)', async () => {
@@ -706,6 +738,49 @@ describe.skipIf(dbYok())('platform yönetimi çekirdeği (/platform/*)', () => {
       expect((await p('GET', dersUrl(), kurum.token)).statusCode).toBe(200);
     });
 
+    it('taklitte yan etkili GET (yoklama listesi katılımcı eşitleme, finans dışa aktarma) hata vermeden okur, yazmaz; işlem READ ONLY', async () => {
+      const y = dersYardimcilari({ t, sistem });
+      const s = await y.kur({ ogrenciSayisi: 2 });
+      const ders = await y.dersAc(s);
+      const katilimci = async () =>
+        (
+          await sistem<{ n: number }[]>`
+            select count(*)::int n from ders.ders_katilimcilari where ders_id = ${ders.id}`
+        )[0]?.n;
+      expect(await katilimci()).toBe(2);
+      const [yeni] = await y.topluOgrenci(s.k.kurumId, 1, 'Sonradan');
+      await y.gruba(s.k, s.grup.id, [yeni ?? '']);
+      const basla = await p('POST', '/platform/taklit', destek.token, {
+        hedef_kullanici_id: s.k.kullaniciId,
+        kurum_id: s.k.kurumId,
+        neden: 'Destek talebi: yoklama listesi eksik görünüyor',
+      });
+      expect(basla.statusCode, basla.body).toBe(200);
+      const tt = basla.json<{ access_token: string }>().access_token;
+      const yoklamaUrl = `/v1/ders/kurumlar/${s.k.kurumId}/dersler/${ders.id}/yoklamalar`;
+      const taklitOku = await p('GET', yoklamaUrl, tt);
+      expect(taklitOku.statusCode, taklitOku.body).toBe(200);
+      // Taklit okuma esitleme yazmadi.
+      expect(await katilimci()).toBe(2);
+      expect(taklitOku.json<{ katilimcilar: unknown[] }>().katilimcilar).toHaveLength(2);
+      const ay = new Date().toISOString().slice(0, 7);
+      const disaUrl = `/v1/finans/kurumlar/${s.k.kurumId}/disa-aktar?ay=${ay}`;
+      const disaSayisi = async () =>
+        (
+          await sistem<{ n: number }[]>`
+            select count(*)::int n from hesap.denetim_kayitlari
+            where kurum_id = ${s.k.kurumId} and eylem = 'finans.disa_aktar'`
+        )[0]?.n;
+      const disa = await p('GET', disaUrl, tt);
+      expect(disa.statusCode, disa.body.slice(0, 200)).toBe(200);
+      expect(await disaSayisi()).toBe(0);
+      expect((await p('GET', disaUrl, s.k.token)).statusCode).toBe(200);
+      expect(await disaSayisi()).toBe(1);
+      // Ayni okuma hedefin kendi belirteciyle esitler (yazma yolu kapali degil, yalniz taklitte).
+      expect((await p('GET', yoklamaUrl, s.k.token)).statusCode).toBe(200);
+      expect(await katilimci()).toBe(3);
+    });
+
     it('süresi dolan taklit belirteci 401; başkasının taklidini destek sonlandıramaz', async () => {
       const basla = await p('POST', '/platform/taklit', destek.token, {
         hedef_kullanici_id: kurum.kullaniciId,
@@ -790,6 +865,317 @@ describe.skipIf(dbYok())('platform yönetimi çekirdeği (/platform/*)', () => {
       const dis = await cagri(s, 'GET', '/v1/hesap/uyeliklerim', tk, undefined, '192.0.2.9');
       expect(dis.statusCode).toBe(403);
       expect(dis.json<Hata>().error.code).toBe('platform_ip_yasak');
+    });
+  });
+
+  describe('abonelik düzeltmeleri ve platform askısı', () => {
+    const ders = (k: KurumluKullanici) =>
+      `/v1/ders/kurumlar/${k.kurumId}/dersler?baslangic=2026-01-01T00:00:00Z&bitis=2026-02-01T00:00:00Z`;
+    const ab = (k: KurumluKullanici, yol = '') => `/platform/kurumlar/${k.kurumId}/abonelik${yol}`;
+    const pk = (k: KurumluKullanici, yol: string) => `/platform/kurumlar/${k.kurumId}/${yol}`;
+    interface AboneligiYanit {
+      abonelik: {
+        durum: string;
+        kaynak: string;
+        plan: { kod: string };
+        deneme_bitis_at: string | null;
+        ek_sure_bitis_at: string | null;
+        iptal_istendi_at: string | null;
+      };
+      kurum_durumu: string;
+      platform_askida: boolean;
+    }
+    interface AskiYanit {
+      durum: string;
+      platform_aski: { askida: boolean; neden: string | null; askida_at: string | null };
+      abonelik_kilitli: boolean;
+      degisti: boolean;
+    }
+    const kurumDurumu = async (k: KurumluKullanici) =>
+      (
+        await sistem<{ durum: string; platform_askida_at: Date | null }[]>`
+          select durum, platform_askida_at from hesap.kurumlar where id = ${k.kurumId}`
+      )[0];
+    const eylemDenetimi = (eylem: string, k: KurumluKullanici) =>
+      sistem<{ neden: string; aktor_kullanici_id: string }[]>`
+        select neden, aktor_kullanici_id from hesap.denetim_kayitlari
+        where eylem = ${eylem} and kurum_id = ${k.kurumId} order by created_at`;
+    const kurumOlayi = async (k: KurumluKullanici) =>
+      (
+        await sistem<{ n: number }[]>`
+          select count(*)::int n from ortak.outbox
+          where kurum_id = ${k.kurumId} and subject = 'evt.hesap.kurum.degisti.v1'`
+      )[0]?.n ?? 0;
+    const yp = (yol: string, govde: unknown, token = yonetici.token) =>
+      p('POST', yol, token, govde);
+
+    it('yalnız yönetici; neden zorunlu; okuma geçmiş ve ödemeleri döner; kurum detayında özet', async () => {
+      const k = await kurumluKullanici(t, 'bireysel', 'Abonelik Okulu 1');
+      const neden = 'destek deneme nedeni';
+      for (const [yontem, yol, govde] of [
+        ['GET', ab(k), undefined],
+        ['POST', ab(k, '/deneme-uzat'), { gun: 5, neden }],
+        ['POST', ab(k, '/kurumsal-aktivasyon'), {}],
+        ['POST', pk(k, 'askiya-al'), { neden }],
+        ['POST', pk(k, 'ac'), { neden }],
+      ] as const) {
+        const r = await p(yontem, yol, destek.token, govde);
+        expect(r.statusCode, yol).toBe(403);
+        expect(r.json<Hata>().error.code, yol).toBe('platform_izin_yok');
+      }
+      expect((await yp(ab(k, '/deneme-uzat'), { gun: 5, neden: 'kısa' })).statusCode).toBe(400);
+      expect(
+        (await yp(ab(k, '/deneme-uzat'), { gun: 0, neden: 'yeterince uzun neden' })).statusCode,
+      ).toBe(400);
+      const oku = await p('GET', ab(k), yonetici.token);
+      expect(oku.statusCode, oku.body).toBe(200);
+      const g = oku.json<{
+        abonelik: { durum: string; kaynak: string };
+        yazma_kilitli: boolean;
+        gecmis: unknown[];
+        odemeler: unknown[];
+      }>();
+      expect(g.abonelik).toMatchObject({ durum: 'deneme', kaynak: 'deneme' });
+      expect(g.yazma_kilitli).toBe(false);
+      expect(g.gecmis).toHaveLength(1);
+      expect(g.odemeler).toEqual([]);
+      expect(
+        (await p('GET', `/platform/kurumlar/${randomUUID()}/abonelik`, yonetici.token)).statusCode,
+      ).toBe(404);
+      const detay = (await p('GET', `/platform/kurumlar/${k.kurumId}`, destek.token)).json<{
+        platform_aski: { askida: boolean };
+        abonelik: { abonelik: { durum: string } | null; yazma_kilitli: boolean };
+      }>();
+      expect(detay.platform_aski.askida).toBe(false);
+      expect(detay.abonelik.abonelik?.durum).toBe('deneme');
+    });
+
+    it('deneme uzat, plan değiştir (hemen / uyumsuz plan), kurumsal aktivasyon: tek denetim satırı ve olay', async () => {
+      const k = await kurumluKullanici(t, 'bireysel', 'Abonelik Okulu 2');
+      const once = (await p('GET', ab(k), yonetici.token)).json<{
+        abonelik: { deneme_bitis_at: string };
+      }>().abonelik.deneme_bitis_at;
+      const uz = await yp(ab(k, '/deneme-uzat'), {
+        gun: 10,
+        neden: 'Pilot kurum, deneme uzatma talebi',
+      });
+      expect(uz.statusCode, uz.body).toBe(200);
+      const fark =
+        new Date(uz.json<AboneligiYanit>().abonelik.deneme_bitis_at ?? 0).getTime() -
+        new Date(once).getTime();
+      expect(fark).toBe(10 * 24 * 3600 * 1000);
+      const satirlar = await eylemDenetimi('platform.abonelik_deneme_uzat', k);
+      expect(satirlar).toHaveLength(1);
+      expect(satirlar[0]).toMatchObject({
+        neden: 'Pilot kurum, deneme uzatma talebi',
+        aktor_kullanici_id: yonetici.kullaniciId,
+      });
+
+      const plan = await yp(ab(k, '/plan-degistir'), {
+        plan_kodu: 'koc',
+        neden: 'Kurum talebi, plan düzeltme',
+      });
+      expect(plan.statusCode, plan.body).toBe(200);
+      expect(plan.json<AboneligiYanit>().abonelik.plan.kod).toBe('koc');
+      const uyumsuz = await yp(ab(k, '/plan-degistir'), {
+        plan_kodu: 'kurum',
+        neden: 'Uyumsuz plan denemesi',
+      });
+      expect(uyumsuz.statusCode).toBe(404);
+      expect(uyumsuz.json<Hata>().error.code).toBe('plan_bulunamadi');
+
+      const kurumsal = await yp(ab(k, '/kurumsal-aktivasyon'), {
+        plan_kodu: 'koc',
+        sozlesme_no: 'SZL-2026-001',
+        periyot: 'yillik',
+        fiyat_kurus: 500000,
+        neden: 'Teklif kabul edildi, fatura kesildi',
+      });
+      expect(kurumsal.statusCode, kurumsal.body).toBe(200);
+      expect(kurumsal.json<AboneligiYanit>()).toMatchObject({
+        abonelik: { durum: 'aktif', kaynak: 'kurumsal' },
+        kurum_durumu: 'aktif',
+        platform_askida: false,
+      });
+      const gecmis = (await p('GET', ab(k), yonetici.token)).json<{
+        gecmis: { durum: string }[];
+      }>().gecmis;
+      expect(gecmis.map((x) => x.durum)).toEqual(['aktif', 'sona_erdi']);
+      expect(await eylemDenetimi('platform.abonelik_kurumsal_aktivasyon', k)).toHaveLength(1);
+      const [olay] = await sistem<{ n: number }[]>`
+        select count(*)::int n from ortak.outbox
+        where kurum_id = ${k.kurumId} and subject = 'evt.abonelik.abonelik.degisti.v1'`;
+      expect(olay?.n).toBeGreaterThanOrEqual(4);
+      // Deneme olmayan abonelik uzatilamaz; aktif aboneliğe ek süre verilmez.
+      expect(
+        (await yp(ab(k, '/deneme-uzat'), { gun: 3, neden: 'deneme dışı abonelik' })).statusCode,
+      ).toBe(409);
+      expect(
+        (await yp(ab(k, '/ek-sure'), { gun: 3, neden: 'aktif aboneliğe ek süre' })).statusCode,
+      ).toBe(409);
+    });
+
+    it('ek süre, abonelik askısı (yazmayı kilitler, ek süre açar), yenileme iptali ve hemen iptal', async () => {
+      const k = await kurumluKullanici(t, 'bireysel', 'Abonelik Okulu 3');
+      await yp(ab(k, '/kurumsal-aktivasyon'), {
+        plan_kodu: 'baslangic',
+        sozlesme_no: 'SZL-2026-002',
+        neden: 'Kurumsal sözleşme aktivasyonu',
+      });
+      await sistem`update abonelik.abonelikler set durum = 'odeme_bekliyor',
+        donem_baslangic_at = now() - interval '40 days', donem_bitis_at = now() - interval '1 day'
+        where kurum_id = ${k.kurumId} and durum = 'aktif'`;
+      const ek = await yp(ab(k, '/ek-sure'), { gun: 5, neden: 'Ödeme gecikmesi için ek süre' });
+      expect(ek.statusCode, ek.body).toBe(200);
+      const e = ek.json<AboneligiYanit>().abonelik;
+      expect(e.durum).toBe('ek_sure');
+      const kalanGun =
+        (new Date(e.ek_sure_bitis_at ?? 0).getTime() - Date.now()) / (24 * 3600 * 1000);
+      expect(kalanGun).toBeGreaterThan(4.9);
+      expect(kalanGun).toBeLessThan(5.1);
+
+      // Abonelik askisi: durum askida, kurum askida gorunur ama platform askisi degil.
+      const aski = await yp(ab(k, '/askiya-al'), {
+        neden: 'Ödeme alınamadı, abonelik askıya alındı',
+      });
+      expect(aski.statusCode, aski.body).toBe(200);
+      expect(aski.json<AboneligiYanit>()).toMatchObject({
+        abonelik: { durum: 'askida' },
+        kurum_durumu: 'askida',
+        platform_askida: false,
+      });
+      expect(await kurumDurumu(k)).toMatchObject({ durum: 'askida', platform_askida_at: null });
+      const kilit = await p('GET', ab(k), yonetici.token);
+      expect(kilit.json<{ yazma_kilitli: boolean }>().yazma_kilitli).toBe(true);
+      // Askidaki ucretli abonelige ek sure: acar.
+      const ac = await yp(ab(k, '/ek-sure'), { gun: 3, neden: 'Ödeme sözü alındı, ek süre' });
+      expect(ac.statusCode, ac.body).toBe(200);
+      expect(ac.json<AboneligiYanit>()).toMatchObject({
+        abonelik: { durum: 'ek_sure' },
+        kurum_durumu: 'aktif',
+      });
+
+      // Iptal: once yenileme (donem sonu), sonra hemen.
+      await yp(ab(k, '/kurumsal-aktivasyon'), {
+        plan_kodu: 'baslangic',
+        sozlesme_no: 'SZL-2026-003',
+        neden: 'Ödeme alındı, yeniden aktivasyon',
+      });
+      const yenileme = await yp(ab(k, '/iptal'), { neden: 'Kurum yenilemeyi iptal etti' });
+      expect(yenileme.statusCode, yenileme.body).toBe(200);
+      expect(yenileme.json<AboneligiYanit>().abonelik.durum).toBe('aktif');
+      expect(yenileme.json<AboneligiYanit>().abonelik.iptal_istendi_at).not.toBeNull();
+      const hemen = await yp(ab(k, '/iptal'), {
+        hemen: true,
+        neden: 'Sözleşme feshedildi, hemen iptal',
+      });
+      expect(hemen.statusCode, hemen.body).toBe(200);
+      expect(hemen.json<AboneligiYanit>().abonelik.durum).toBe('iptal');
+    });
+
+    it('platform askısı: kurum kullanıcısı 403 kurum_askida, taklit okur; abonelik/ödeme askıyı kaldıramaz; /ac açar', async () => {
+      const k = await kurumluKullanici(t, 'bireysel', 'Askı Okulu');
+      expect((await p('GET', ders(k), k.token)).statusCode).toBe(200);
+      expect((await yp(pk(k, 'askiya-al'), { neden: 'kısa' })).statusCode).toBe(400);
+      const olayOnce = await kurumOlayi(k);
+      const neden = 'Kötüye kullanım şikayeti incelemesi';
+      const askiya = await yp(pk(k, 'askiya-al'), { neden });
+      expect(askiya.statusCode, askiya.body).toBe(200);
+      expect(askiya.json<AskiYanit>()).toMatchObject({
+        durum: 'askida',
+        platform_aski: { askida: true, neden },
+        degisti: true,
+      });
+      expect(await kurumOlayi(k)).toBe(olayOnce + 1);
+      // Idempotent: ikinci cagri hicbir sey degistirmez, ikinci olay yok.
+      const tekrar = await yp(pk(k, 'askiya-al'), { neden: 'ikinci istek denemesi' });
+      expect(tekrar.json<AskiYanit>().degisti).toBe(false);
+      expect(tekrar.json<AskiYanit>().platform_aski.neden).toBe(neden);
+      expect(await kurumOlayi(k)).toBe(olayOnce + 1);
+
+      const red = await p('GET', ders(k), k.token);
+      expect(red.statusCode).toBe(403);
+      expect(red.json<Hata>().error.code).toBe('kurum_askida');
+      // Destek taklit ile okuyabilir.
+      const tk = await yp(
+        '/platform/taklit',
+        {
+          hedef_kullanici_id: k.kullaniciId,
+          kurum_id: k.kurumId,
+          neden: 'Askı incelemesi için hesabı görüntüleme',
+        },
+        destek.token,
+      );
+      expect(tk.statusCode, tk.body).toBe(200);
+      expect(
+        (await p('GET', ders(k), tk.json<{ access_token: string }>().access_token)).statusCode,
+      ).toBe(200);
+
+      // Abonelik/odeme isi askiyi kaldirmaz: kurumsal aktivasyon (platform ucu) ve odeme (servis fonksiyonu).
+      const aktivasyon = await yp(ab(k, '/kurumsal-aktivasyon'), {
+        plan_kodu: 'baslangic',
+        sozlesme_no: 'SZL-ASKI-1',
+        neden: 'Askıdayken kurumsal aktivasyon denemesi',
+      });
+      expect(aktivasyon.statusCode, aktivasyon.body).toBe(200);
+      expect(aktivasyon.json<AboneligiYanit>()).toMatchObject({
+        abonelik: { durum: 'aktif' },
+        kurum_durumu: 'askida',
+        platform_askida: true,
+      });
+      await kurumsalAboneligiAktiflestir(sistemDb, {
+        kurumId: k.kurumId,
+        planKodu: 'baslangic',
+        sozlesmeNo: 'SZL-ASKI-2',
+        aktorKullaniciId: yonetici.kullaniciId,
+        neden: 'Ödeme simülasyonu: askıyı kaldırmamalı',
+      });
+      expect(await kurumDurumu(k)).toMatchObject({ durum: 'askida' });
+      expect((await kurumDurumu(k))?.platform_askida_at).not.toBeNull();
+      expect((await p('GET', ders(k), k.token)).statusCode).toBe(403);
+
+      // Abonelik de askidaysa /ac kurumu acmaz (abonelik askisini platform acmaz); ek sure acar.
+      await yp(ab(k, '/askiya-al'), { neden: 'Ödeme alınamadı, abonelik askıda' });
+      const kilitliAc = await yp(pk(k, 'ac'), { neden: 'Abonelik kilitliyken açma denemesi' });
+      expect(kilitliAc.json<AskiYanit>()).toMatchObject({
+        durum: 'askida',
+        platform_aski: { askida: false },
+        abonelik_kilitli: true,
+      });
+      expect(await kurumDurumu(k)).toMatchObject({ durum: 'askida', platform_askida_at: null });
+      await yp(ab(k, '/ek-sure'), { gun: 3, neden: 'Ödeme sözü alındı, ek süre' });
+      expect((await kurumDurumu(k))?.durum).toBe('aktif');
+      await yp(pk(k, 'askiya-al'), { neden: 'Yeniden platform askısı' });
+      const acildi = await yp(pk(k, 'ac'), { neden: 'İnceleme tamamlandı, askı kalktı' });
+      expect(acildi.statusCode, acildi.body).toBe(200);
+      expect(acildi.json<AskiYanit>()).toMatchObject({
+        durum: 'aktif',
+        platform_aski: { askida: false },
+        abonelik_kilitli: false,
+        degisti: true,
+      });
+      expect(await kurumDurumu(k)).toMatchObject({ durum: 'aktif', platform_askida_at: null });
+      expect((await p('GET', ders(k), k.token)).statusCode).toBe(200);
+      expect(
+        (await yp(pk(k, 'ac'), { neden: 'ikinci açma denemesi' })).json<AskiYanit>().degisti,
+      ).toBe(false);
+      for (const eylem of ['platform.kurum_askiya_al', 'platform.kurum_ac']) {
+        const satirlar = await eylemDenetimi(eylem, k);
+        expect(satirlar.length, eylem).toBeGreaterThanOrEqual(1);
+        expect(satirlar[0]?.aktor_kullanici_id).toBe(yonetici.kullaniciId);
+      }
+    });
+
+    it('olmayan kurum 404; kapalı kurum askıya alınamaz (409)', async () => {
+      const k = await kurumluKullanici(t, 'bireysel', 'Askı Okulu 2');
+      expect(
+        (await yp(`/platform/kurumlar/${randomUUID()}/askiya-al`, { neden: 'olmayan kurum' }))
+          .statusCode,
+      ).toBe(404);
+      await sistem`update hesap.kurumlar set durum = 'kapali' where id = ${k.kurumId}`;
+      expect((await yp(pk(k, 'askiya-al'), { neden: 'kapalı kurum denemesi' })).statusCode).toBe(
+        409,
+      );
     });
   });
 

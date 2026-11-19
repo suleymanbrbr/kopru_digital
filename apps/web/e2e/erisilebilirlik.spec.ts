@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, test } from './yardimcilar';
 
 async function ihlaller(page: Page) {
   // Sayfa gecisinde <title> ayrica akar; tarama basliktan once calisirsa document-title yanlis alarm verir.
