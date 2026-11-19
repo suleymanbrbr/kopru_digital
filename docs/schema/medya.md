@@ -17,7 +17,7 @@ Tek şema: `medya` (+ `ortak`). Roller: `medya_owner`, `medya_app`, `medya_siste
 - **Depolama anahtarı:** `{kurum_id}/{tur}/{yyyy}/{mm}/{dosya_id}` (kullanıcı adı veya özgün dosya adı içermez). İstemci baytları presigned PUT ile `{anahtar}.yukleme` nesnesine yazar; işleme yeniden kodlanmış çıktıyı `{anahtar}`a yazar ve commit sonrası `.yukleme` nesnesini siler (çökme/yeniden denemede özgün bayt ve `sha256` hep elde kalır). Küçük resimler `{anahtar}.kucuk.webp` ve `{anahtar}.orta.webp`.
 - **İşleme:** worker `durum='yuklendi'` satırlarını `FOR UPDATE SKIP LOCKED` ile alıp `isleniyor` yapar (kısa işlem), ağır işi işlem dışında yapar, sonucu (`hazir` + `medya.dosya.hazir.v1` ya da `islenemedi` + `medya.dosya.islenemedi.v1`) tek işlemde yazar. Geçici (depolama) hatada satır `yuklendi`ye döner ve 10 sn / 30 sn / 2 dk / 10 dk / 30 dk gecikmeyle en çok 5 kez denenir; `isleniyor`da 10 dakikadan uzun kalan satır (çökmüş worker) kuyruğa geri alınır. Sıra: boyut → SHA-256 (`bozuk_dosya`) → bayt imzası (`mime_uyusmazligi`) → görsel yeniden kodlama / ses süresi.
 - **İzinli içerik:** görseller `image/jpeg`, `image/png`, `image/webp`; **HEIC/HEIF ve SVG kabul edilmez** (istemci yüklemeden önce JPEG'e çevirir). Ses: `audio/mp4` (m4a/AAC), `audio/aac`, `audio/mpeg`, `audio/webm`, `audio/ogg`; azami süre **180 sn**, azami 5 MB; süresi doğrulanamayan ses reddedilir. Süre önce `music-metadata` ile, başlıkta yoksa (Chrome `MediaRecorder` WebM/Opus, Ogg/Opus) dosyanın tamamı taranarak bulunur: WebM'de son bloğun Cluster zamanı + Opus paket süresi, Ogg'da son sayfanın granule konumu. PDF `application/pdf` (`odev_eki`, `fatura_pdf`). Kural tek kaynağı `@kopru/contracts` `MEDYA_TUR_KURALLARI`; tohum testle birebir doğrulanır.
-- **Rol × tür** (JWT `rol`; medya üyelik kopyası tutmaz): `soru_fotografi`, `odev_teslim_fotografi` öğrenci; `soru_cevap_fotografi`, `soru_ses` öğretmen/yönetici/sahip; `soru_cizim` öğrenci ve personel; `odev_eki` personel; `kurum_logosu` sahip/yönetici; `avatar` herkes; `fatura_pdf` istemciden yüklenemez (403 `dosya_turu_yetkisi_yok`).
+- **Rol × tür** (JWT `rol`; medya üyelik kopyası tutmaz): `soru_fotografi`, `odev_teslim_fotografi`, `gunluk_soru_fotografi` öğrenci; `soru_cevap_fotografi`, `soru_ses` öğretmen/yönetici/sahip; `soru_cizim` öğrenci ve personel; `odev_eki` personel; `kurum_logosu` sahip/yönetici; `avatar` herkes; `fatura_pdf` istemciden yüklenemez (403 `dosya_turu_yetkisi_yok`).
 
 ```mermaid
 erDiagram
@@ -42,7 +42,7 @@ Dosya türü kuralları. Profil: `G`. RLS: hayır. Tohum verisi.
 | `kucuk_resim` | boolean | hayır | true | Küçük resim üretilsin mi |
 | `ek_islem` | text | evet | | `gorsel_yeniden_kodla`, `ses_sure_cikar`, `yok` |
 
-Tür değerleri (CHECK, `dosyalar.tur` ile aynı): `soru_fotografi`, `soru_cevap_fotografi`, `soru_cizim`, `soru_ses`, `odev_eki`, `odev_teslim_fotografi`, `kurum_logosu`, `avatar`, `fatura_pdf`. Başlangıç saklama: `soru_*` bağlanma sonrası `NULL` ( `soru.cozuldu` olayı süreyi 30 güne ayarlar); `odev_teslim_fotografi` 365 gün; `odev_eki` 365 gün; `kurum_logosu`, `avatar` süresiz; `fatura_pdf` 3650 gün (10 yıl, vergi mevzuatı için saklama yükümlülüğü teyit edilmeli, bkz. Q7).
+Tür değerleri (CHECK, `dosyalar.tur` ile aynı): `soru_fotografi`, `soru_cevap_fotografi`, `soru_cizim`, `soru_ses`, `odev_eki`, `odev_teslim_fotografi`, `gunluk_soru_fotografi` (migration 0004: günlük soru takibi yanlış soru fotoğrafı, 10 MB görsel, 365 gün), `kurum_logosu`, `avatar`, `fatura_pdf`. Başlangıç saklama: `soru_*` bağlanma sonrası `NULL` ( `soru.cozuldu` olayı süreyi 30 güne ayarlar); `odev_teslim_fotografi` 365 gün; `odev_eki` 365 gün; `kurum_logosu`, `avatar` süresiz; `fatura_pdf` 3650 gün (10 yıl, vergi mevzuatı için saklama yükümlülüğü teyit edilmeli, bkz. Q7).
 
 ## `medya.dosyalar`
 
@@ -71,7 +71,7 @@ Profil: `KS`. RLS: evet.
 | `tamamlandi_at` | timestamptz | evet | | İstemci `tamam` dediği an |
 | `hazir_at` | timestamptz | evet | | |
 | `baglandi` | boolean | hayır | false | `ortak.dosya.baglandi.v1` ile true olur |
-| `bagli_tur` | text | evet | | `odev_teslimi`, `odev_eki`, `soru`, `soru_mesaji`, `kurum`, `kullanici`, `fatura` |
+| `bagli_tur` | text | evet | | `odev_teslimi`, `odev_eki`, `soru`, `soru_mesaji`, `gunluk_soru_kaydi`, `kurum`, `kullanici`, `fatura` |
 | `bagli_id` | uuid | evet | | |
 | `baglandi_at` | timestamptz | evet | | |
 | `silinecek_at` | timestamptz | evet | | Silme zamanı (retention / `delete_after`). NULL = silme planlı değil. |
