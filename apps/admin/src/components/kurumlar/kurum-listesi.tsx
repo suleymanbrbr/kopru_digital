@@ -13,7 +13,7 @@ import { Rozet, type RozetTonu } from '../ui/rozet';
 import { Tablo, Td, Th } from '../ui/tablo';
 
 import { platform } from '@/lib/api';
-import { tarih } from '@/lib/bicim';
+import { sahipMetni, tarih } from '@/lib/bicim';
 import type { KurumDurumu, KurumListesi } from '@/lib/tipler';
 
 export const DURUM_TONU: Record<KurumDurumu, RozetTonu> = {
@@ -130,9 +130,7 @@ export function KurumListesiSayfasi() {
                   </Td>
                   <Td className="text-metin-ikincil">
                     {k.sahipler.map((s) => (
-                      <div key={s.kullanici_id}>
-                        {s.telefon_maskeli} · {s.eposta_maskeli}
-                      </div>
+                      <div key={s.kullanici_id}>{sahipMetni(s)}</div>
                     ))}
                   </Td>
                   <Td className="whitespace-nowrap">{tarih(k.created_at)}</Td>

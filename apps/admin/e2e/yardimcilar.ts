@@ -5,6 +5,7 @@ export const KOD = '123456';
 export const YONETICI_TELEFON = '532 123 45 67';
 export const DESTEK_TELEFON = '501 123 45 67';
 export const ROLSUZ_TELEFON = '500 123 45 67';
+export const IP_YASAK_TELEFON = '502 123 45 67';
 
 /** Paylasimli mock durumunu basa alir (testler sirayla calisir). */
 export async function sifirla(page: Page) {

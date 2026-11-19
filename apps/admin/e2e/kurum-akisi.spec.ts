@@ -6,6 +6,7 @@ import {
   KOD,
   menuAc,
   menuGit,
+  IP_YASAK_TELEFON,
   ROLSUZ_TELEFON,
   DESTEK_TELEFON,
   sifirla,
@@ -103,6 +104,12 @@ test('platform rolü olmayan hesap açık hata ekranı görür', async ({ page }
   await girisYap(page, ROLSUZ_TELEFON);
   await expect(page.getByRole('heading', { name: 'Platform yetkiniz yok' })).toBeVisible();
   await expect(page.getByText(/platform sorumlusu tarafından/)).toBeVisible();
+});
+
+test('IP izin listesi dışındaki istemci açık hata ekranı görür', async ({ page }) => {
+  await girisYap(page, IP_YASAK_TELEFON);
+  await expect(page.getByRole('heading', { name: 'Bu adresten erişilemiyor' })).toBeVisible();
+  await expect(page.getByText(/yalnızca izin verilen ağ adreslerinden/)).toBeVisible();
 });
 
 test('destek rolü yalnız okur: yazma ve yönetici sayfaları kapalı', async ({ page }) => {

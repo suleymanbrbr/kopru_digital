@@ -139,7 +139,8 @@ export const tr = {
       uygulamaKoduKullan: 'Uygulama kodunu kullan',
       yedekKodEtiketi: 'Yedek kod',
       kalanYedek: 'Kalan yedek kod: {n}',
-      azYedek: 'Yedek kodlarınız azaldı (kalan {n}). Yeni yedek kodlar için platform sorumlusuna başvurun.',
+      azYedek:
+        'Yedek kodlarınız azaldı (kalan {n}). Yeni yedek kodlar için platform sorumlusuna başvurun.',
       kurulamadi: 'Kurulum başlatılamadı.',
       sifreleBilgi: 'Doğrulama 8 saat geçerlidir.',
     },
@@ -199,7 +200,7 @@ export const tr = {
       betaSil: 'Bayrağı sil',
       betaYeni: 'Yeni bayrak ekle',
       betaKod: 'Özellik kodu',
-      betaKodYardim: 'Küçük harf, rakam, alt çizgi veya tire.',
+      betaKodYardim: 'Küçük harfle başlar; küçük harf, rakam ve alt çizgi (2–40 karakter).',
       betaEkle: 'Ekle',
       betaOnayBaslik: '{kod} bayrağı',
       betaOnayMetin: '{kurum} kurumunda "{kod}" beta bayrağı: {islem}.',
@@ -387,7 +388,8 @@ export const tr = {
         'Kaynak konu kapanır; alt konuları hedefe bağlanır. Kurum verisi eski kimlikle okunmaya devam eder.',
       hedefKonu: 'Hedef konu (kalacak olan)',
       kaldirBaslik: 'Kaldır',
-      kaldirAciklama: 'Konu ve aktif alt konuları taslakta kapanır. Silme yoktur; yayınlı sürümler değişmez.',
+      kaldirAciklama:
+        'Konu ve aktif alt konuları taslakta kapanır. Silme yoktur; yayınlı sürümler değişmez.',
       oneri: 'Yerine geçen konu (isteğe bağlı)',
       not: 'Değişiklik notu',
       notYardim: 'Zorunlu, en çok 1000 karakter. Farkta ve denetimde görünür.',
@@ -408,8 +410,15 @@ export const tr = {
         'Yayınlandıktan sonra sürüm değiştirilemez. Her aktif kuruma müfredat güncellendi olayı gönderilir ve sahip/yöneticilere bildirim düşer.',
       yayinOnay: 'Bu değişikliklerin tüm kurumlara yayınlanacağını anlıyorum.',
       yayinOzet: 'Taslakta {n} işlem var.',
-      yayinlandi: 'Sürüm yayınlandı. {kurum} kuruma bildirildi, {baglanan} kurum alt konusu yeniden bağlandı.',
-      islemTuru: { ekle: 'Ekle', adlandir: 'Adlandır', tasi: 'Taşı', birlestir: 'Birleştir', kaldir: 'Kaldır' },
+      yayinlandi:
+        'Sürüm yayınlandı. {kurum} kuruma bildirildi, {baglanan} kurum alt konusu yeniden bağlandı.',
+      islemTuru: {
+        ekle: 'Ekle',
+        adlandir: 'Adlandır',
+        tasi: 'Taşı',
+        birlestir: 'Birleştir',
+        kaldir: 'Kaldır',
+      },
     },
     motivasyon: {
       baslik: 'Motivasyon ayarları',
@@ -439,7 +448,8 @@ export const tr = {
       uyarilar: 'Uyarılar',
       uyariAciklama: 'Değişiklik kaydedildi, ancak şu varsayımlar etkilendi:',
       kaydedildi: 'Sürüm {n} kaydedildi.',
-      surumCatismasi: 'Ayarlar siz bakarken değişti. Güncel değerler yüklendi; değişikliklerinizi yeniden uygulayın.',
+      surumCatismasi:
+        'Ayarlar siz bakarken değişti. Güncel değerler yüklendi; değişikliklerinizi yeniden uygulayın.',
       gecmis: 'Sürüm geçmişi',
       gecmisTablo: 'Ayar sürümleri',
       gecmisSurum: 'Sürüm',
@@ -484,7 +494,8 @@ export const tr = {
       otp_gecersiz: 'Kod hatalı veya süresi dolmuş.',
       telefon_gecersiz: 'Telefon numarası geçersiz.',
       ikinci_adim_gerekli: 'Bu işlem için önce iki adımlı doğrulamayı tamamlayın.',
-      ikinci_adim_kurulu: 'İki adımlı doğrulama zaten kurulu. Sıfırlama yalnızca platform sorumlusundan istenebilir.',
+      ikinci_adim_kurulu:
+        'İki adımlı doğrulama zaten kurulu. Sıfırlama yalnızca platform sorumlusundan istenebilir.',
       kod_gecersiz: 'Doğrulama kodu hatalı. Kodu kontrol edip yeniden deneyin.',
       cok_fazla_istek: 'Çok fazla deneme yapıldı. 15 dakika bekleyip yeniden deneyin.',
       platform_ip_yasak: 'Bu ağ adresinden platform erişimine izin verilmiyor.',

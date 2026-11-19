@@ -35,7 +35,7 @@ export interface MockDenetim {
   taklit_kayit_id?: string;
 }
 
-export type MockRol = 'destek' | 'yonetici' | 'yok';
+export type MockRol = 'destek' | 'yonetici' | 'yok' | 'ip';
 
 export interface MockOturum {
   ikinciAdimDogrulandi: boolean;
@@ -193,7 +193,7 @@ function kurumlariUret(): MockKurum[] {
         },
       ]),
     ),
-    beta: i % 2 === 0 ? [{ ozellik_kodu: 'yeni-rapor', acik: true, updated_at: simdi() }] : [],
+    beta: i % 2 === 0 ? [{ ozellik_kodu: 'yeni_rapor', acik: true, updated_at: simdi() }] : [],
   }));
 }
 

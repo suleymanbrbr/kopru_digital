@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { dakikaSaniye, kodAdi, tarihSaat, uuidMi, yerelIso } from './bicim';
+import { dakikaSaniye, kodAdi, sahipMetni, tarihSaat, uuidMi, yerelIso } from './bicim';
 
 describe('bicim', () => {
   it('dakikaSaniye negatife düşmez ve sıfır doldurur', () => {
@@ -29,5 +29,13 @@ describe('bicim', () => {
 
   it('kodAdi', () => {
     expect(kodAdi('odev_teslim')).toBe('Odev teslim');
+  });
+
+  it('sahipMetni olmayan iletişim bilgisini atlar', () => {
+    expect(sahipMetni({ telefon_maskeli: '+90 532 *** ** 12', eposta_maskeli: 'a***@b.com' })).toBe(
+      '+90 532 *** ** 12 · a***@b.com',
+    );
+    expect(sahipMetni({ telefon_maskeli: null, eposta_maskeli: 'a***@b.com' })).toBe('a***@b.com');
+    expect(sahipMetni({ telefon_maskeli: null, eposta_maskeli: null })).toBe('');
   });
 });

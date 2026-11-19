@@ -43,3 +43,11 @@ export function kodAdi(kod: string): string {
   const s = kod.replace(/[_-]+/g, ' ');
   return s.charAt(0).toLocaleUpperCase('tr') + s.slice(1);
 }
+
+/** Sahibin maskeli iletisim bilgisi (telefon ve/veya e-posta; olmayan atlanir). */
+export function sahipMetni(s: {
+  telefon_maskeli?: string | null;
+  eposta_maskeli?: string | null;
+}): string {
+  return [s.telefon_maskeli, s.eposta_maskeli].filter(Boolean).join(' · ');
+}

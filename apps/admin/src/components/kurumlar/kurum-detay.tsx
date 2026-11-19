@@ -18,7 +18,7 @@ import { Uyari } from '../ui/uyari';
 import { DURUM_TONU } from './kurum-listesi';
 
 import { platform } from '@/lib/api';
-import { tarih, uuidMi } from '@/lib/bicim';
+import { sahipMetni, tarih, uuidMi } from '@/lib/bicim';
 import { useYonetici, TAKLIT_ANAHTARI } from '@/lib/oturum';
 import type { KurumDetayi, ModulDurumu, TaklitSonuc } from '@/lib/tipler';
 
@@ -94,7 +94,7 @@ function TaklitBaslatPenceresi({
         {kurum.sahipler.map((s) => (
           <option key={s.kullanici_id} value={s.kullanici_id}>
             {t('yonetim.taklitBaslat.hedefSahip', {
-              ad: s.telefon_maskeli ?? s.eposta_maskeli ?? '',
+              ad: sahipMetni(s),
             })}
           </option>
         ))}
@@ -247,7 +247,7 @@ function BetaKarti({ kurum, yonetici }: { kurum: KurumDetayi; yonetici: boolean 
   const istemci = useQueryClient();
   const [islem, setIslem] = useState<BetaIslemi | null>(null);
   const [yeniKod, setYeniKod] = useState('');
-  const yeniGecerli = /^[a-z0-9_-]{1,64}$/.test(yeniKod);
+  const yeniGecerli = /^[a-z][a-z0-9_]{1,39}$/.test(yeniKod);
 
   const kaydet = useMutation({
     mutationFn: ({ kod, acik, neden }: BetaIslemi & { neden: string }) =>
@@ -480,9 +480,7 @@ export function KurumDetaySayfasi({ id }: { id: string }) {
           ) : (
             <ul className="space-y-1 text-sm">
               {k.sahipler.map((s) => (
-                <li key={s.kullanici_id}>
-                  {s.telefon_maskeli} · {s.eposta_maskeli}
-                </li>
+                <li key={s.kullanici_id}>{sahipMetni(s)}</li>
               ))}
             </ul>
           )}

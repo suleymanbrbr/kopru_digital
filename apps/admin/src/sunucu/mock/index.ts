@@ -13,7 +13,7 @@ export type { MockYanit };
 /**
  * Yonetim panelinin mock arka ucu (`NEXT_PUBLIC_API_MOCK=1`): giris, ikinci adim, kurumlar, taklit, denetim,
  * saglik, mesajlar, mufredat ve motivasyon. Sabitler: telefon kodu `123456`, e-posta parolasi `parola1234`;
- * `500...` telefon / `yok@` e-posta platform rolsuz, `501...` / `destek@` destek, digerleri yonetici.
+ * `500...` telefon / `yok@` e-posta platform rolsuz, `502...` / `ip@` IP izin listesi disinda, `501...` / `destek@` destek, digerleri yonetici.
  */
 
 export const MOCK_KOD = '123456';
@@ -26,10 +26,12 @@ function rolBelirle(anahtar: string, tur: 'telefon' | 'eposta'): MockRol {
   if (tur === 'telefon') {
     const s = anahtar.replace(/\D/g, '').replace(/^90/, '').replace(/^0/, '');
     if (s.startsWith('500')) return 'yok';
+    if (s.startsWith('502')) return 'ip';
     if (s.startsWith('501')) return 'destek';
     return 'yonetici';
   }
   if (anahtar.startsWith('yok@')) return 'yok';
+  if (anahtar.startsWith('ip@')) return 'ip';
   if (anahtar.startsWith('destek@')) return 'destek';
   return 'yonetici';
 }
@@ -184,6 +186,8 @@ export function mockPlatform(istek: MockPlatformIstek): MockYanit {
   const oturumId = /^mock-erisim\.(.+)$/.exec(istek.erisim)?.[1];
   const oturum = oturumId ? durum().oturumlar.get(oturumId) : undefined;
   if (!oturum) return hata(401, 'unauthorized', 'Oturum açmanız gerekiyor.');
+  if (oturum.rol === 'ip')
+    return hata(403, 'platform_ip_yasak', 'Bu adresten platform erişimine izin verilmiyor.');
   if (oturum.rol === 'yok') return hata(403, 'platform_yetkisi_yok', 'Platform yetkiniz yok.');
   const yonetici = oturum.rol === 'yonetici';
   const p = yol.split('/');
@@ -332,7 +336,7 @@ export function mockPlatform(istek: MockPlatformIstek): MockYanit {
           govde: { modul_kodu: kod, kurum_acik: m.acik, kurum_ayari_var: m.ayarVar },
         };
       }
-      if (!/^[a-z0-9_-]{1,64}$/.test(kod)) {
+      if (!/^[a-z][a-z0-9_]{1,39}$/.test(kod)) {
         return dogrulamaHatasi({ path: 'ozellik_kodu', message: 'Özellik kodu geçersiz.' });
       }
       const var_ = kurum.beta.find((b) => b.ozellik_kodu === kod);
