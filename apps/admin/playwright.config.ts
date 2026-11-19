@@ -1,0 +1,45 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/** `E2E_ADMIN_PORT` ile degistirilebilir (baska bir surecle cakismamak icin). */
+const port = Number(process.env.E2E_ADMIN_PORT ?? 3001);
+/** Konteynerde Playwright tarayicisi indirilemiyorsa yerel Chrome: PLAYWRIGHT_CHROME_PATH=/usr/bin/google-chrome */
+const chromeYolu = process.env.PLAYWRIGHT_CHROME_PATH;
+const kullan = chromeYolu ? { launchOptions: { executablePath: chromeYolu } } : {};
+
+/**
+ * Mock modunda (`NEXT_PUBLIC_API_MOCK=1`) e2e. Mock durum sunucuda tek ve paylasimli oldugundan testler
+ * sirayla calisir; her test `/api/mock/sifirla` ile durumu basa alir.
+ */
+export default defineConfig({
+  testDir: './e2e',
+  testMatch: '**/*.spec.ts',
+  fullyParallel: false,
+  workers: 1,
+  forbidOnly: Boolean(process.env.CI),
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
+  use: {
+    baseURL: `http://localhost:${String(port)}`,
+    locale: 'tr-TR',
+    timezoneId: 'Europe/Istanbul',
+    trace: 'retain-on-failure',
+    ...kullan,
+  },
+  projects: [
+    {
+      name: 'masaustu',
+      use: { ...devices['Desktop Chrome'], ...kullan, viewport: { width: 1280, height: 800 } },
+    },
+    { name: 'mobil', use: { ...devices['Pixel 7'], ...kullan } },
+  ],
+  webServer: {
+    // E2E_HAZIR=1: build zaten yapildi (CI). Aksi halde mock modunda build edilip baslatilir.
+    command: process.env.E2E_HAZIR
+      ? `pnpm exec next start --port ${String(port)}`
+      : `pnpm build && pnpm exec next start --port ${String(port)}`,
+    url: `http://localhost:${String(port)}/giris`,
+    reuseExistingServer: !process.env.CI,
+    timeout: 300_000,
+    env: { NEXT_PUBLIC_API_MOCK: '1' },
+  },
+});
