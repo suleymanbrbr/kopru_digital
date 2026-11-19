@@ -20,6 +20,7 @@ export const MOCK_PLANLAR: AbonelikPlani[] = [
     yillikFiyatKurus: 299000,
     maxOgrenci: 15,
     maxOgretmen: 1,
+    magazaUrunKodlari: { apple: 'kopru.baslangic.aylik', google: 'kopru_baslangic' },
   },
   {
     kod: 'koc',
@@ -29,6 +30,7 @@ export const MOCK_PLANLAR: AbonelikPlani[] = [
     yillikFiyatKurus: 699000,
     maxOgrenci: 60,
     maxOgretmen: 1,
+    magazaUrunKodlari: { apple: 'kopru.koc.aylik', google: 'kopru_koc' },
   },
 ];
 

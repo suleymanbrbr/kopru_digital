@@ -145,6 +145,13 @@ export function PlanLimitiSayfasi() {
         : 'bilinmeyen'
     }`,
   );
+  // Sayfa kapaninca (dugme ya da yana kaydirma) limit durumu temizlenir: sonraki olay yeniden acar.
+  useEffect(
+    () => () => {
+      abonelikUyari.limitKapat();
+    },
+    [abonelikUyari],
+  );
   const kapat = () => {
     abonelikUyari.limitKapat();
     router.back();

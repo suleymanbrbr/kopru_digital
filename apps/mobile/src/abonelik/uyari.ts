@@ -43,6 +43,8 @@ export function abonelikUyariYoneticisi(): AbonelikUyariYoneticisi {
     hataIsle(e) {
       if (!apiHatasiMi(e)) return;
       if (e.kod === 'plan_limiti') {
+        // "Planini yukselt" sayfasi aciksa (limit dolu) yeni olaylar yok sayilir.
+        if (depo.al().limit !== null) return;
         const d = (e.detay ?? {}) as Record<string, unknown>;
         depo.ayarla({
           limit: {

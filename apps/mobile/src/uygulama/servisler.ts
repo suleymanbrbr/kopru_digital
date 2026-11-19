@@ -97,7 +97,7 @@ export function servisleriKur(): Servisler {
     abonelikUyari.hataIsle(e);
   });
   const magaza = uygulamaMagazasi(
-    () => adaptorler.abonelik.planlar().then((p) => p.map((x) => x.kod)),
+    () => adaptorler.abonelik.planlar(),
     ortam.apiMock
       ? {
           satinAlindi: (teklif) => {

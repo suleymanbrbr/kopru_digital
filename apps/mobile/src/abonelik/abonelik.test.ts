@@ -183,6 +183,7 @@ describe('abonelikUyariYoneticisi ve hatalariGozle', () => {
       ustSinir: 15,
       anahtar: 1,
     });
+    y.limitKapat();
     y.hataIsle(new ApiHata('plan_limiti'));
     expect(y.depo.al().limit).toMatchObject({ limit: null, mevcut: null, anahtar: 2 });
     y.hataIsle(new ApiHata('abonelik_gerekli'));
@@ -190,6 +191,24 @@ describe('abonelikUyariYoneticisi ve hatalariGozle', () => {
     expect(y.depo.al()).toMatchObject({ saltOkunur: true, askida: true });
     y.sifirla();
     expect(y.depo.al()).toEqual({ saltOkunur: false, askida: false, limit: null });
+  });
+
+  it('limit sayfasi aciksa yeni plan_limiti olaylari yok sayilir; kapaninca yeniden acilir', () => {
+    const y = abonelikUyariYoneticisi();
+    y.hataIsle(
+      new ApiHata('plan_limiti', undefined, {
+        detay: { limit: 'max_ogrenci', mevcut: 1, ust_sinir: 1 },
+      }),
+    );
+    y.hataIsle(
+      new ApiHata('plan_limiti', undefined, {
+        detay: { limit: 'max_ogretmen', mevcut: 2, ust_sinir: 2 },
+      }),
+    );
+    expect(y.depo.al().limit).toMatchObject({ limit: 'max_ogrenci', anahtar: 1 });
+    y.limitKapat();
+    y.hataIsle(new ApiHata('plan_limiti'));
+    expect(y.depo.al().limit).toMatchObject({ anahtar: 2 });
   });
 
   it('hatalariGozle: hata bildirilir ve aynen firlatilir; auth haric; basarida dokunmaz', async () => {

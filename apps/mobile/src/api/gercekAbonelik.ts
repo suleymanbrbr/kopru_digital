@@ -19,6 +19,7 @@ interface ApiPlan {
   aylik_fiyat_kurus: number;
   yillik_fiyat_kurus: number | null;
   limitler: { max_ogrenci: number; max_ogretmen: number };
+  magaza_urun_kodlari: { apple?: string; google?: string } | null;
 }
 
 /** Plan limitlerinde -1 = sinirsiz. */
@@ -33,6 +34,7 @@ export function planCevir(p: ApiPlan): AbonelikPlani {
     yillikFiyatKurus: p.yillik_fiyat_kurus,
     maxOgrenci: sinir(p.limitler.max_ogrenci),
     maxOgretmen: sinir(p.limitler.max_ogretmen),
+    magazaUrunKodlari: p.magaza_urun_kodlari,
   };
 }
 

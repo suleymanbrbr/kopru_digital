@@ -858,6 +858,10 @@ export interface paths {
                                             sms_aylik: number;
                                             soru_aylik_ogrenci: number;
                                         };
+                                        magaza_urun_kodlari: {
+                                            apple?: string;
+                                            google?: string;
+                                        } | null;
                                         moduller: string[];
                                         surum: number;
                                         yillik_fiyat_kurus: number | null;
@@ -990,6 +994,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1037,6 +1045,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1154,6 +1166,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1252,6 +1268,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1350,6 +1370,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1452,6 +1476,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1568,6 +1596,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -1673,6 +1705,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -3158,6 +3194,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -3265,6 +3305,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -3358,6 +3402,10 @@ export interface paths {
                                         sms_aylik: number;
                                         soru_aylik_ogrenci: number;
                                     };
+                                    magaza_urun_kodlari: {
+                                        apple?: string;
+                                        google?: string;
+                                    } | null;
                                     moduller: string[];
                                     surum: number;
                                     yillik_fiyat_kurus: number | null;
@@ -3716,6 +3764,10 @@ export interface paths {
                                     sms_aylik: number;
                                     soru_aylik_ogrenci: number;
                                 };
+                                magaza_urun_kodlari: {
+                                    apple?: string;
+                                    google?: string;
+                                } | null;
                                 moduller: string[];
                                 surum: number;
                                 yillik_fiyat_kurus: number | null;

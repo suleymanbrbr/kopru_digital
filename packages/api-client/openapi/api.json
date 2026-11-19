@@ -1437,6 +1437,19 @@
                                   ],
                                   "type": "object"
                                 },
+                                "magaza_urun_kodlari": {
+                                  "additionalProperties": false,
+                                  "nullable": true,
+                                  "properties": {
+                                    "apple": {
+                                      "type": "string"
+                                    },
+                                    "google": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
                                 "moduller": {
                                   "items": {
                                     "type": "string"
@@ -1465,7 +1478,8 @@
                                 "yillik_fiyat_kurus",
                                 "kdv_orani",
                                 "limitler",
-                                "moduller"
+                                "moduller",
+                                "magaza_urun_kodlari"
                               ],
                               "type": "object"
                             }
@@ -1898,6 +1912,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -1926,7 +1953,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -2112,6 +2140,19 @@
                                 ],
                                 "type": "object"
                               },
+                              "magaza_urun_kodlari": {
+                                "additionalProperties": false,
+                                "nullable": true,
+                                "properties": {
+                                  "apple": {
+                                    "type": "string"
+                                  },
+                                  "google": {
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
                               "moduller": {
                                 "items": {
                                   "type": "string"
@@ -2140,7 +2181,8 @@
                               "yillik_fiyat_kurus",
                               "kdv_orani",
                               "limitler",
-                              "moduller"
+                              "moduller",
+                              "magaza_urun_kodlari"
                             ],
                             "type": "object"
                           }
@@ -2470,6 +2512,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -2498,7 +2553,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -2760,6 +2816,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -2788,7 +2857,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -3050,6 +3120,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -3078,7 +3161,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -3339,6 +3423,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -3367,7 +3464,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -3660,6 +3758,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -3688,7 +3799,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -3961,6 +4073,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -3989,7 +4114,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -7412,6 +7538,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -7440,7 +7579,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -7768,6 +7908,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -7796,7 +7949,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -8045,6 +8199,19 @@
                               ],
                               "type": "object"
                             },
+                            "magaza_urun_kodlari": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "apple": {
+                                  "type": "string"
+                                },
+                                "google": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
                             "moduller": {
                               "items": {
                                 "type": "string"
@@ -8073,7 +8240,8 @@
                             "yillik_fiyat_kurus",
                             "kdv_orani",
                             "limitler",
-                            "moduller"
+                            "moduller",
+                            "magaza_urun_kodlari"
                           ],
                           "type": "object"
                         }
@@ -8911,6 +9079,19 @@
                             ],
                             "type": "object"
                           },
+                          "magaza_urun_kodlari": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "apple": {
+                                "type": "string"
+                              },
+                              "google": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "moduller": {
                             "items": {
                               "type": "string"
@@ -8939,7 +9120,8 @@
                           "yillik_fiyat_kurus",
                           "kdv_orani",
                           "limitler",
-                          "moduller"
+                          "moduller",
+                          "magaza_urun_kodlari"
                         ],
                         "type": "object"
                       },

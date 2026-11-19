@@ -554,6 +554,23 @@ describe.skipIf(dbYok())('abonelik: deneme, plan limiti, 402 ve sahip uc noktala
       expect(planlar.map((p) => p.kod)).toEqual(['baslangic', 'koc']);
       expect(planlar.every((p) => p.kurum_turu === 'bireysel')).toBe(true);
 
+      // magaza_urun_kodlari: tanimsizsa null; doldurulunca yalniz apple/google doner
+      expect(
+        (planlar as unknown as { magaza_urun_kodlari: unknown }[]).every(
+          (p) => p.magaza_urun_kodlari === null,
+        ),
+      ).toBe(true);
+      await sistem`update abonelik.planlar set magaza_urun_kodlari = ${sistem.json({ apple: 'kopru.baslangic.aylik', google: 'kopru_baslangic', diger: 'x' })} where kod = 'baslangic' and surum = 1`;
+      const dolu = (await app.inject({ url: ab(k, '/planlar'), headers: bearer(k.token) })).json<{
+        planlar: { kod: string; magaza_urun_kodlari: unknown }[];
+      }>().planlar;
+      expect(dolu.find((p) => p.kod === 'baslangic')?.magaza_urun_kodlari).toEqual({
+        apple: 'kopru.baslangic.aylik',
+        google: 'kopru_baslangic',
+      });
+      expect(dolu.find((p) => p.kod === 'koc')?.magaza_urun_kodlari).toBeNull();
+      await sistem`update abonelik.planlar set magaza_urun_kodlari = null where kod = 'baslangic' and surum = 1`;
+
       // Sahip olmayan roller 403 izin_yok
       const u = await kullaniciHazirla();
       const kurum = await kurumluKullanici(t, 'kurum');

@@ -15,6 +15,8 @@ export interface AbonelikPlani {
   /** `null`: sinirsiz. */
   maxOgrenci: number | null;
   maxOgretmen: number | null;
+  /** Magaza urun kodlari (api); `null`: tanimsiz -> plan "Yakinda". */
+  magazaUrunKodlari: { apple?: string; google?: string } | null;
 }
 
 export interface Abonelik {

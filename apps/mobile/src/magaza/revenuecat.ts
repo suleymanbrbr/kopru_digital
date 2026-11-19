@@ -1,4 +1,4 @@
-import { urundenPlan } from './eslesme';
+import type { AbonelikPlani } from '../api/abonelikTipleri';
 import {
   MagazaHatasi,
   type MagazaSaglayici,
@@ -28,8 +28,10 @@ export interface RevenueCatModulu {
 
 export interface RevenueCatSecenekleri {
   apiAnahtari: string;
-  /** Plan kodlari (urun kimliginden plan eslemesi icin). */
-  planKodlari: () => Promise<readonly string[]>;
+  /** Planlar (api `magaza_urun_kodlari`); mağaza urunu bu kodlarla plana eslenir. */
+  planlar: () => Promise<readonly AbonelikPlani[]>;
+  /** `apple` ya da `google`: hangi urun kodu alani kullanilir. */
+  kanal: 'apple' | 'google';
   /** Test icin modul enjeksiyonu; varsayilan gercek `react-native-purchases`. */
   modul?: () => RevenueCatModulu;
 }
@@ -77,16 +79,18 @@ export function revenueCatSaglayicisi(sec: RevenueCatSecenekleri): MagazaSaglayi
       } catch (e) {
         throw new MagazaHatasi('kullanilamiyor', e instanceof Error ? e.message : undefined);
       }
-      const kodlar = await sec.planKodlari();
+      const planlar = await sec.planlar();
       const teklifler: MagazaTeklifi[] = [];
       for (const o of Object.values(sonuc.all)) {
         for (const p of o.availablePackages) {
-          const e = urundenPlan(p.product.identifier, kodlar);
-          if (!e) continue;
+          // Google urun kimligi `abonelik:temelplan` bicimindedir; abonelik kodu `:` oncesidir.
+          const urun = p.product.identifier.split(':')[0];
+          const plan = planlar.find((x) => x.magazaUrunKodlari?.[sec.kanal] === urun);
+          if (!plan) continue;
           teklifler.push({
             urunId: p.product.identifier,
-            planKodu: e.planKodu,
-            periyot: e.periyot,
+            planKodu: plan.kod,
+            periyot: 'aylik',
             fiyatMetni: p.product.priceString,
             ham: p,
           });

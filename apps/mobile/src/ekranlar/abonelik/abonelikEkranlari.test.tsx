@@ -250,6 +250,22 @@ describe('limit, askı, şerit ve platform mesajı', () => {
     expect(o.servisler.abonelikUyari.depo.al().limit).toBeNull();
   });
 
+  it('plan limiti sayfasi aciksa yeni olaylar yok sayilir; sayfa kapaninca (yana kaydirma dahil) temizlenir', async () => {
+    const o = await girisli(SAHIP, 'limit_dolu');
+    const limit = (ust: number) =>
+      new ApiHata('plan_limiti', undefined, {
+        detay: { limit: 'max_ogrenci', mevcut: ust, ust_sinir: ust },
+      });
+    o.servisler.abonelikUyari.hataIsle(limit(15));
+    await ac(o, <PlanLimitiSayfasi />);
+    o.servisler.abonelikUyari.hataIsle(limit(99));
+    expect(o.servisler.abonelikUyari.depo.al().limit).toMatchObject({ mevcut: 15, anahtar: 1 });
+    temizle(); // sayfa unmount (dugmesiz kapanis)
+    expect(o.servisler.abonelikUyari.depo.al().limit).toBeNull();
+    o.servisler.abonelikUyari.hataIsle(limit(20));
+    expect(o.servisler.abonelikUyari.depo.al().limit).toMatchObject({ mevcut: 20, anahtar: 2 });
+  });
+
   it('plan limiti: diger rollere "kurum sahibine bildir", yukseltme dugmesi yok', async () => {
     const o = await girisli(OGRETMEN, 'limit_dolu');
     o.servisler.abonelikUyari.hataIsle(

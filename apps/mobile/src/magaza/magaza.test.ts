@@ -1,28 +1,27 @@
-import { urundenPlan } from './eslesme';
+import type { AbonelikPlani } from '../api/abonelikTipleri';
+import { MOCK_PLANLAR } from '../api/mockAbonelik';
 import { magazaSaglayiciSec } from './index';
 import { revenueCatSaglayicisi, type RevenueCatModulu } from './revenuecat';
 import { sahteMagazaOlustur } from './sahte';
 import { aboneligiYonetUrl, MagazaHatasi } from './tipler';
 
-const KODLAR = ['baslangic', 'koc', 'ekip', 'kurum'];
-
-describe('urundenPlan', () => {
-  it('Apple ve Google urun kimliklerini plan koduna ve periyoda esler', () => {
-    expect(urundenPlan('kopru.kurum.aylik', KODLAR)).toEqual({
-      planKodu: 'kurum',
-      periyot: 'aylik',
-    });
-    expect(urundenPlan('kopru_koc:yillik', KODLAR)).toEqual({ planKodu: 'koc', periyot: 'yillik' });
-    expect(urundenPlan('kopru.ekip.yearly', KODLAR)).toEqual({
-      planKodu: 'ekip',
-      periyot: 'yillik',
-    });
-    expect(urundenPlan('baska.urun', KODLAR)).toBeNull();
-  });
+const plan = (
+  kod: string,
+  magazaUrunKodlari: AbonelikPlani['magazaUrunKodlari'],
+): AbonelikPlani => ({
+  kod,
+  ad: kod,
+  kurumTuru: 'kurum',
+  aylikFiyatKurus: 1,
+  yillikFiyatKurus: null,
+  maxOgrenci: 1,
+  maxOgretmen: 1,
+  magazaUrunKodlari,
 });
+const PLANLAR = [plan('kurum', { apple: 'kopru.kurum.aylik' }), plan('bos', null)];
 
 describe('magazaSaglayiciSec', () => {
-  const taban = { planKodlari: () => Promise.resolve(KODLAR) };
+  const taban = { planlar: () => Promise.resolve(MOCK_PLANLAR) };
   it('anahtar yoksa sahte', () => {
     expect(
       magazaSaglayiciSec({ ...taban, apiAnahtari: '', expoGo: false, platform: 'ios' }).tur,
@@ -75,7 +74,8 @@ describe('revenueCatSaglayicisi', () => {
     const { modul, cagrilar } = sahteModul();
     const s = revenueCatSaglayicisi({
       apiAnahtari: 'k',
-      planKodlari: () => Promise.resolve(KODLAR),
+      planlar: () => Promise.resolve(PLANLAR),
+      kanal: 'apple',
       modul: () => modul,
     });
     expect(cagrilar).toEqual([]);
@@ -86,11 +86,12 @@ describe('revenueCatSaglayicisi', () => {
     expect(cagrilar.at(-1)).toBe('logOut');
   });
 
-  it('teklifler: yalniz plana eslenen urunler', async () => {
+  it('teklifler: yalniz api urun koduyla eslenen urunler; kodu olmayan plan teklifsiz', async () => {
     const { modul } = sahteModul();
     const s = revenueCatSaglayicisi({
       apiAnahtari: 'k',
-      planKodlari: () => Promise.resolve(KODLAR),
+      planlar: () => Promise.resolve(PLANLAR),
+      kanal: 'apple',
       modul: () => modul,
     });
     const t = await s.teklifleriGetir();
@@ -102,7 +103,8 @@ describe('revenueCatSaglayicisi', () => {
     const { modul } = sahteModul();
     const s = revenueCatSaglayicisi({
       apiAnahtari: 'k',
-      planKodlari: () => Promise.resolve(KODLAR),
+      planlar: () => Promise.resolve(PLANLAR),
+      kanal: 'apple',
       modul: () => modul,
     });
     const teklif = { urunId: 'u', planKodu: 'kurum', periyot: 'aylik' as const, fiyatMetni: '' };

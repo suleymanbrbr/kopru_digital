@@ -53,6 +53,7 @@ const planYaniti = {
   moduller: [],
   surum: 1,
   yillik_fiyat_kurus: 299000,
+  magaza_urun_kodlari: { apple: 'kopru.baslangic.aylik' },
 };
 
 function adaptor(yanit: (yol: string) => unknown) {
@@ -123,7 +124,11 @@ describe('gercek abonelik adaptoru', () => {
         ? { mesaj: { id: 'm1', baslik: 'Bakım', metin: 'Gece', onem: 'uyari' } }
         : { planlar: [planYaniti] },
     );
-    expect((await a.planlar())[0]).toMatchObject({ kod: 'baslangic', aylikFiyatKurus: 29900 });
+    expect((await a.planlar())[0]).toMatchObject({
+      kod: 'baslangic',
+      aylikFiyatKurus: 29900,
+      magazaUrunKodlari: { apple: 'kopru.baslangic.aylik' },
+    });
     expect(await a.platformMesaji()).toEqual({
       id: 'm1',
       baslik: 'Bakım',

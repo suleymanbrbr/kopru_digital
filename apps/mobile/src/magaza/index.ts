@@ -1,13 +1,13 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
+import type { AbonelikPlani } from '../api/abonelikTipleri';
 import { ortam } from '../ortam';
 import { revenueCatSaglayicisi } from './revenuecat';
 import { sahteMagazaOlustur, type SahteMagazaSecenekleri } from './sahte';
 import type { MagazaSaglayici } from './tipler';
 
 export * from './tipler';
-export { urundenPlan } from './eslesme';
 export { sahteMagazaOlustur, SAHTE_TEKLIFLER } from './sahte';
 
 export interface MagazaSecimGirdisi {
@@ -17,7 +17,7 @@ export interface MagazaSecimGirdisi {
   expoGo: boolean;
   /** Web'de magaza yoktur. */
   platform: string;
-  planKodlari: () => Promise<readonly string[]>;
+  planlar: () => Promise<readonly AbonelikPlani[]>;
   sahte?: SahteMagazaSecenekleri;
 }
 
@@ -25,21 +25,25 @@ export interface MagazaSecimGirdisi {
 export function magazaSaglayiciSec(g: MagazaSecimGirdisi): MagazaSaglayici {
   const destekli = g.platform === 'ios' || g.platform === 'android';
   if (g.apiAnahtari && destekli && !g.expoGo) {
-    return revenueCatSaglayicisi({ apiAnahtari: g.apiAnahtari, planKodlari: g.planKodlari });
+    return revenueCatSaglayicisi({
+      apiAnahtari: g.apiAnahtari,
+      planlar: g.planlar,
+      kanal: g.platform === 'android' ? 'google' : 'apple',
+    });
   }
   return sahteMagazaOlustur(g.sahte);
 }
 
 /** Uygulamanin magaza saglayicisi (ortam degiskenleri + calisma ortami). */
 export function uygulamaMagazasi(
-  planKodlari: () => Promise<readonly string[]>,
+  planlar: () => Promise<readonly AbonelikPlani[]>,
   sahte?: SahteMagazaSecenekleri,
 ): MagazaSaglayici {
   return magazaSaglayiciSec({
     apiAnahtari: Platform.OS === 'android' ? ortam.revenueCatAndroid : ortam.revenueCatIos,
     expoGo: Constants.executionEnvironment === ExecutionEnvironment.StoreClient,
     platform: Platform.OS,
-    planKodlari,
+    planlar,
     ...(sahte ? { sahte } : {}),
   });
 }
