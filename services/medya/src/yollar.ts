@@ -28,6 +28,7 @@ import { sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
 import type { Depolama } from './depolama.js';
+import { kvkkYollari } from './kvkk-yollari.js';
 import { dosyayiBasarisizYap, depolamaAnahtari, iso, yuklemeAnahtari } from './dosya-deposu.js';
 
 interface DosyaSatiri extends Record<string, unknown> {
@@ -344,6 +345,7 @@ export function yollariOlustur(secenek: YolSecenekleri): ServicePlugin {
       },
     );
 
+    app.register(kvkkYollari);
     app.post(
       '/ic/okuma-adresleri',
       {
