@@ -16,6 +16,8 @@ export interface BelirtecIddiasi {
   roller: Rol[];
   /** Platform kullanicisinin rolu (`plat` claim'i). */
   plat?: 'destek' | 'yonetici' | undefined;
+  /** Platform ikinci adiminin gecerlilik bitisi (epoch sn, `plat_2fa_exp` claim'i); yalniz taze 2FA varsa. */
+  plat2faBitis?: number | undefined;
   /** Taklit belirteci (ADR 0004): `sub` hedef kullanici, `imp` taklit, `aktor` platform kullanicisi. */
   taklit?: { taklitId: string; aktorId: string; bitis: Date } | undefined;
 }
@@ -36,6 +38,7 @@ export async function erisimBelirteciUret(
     ...(iddia.uyelikId ? { uyelik_id: iddia.uyelikId } : {}),
     ...(iddia.rol ? { rol: iddia.rol } : {}),
     ...(iddia.plat ? { plat: iddia.plat } : {}),
+    ...(iddia.plat && iddia.plat2faBitis ? { plat_2fa_exp: iddia.plat2faBitis } : {}),
     ...(iddia.taklit
       ? {
           imp: { taklit_id: iddia.taklit.taklitId, bitis: iddia.taklit.bitis.toISOString() },

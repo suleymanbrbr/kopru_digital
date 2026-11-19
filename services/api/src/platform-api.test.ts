@@ -4,6 +4,7 @@ import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { base32Coz, sayacHesapla, totpKodu } from './modules/hesap/index.js';
+import { dersYardimcilari } from './test/ders-yardimcilar.js';
 import { platformYoneticiEkle } from './sistem/platform-yonetici.js';
 import {
   bearer,
@@ -161,6 +162,34 @@ describe.skipIf(dbYok())('platform yönetimi çekirdeği (/platform/*)', () => {
         Buffer.from(kurum.token.split('.')[1] ?? '', 'base64url').toString('utf8'),
       ) as Record<string, unknown>;
       expect(digerPayload.plat).toBeUndefined();
+    });
+
+    it('plat_2fa_exp: yalnız oturumda taze 2FA varsa ve yeni belirteç alındıktan sonra; taklit/kurum belirtecinde yok', async () => {
+      const claim = (jwt: string) =>
+        JSON.parse(Buffer.from(jwt.split('.')[1] ?? '', 'base64url').toString('utf8')) as Record<
+          string,
+          unknown
+        >;
+      const k = await platformKullanicisi('yonetici');
+      // 2FA'dan once: yalniz `plat`.
+      expect(claim(k.token).plat).toBe('yonetici');
+      expect(claim(k.token).plat_2fa_exp).toBeUndefined();
+      await ikinciAdimTamamla(k);
+      // Eski belirtec degismez; istemci /auth/token ile yenisini alir.
+      expect(claim(k.token).plat_2fa_exp).toBeUndefined();
+      const yeni = (await tokenAl(t, k.oturum)).accessToken;
+      const exp = claim(yeni).plat_2fa_exp as number;
+      const beklenen = Math.floor(Date.now() / 1000) + 8 * 3600;
+      expect(Math.abs(exp - beklenen)).toBeLessThan(120);
+      // Baska (2FA'siz) oturum claim almaz; platform kullanicisi olmayan da.
+      const digerOturum = await otpIleGiris(t, k.telefon);
+      expect(
+        claim((await tokenAl(t, digerOturum.oturum)).accessToken).plat_2fa_exp,
+      ).toBeUndefined();
+      expect(claim(kurum.token).plat_2fa_exp).toBeUndefined();
+      // Dogrulama suresi (PLATFORM_IKINCI_ADIM_OMRU_SN) dolmus oturum claim almaz.
+      await sistem`update hesap.oturumlar set ikinci_adim_at = now() - interval '9 hours' where id in (select id from hesap.oturumlar where kullanici_id = ${k.kullaniciId} and ikinci_adim_at is not null)`;
+      expect(claim((await tokenAl(t, k.oturum)).accessToken).plat_2fa_exp).toBeUndefined();
     });
 
     it('2FA tamamlanmamış platform kullanıcısı /platform/* çağıramaz (yalnız ikinci adım uçları açık)', async () => {
@@ -704,6 +733,49 @@ describe.skipIf(dbYok())('platform yönetimi çekirdeği (/platform/*)', () => {
       }
       // Hedefin kendi belirteci etkilenmez.
       expect((await p('GET', dersUrl(), kurum.token)).statusCode).toBe(200);
+    });
+
+    it('taklitte yan etkili GET (yoklama listesi katılımcı eşitleme, finans dışa aktarma) hata vermeden okur, yazmaz; işlem READ ONLY', async () => {
+      const y = dersYardimcilari({ t, sistem });
+      const s = await y.kur({ ogrenciSayisi: 2 });
+      const ders = await y.dersAc(s);
+      const katilimci = async () =>
+        (
+          await sistem<{ n: number }[]>`
+            select count(*)::int n from ders.ders_katilimcilari where ders_id = ${ders.id}`
+        )[0]?.n;
+      expect(await katilimci()).toBe(2);
+      const [yeni] = await y.topluOgrenci(s.k.kurumId, 1, 'Sonradan');
+      await y.gruba(s.k, s.grup.id, [yeni ?? '']);
+      const basla = await p('POST', '/platform/taklit', destek.token, {
+        hedef_kullanici_id: s.k.kullaniciId,
+        kurum_id: s.k.kurumId,
+        neden: 'Destek talebi: yoklama listesi eksik görünüyor',
+      });
+      expect(basla.statusCode, basla.body).toBe(200);
+      const tt = basla.json<{ access_token: string }>().access_token;
+      const yoklamaUrl = `/v1/ders/kurumlar/${s.k.kurumId}/dersler/${ders.id}/yoklamalar`;
+      const taklitOku = await p('GET', yoklamaUrl, tt);
+      expect(taklitOku.statusCode, taklitOku.body).toBe(200);
+      // Taklit okuma esitleme yazmadi.
+      expect(await katilimci()).toBe(2);
+      expect(taklitOku.json<{ katilimcilar: unknown[] }>().katilimcilar).toHaveLength(2);
+      const ay = new Date().toISOString().slice(0, 7);
+      const disaUrl = `/v1/finans/kurumlar/${s.k.kurumId}/disa-aktar?ay=${ay}`;
+      const disaSayisi = async () =>
+        (
+          await sistem<{ n: number }[]>`
+            select count(*)::int n from hesap.denetim_kayitlari
+            where kurum_id = ${s.k.kurumId} and eylem = 'finans.disa_aktar'`
+        )[0]?.n;
+      const disa = await p('GET', disaUrl, tt);
+      expect(disa.statusCode, disa.body.slice(0, 200)).toBe(200);
+      expect(await disaSayisi()).toBe(0);
+      expect((await p('GET', disaUrl, s.k.token)).statusCode).toBe(200);
+      expect(await disaSayisi()).toBe(1);
+      // Ayni okuma hedefin kendi belirteciyle esitler (yazma yolu kapali degil, yalniz taklitte).
+      expect((await p('GET', yoklamaUrl, s.k.token)).statusCode).toBe(200);
+      expect(await katilimci()).toBe(3);
     });
 
     it('süresi dolan taklit belirteci 401; başkasının taklidini destek sonlandıramaz', async () => {

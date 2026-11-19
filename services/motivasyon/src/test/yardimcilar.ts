@@ -50,13 +50,20 @@ export async function kullaniciTokeni(k: Kimlik): Promise<string> {
     .sign(anahtar.privateKey);
 }
 
-/** Platform belirteci: kurum/uyelik yok, `plat` claim'i (`yonetici`/`destek`), istege bagli `imp`. */
+/**
+ * Platform belirteci: kurum/uyelik yok, `plat` claim'i (`yonetici`/`destek`), istege bagli `imp`. Varsayilan
+ * olarak taze ikinci adim kaniti (`plat_2fa_exp`) tasir; `ek` ile ezilebilir (`{ plat_2fa_exp: undefined }`).
+ */
 export async function platformTokeni(
   plat: 'yonetici' | 'destek' | null,
   ek: Record<string, unknown> = {},
   kullaniciId: string = uuidv7(),
 ): Promise<string> {
-  return new SignJWT({ ...(plat ? { plat } : {}), sid: uuidv7(), ...ek })
+  return new SignJWT({
+    ...(plat ? { plat, plat_2fa_exp: Math.floor(Date.now() / 1000) + 3600 } : {}),
+    sid: uuidv7(),
+    ...ek,
+  })
     .setProtectedHeader({ alg: 'EdDSA' })
     .setSubject(kullaniciId)
     .setIssuedAt()

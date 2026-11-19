@@ -1,5 +1,5 @@
 import { errorCodes, type Actor, type AnyEventEnvelope } from '@kopru/contracts';
-import { AppError, publishInTx, type Database, type Tx } from '@kopru/service-kit';
+import { AppError, publishInTx, saltOkunurMu, type Database, type Tx } from '@kopru/service-kit';
 import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -125,6 +125,8 @@ export async function denetimYaz(
     istekId?: string | null;
   },
 ): Promise<void> {
+  // Taklit (salt okunur islem): disa aktarma gibi yan etkili okumalarin kaydi `taklit.istek` denetimindedir.
+  if (saltOkunurMu()) return;
   await tx.insert(denetimKayitlari).values({
     id: uuidv7(),
     kurum_id: y.kurumId,

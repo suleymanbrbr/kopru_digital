@@ -22,9 +22,11 @@ import {
 } from '@kopru/contracts';
 import type { ServicePlugin, Tx } from '@kopru/service-kit';
 import { asc, eq, sql } from 'drizzle-orm';
+import type { FastifyRequest } from 'fastify';
 
 import { mufredatDegisiklikleri, mufredatSurumleri } from '../../db/schema.js';
 import { platformMufredatIslemi } from '../../sistem/mufredat-editor.js';
+import { platformIslem, platformKapisiKur } from '../hesap/index.js';
 import type { KonuSatiri } from './mufredat-deposu.js';
 import {
   degisiklikleri,
@@ -42,7 +44,6 @@ import {
   type IslemSonucu,
   type SurumSatiri,
 } from './mufredat-editor.js';
-import { platformYoneticisiGerekli } from './platform-yetki.js';
 
 const ONEK = '/platform/mufredat/kataloglar/:katalog_kodu';
 
@@ -97,20 +98,36 @@ const islemYaniti = (s: IslemSonucu) => ({
  * Platform mufredat editoru (`/platform/mufredat/...`, ADR 0004 "Platform yoneticisi"): taslak surum,
  * konu ekle/adlandir/tasi/birlestir/kaldir, surum farki, yayin. Yazmalar `api_sistem` islemidir ve
  * denetim kaydi uretir (`sistem/mufredat-editor.ts`). Okumalar RLS'li uygulama rolu ile yapilir (global
- * icerik). Yetki: `platformYoneticisiGerekli` (P1 korumasi birlestirilince degisecek tek nokta).
+ * icerik). Yetki: hesap modulunun P1 kapisi (`platformKapisiKur`: IP, 2FA, rota rolu `yonetici`).
  */
 export const mufredatPlatformYollari: ServicePlugin = (app) => {
   const { db, sistemDb } = app.kimlik;
-  // Kimlik dogrulamasindan sonra, govde dogrulamasindan once (yetkisize 400 yerine 403 doner).
-  const korumali = {
-    preValidation: (request: Parameters<typeof platformYoneticisiGerekli>[0]) => {
-      platformYoneticisiGerekli(request);
-      return Promise.resolve();
-    },
+  // P1 kapisi (IP izin listesi, `plat` claim'i + DB rolu, oturumda 2FA, rota rolu, denetim): bu plugin'in
+  // tum rotalarina `onRequest`te uygulanir; govde dogrulamasindan once calistigindan yetkisize 400 yerine 403 doner.
+  platformKapisiKur(app, app.kimlik);
+  const aktor = (request: FastifyRequest): string => {
+    const p = request.platform;
+    if (!p) throw new Error('platform kapısı çalışmadan müfredat işlemi çağrıldı');
+    return p.kullaniciId;
   };
-  const config = { rizaMuaf: true };
-  const aktor = (request: Parameters<typeof platformYoneticisiGerekli>[0]) =>
-    platformYoneticisiGerekli(request);
+  /** Yazma: `api_sistem` islemi + islemle ayni transaction'da denetim satiri (`platform.mufredat.<eylem>`). */
+  const islem = <T>(
+    request: FastifyRequest,
+    ek: {
+      eylem: string;
+      neden: string;
+      hedefId?: string;
+      ayrinti?: Record<string, unknown>;
+    },
+    fn: (tx: Tx) => Promise<T>,
+  ): Promise<T> =>
+    platformIslem(request, (baglam) => platformMufredatIslemi(sistemDb, baglam, fn), {
+      eylem: `platform.mufredat.${ek.eylem}`,
+      neden: ek.neden,
+      hedefTuru: 'mufredat',
+      ...(ek.hedefId ? { hedefId: ek.hedefId } : {}),
+      ...(ek.ayrinti ? { ayrinti: ek.ayrinti } : {}),
+    });
   const oku = <T>(fn: (tx: Tx) => Promise<T>) => db.orm.transaction(fn);
 
   async function degisiklikSayilari(tx: Tx, katalog: KatalogKodu): Promise<Map<number, number>> {
@@ -128,8 +145,10 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.get(
     '/platform/mufredat/kataloglar',
     {
-      ...korumali,
-      config,
+      config: {
+        platformEylem: 'platform.mufredat.katalog_listele',
+        platformRolu: 'yonetici' as const,
+      },
       schema: {
         tags: ['platform'],
         summary: 'Katalog ve sürüm listesi (taslaklar dahil) ile değişiklik sayıları.',
@@ -163,8 +182,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.taslak_ac', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary:
@@ -178,10 +196,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog } = request.params;
       const g = request.body;
-      const surum = await platformMufredatIslemi(
-        sistemDb,
+      const surum = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'taslak_ac',
           neden: `Taslak sürüm açıldı: ${katalog}`,
           ayrinti: { katalog_kodu: katalog },
@@ -195,8 +212,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.get(
     `${ONEK}/surumler/:surum_no/agac`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.agac', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary: 'Sürümde geçerli konu ağacı (düz liste; taslakta yeni eklenenler `yeni: true`).',
@@ -222,8 +238,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.get(
     `${ONEK}/surumler/:surum_no/fark`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.fark', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary:
@@ -258,8 +273,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak/konular`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.konu_ekle', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary: 'Taslağa konu ekle.',
@@ -272,10 +286,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog } = request.params;
       const g = request.body;
-      const sonuc = await platformMufredatIslemi(
-        sistemDb,
+      const sonuc = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'konu_ekle',
           neden: g.not,
           ayrinti: { katalog_kodu: katalog, brans_kodu: g.brans_kodu, seviye: g.seviye },
@@ -289,8 +302,10 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak/konular/:id/adlandir`,
     {
-      ...korumali,
-      config,
+      config: {
+        platformEylem: 'platform.mufredat.konu_adlandir',
+        platformRolu: 'yonetici' as const,
+      },
       schema: {
         tags: ['platform'],
         summary:
@@ -304,10 +319,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog, id } = request.params;
       const g = request.body;
-      const sonuc = await platformMufredatIslemi(
-        sistemDb,
+      const sonuc = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'konu_adlandir',
           neden: g.not,
           hedefId: id,
@@ -322,8 +336,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak/konular/:id/tasi`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.konu_tasi', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary:
@@ -337,10 +350,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog, id } = request.params;
       const g = request.body;
-      const sonuc = await platformMufredatIslemi(
-        sistemDb,
+      const sonuc = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'konu_tasi',
           neden: g.not,
           hedefId: id,
@@ -355,8 +367,10 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak/konular/:id/birlestir`,
     {
-      ...korumali,
-      config,
+      config: {
+        platformEylem: 'platform.mufredat.konu_birlestir',
+        platformRolu: 'yonetici' as const,
+      },
       schema: {
         tags: ['platform'],
         summary:
@@ -370,10 +384,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog, id } = request.params;
       const g = request.body;
-      const sonuc = await platformMufredatIslemi(
-        sistemDb,
+      const sonuc = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'konu_birlestir',
           neden: g.not,
           hedefId: id,
@@ -388,8 +401,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak/konular/:id/kaldir`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.konu_kaldir', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary:
@@ -403,10 +415,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog, id } = request.params;
       const g = request.body;
-      const sonuc = await platformMufredatIslemi(
-        sistemDb,
+      const sonuc = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'konu_kaldir',
           neden: g.not,
           hedefId: id,
@@ -421,8 +432,7 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
   app.post(
     `${ONEK}/taslak/yayinla`,
     {
-      ...korumali,
-      config,
+      config: { platformEylem: 'platform.mufredat.yayinla', platformRolu: 'yonetici' as const },
       schema: {
         tags: ['platform'],
         summary:
@@ -435,10 +445,9 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
     async (request) => {
       const kullanici = aktor(request);
       const { katalog_kodu: katalog } = request.params;
-      const sonuc = await platformMufredatIslemi(
-        sistemDb,
+      const sonuc = await islem(
+        request,
         {
-          aktorKullaniciId: kullanici,
           eylem: 'yayinla',
           neden: request.body.not ?? `Müfredat yayınlandı: ${katalog}`,
           ayrinti: { katalog_kodu: katalog },

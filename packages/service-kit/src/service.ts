@@ -22,6 +22,7 @@ import { z } from 'zod';
 import { createJwtVerifier, installAuth, type VerifyJwt } from './auth.js';
 import { checkDb, createDb, type Database } from './db.js';
 import type { BaseEnv } from './env.js';
+import { installIstekBaglami } from './istek-baglami.js';
 import { errorHandler, notFoundHandler } from './errors.js';
 import { BellekIptalDeposu, NatsIptalDeposu, type IptalDeposu } from './iptal.js';
 import { createLogger } from './logger.js';
@@ -170,6 +171,7 @@ export function createService(options: CreateServiceOptions): Service {
   app.register(cors, { origin: env.CORS_ORIGINS.length > 0 ? env.CORS_ORIGINS : false });
   app.register(rateLimit, { max: env.RATE_LIMIT_MAX, timeWindow: '1 minute' });
 
+  installIstekBaglami(app);
   installAuth(app, {
     enabled: env.AUTH_ENABLED,
     iptal,
