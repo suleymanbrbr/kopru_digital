@@ -190,6 +190,34 @@ Solo hoca hem sahip hem öğretmen rolündedir ve kurum menülerini (şube, kade
 
 **Sonraki iyileştirmeler:** Konu bazında yanlış analizi (soru–konu eşleşmesi), hedef puan ve bölüm/lise farkı, optik form içe aktarımı, deneme sonrası otomatik plan önerisi.
 
+### Günlük soru takibi ve konu analizi
+
+> Koç geri bildirimiyle eklendi (19 Kasım 2026). Veli tarafı bilerek dışarıda: rapor öğretmene gider, veliye iletim Faz 2 veli modülünde.
+
+**Amaç:** Koçluğun günlük takibi: öğrencinin her gün hangi konudan, hangi zorlukta kaç soru çözüp kaçını yanlış yaptığını görmek; eksik konuyu ve zorlandığı zorluk bandını tespit edip çalışmayı buna göre yönlendirmek.
+
+**Kim:** Öğrenci girer (mobil ağırlıklı, web'de de). Öğretmen kendi öğrencilerini, sahip/yönetici kurumu görür.
+
+**Akış (öğrenci):** “Bugün” ekranında “Soru çözdüm” → ders → konu (müfredattan; son kullanılanlar üstte) → zorluk (kolay / orta / zor) → kaynak (isteğe bağlı: tanımlı kaynak kitaptan test seç ya da serbest metin) → doğru / yanlış / boş → isteğe bağlı yanlış soruların fotoğrafı → kaydet → XP. Plan görevine bağlıysa görevin gerçekleşeni de dolar.
+
+**Akış (öğretmen):** Öğrenci kartı → “Konu analizi”: ders ve tarih aralığı (7 / 30 gün / dönem) seçilir → konu × zorluk tablosu (çözülen, başarı oranı, renk) → bir hücreye dokununca o kayıtlar ve fotoğraflar → “Görev ver” ile seçili konu ve zorluk için haftalık plana ya da ödeve tek tıkla görev. Gruba/sınıfa toplu görünüm: konu bazında sınıf ortalaması ve en çok zorlanan konular.
+
+**Faz 1 kapsamı:**
+
+- Günlük soru kaydı (konu, zorluk, kaynak, D/Y/B, fotoğraf), düzeltme ve silme aynı gün içinde; ödev teslimleri ve plan görevlerinin gerçekleşenleri de aynı analize akar (konu ve zorluk bilgisi varsa).
+- Konu × zorluk ısı haritası, ders bazında ve tarih aralığıyla; sınıf/grup görünümü.
+- **Zorluk bandı tespiti:** bir konuda başarının hangi zorlukta belirgin düştüğü (ör. kolay %90, orta %60, zor %25 → “orta seviyede zorlanıyor”); yeterli veri yoksa (ör. bantta 10 sorudan az) tespit yapılmaz, “veri az” yazılır.
+- **Öğretmene öneriler (kural tabanlı, öğretmen onaylı):** “Genetik konusunda orta seviyede zorlanıyor: orta seviyeden 20 soruluk görev öner”, son 2 haftada bir konuda zor bantta başarı %30'un altında ve düzelmiyorsa “birebir ders gerekebilir” işareti. Öneri öğretmene gider; öğrenciye ya da başkasına otomatik gitmez. Kurallar ve eşikler kodda tek yerde, belgelidir.
+- **Kaynak kitap tanımı (küçük sürüm):** kurum ya da öğretmen kaynak kitap tanımlar (ad, yayınevi, ders, test/bölüm listesi ve soru sayıları). Kitabın içeriği/PDF'i yüklenmez (telif). Öğrenci günlük kayıtta testi seçer; kitap bazında ilerleme (çözülen test / toplam).
+- Haftalık özet öğretmen için (öğrenci kartında): çözülen soru, en zayıf 3 konu, zorluk bandı değişimi.
+- XP: günlük soru kaydı motivasyon olayı üretir (günlük tavanla; şüpheli örüntü kuralları geçerli).
+
+**Kalite çıtası:** Öğrenci bir kaydı 15 saniyede girer (son kullanılan ders/konu/kaynak hatırlanır); öğretmen bir öğrencinin 30 günlük konu analizini 2 saniyede açar; 30 kişilik sınıf görünümü 3 saniyede; öneriler yanlış pozitif vermemek için yeterli veri eşiği uygular.
+
+**Sonraki iyileştirmeler:** Deneme sonuçlarında soru–konu eşleşmesi (optik form ile), yapay zekâ ile fotoğraftan D/Y/B okuma, hata defteri (yanlış soruların tekrarı), veliye haftalık rapor (Faz 2 veli modülüyle).
+
+**Kapsam dışı:** Veliye otomatik mesaj ya da rapor (Faz 2), kitap içeriği/PDF barındırma, otomatik (öğretmen onaysız) yönlendirme.
+
 ## Soru sor
 
 **Amaç:** Öğrenci takıldığı an yardım alır; öğretmen yükünü kontrol ederek hızlı ve zengin cevap verir. Rakipten en net ayrışabileceğimiz özellik.
@@ -423,28 +451,28 @@ Maliyeti düşük tutan üç ilke: **dosyayı telefonda küçült, sunucudan ge�
 
 Bunlar planlarda duruyor; veri modeli ve modül sistemi hepsinin sonradan eklenebilmesine göre kuruluyor. Öncelik, Faz 1 beta verisine göre yeniden sıralanacak.
 
-| Özellik                              | Kapsam özeti                                                                                                                       | Ön koşul                                                       | Önerilen faz           |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------- |
-| Veli modülü                          | Veli uygulaması (çocuk seçici, program, devam, ödevler, seri, deneme grafiği, kalan ders), haftalık rapor linki, veli–öğrenci bağı | Faz 1 rol ve veri modeli                                       | Faz 2 (ilk)            |
-| Yapay zekâ koç asistanı              | Deneme ve ödev verisinden zayıf konuları çıkarıp haftalık plan taslağı önerir; öğretmen düzenleyip onaylar                         | Yeterli deneme/ödev verisi; KVKK uyumlu model sağlayıcı kararı | Faz 2                  |
-| Yapay zekâ soru ipucu                | Soru fotoğrafından öğretmene çözüm/ipucu taslağı; öğretmen onaylamadan öğrenciye gitmez                                            | Aynı KVKK kararı                                               | Faz 2                  |
-| Ana ekran widget'ı                   | Seri, bugünün görevi, sıradaki ders, karakter                                                                                      | Motivasyon sistemi                                             | Faz 2                  |
-| Hata defteri                         | Fotoğraf + konu + 1-3-7-21 gün tekrarı; cevaplanan sorudan tek dokunuşla ekleme                                                    | Soru sor, medya hattı                                          | Faz 2                  |
-| Uygulama içi mesajlaşma              | Öğretmen–öğrenci ve grup sohbeti; kayıtlı, yönetici/veli görünürlüğü, raporlama, sessiz saatler                                    | Çocuk güvenliği kuralları                                      | Faz 2                  |
-| Otomatik SMS/WhatsApp                | Şablonlu hatırlatmalar (ders, ödeme, ödev); İYS ayrımı                                                                             | SMS sağlayıcı, WhatsApp iş hesabı                              | Faz 2                  |
-| Ortak sınıf hedefi                   | Grup için haftalık toplam hedef ve ortak ilerleme çubuğu                                                                           | Motivasyon sistemi                                             | Faz 2                  |
-| Sessiz çalışma odası                 | Grupta o an odak modunda olanlar karakterleriyle görünür; isteğe bağlı                                                             | Odak sayacı, karakter                                          | Faz 2                  |
-| Haftalık paylaşım kartı              | Haftanın özeti hikâye formatında görsel; ad ve kurum gizli seçeneği                                                                | Karakter                                                       | Faz 2                  |
-| Kaynak kitap takibi                  | Öğrencinin kitap/test ilerlemesi (ad ve sayı)                                                                                      | Ödev modülü                                                    | Faz 2                  |
-| Quiz ve soru havuzu                  | Kurumun kendi sorularından çoktan seçmeli test, otomatik puan                                                                      | Telif kuralları                                                | Faz 2–3                |
-| Konu haritası                        | Müfredat karakterin dünyası gibi; bitirilen konular bölge açar                                                                     | Konu bazında ilerleme verisi, çizim                            | Faz 3                  |
-| Hedef puan                           | Tahmini TYT/AYT/LGS puanı, hedef bölüm/lise farkı                                                                                  | Yıllık katsayı/taban puan verisi                               | Faz 3                  |
-| Optik form içe aktarımı              | Optik okuyucu çıktılarından deneme sonuçları                                                                                       | Deneme modülü                                                  | Faz 3                  |
-| Yıl kapanışı sihirbazı               | Öğrencileri toplu arşivleme/yeni sınıfa taşıma (otomatik atlatma yok)                                                              | Kurum yapısı                                                   | Faz 3                  |
-| Kurum paketi genişletme              | Çoklu şube, sekreter/muhasebe, taksit/senet, toplu içe aktarım, özel roller                                                        | Kurum müşterisi                                                | Müşteri geldikçe       |
-| Veliden online tahsilat              | Velinin paketi kartla ödemesi                                                                                                      | Veli modülü, alt üye işyeri yapısı                             | Faz 3                  |
-| Hoca vitrini ve herkese açık araçlar | Hoca tanıtım sayfası, ön kayıt, puan hesaplama ve taban puan sayfaları (SEO)                                                       | —                                                              | Büyüme ihtiyacına göre |
-| Liderlik tablosu                     | İsteğe bağlı, kurum ayarıyla                                                                                                       | Motivasyon verisi                                              | Belki                  |
+| Özellik                              | Kapsam özeti                                                                                                                                                     | Ön koşul                                                       | Önerilen faz           |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------- |
+| Veli modülü                          | Veli uygulaması (çocuk seçici, program, devam, ödevler, seri, deneme grafiği, kalan ders), haftalık rapor linki, veli–öğrenci bağı                               | Faz 1 rol ve veri modeli                                       | Faz 2 (ilk)            |
+| Yapay zekâ koç asistanı              | Deneme ve ödev verisinden zayıf konuları çıkarıp haftalık plan taslağı önerir; öğretmen düzenleyip onaylar                                                       | Yeterli deneme/ödev verisi; KVKK uyumlu model sağlayıcı kararı | Faz 2                  |
+| Yapay zekâ soru ipucu                | Soru fotoğrafından öğretmene çözüm/ipucu taslağı; öğretmen onaylamadan öğrenciye gitmez                                                                          | Aynı KVKK kararı                                               | Faz 2                  |
+| Ana ekran widget'ı                   | Seri, bugünün görevi, sıradaki ders, karakter                                                                                                                    | Motivasyon sistemi                                             | Faz 2                  |
+| Hata defteri                         | Fotoğraf + konu + 1-3-7-21 gün tekrarı; cevaplanan sorudan tek dokunuşla ekleme                                                                                  | Soru sor, medya hattı                                          | Faz 2                  |
+| Uygulama içi mesajlaşma              | Öğretmen–öğrenci ve grup sohbeti; kayıtlı, yönetici/veli görünürlüğü, raporlama, sessiz saatler                                                                  | Çocuk güvenliği kuralları                                      | Faz 2                  |
+| Otomatik SMS/WhatsApp                | Şablonlu hatırlatmalar (ders, ödeme, ödev); İYS ayrımı                                                                                                           | SMS sağlayıcı, WhatsApp iş hesabı                              | Faz 2                  |
+| Ortak sınıf hedefi                   | Grup için haftalık toplam hedef ve ortak ilerleme çubuğu                                                                                                         | Motivasyon sistemi                                             | Faz 2                  |
+| Sessiz çalışma odası                 | Grupta o an odak modunda olanlar karakterleriyle görünür; isteğe bağlı                                                                                           | Odak sayacı, karakter                                          | Faz 2                  |
+| Haftalık paylaşım kartı              | Haftanın özeti hikâye formatında görsel; ad ve kurum gizli seçeneği                                                                                              | Karakter                                                       | Faz 2                  |
+| Kaynak kitap takibi                  | Öğrencinin kitap/test ilerlemesi (ad ve sayı). Küçük sürümü Faz 1'e alındı (“Günlük soru takibi ve konu analizi”); Faz 2'de ödevle bağlantı ve yayınevi kataloğu | Ödev modülü                                                    | Faz 2                  |
+| Quiz ve soru havuzu                  | Kurumun kendi sorularından çoktan seçmeli test, otomatik puan                                                                                                    | Telif kuralları                                                | Faz 2–3                |
+| Konu haritası                        | Müfredat karakterin dünyası gibi; bitirilen konular bölge açar                                                                                                   | Konu bazında ilerleme verisi, çizim                            | Faz 3                  |
+| Hedef puan                           | Tahmini TYT/AYT/LGS puanı, hedef bölüm/lise farkı                                                                                                                | Yıllık katsayı/taban puan verisi                               | Faz 3                  |
+| Optik form içe aktarımı              | Optik okuyucu çıktılarından deneme sonuçları                                                                                                                     | Deneme modülü                                                  | Faz 3                  |
+| Yıl kapanışı sihirbazı               | Öğrencileri toplu arşivleme/yeni sınıfa taşıma (otomatik atlatma yok)                                                                                            | Kurum yapısı                                                   | Faz 3                  |
+| Kurum paketi genişletme              | Çoklu şube, sekreter/muhasebe, taksit/senet, toplu içe aktarım, özel roller                                                                                      | Kurum müşterisi                                                | Müşteri geldikçe       |
+| Veliden online tahsilat              | Velinin paketi kartla ödemesi                                                                                                                                    | Veli modülü, alt üye işyeri yapısı                             | Faz 3                  |
+| Hoca vitrini ve herkese açık araçlar | Hoca tanıtım sayfası, ön kayıt, puan hesaplama ve taban puan sayfaları (SEO)                                                                                     | —                                                              | Büyüme ihtiyacına göre |
+| Liderlik tablosu                     | İsteğe bağlı, kurum ayarıyla                                                                                                                                     | Motivasyon verisi                                              | Belki                  |
 
 ## Güncellenmiş süre ve açık sorular
 
