@@ -9,10 +9,48 @@
     background: var(--arka-plan);
     color: var(--metin);
     font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss03';
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--arka-plan);
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+    text-wrap: balance;
   }
 
   :focus-visible {
     outline: 2px solid var(--birincil);
     outline-offset: 2px;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='tab'],
+  [role='radio'],
+  summary {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: var(--birincil-yumusak);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
