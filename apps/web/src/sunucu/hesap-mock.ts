@@ -11,6 +11,8 @@ interface Istek {
   yol: string;
   sorgu: URLSearchParams;
   govde: unknown;
+  /** Abonelik mock senaryosu (`mock_senaryo` cerezi). */
+  senaryo?: string;
 }
 interface Yanit {
   durum: number;
@@ -53,9 +55,9 @@ function rastgele(uzunluk: number, alfabe = ALFABE): string {
   return s;
 }
 
-const hata = (durum: number, kod: string, mesaj: string): Yanit => ({
+const hata = (durum: number, kod: string, mesaj: string, details?: unknown): Yanit => ({
   durum,
-  govde: { error: { code: kod, message: mesaj } },
+  govde: { error: { code: kod, message: mesaj, ...(details === undefined ? {} : { details }) } },
 });
 const izinYok = () => hata(403, 'izin_yok', 'Bu işlem için yetkin yok.');
 const bulunamadi = () => hata(404, 'bulunamadi', 'Kaynak bulunamadı.');
@@ -837,6 +839,14 @@ function kiracisiz(parcalar: string[], istek: Istek): Yanit {
       return hata(410, 'davet_gecersiz', 'Davet geçersiz, süresi dolmuş ya da kullanılmış.');
     }
     if (belirtec.startsWith('zatenuye')) return hata(409, 'zaten_uye', 'Bu kurumda zaten üyesin.');
+    // 16. ogrenci: kurumun plan siniri dolu (402 `plan_limiti`).
+    if (belirtec.startsWith('limitdolu')) {
+      return hata(402, 'plan_limiti', 'Kurumun öğrenci sınırı doldu.', {
+        limit: 'max_ogrenci',
+        mevcut: 15,
+        ust_sinir: 15,
+      });
+    }
     const grupId = uid();
     return {
       durum: 200,
@@ -940,10 +950,23 @@ function ownGorunum(kurumId: string, k: KurumDurumu, i: Kayit): Kayit {
 
 export function hesapMock(istek: Istek): Yanit {
   const parcalar = istek.yol.split('/');
+  // Abonelik senaryosu `limit-dolu`: yeni ogrenci daveti 402 `plan_limiti` doner.
+  if (
+    istek.yontem === 'POST' &&
+    parcalar[0] === 'kurumlar' &&
+    parcalar[1] === 'kurum-kuzey' &&
+    parcalar[2] === 'davetler' &&
+    parcalar.length === 3 &&
+    govdeNesnesi(istek.govde).rol === 'ogrenci'
+  ) {
+    const doldu = mockOgrenciLimitiDolu(istek.senaryo);
+    if (doldu) return hata(402, 'plan_limiti', 'Kurumun öğrenci sınırı doldu.', doldu);
+  }
   if (parcalar[0] === 'kurumlar' && parcalar[1]) {
     if (!(parcalar[1] in KURUM_ADLARI)) return bulunamadi();
     return kurumdaIsle(parcalar[1], parcalar.slice(2), istek);
   }
   return kiracisiz(parcalar, istek);
 }
+import { mockOgrenciLimitiDolu } from './abonelik-mock';
 import { mockSimdi } from './mock-zaman';

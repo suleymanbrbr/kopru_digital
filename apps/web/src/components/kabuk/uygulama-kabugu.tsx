@@ -8,6 +8,7 @@ import { useState, type ReactNode } from 'react';
 
 import { AltMenuHucresi, NavSatiri } from './nav-baglantisi';
 
+import { AbonelikAfisleri } from '@/components/abonelik/afisler';
 import { BildirimZili } from '@/components/bildirim/bildirim-zili';
 import { MarkaAdi, MarkaIsareti } from '@/components/marka';
 import { TemaAnahtari } from '@/components/tema-anahtari';
@@ -132,7 +133,7 @@ export function UygulamaKabugu({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh lg:pl-64">
       {/* Masaustu: sabit yan menu */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col gap-5 overflow-y-auto border-r border-kenar bg-yuzey px-3 py-4 lg:flex">
+      <aside className="fixed bottom-0 left-0 top-[var(--afis-h,0px)] z-30 hidden w-64 flex-col gap-5 overflow-y-auto border-r border-kenar bg-yuzey px-3 py-4 lg:flex">
         <Link href="/kurum-sec" className="px-1.5 pt-1" aria-label={t('marka.ad')}>
           <MarkaAdi />
         </Link>
@@ -144,7 +145,7 @@ export function UygulamaKabugu({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Mobil: ust cubuk */}
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-kenar bg-yuzey/95 px-4 backdrop-blur lg:hidden">
+      <header className="sticky top-[var(--afis-h,0px)] z-20 flex h-14 items-center gap-3 border-b border-kenar bg-yuzey/95 px-4 backdrop-blur lg:hidden">
         <MarkaIsareti className="size-7" />
         <Link href="/kurum-sec" className="min-w-0 flex-1" title={t('kurumSec.degistir')}>
           <span className="block truncate text-sm font-semibold">{uyelik.kurumAd}</span>
@@ -156,7 +157,7 @@ export function UygulamaKabugu({ children }: { children: ReactNode }) {
       </header>
 
       {/* Masaustu: ince ust cubuk (bildirim zili) */}
-      <div className="sticky top-0 z-20 hidden h-14 items-center justify-end border-b border-kenar bg-yuzey/95 px-10 backdrop-blur lg:flex">
+      <div className="sticky top-[var(--afis-h,0px)] z-20 hidden h-14 items-center justify-end border-b border-kenar bg-yuzey/95 px-10 backdrop-blur lg:flex">
         <BildirimZili />
       </div>
 
@@ -165,6 +166,7 @@ export function UygulamaKabugu({ children }: { children: ReactNode }) {
         tabIndex={-1}
         className="mx-auto w-full max-w-5xl px-4 pb-28 pt-6 sm:px-8 lg:px-10 lg:pb-14 lg:pt-10"
       >
+        <AbonelikAfisleri />
         {children}
       </main>
 

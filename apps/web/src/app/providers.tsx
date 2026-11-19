@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { useState, type ReactNode } from 'react';
 
+import { PlatformMesaji } from '@/components/platform-mesaji';
 import { OturumSaglayici } from '@/oturum/saglayici';
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={istemci}>
+        <PlatformMesaji />
         <OturumSaglayici>{children}</OturumSaglayici>
       </QueryClientProvider>
     </ThemeProvider>
