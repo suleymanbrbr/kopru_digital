@@ -16,6 +16,7 @@ import { AnahtarDeposu } from './anahtarlar.js';
 import { createBetterAuth, type KimlikDogrulama } from './better-auth.js';
 import { epostaGondericiOlustur, type EpostaGonderici } from './eposta.js';
 import { JWT_AUDIENCE } from './erisim-belirteci.js';
+import { platformKokKancalari } from './platform/kapi.js';
 import { onayGerekliMi, rizaDurumu } from './riza.js';
 import { LogSmsGonderici, type SmsGonderici } from './sms.js';
 
@@ -121,6 +122,12 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
         await sistemDb?.close();
         eposta.close?.();
       });
+
+      // Taklit belirteci kapisi (canli dogrulama, salt okunur, IP, denetim) ve HTTP sayaci.
+      platformKokKancalari(app, hizmet);
+      if (env.NODE_ENV === 'production' && env.PLATFORM_IP_IZINLI.length === 0) {
+        app.log.warn('PLATFORM_IP_IZINLI boş: üretimde /platform/* ve taklit belirteçleri kapalı');
+      }
 
       // ADR 0004 kontrol sirasi 2: KVKK riza. Kimlik dogrulamasindan (service-kit onRequest) sonra calisir.
       app.addHook('onRequest', async (request) => {

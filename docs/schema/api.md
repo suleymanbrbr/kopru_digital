@@ -170,6 +170,7 @@ Profil: `G`. RLS: hayır.
 | `son_kullanim_at` | timestamptz | hayır | now() | |
 | `iptal_at` | timestamptz | evet | | |
 | `taklit_kayit_id` | uuid | evet | | Taklit oturumu ise `taklit_kayitlari.id` |
+| `ikinci_adim_at` | timestamptz | evet | | Platform kullanıcısının bu oturumda iki adımlı doğrulamayı tamamladığı an (0016); `/platform/*` her istekte bakar |
 
 Kısıtlar: `UNIQUE (belirtec_hash)`. İndeks: `(kullanici_id, iptal_at)`, `(expires_at)` (temizlik). Olaylar: yok.
 
@@ -442,7 +443,7 @@ LEFT JOIN hesap.modul_ayarlari m
 WHERE d.kid IS NOT NULL;
 ```
 
-İndeks: `(kurum_id, modul_kodu)`. Olaylar: `hesap.modul_ayari.degisti.v1`.
+İndeks: `(kurum_id, modul_kodu)`. Olaylar: `hesap.modul_ayari.degisti.v1`. Platform yöneticisi kurum düzeyinde `PUT /platform/kurumlar/:id/moduller/:kod` ile açıp kapatabilir; aynı işlemde aynı olay yayımlanır (`actor` platform kullanıcısıdır, olay yükünde kişisel veri yoktur) ve denetim satırı `platform.modul_ayarla` yazılır.
 
 ### Rol ve izin sözlüğü
 
@@ -536,7 +537,87 @@ Profil: `D` (`kurum_id` NULL olabilir: platform eylemleri). RLS: evet (`kurum_id
 | `istek_id` | uuid | evet | | `korelasyon_id` |
 | `ip` | inet | evet | | |
 
-İndeks: `(kurum_id, created_at DESC)`, `(hedef_turu, hedef_id)`, `(aktor_kullanici_id, created_at DESC)`. Olaylar: yok.
+İndeks: `(kurum_id, created_at DESC)`, `(hedef_turu, hedef_id)`, `(aktor_kullanici_id, created_at DESC)`, `(created_at DESC, id DESC)` ve `(eylem, created_at DESC)` (platform denetim listesi, 0016). Olaylar: yok.
+
+**Platform eylemleri** (`platform.*`, `taklit.*`): her `/platform/*` isteği (okuma, reddedilenler ve yazmalar dahil) bir satır yazar: `aktor_kullanici_id`, `ip` (`request.ip`, [ADR 0009](../adr/0009-guvenilir-proxy-ve-istemci-ip.md)), `istek_id`, `kurum_id`/`hedef_*` (varsa) ve `sonra` içinde yalnız kişisel veri içermeyen ayrıntı (`durum`, `kod`, `red`, arama türü, süzgeç adları, modül/beta kodu). Veri değiştirenler satırı değişiklikle **aynı işlemde** yazar (`withSistem`), `neden` istek gövdesinden gelir; diğerleri `onSend` kancasında yazılır. Arama metni (telefon/e-posta olabilir) ve mesaj metni denetime girmez. Taklit belirteciyle gelen **her** istek `taklit.istek` (`taklit_kayit_id`, `kurum_id` = hedef kurum, `aktor_kullanici_id` = platform kullanıcısı, `sonra.yontem|yol|durum`) olarak yazılır; reddedilenler (401 sonlanmış, 403 yazma/IP) dahil. Eylem adları: `platform.ben`, `platform.ikinci_adim_kur|onayla|dogrula|basarisiz`, `platform.kurum_ara|kurum_detay`, `platform.modul_ayarla`, `platform.beta_ayarla`, `platform.taklit_baslat|taklit_sonlandir`, `platform.denetim_listele`, `platform.sistem_sagligi`, `platform.mesaj_listele|mesaj_yayinla|mesaj_iptal`, `platform.yonetici_ekle` (betik), `taklit.istek`.
+
+### Platform yönetimi tabloları (0016)
+
+#### `hesap.platform_ikinci_adim`
+
+Platform kullanıcılarının TOTP ikinci adımı ([ADR 0004](../adr/0004-kimlik-dogrulama-ve-yetkilendirme.md#değişiklik-notu-2026-11-18-platform-çekirdeği)). Profil: `G`. RLS: hayır; `api_app` erişimi `REVOKE ALL` ile kapalı, yalnız `_sistem` rolü okur/yazar.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `kullanici_id` | uuid | hayır | | FK `kullanicilar`, `UNIQUE` |
+| `sir_sifreli` | bytea | hayır | | TOTP sırrı, AES-256-GCM (`iv(12) + etiket(16) + şifreli`); anahtar `BETTER_AUTH_SECRET`'tan HKDF ile türetilir |
+| `onaylandi_at` | timestamptz | evet | | Kurulum ilk kodla onaylanınca dolar; dolu kayıt yeniden kurulamaz |
+| `son_sayac` | bigint | evet | | En son kabul edilen TOTP adımı (tekrar oynatma koruması) |
+| `yedek_kod_ozetleri` | text[] | hayır | `'{}'` | Tek kullanımlık yedek kodların HMAC-SHA-256 özetleri (düz kod saklanmaz); kullanılan kod diziden çıkar |
+| `yanlis_deneme` | smallint | hayır | `0` | Art arda yanlış sayısı; 5'te 15 dakika kilit |
+| `kilitli_bitis_at` | timestamptz | evet | | Doluysa ve gelecekteyse doğrulama `429` |
+
+Olaylar: yok. Sıfırlama yalnız `platform:yonetici-ekle --2fa-sifirla` betiğiyle.
+
+#### `hesap.platform_mesajlari`
+
+Tüm kullanıcılara görünen bakım/duyuru mesajı. Profil: `G`. RLS: hayır (kiracısız, kişisel veri yok). `api_app` yalnız `SELECT`; yazma `_sistem` ile (`/platform/mesajlar`).
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `created_by` | uuid | evet | | Yayınlayan platform kullanıcısı |
+| `baslik` | text | hayır | | CHECK `char_length BETWEEN 1 AND 120` |
+| `metin` | text | hayır | | CHECK `char_length BETWEEN 1 AND 2000`. Kişisel veri konmaz. |
+| `onem` | text | hayır | `'bilgi'` | CHECK `IN ('bilgi','uyari','kritik')` |
+| `baslangic_at` | timestamptz | hayır | | |
+| `bitis_at` | timestamptz | hayır | | CHECK `bitis_at > baslangic_at` |
+| `iptal_at` | timestamptz | evet | | Erken kaldırma |
+
+İndeks: `(baslangic_at, bitis_at) WHERE iptal_at IS NULL`. Etkin mesaj: `iptal_at IS NULL AND baslangic_at <= now() AND bitis_at > now()`; birden çoksa önem (`kritik` > `uyari` > `bilgi`), sonra en yeni. Olaylar: yok.
+
+#### `hesap.kurum_beta_ozellikleri`
+
+Kuruma özel beta özellik bayrakları. Profil: `KS`. RLS: evet (`kurum_id = aktif_kurum()`); kurum yalnız kendi bayraklarını **okur**, `api_app` yazamaz (`REVOKE INSERT, UPDATE, DELETE`); yazma platform yöneticisi `_sistem` ile.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ozellik_kodu` | text | hayır | | CHECK `~ '^[a-z][a-z0-9_]{1,39}$'`. Kod listesi kodda sabit değildir; özelliği getiren paket kullanıma alır. |
+| `acik` | boolean | hayır | | |
+| `degistiren_id` | uuid | evet | | Değiştiren platform **kullanıcısı** (`kullanicilar.id`; `modul_ayarlari`ndaki gibi üyelik değil) |
+
+Kısıtlar: `UNIQUE (kurum_id, ozellik_kodu)`. Kayıt yok = kapalı. Olaylar: yok (Faz 1'de yalnız api okur).
+
+Arama indeksi: `kurumlar_ad_trgm_idx` = `GIN (translate(ad, 'İIı', 'iii') gin_trgm_ops)` (`ILIKE` sorgusu aynı `translate` ile yazılır; i/İ/ı farkı yok sayılır).
+
+### Platform yönetimi uçları (`/platform/*`)
+
+Kök yolda (`/v1` değil) ve `hesap` modülünün kök eklentisinde kayıtlıdır; kodu `services/api/src/modules/hesap/platform/`, SQL'i (`withSistem`, ADR 0003) `services/api/src/sistem/platform-*.ts` içindedir. **Kapı sırası** (her istekte; reddedilenler de denetlenir): IP izin listesi (`PLATFORM_IP_IZINLI`, boşsa geliştirmede/testte açık, üretimde **kapalı**) → taklit belirteci olmamalı → `plat` claim'i → veritabanında aktif `platform_rolu` (claim yalnız ipucudur; rol geri alınınca belirteç ömrü beklenmez) → ikinci adım tamamlanmış (`oturumlar.ikinci_adim_at`, `PLATFORM_IKINCI_ADIM_OMRU_SN` = 8 saat; yalnız `ben` ve `ikinci-adim/*` muaf) → rota rolü. KVKK rıza kapısından muaftır (platform kullanıcısı kurum üyesi olmayabilir).
+
+| Yöntem | Yol | Rol | Açıklama |
+| --- | --- | --- | --- |
+| GET | `/ben` | destek | Platform kimliğim, `ikinci_adim: { kurulu, oturumda_dogrulandi, yedek_kod_kalan }` |
+| POST | `/ikinci-adim/kur` | destek | `{ otpauth_uri, sir, yedek_kodlar[10] }` (yalnız burada gösterilir; QR'ı istemci üretir). Onaylı kurulum `409 ikinci_adim_kurulu` |
+| POST | `/ikinci-adim/onayla` | destek | `{ kod }`; kurulumu onaylar ve oturumu doğrulanmış sayar |
+| POST | `/ikinci-adim/dogrula` | destek | `{ kod }` veya `{ yedek_kod }`; oturumu doğrular. 5 yanlış → `429` (15 dk). Aynı TOTP adımı iki kez kabul edilmez |
+| GET | `/kurumlar` | destek | `?q&durum&limit&imlec`; `q` ad (trigram, i/ı farkı yok), kurum kimliği, sahip telefonu (tam) veya e-postası (tam). Sahip iletişimi **maskeli** (`telefon_maskeli`, `eposta_maskeli`) |
+| GET | `/kurumlar/:kurum_id` | destek | Üye sayıları (aktif toplam, role göre, diğer durumlar), durum, modül durumları (kurum düzeyi + alt düzey kapalı sayısı), beta bayrakları |
+| PUT | `/kurumlar/:kurum_id/moduller/:modul_kodu` | yonetici | `{ acik: boolean veya null, neden(≥10) }`; `null` mirasa döner. Aynı işlemde `hesap.modul_ayari.degisti.v1` |
+| PUT | `/kurumlar/:kurum_id/beta/:ozellik_kodu` | yonetici | `{ acik: boolean veya null, neden(≥10) }`; `null` bayrağı siler |
+| POST | `/taklit` | destek | `{ hedef_kullanici_id, kurum_id, neden(≥10) }` → 15 dk, yenilenemez, salt okunur JWT. Hedef: aktif, o kurumda aktif üye, platform kullanıcısı değil (`403`/`404`) |
+| POST | `/taklit/:taklit_id/sonlandir` | destek | Başlatan veya yönetici; belirteç hemen `401` (DB doğrulaması + `sid` iptal listesi). Zaten bitmişse `200` |
+| GET | `/denetim` | yonetici | `?kurum_id&aktor_id&eylem(tam veya onek.*)&baslangic&bitis&limit&imlec`; `(created_at, id)` azalan, imleç mikrosaniye hassasiyetli |
+| GET | `/sistem-sagligi` | destek | `outbox` (bekleyen, en eski yaş sn, hatalı), `kuyruklar` (`pgboss_kurulu`, derinlikler, başarısız), `http` (süreç içi son 60 dk istek/5xx/oran) |
+| GET | `/mesajlar` | destek | Son 50 mesaj (iptal edilenler dahil) |
+| POST | `/mesajlar` | yonetici | `{ baslik, metin, onem, baslangic_at?, bitis_at }` |
+| POST | `/mesajlar/:mesaj_id/iptal` | yonetici | Erken kaldırır; yoksa/iptalse `404` |
+
+Herkese açık (kimliksiz): `GET /v1/platform-mesaji` → `{ mesaj: { id, baslik, metin, onem, baslangic_at, bitis_at } veya null }` (`Cache-Control: public, max-age=30`).
+
+**`destek` ve `yonetici` farkı:** `destek` salt okunur gezinir (kurum arama/detay, sistem sağlığı, mesaj listesi) ve **taklit** başlatabilir; kendi taklidini sonlandırır. `yonetici` her şeyi yapar: modül/beta değişikliği, mesaj yayınlama/iptal, denetim listesi, başkasının taklidini sonlandırma. Platform rolü yalnız `pnpm --filter @kopru/api platform:yonetici-ekle -- <telefon|eposta> [--rol destek|yonetici] [--2fa-sifirla]` betiğiyle verilir (HTTP ucu yok; üretimde de tek yol; `platform.yonetici_ekle` denetimi).
+
+**Taklit belirteci:** `sub` = hedef, `sid` = taklit kaydı, `imp` = `{ taklit_id, bitis }`, `aktor` = platform kullanıcısı, `exp` = `bitis_at` (≤15 dk); `plat` taşımaz, `/auth/token` ile yenilenemez. Kök kancada her istekte: kayıt sonlanmamış, süresi dolmamış ve hedef/kurumla eşleşiyor, platform kullanıcısı hâlâ yetkili değilse `401`; yazma yöntemleri (`POST/PUT/PATCH/DELETE`) tüm rotalarda `403 taklit_salt_okunur`; IP izin listesi uygulanır; her istek `taklit.istek` olarak denetlenir. **Bilinen sınır:** veritabanı işleminin `READ ONLY` açılması (ADR 0004 adım 8) service-kit `withTenant` değişikliği ister ve bu pakette yapılmadı; yazma yöntemleri veritabanına hiç ulaşmadan reddedildiği için etkisi yan etkili `GET` uçlarıyla sınırlıdır.
+
+Hata kodları: `ikinci_adim_gerekli`, `platform_ip_yasak`, `platform_yetkisi_yok`, `platform_izin_yok`, `ikinci_adim_kurulu` (ayrıca `400 kod_gecersiz`, `429 cok_fazla_istek`).
 
 ## `ders`
 
