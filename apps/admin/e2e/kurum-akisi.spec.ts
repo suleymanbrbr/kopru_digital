@@ -6,7 +6,6 @@ import {
   KOD,
   menuAc,
   menuGit,
-  panelAc,
   ROLSUZ_TELEFON,
   DESTEK_TELEFON,
   sifirla,
