@@ -345,7 +345,7 @@ Yalnızca olay tüketicisi yazar. Olay zarfında `ozne_surumu` olmadığından h
 | `atama_kopyalari` | `hesap.atama.degisti.v1` | `atama_id` PK, `grup_id`, `ogretmen_id`, `brans_kodu`, `baslangic_tarihi`, `bitis_tarihi`, `son_olay_at`, `son_olay_id` | Öğretmenin öğrenciye seri duraklatma yetkisi |
 | `modul_ayari_kopyalari` | `hesap.modul_ayari.degisti.v1` | `kurum_id`, `modul_kodu`, `kapsam`, `kapsam_id`, `acik` (boş olamaz; `acik: null` olayı satırı siler), `son_olay_at`, `son_olay_id`; PK `(kurum_id, modul_kodu, kapsam, kapsam_id)` | `oyunlastirma` modülü açık mı (kurum > kademe > grup, ADR 0004) |
 
-`hesap.kullanici.silindi.v1` gelince: ilgili `kullanici_id`'nin üyelikleri bulunur, o üyeliklerin `ogrenci_durumlari`, `xp_hareketleri`, `seriler`, `seri_gunleri`, `ogrenci_rozetleri`, `ogrenci_karakterleri`, `ogrenci_kozmetikleri`, `karakter_kusanimlari`, `beceri_puanlari`, `ogrenci_sayaclari`, `odak_oturumlari`, `seri_duraklatmalari` satırları silinir (oyunlaştırma verisi tanımlayıcı veridir; defter değişmezliği KVKK silme için istisnadır ve `ortak.anonimlestir(ogrenci_id)` yordamıyla yapılır).
+`hesap.kullanici.silindi.v1` (`motivasyon.kvkk` tüketicisi, `motivasyon_sistem`, `kiraci:'yok'`; olay `uyelik_idleri[]` taşır) işlenince: `ogrenci_karakterleri.ad` = `Anonim`, `haftanin_yildizlari.gerekce` ve `odak_oturumlari.cihaz` NULL'lanır. **Sapma (önceki plan: satırlar silinir):** XP defteri ve türev satırlar (`ogrenci_id` = üyelik kimliği) hesap anonimleştiğinde kişiye bağlanamadığından **anonim veri olarak kalır**; defter değişmezliği bozulmaz, kurumun sıralaması/toplamları korunur. Ayrıntı: [kvkk-silme.md](kvkk-silme.md). Disa aktarma: `POST /ic/kvkk/veri`.
 
 ## Tüketilen olaylar
 
@@ -375,7 +375,7 @@ Her tüketici `ortak.processed_events` ile idempotent çalışır ([ADR 0002](..
 - `haftanin_yildizi.ogretmen_haftalik_limit` varsayılanı (3) ürün onayı bekler (orkestratör kararı: 3 kalsın).
 - Net artışı referansı: öğrencinin aynı sınav türündeki önceki 3 denemesinin ortalaması ve 50 XP sınırı yalnızca net artışı bonusu için varsayıldı (toplam deneme XP'si en çok 60).
 - `oyunlastirma.oku` izni öğretmene verilmedi (izin sözlüğü sürüm 7); öğretmen özeti şimdilik uçta rol + atama kapsamıyla açılıyor. Sözlüğe `ogretmen: oyunlastirma.oku = grup` eklenip sürüm artırılmalı.
-- `hesap.kullanici.silindi.v1` sözleşmesi yok; KVKK temizliği (`ortak.anonimlestir`) yazılmadı.
+- KVKK temizliği uygulandı (`kvkk.ts`, bkz. yukarıdaki not); `ortak.anonimlestir` yordamı yazılmadı (gerek kalmadı).
 
 ## Uygulama notları (paket M1, çekirdek)
 
