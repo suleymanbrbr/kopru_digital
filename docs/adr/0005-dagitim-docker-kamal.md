@@ -45,6 +45,8 @@ Drizzle migrasyonları `{servis}_owner` rolüyle, dağıtım adımında (`kamal`
 
 OpenTelemetry izleri ve yapılandırılmış JSON günlükleri, `korelasyon_id` ile. Metrik ve günlükler Türkiye'de barındırılan bir yığına (Prometheus, Loki, Grafana) akar. Alarm: p95 gecikme, 5xx oranı, DLQ boyutu, outbox gecikmesi (`now() - min(olusma_zamani)` bekleyenler için), disk ve WAL, yedek yaşı.
 
+> **Uygulama notu (2026-11-19, paket D2).** Ortak metrikler `packages/service-kit/src/metrikler.ts`'te (OTLP; kurum/kişi etiketi yok, rota şablonu), alarm kuralları `infra/gozlem/alarmlar/alarmlar.yaml`'da (yukarıdaki liste + iptal listesi "kontrol atlandı", push gönderim hatası, ödeme webhook/çift kanal, fatura `hata`), panolar `infra/gozlem/panolar/` altında kod olarak; yedek/geri yükleme `infra/postgres/pgbackrest/` ve `infra/scripts/geri-yukleme-tatbikati.sh`; nöbet belgesi `docs/isletim/el-kitabi.md`. Outbox zaman sütunu kodda `created_at`'tir. Günlük anahtarı `korelasyon_id`'dir (önceden `correlationId`); kişisel veri/sır alanları günlükte `[gizli]` olur (`gizliTemizle`).
+
 ### Kubernetes'e geçiş ölçütleri
 
 Aşağıdaki ölçütlerden **en az ikisi** iki ardışık çeyrekte sağlanırsa Kubernetes geçişi değerlendirilir:
