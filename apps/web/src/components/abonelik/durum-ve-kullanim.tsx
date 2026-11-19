@@ -76,7 +76,7 @@ export function DurumKarti({
         ) : (
           <Rozet>{t('abonelik.ucretsizDurum')}</Rozet>
         )}
-        {a ? <Rozet>{t(`abonelik.kaynak.${a.kaynak}`)}</Rozet> : null}
+        {a && a.kaynak !== 'deneme' ? <Rozet>{t(`abonelik.kaynak.${a.kaynak}`)}</Rozet> : null}
         {a && a.kaynak !== 'deneme' ? <Rozet>{t(`abonelik.periyot.${a.periyot}`)}</Rozet> : null}
       </div>
       <p className="mt-2 text-sm text-metin-ikincil">{durumMetni(yanit, simdi)}</p>

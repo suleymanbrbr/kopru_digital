@@ -125,7 +125,7 @@ describe('odeme donusu', () => {
     expect(donusKurumu(u, null, 'k2')).toBe('k2');
     expect(donusKurumu(u, 'u1', 'k3')).toBe('k1');
     expect(donusKurumu(u, null, null)).toBeNull();
-    expect(donusKurumu([u[0] as (typeof u)[number]], null, null)).toBe('k1');
-    expect(donusKurumu([u[2] as (typeof u)[number]], 'u3', null)).toBeNull();
+    expect(donusKurumu(u.slice(0, 1), null, null)).toBe('k1');
+    expect(donusKurumu(u.slice(2), 'u3', null)).toBeNull();
   });
 });

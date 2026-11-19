@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access -- mock yanitlari gevsek JSON */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {

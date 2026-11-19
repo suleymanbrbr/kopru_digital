@@ -30,7 +30,8 @@ export const useKurumAbonelik = () => useContext(Baglam);
 export function AbonelikDurumKatmani({ children }: { children: ReactNode }) {
   const { rol, uyelik } = useKurum();
   const sahip = rol === 'sahip';
-  const sorgu = useAbonelik(uyelik.kurumId, sahip);
+  // Durum disaridan (webhook, zamanlayici, platform) degisebilir: dakikada bir tazelenir.
+  const sorgu = useAbonelik(uyelik.kurumId, sahip, 60_000);
   const [olayKilidi, setOlayKilidi] = useState(false);
   const [askida, setAskida] = useState(false);
   const [limit, setLimit] = useState<PlanLimitiDetay | null>(null);
