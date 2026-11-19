@@ -11,6 +11,7 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { NatsConnection } from 'nats';
 
 import type { Database, Orm } from './db.js';
+import { metrikler } from './metrikler.js';
 import { identifier, tableRef } from './sql-adi.js';
 
 /** outbox tablosu icin SQL migration sablonunu verilen sema ile doldurur. */
@@ -54,6 +55,8 @@ export interface OutboxRelayOptions extends OutboxOptions {
   logger?: Pick<FastifyBaseLogger, 'info' | 'warn' | 'error'>;
   batchSize?: number;
   intervalMs?: number;
+  /** Bekleyen sayisi/en eski yas metriginin yenileme araligi (varsayilan 15 sn; 0 = kapali). */
+  metrikAraligiMs?: number;
 }
 
 export interface OutboxRelay {
@@ -112,6 +115,30 @@ export function startOutboxRelay(options: OutboxRelayOptions): OutboxRelay {
       return { fetched: rows.length, sent };
     });
 
+  // Metrik: bekleyen sayisi ve en eski yas (ADR 0005 alarmi: `now() - min(created_at)`). Ayri, seyrek sorgu.
+  const olc = async () => {
+    try {
+      const [satir] = await db.orm.execute<{ bekleyen: number; yas: number | null }>(
+        sql`select count(*)::int as bekleyen,
+                   extract(epoch from now() - min(created_at))::float8 as yas
+              from ${table} where sent_at is null`,
+      );
+      metrikler.outboxDurumuGuncelle({
+        bekleyen: satir?.bekleyen ?? 0,
+        enEskiYasSn: Math.max(0, satir?.yas ?? 0),
+      });
+    } catch (err) {
+      logger?.warn({ err }, 'outbox metriği okunamadı');
+    }
+  };
+  const metrikAraligiMs = options.metrikAraligiMs ?? 15_000;
+  let metrikZamanlayici: NodeJS.Timeout | undefined;
+  if (metrikAraligiMs > 0) {
+    void olc();
+    metrikZamanlayici = setInterval(() => void olc(), metrikAraligiMs);
+    metrikZamanlayici.unref();
+  }
+
   const loop = (async () => {
     while (!abort.signal.aborted) {
       try {
@@ -139,6 +166,7 @@ export function startOutboxRelay(options: OutboxRelayOptions): OutboxRelay {
   return {
     async stop() {
       abort.abort();
+      clearInterval(metrikZamanlayici);
       await loop;
     },
   };

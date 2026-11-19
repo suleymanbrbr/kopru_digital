@@ -5,6 +5,7 @@ export * from './errors.js';
 export * from './iptal.js';
 export * from './istek-baglami.js';
 export * from './logger.js';
+export * from './metrikler.js';
 export * from './outbox.js';
 export * from './service.js';
 export * from './servis-auth.js';

@@ -1,5 +1,5 @@
 import { WebhookYanitSema, abonelikHataKodlari, errorCodes } from '@kopru/contracts';
-import { AppError, type ServiceApp, type ServicePlugin } from '@kopru/service-kit';
+import { AppError, metrikler, type ServiceApp, type ServicePlugin } from '@kopru/service-kit';
 import { and, eq } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 
@@ -41,6 +41,7 @@ function hemenIsle(app: ServiceApp, kanallar: OdemeKanallari, olayId: string): v
   void olayiIsle(db, kanallar, olayId, app.log)
     .then(() => faturalariKes(db, kanallar.eArsiv, app.log))
     .catch((err: unknown) => {
+      metrikler.abonelikAlarm('webhook_isleme');
       app.log.error({ err: String(err), olayId }, 'abonelik_webhook_aninda_isleme_hatasi');
     });
 }
@@ -74,6 +75,7 @@ export const webhookYollari: ServicePlugin = (app) => {
     const ham = hamGovde(request);
     const b = basliklar(request);
     if (!saglayici.webhookDogrula(ham, b)) {
+      metrikler.abonelikAlarm('webhook_imza');
       request.log.warn({ kaynak: saglayici.kaynak }, 'abonelik_webhook_imza_gecersiz');
       throw new AppError(401, errorCodes.unauthorized, 'Webhook doğrulanamadı.');
     }

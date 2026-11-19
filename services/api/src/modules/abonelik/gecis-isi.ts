@@ -1,4 +1,4 @@
-import type { Database } from '@kopru/service-kit';
+import { metrikler, type Database } from '@kopru/service-kit';
 
 import { abonelikGecisAdayiVarMi, abonelikSistemIslemi } from '../../sistem/abonelik-sistem.js';
 import { GECIS_SAYFA, gecisleriUygula, type GecisOzeti } from './yazma.js';
@@ -52,7 +52,9 @@ export function abonelikGecisIsiZamanla(
     if (calisiyor) return;
     calisiyor = true;
     try {
-      const ozet = await abonelikGecisleriCalistir(db, simdi());
+      const ozet = await metrikler.isiOlc('abonelik-gecis', () =>
+        abonelikGecisleriCalistir(db, simdi()),
+      );
       if (ozet.gecis > 0) log.info({ ...ozet }, 'abonelik_gecisleri_uygulandi');
     } catch (err) {
       log.error({ err: String(err) }, 'abonelik_gecis_isi_hatasi');
