@@ -3,6 +3,7 @@ import type { ServicePlugin } from '@kopru/service-kit';
 import { cihazYollari } from './cihaz-yollari.js';
 import { duyuruYollari } from './duyuru-yollari.js';
 import { kutuYollari } from './kutu-yollari.js';
+import { kvkkYollari } from './kvkk-yollari.js';
 import { tercihYollari } from './tercih-yollari.js';
 
 export interface YolSecenekleri {
@@ -23,5 +24,6 @@ export function yollariOlustur(secenek: YolSecenekleri = {}): ServicePlugin {
     await app.register(kutuYollari({ simdi }));
     await app.register(tercihYollari());
     await app.register(duyuruYollari({ simdi }));
+    await app.register(kvkkYollari);
   };
 }

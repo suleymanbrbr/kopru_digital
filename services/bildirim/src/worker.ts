@@ -33,7 +33,7 @@ await runWorker({
 
     if (nats && env.DATABASE_URL) {
       const appDb = createDb({ url: env.DATABASE_URL, max: env.DATABASE_POOL_MAX });
-      const tuketiciler = await tuketicileriBaslat({ nats, db: appDb, log });
+      const tuketiciler = await tuketicileriBaslat({ nats, db: appDb, sistemDb: db, log });
       temizleyiciler.push(async () => {
         await Promise.all(tuketiciler.map((t) => t.stop()));
         await appDb.close();
