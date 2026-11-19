@@ -14,6 +14,8 @@ export type AbonelikSistemEylemi =
   | 'sistem.abonelik_plan_degistir'
   | 'sistem.abonelik_kurumsal_aktivasyon'
   | 'sistem.abonelik_odeme_isle'
+  | 'sistem.abonelik_odeme_baslat'
+  | 'sistem.abonelik_cift_kanal'
   | 'sistem.abonelik_gecisleri';
 
 export interface AbonelikSistemBaglami {

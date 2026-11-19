@@ -38,7 +38,7 @@ export interface OlayBaglami {
 
 export const ZAMANLAYICI_AKTORU: Actor = { tur: 'sistem', id: 'abonelik-zamanlayici' };
 
-const fiyatSec = (plan: PlanSatiri, periyot: Periyot): number =>
+export const fiyatSec = (plan: PlanSatiri, periyot: Periyot): number =>
   periyot === 'yillik'
     ? (plan.yillik_fiyat_kurus ?? plan.aylik_fiyat_kurus * 12)
     : plan.aylik_fiyat_kurus;
@@ -108,7 +108,7 @@ export async function kurumDurumunuEsitle(
   return true;
 }
 
-async function satiriPlanlaGetir(tx: Tx, abonelikId: string): Promise<AbonelikVePlan> {
+export async function satiriPlanlaGetir(tx: Tx, abonelikId: string): Promise<AbonelikVePlan> {
   const [satir] = await tx
     .select({ abonelik: abonelikler, plan: planlar })
     .from(abonelikler)

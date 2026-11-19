@@ -1,4 +1,6 @@
 import { defineModule } from '../define-module.js';
+import { odemeYollari } from './odeme-yollari.js';
+import { webhookYollari } from './webhook-yollari.js';
 import { abonelikYollari } from './yollar.js';
 
 /**
@@ -10,6 +12,11 @@ import { abonelikYollari } from './yollar.js';
 export const abonelikModule = defineModule('abonelik', async (app) => {
   if (!app.hasDecorator('kimlik')) return;
   await app.register(abonelikYollari);
+  // Odeme kanallari (`odemeKanallariPlugin`) tanimliysa: odeme baslatma/gecmis ve webhook/donus uclari.
+  if (app.hasDecorator('abonelikOdeme')) {
+    await app.register(odemeYollari);
+    await app.register(webhookYollari);
+  }
 });
 
 // hesap modulu: kurum olusturmada deneme, kontrol sirasi adim 4 (402) ve uye eklemede plan limiti.
@@ -43,6 +50,25 @@ export {
   abonelikGecisleriCalistir,
   type GecisIsiGunlugu,
 } from './gecis-isi.js';
+export {
+  odemeKanallariOlustur,
+  odemeKanallariPlugin,
+  type OdemeEnv,
+  type OdemeGunlugu,
+  type OdemeKanallari,
+} from './odeme-kanallari.js';
+export { odemeIsiZamanla, odemeIsleriniCalistir, ODEME_ISI_ARALIGI_MS } from './odeme-isi.js';
+export { bekleyenOlaylariIsle, olayiIsle } from './odeme-isleme.js';
+export { faturalariKes, type FaturaIsiOzeti } from './fatura-isi.js';
+export {
+  LogEArsivSaglayici,
+  type EArsivSaglayici,
+  type FaturaKesGirdisi,
+  type FaturaKesSonucu,
+} from './earsiv.js';
+export { IyzicoSaglayici, IYZICO_PROTOKOL } from './iyzico.js';
+export { RevenueCatSaglayici, REVENUECAT_PROTOKOL } from './revenuecat.js';
+export { kdvAyir, kdvEkle } from './kdv.js';
 export {
   SahteOdemeSaglayici,
   type AyristirilmisWebhook,

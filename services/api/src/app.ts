@@ -1,6 +1,7 @@
 import { createService, type Service } from '@kopru/service-kit';
 
 import { serviceName, type Env } from './config.js';
+import { odemeKanallariPlugin, type OdemeKanallari } from './modules/abonelik/index.js';
 import { createKimlik, type EpostaGonderici, type SmsGonderici } from './modules/hesap/index.js';
 import { modulesPlugin } from './modules/index.js';
 
@@ -10,6 +11,8 @@ export interface BuildOptions {
   sms?: SmsGonderici;
   /** Testler ve bildirim servisi entegrasyonu icin e-posta gondericisi (varsayilan: ortama gore log/SMTP). */
   eposta?: EpostaGonderici;
+  /** Testler icin hazir odeme kanallari (varsayilan: env'den `odemeKanallariOlustur`). */
+  odeme?: OdemeKanallari;
 }
 
 export function buildService(env: Env, options: BuildOptions = {}): Service {
@@ -23,7 +26,7 @@ export function buildService(env: Env, options: BuildOptions = {}): Service {
     env,
     verifyJwt: kimlik.verifyJwt,
     verifyServisJwt: kimlik.verifyServisJwt,
-    plugins: [kimlik.plugin, modulesPlugin],
+    plugins: [kimlik.plugin, odemeKanallariPlugin(env, options.odeme), modulesPlugin],
     ...(options.onClose ? { onClose: options.onClose } : {}),
   });
 }
