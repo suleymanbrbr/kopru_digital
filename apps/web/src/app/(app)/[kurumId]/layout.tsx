@@ -9,11 +9,13 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 
 import Yukleniyor from './loading';
 
+import { AskiEkrani } from '@/components/abonelik/aski-ekrani';
 import { BosDurum } from '@/components/bos-durum';
 import { HataDurumu } from '@/components/hata-durumu';
 import { UygulamaKabugu } from '@/components/kabuk/uygulama-kabugu';
 import { XpSaglayici } from '@/components/motivasyon/xp-saglayici';
 import { dugmeStili } from '@/components/ui/button';
+import { AbonelikDurumKatmani } from '@/kurum/abonelik-durumu';
 import { KurumKutusu, type KurumBaglami } from '@/kurum/baglam';
 import { bffIstek, hataMesaji, UygulamaHatasi } from '@/lib/api';
 import { tercihEdilenUyelik } from '@/lib/kurum-secimi';
@@ -106,6 +108,8 @@ export default function KurumDuzeni({ children }: { children: ReactNode }) {
     );
   }
 
+  if (baglamHatasi?.kod === 'kurum_askida') return <AskiEkrani />;
+
   if (baglam.isError) {
     return (
       <div className="mx-auto flex min-h-dvh max-w-md items-center">
@@ -122,9 +126,11 @@ export default function KurumDuzeni({ children }: { children: ReactNode }) {
 
   return (
     <KurumKutusu value={deger}>
-      <XpSaglayici>
-        <UygulamaKabugu>{children}</UygulamaKabugu>
-      </XpSaglayici>
+      <AbonelikDurumKatmani>
+        <XpSaglayici>
+          <UygulamaKabugu>{children}</UygulamaKabugu>
+        </XpSaglayici>
+      </AbonelikDurumKatmani>
     </KurumKutusu>
   );
 }

@@ -24,6 +24,8 @@ export interface MockIstek {
   ikili?: Uint8Array;
   /** Istegin geldigi kaynak (`https://host`); mock mutlak adres uretirken kullanir. */
   kaynak?: string;
+  /** Mock senaryo anahtari (`mock_senaryo` cerezi): e2e testleri birbirinin durumunu bozmasin diye. */
+  senaryo?: string;
 }
 
 export interface MockYanit {
@@ -34,7 +36,8 @@ export interface MockYanit {
 }
 
 export interface VekilTanimi {
-  servis: 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon' | 'bildirim';
+  servis:
+    'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon' | 'bildirim' | 'abonelik';
   /** Hedef adres; verilmezse `api` servisi (`<API_URL>/v1/<servis>/<yol>`). */
   hedef?: (yol: string) => string;
   /** Yol parcalarinin (birlestirilmis) eslesmesi gereken desenler. */
@@ -147,6 +150,9 @@ export async function servisVekili(
       govde: govde.length > 0 ? guvenliJson(govde) : undefined,
       basliklar: idempotency ? { 'idempotency-key': idempotency } : {},
       kaynak: request.nextUrl.origin,
+      ...(request.cookies.get('mock_senaryo')?.value
+        ? { senaryo: request.cookies.get('mock_senaryo')?.value ?? '' }
+        : {}),
       ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
     });
     // Mock'ta olay tuketicisi yok: basarili ogrenci eylemi motivasyon mock'unda XP yazar.

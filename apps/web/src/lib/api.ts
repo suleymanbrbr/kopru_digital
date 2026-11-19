@@ -28,6 +28,15 @@ const bilinenKodlar = new Set([
   'modul_kapali',
   'izin_yok',
   'abonelik_gerekli',
+  'kurum_askida',
+  'plan_limiti',
+  'plan_bulunamadi',
+  'etkin_abonelik_yok',
+  'magaza_uzerinden_yonetilir',
+  'abonelik_baska_kanalda',
+  'abonelik_zaten_aktif',
+  'fatura_bilgisi_gerekli',
+  'odeme_kanali_kapali',
   'ag',
   'bulunamadi',
   'davet_gecersiz',
@@ -161,6 +170,24 @@ export function hataMesaji(hata: unknown): string {
   return t('ortak.hataGenel');
 }
 
+/** Abonelik/askı hatası geldiğinde `window`a yayılan olay (kurum geneli afiş ve pencereler dinler). */
+export const ABONELIK_HATA_OLAYI = 'kopru:abonelik-hatasi';
+export const ABONELIK_HATA_KODLARI = ['plan_limiti', 'abonelik_gerekli', 'kurum_askida'] as const;
+export interface AbonelikHataOlayi {
+  kod: (typeof ABONELIK_HATA_KODLARI)[number];
+  detaylar: unknown;
+}
+
+function abonelikHatasiniYay(kod: string, detaylar: unknown): void {
+  if (typeof window === 'undefined') return;
+  if (!(ABONELIK_HATA_KODLARI as readonly string[]).includes(kod)) return;
+  window.dispatchEvent(
+    new CustomEvent<AbonelikHataOlayi>(ABONELIK_HATA_OLAYI, {
+      detail: { kod: kod as AbonelikHataOlayi['kod'], detaylar },
+    }),
+  );
+}
+
 /** Same-origin BFF istegi. Hata govdesini `UygulamaHatasi`na cevirir. */
 export async function bffIstek<S extends z.ZodType>(
   yol: string,
@@ -194,6 +221,7 @@ export async function bffIstek<S extends z.ZodType>(
     const govde = hataSema.safeParse(ham);
     if (govde.success) {
       const { code, message, requestId, details } = govde.data.error;
+      abonelikHatasiniYay(code, details);
       throw new UygulamaHatasi(yanit.status, code, message, requestId, details);
     }
     throw new UygulamaHatasi(yanit.status, 'sunucu_hatasi', t('ortak.hataGenel'));
