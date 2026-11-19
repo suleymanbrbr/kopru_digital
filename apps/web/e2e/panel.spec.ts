@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, test } from './yardimcilar';
 
 /**
  * Mock modda yonetici paneli (`/[kurumId]/panel`) ve modul ayarlari (`/[kurumId]/moduller`).

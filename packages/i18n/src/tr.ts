@@ -359,6 +359,7 @@ export const tr = {
     modul_kapali: 'Bu özellik kurumunda kapalı.',
     izin_yok: 'Bu işlem için yetkin yok.',
     abonelik_gerekli: 'Kurumunun aboneliği etkin değil.',
+    kurum_askida: 'Kurumunun hesabı askıya alındı. Destek ekibiyle iletişime geç.',
     plan_limiti: 'Planının sınırına ulaştın. Yeni eklemek için planını yükselt.',
     plan_bulunamadi: 'Seçtiğin plan bulunamadı.',
     etkin_abonelik_yok: 'Etkin bir aboneliğin yok.',

@@ -1,5 +1,6 @@
 import { finansKrediUygula } from './finans-mock';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -123,7 +124,7 @@ function dersYap(
     yer: null,
     cakisma_onayli: false,
     surum: 1,
-    created_at: new Date().toISOString(),
+    created_at: new Date(mockSimdi()).toISOString(),
     katilimcilar: grupKatilimcilari(kurumId, grupId),
     ...ek,
   };
@@ -135,7 +136,7 @@ function kur(kurumId: string): DersDurumu {
   const birebir = v.gruplar.find((g) => g.tur === 'birebir');
   const grup = v.gruplar.find((g) => g.tur === 'grup');
   const dersler: Ders[] = [];
-  const simdi = Date.now();
+  const simdi = mockSimdi();
   const bugun = yerelTarih(new Date(simdi).toISOString());
   const pazartesi = gunEkle(bugun, -haftaGunu(bugun));
   if (sinif) {
@@ -339,7 +340,7 @@ function seriOlustur(kurumId: string, s: DersDurumu, g: Kayit): MockYanit {
     ? bydayMetni.split(',').map((x) => GUN_KODLARI.indexOf(x))
     : [haftaGunu(baslangic)];
   const aralik = Number(/INTERVAL=(\d+)/.exec(kural)?.[1] ?? '1');
-  const bugun = yerelTarih(new Date().toISOString());
+  const bugun = yerelTarih(new Date(mockSimdi()).toISOString());
   const ilkGun = baslangic > bugun ? baslangic : bugun;
   const ufuk = gunEkle(ilkGun, 84);
   const bitis = typeof g.bitis_tarihi === 'string' ? g.bitis_tarihi : null;
@@ -550,8 +551,8 @@ function iptalEt(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit {
     h.iptal_nedeni = typeof g.iptal_nedeni === 'string' ? g.iptal_nedeni : null;
     h.iptal_kaynagi = kaynak;
     h.iptal_eden_id = ogretmenId;
-    h.iptal_at = new Date().toISOString();
-    h.gec_iptal = Date.parse(h.baslangic_at) - Date.now() < 24 * SAAT_MS;
+    h.iptal_at = new Date(mockSimdi()).toISOString();
+    h.gec_iptal = Date.parse(h.baslangic_at) - mockSimdi() < 24 * SAAT_MS;
     h.surum += 1;
   }
   return {
@@ -615,7 +616,7 @@ function yoklamaKaydet(kurumId: string, s: DersDurumu, d: Ders, istek: MockIstek
   }
   if (d.durum === 'iptal')
     return hata(409, 'ders_iptal_edildi', 'İptal edilmiş derse yoklama alınamaz.');
-  if (Date.parse(d.baslangic_at) > Date.now() + 5 * 60_000) {
+  if (Date.parse(d.baslangic_at) > mockSimdi() + 5 * 60_000) {
     return hata(422, 'ders_henuz_baslamadi', 'Ders henüz başlamadı.');
   }
   const satirlar = govdeNesnesi(istek.govde).yoklamalar;
@@ -632,7 +633,7 @@ function yoklamaKaydet(kurumId: string, s: DersDurumu, d: Ders, istek: MockIstek
     const anah = `${d.id}/${ogrenciId}`;
     const mevcut = s.yoklamalar.get(anah);
     const isaret =
-      typeof r.isaretlenme_at === 'string' ? r.isaretlenme_at : new Date().toISOString();
+      typeof r.isaretlenme_at === 'string' ? r.isaretlenme_at : new Date(mockSimdi()).toISOString();
     if (mevcut && Date.parse(isaret) < Date.parse(mevcut.isaretlenme_at as string)) {
       sonuclar.push({
         ogrenci_id: ogrenciId,
@@ -672,7 +673,7 @@ function yoklamaKaydet(kurumId: string, s: DersDurumu, d: Ders, istek: MockIstek
       not_gorunurluk: gorunurluk,
       isaretleyen_id: kimlikler(kurumId).ogretmenId,
       isaretlenme_at: isaret,
-      sunucu_at: new Date().toISOString(),
+      sunucu_at: new Date(mockSimdi()).toISOString(),
       surum: ((mevcut?.surum as number | undefined) ?? 0) + 1,
     };
     s.yoklamalar.set(anah, satir);
@@ -725,7 +726,7 @@ export function dersMock(istek: MockIstek): MockYanit {
 
   if (kaynak === 'yoklama-bekleyen' && yontem === 'GET') {
     if (!yazabilir) return izinYok();
-    const simdi = Date.now();
+    const simdi = mockSimdi();
     const liste = gorunenDersler(kurumId, s)
       .filter(
         (d) =>

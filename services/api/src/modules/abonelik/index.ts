@@ -44,6 +44,21 @@ export {
   type OlayBaglami,
 } from './yazma.js';
 export { kurumsalAboneligiAktiflestir, type KurumsalAktivasyonGirdisi } from './kurumsal.js';
+// Platform paneli (`/platform/kurumlar/:id/abonelik`): okuma ve duzeltme eylemleri.
+export {
+  kurumsalAktivasyonIslemi,
+  platformAbonelikDetayi,
+  platformAbonelikEylemi,
+  platformAbonelikOku,
+  platformAbonelikOzeti,
+  platformAboneligiAskiyaAl,
+  platformAboneligiIptalEt,
+  platformDenemeyiUzat,
+  platformEkSureVer,
+  platformPlanDegistir,
+  type PlatformAbonelikEylemSonucu,
+} from './platform.js';
+export type { AbonelikVePlan } from './abonelik-deposu.js';
 export { gecisZinciri, sonrakiGecis, type Gecis, type GecisGirdisi } from './durum-makinesi.js';
 export {
   abonelikGecisIsiZamanla,

@@ -55,6 +55,14 @@ export {
   type SmsMesaji,
 } from './sms.js';
 export { telefonuNormallestir } from './telefon.js';
+// P1 kapisi ve denetim yardimcisi: baska modullerin `/platform/*` uclari (mufredat editoru) bunu kullanir.
+export { platformKapisiKur } from './platform/kapi.js';
+export {
+  denetimAlanlari,
+  platformBaglami,
+  platformIslem,
+  type PlatformKimligi,
+} from './platform/ortak.js';
 // Platform 2FA (testler ve betikler icin TOTP yardimcilari).
 export { base32Coz, sayacHesapla, totpKodu } from './platform/totp.js';
 export { requirePermission, type IzinSecenekleri } from './yetki.js';

@@ -3,9 +3,19 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { z } from 'zod';
 
+import { saltOkunurMu } from './istek-baglami.js';
+
 export type Orm = PostgresJsDatabase;
 /** `withTenant` / `orm.transaction` icindeki islem nesnesi. */
 export type Tx = Parameters<Parameters<Orm['transaction']>[0]>[0];
+
+/**
+ * Istek salt okunur isaretliyse (taklit, ADR 0004) islemi `set transaction read only` ile baslatir:
+ * yan etkili bir okuma yolu bile veritabaninda yazamaz. Islemin ILK ifadesi olmali.
+ */
+export async function saltOkunurIslemiUygula(tx: Pick<Tx, 'execute'>): Promise<void> {
+  if (saltOkunurMu()) await tx.execute(sql`set transaction read only`);
+}
 
 export interface Database {
   /** Ham postgres.js istemcisi (migration, health, LISTEN vb. icin). */
@@ -71,6 +81,7 @@ export async function withTenant<T>(
 ): Promise<T> {
   const { kurumId, kullaniciId, roller } = tenantContextSchema.parse(context);
   return db.orm.transaction(async (tx) => {
+    await saltOkunurIslemiUygula(tx);
     await kiraciBaglaminiAyarla(tx, { kurumId, kullaniciId, roller });
     return fn(tx);
   });
@@ -87,6 +98,7 @@ export async function withUser<T>(
 ): Promise<T> {
   const kullaniciId = z.uuid().parse(context.kullaniciId);
   return db.orm.transaction(async (tx) => {
+    await saltOkunurIslemiUygula(tx);
     await tx.execute(sql`select set_config('app.kullanici_id', ${kullaniciId}, true)`);
     return fn(tx);
   });

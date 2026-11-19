@@ -8,7 +8,7 @@ import {
   type Periyot,
 } from '@kopru/contracts';
 import { AppError, publishInTx, type Tx } from '@kopru/service-kit';
-import { and, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
 import { abonelikler, kurumlar, planlar } from '../../db/schema.js';
@@ -73,7 +73,8 @@ export async function abonelikDegistiYaz(
 
 /**
  * `hesap.kurumlar.durum` aboneligi yansitir: `askida`/`sona_erdi` -> `askida`, odeme gelince `aktif`.
- * Yalniz beklenen onceki durumdan gecer (`kapali` kuruma dokunmaz). `hesap.kurum.degisti` olayi yayimlanir.
+ * Yalniz beklenen onceki durumdan gecer (`kapali` kuruma dokunmaz). Platform elle askiya almissa
+ * (`platform_askida_at` dolu) `aktif` yapmaz: abonelik isi platform askisini kaldiramaz. `hesap.kurum.degisti` olayi yayimlanir.
  */
 export async function kurumDurumunuEsitle(
   tx: Tx,
@@ -85,7 +86,12 @@ export async function kurumDurumunuEsitle(
     .update(kurumlar)
     .set({ durum: hedef })
     .where(
-      and(eq(kurumlar.id, kurumId), eq(kurumlar.durum, hedef === 'askida' ? 'aktif' : 'askida')),
+      and(
+        eq(kurumlar.id, kurumId),
+        eq(kurumlar.durum, hedef === 'askida' ? 'aktif' : 'askida'),
+        // Platform askisi (0018): odeme/aktivasyon bu kurumu yeniden acamaz; yalniz platform acar.
+        ...(hedef === 'aktif' ? [isNull(kurumlar.platform_askida_at)] : []),
+      ),
     )
     .returning();
   if (!k) return false;

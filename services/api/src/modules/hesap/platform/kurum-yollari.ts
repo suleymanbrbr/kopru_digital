@@ -24,6 +24,7 @@ import {
   type KurumAramasi,
   type SahipSatiri,
 } from '../../../sistem/platform-kurum.js';
+import { platformAbonelikOzeti } from '../../abonelik/index.js';
 import { telefonuNormallestir } from '../telefon.js';
 import { epostayiMaskele, telefonuMaskele } from './maskele.js';
 import { denetimAlanlari, platformIslem, sistemDbAl, uuidMi } from './ortak.js';
@@ -100,7 +101,8 @@ export const platformKurumYollari: ServicePlugin = (app) => {
       config: { platformEylem: 'platform.kurum_detay', platformRolu: 'destek' },
       schema: {
         tags: tag,
-        summary: 'Kurum detayı: üye sayıları, durum, modül ayarları, beta özellikleri',
+        summary:
+          'Kurum detayı: üye sayıları, durum, platform askısı, abonelik özeti, modül ayarları, beta özellikleri',
         params: kurumParam,
         response: { 200: PlatformKurumDetayYanitSema },
       },
@@ -109,7 +111,9 @@ export const platformKurumYollari: ServicePlugin = (app) => {
       const { kurum_id: kurumId } = request.params;
       denetimAlanlari(request, { kurumId, hedefTuru: 'kurum', hedefId: kurumId });
       const d = await platformIslem(request, (baglam) =>
-        platformKurumDetayi(sistemDbAl(kimlik), baglam, kurumId),
+        platformKurumDetayi(sistemDbAl(kimlik), baglam, kurumId, (tx) =>
+          platformAbonelikOzeti(tx, kurumId),
+        ),
       );
       if (!d.kurum) throw new AppError(404, errorCodes.notFound, 'Kurum bulunamadı.');
       const rollereGore: Record<string, number> = {};
@@ -130,6 +134,12 @@ export const platformKurumYollari: ServicePlugin = (app) => {
         durum: d.kurum.durum as 'aktif' | 'askida' | 'kapali',
         created_at: d.kurum.created_at,
         saat_dilimi: d.kurum.saat_dilimi,
+        platform_aski: {
+          askida: d.kurum.platform_askida_at !== null,
+          neden: d.kurum.platform_aski_nedeni,
+          askida_at: d.kurum.platform_askida_at,
+        },
+        abonelik: d.ek ?? { abonelik: null, yazma_kilitli: false },
         sahipler: d.sahipler.map(sahipOzeti),
         uye_sayilari: {
           aktif_toplam: aktif,

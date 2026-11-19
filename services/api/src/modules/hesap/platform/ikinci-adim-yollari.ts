@@ -148,6 +148,8 @@ export const ikinciAdimYollari: ServicePlugin = (app) => {
       schema: {
         tags: tag,
         summary: 'Kurulumu ilk kodla onayla (oturumu da doğrulanmış sayar)',
+        description:
+          "Başarıdan sonra `POST /auth/token` ile yeni erişim belirteci alın: belirteçteki `plat_2fa_exp` claim'i diğer servislerin (motivasyon) platform uçlarını açar.",
         body: IkinciAdimKodGirdiSema,
         response: { 200: IkinciAdimYanitSema },
       },
@@ -188,7 +190,7 @@ export const ikinciAdimYollari: ServicePlugin = (app) => {
         tags: tag,
         summary: 'Oturumu ikinci adım koduyla (veya yedek kodla) doğrula',
         description:
-          'Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.',
+          "Başarılı doğrulama oturuma bağlanır ve `PLATFORM_IKINCI_ADIM_OMRU_SN` boyunca `/platform/*` açılır. Diğer servislerin platform uçları için `POST /auth/token` ile yeni belirteç alın (`plat_2fa_exp` claim'i). 5 yanlış denemede 15 dakika kilit (429). Aynı TOTP kodu iki kez kullanılamaz. Yedek kod tek kullanımlıktır.",
         body: IkinciAdimDogrulaGirdiSema,
         response: { 200: IkinciAdimYanitSema },
       },
