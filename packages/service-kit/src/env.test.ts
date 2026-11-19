@@ -34,6 +34,17 @@ describe('loadEnv', () => {
     expect(() => loadEnv(schema, { source: { PORT: 'abc' } })).toThrow(/PORT/);
   });
 
+  it('uretimde AUTH_ENABLED=false (ya da unutulmus) reddedilir', () => {
+    expect(() => loadEnv(schema, { source: { NODE_ENV: 'production' } })).toThrow(/AUTH_ENABLED/);
+    expect(() =>
+      loadEnv(schema, { source: { NODE_ENV: 'production', AUTH_ENABLED: 'false' } }),
+    ).toThrow(/AUTH_ENABLED/);
+    const env = loadEnv(schema, {
+      source: { NODE_ENV: 'production', AUTH_ENABLED: 'true', JWKS_URL: 'https://a.example.com/j' },
+    });
+    expect(env.AUTH_ENABLED).toBe(true);
+  });
+
   it('AUTH_ENABLED=true iken JWKS_URL ister', () => {
     expect(() => loadEnv(schema, { source: { AUTH_ENABLED: 'true' } })).toThrow(/JWKS_URL/);
     const env = loadEnv(schema, {

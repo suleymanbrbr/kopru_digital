@@ -45,6 +45,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Guvenlik: depoda sir kalmadigini dogrular; uretim bagimliliklarinda yuksek/kritik acik varsa kirilir.
+      - name: Sır taraması
+        run: infra/scripts/sir-taramasi.sh
+
+      - name: Bağımlılık denetimi (yüksek/kritik)
+        run: pnpm audit --prod --audit-level=high
+
       - name: Biçim
         run: pnpm format:check
 

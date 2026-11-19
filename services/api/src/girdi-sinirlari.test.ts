@@ -157,4 +157,35 @@ describe.skipIf(dbYok())('guvenlik: girdi sinirlari', () => {
     });
     expect([400, 404, 422]).toContain(yanit.statusCode);
   });
+
+  it('webhook govdesi 256 KB ustu 413 alir (imza dogrulamadan once)', async () => {
+    for (const url of ['/v1/abonelik/webhook/iyzico', '/v1/abonelik/webhook/revenuecat']) {
+      const yanit = await app.inject({
+        method: 'POST',
+        url,
+        headers: { 'content-type': 'application/json' },
+        payload: JSON.stringify({ x: 'a'.repeat(300 * 1024) }),
+      });
+      expect(yanit.statusCode, url).toBe(413);
+    }
+  });
+
+  it('CORS: izin listesi disi origin icin Access-Control-Allow-Origin donmez (preflight dahil)', async () => {
+    const yanit = await app.inject({
+      url: '/health',
+      headers: { origin: 'https://evil.example.com' },
+    });
+    expect(yanit.headers['access-control-allow-origin']).toBeUndefined();
+    const onUcus = await app.inject({
+      method: 'OPTIONS',
+      url: '/v1/hesap/ben',
+      headers: {
+        origin: 'https://evil.example.com',
+        'access-control-request-method': 'GET',
+        'access-control-request-headers': 'authorization',
+      },
+    });
+    expect(onUcus.headers['access-control-allow-origin']).toBeUndefined();
+    expect(onUcus.headers['access-control-allow-credentials']).toBeUndefined();
+  });
 });
