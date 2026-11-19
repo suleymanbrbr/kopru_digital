@@ -9,6 +9,7 @@ import {
   hesapModulAyariDegistiV1,
   hesapUyelikDegistiV1,
   ogrenmeDenemeGirildiV1,
+  ogrenmeGunlukSoruKaydedildiV1,
   ogrenmeOdevIncelendiV1,
   ogrenmeOdevTeslimEdildiV1,
   ogrenmePlanGoreviGuncellendiV1,
@@ -34,6 +35,7 @@ import {
 import {
   denemeIsle,
   geriBildirimIsle,
+  gunlukSoruIsle,
   kayitIzlendiIsle,
   odevIncelendiIsle,
   odevTeslimIsle,
@@ -111,6 +113,7 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
       ogrenmeDenemeGirildiV1,
       ogrenmeSoruSorildiV1,
       ogrenmeSoruCozulduV1,
+      ogrenmeGunlukSoruKaydedildiV1,
     ] as const,
     isle: async (tx, olay) => {
       switch (olay.type) {
@@ -132,6 +135,8 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
           return soruSorildiIsle(tx, olay);
         case 'ogrenme.soru.cozuldu':
           return soruCozulduIsle(tx, olay);
+        case 'ogrenme.gunluk_soru.kaydedildi':
+          return gunlukSoruIsle(tx, olay);
       }
     },
   });

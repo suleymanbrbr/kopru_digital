@@ -11,9 +11,9 @@ const gunlukXp = haftalikXp() / 7;
 const seviyeGun = (gun: number) => seviyeHesapla(egri, Math.floor(gunlukXp * gun));
 
 describe('seviye egrisi hedefleri (duzenli ogrenci modeli)', () => {
-  it('varsayimlar: haftalik ~393 XP, gunluk ~56, ilk gun 75', () => {
-    expect(haftalikXp()).toBe(393);
-    expect(ilkGunXp()).toBe(75);
+  it('varsayimlar: haftalik ~423 XP (gunluk soru dahil), gunluk ~60, ilk gun 81', () => {
+    expect(haftalikXp()).toBe(423);
+    expect(ilkGunXp()).toBe(81);
     expect(DUZENLI_OGRENCI.ders).toBe(3);
   });
 
@@ -76,6 +76,7 @@ describe.skipIf(dbYok())('seviye egrisi migration tohumu', () => {
         soru_sorma: TOHUM_KURALLAR.soruSorma,
         soru_anladim: TOHUM_KURALLAR.soruAnladim,
         kayit_izledi: TOHUM_KURALLAR.kayit,
+        gunluk_soru: TOHUM_KURALLAR.gunlukSoru,
         deneme_girisi: TOHUM_KURALLAR.denemeGirisi,
         deneme_net_artisi: TOHUM_KURALLAR.netBasina,
         haftanin_yildizi: 50,
@@ -88,6 +89,7 @@ describe.skipIf(dbYok())('seviye egrisi migration tohumu', () => {
         odak: TOHUM_KURALLAR.odakTavan,
         soru: TOHUM_KURALLAR.soruTavan,
         kayit: TOHUM_KURALLAR.kayitTavan,
+        gunluk_soru: TOHUM_KURALLAR.gunlukSoruTavan,
       });
     } finally {
       await sql.end();
