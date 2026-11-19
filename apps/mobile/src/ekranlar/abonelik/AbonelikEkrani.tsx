@@ -267,7 +267,7 @@ export function AbonelikEkrani({ yoklama, platform = Platform.OS }: AbonelikEkra
         </Kart>
       ) : null}
 
-      {kanal && d.satinAlmaKapali !== 'baska_kanal' ? (
+      {kanal && d.satinAlmaKapali === null ? (
         <View className="gap-3">
           <Metin varyant="altBaslik" accessibilityRole="header">
             {t('mobil.abonelik.planlar.baslik')}

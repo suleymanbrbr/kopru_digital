@@ -131,7 +131,7 @@ export function mockAbonelik(
         durum: 'ek_sure',
         kaynak: 'apple',
         plan: plan('baslangic'),
-        ekSureBitis: iso(t + 5 * GUN),
+        ekSureBitis: iso(t + 5 * GUN - 3_600_000),
       };
     }
     return {
@@ -139,7 +139,7 @@ export function mockAbonelik(
       durum: 'deneme',
       kaynak: 'deneme',
       plan: plan('baslangic'),
-      denemeBitis: iso(t + (var_('deneme_bitiyor') ? 2 : 12) * GUN + 3_600_000),
+      denemeBitis: iso(t + (var_('deneme_bitiyor') ? 2 : 12) * GUN - 3_600_000),
     };
   }
 
