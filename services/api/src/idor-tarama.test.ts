@@ -81,7 +81,10 @@ describe.skipIf(dbYok())('guvenlik: kiracilar arasi erisim (IDOR) taramasi', () 
       const satirlar = await sistem<{ id: string }[]>`
         select id from ${sistem(s)}.${sistem(t)} where kurum_id = ${b.k.kurumId} limit 40`;
       if (satirlar.length === 0) continue;
-      bKimlikleri.set(t, satirlar.map((r) => r.id));
+      bKimlikleri.set(
+        t,
+        satirlar.map((r) => r.id),
+      );
       for (const r of satirlar) tumBKimlikleri.add(r.id);
     }
     tumBKimlikleri.add(b.k.kurumId);
@@ -95,7 +98,8 @@ describe.skipIf(dbYok())('guvenlik: kiracilar arasi erisim (IDOR) taramasi', () 
     const kok = param.replace(/_id$/, '').replace(/s$/, '');
     const eslesen: string[] = [];
     for (const [tablo, idler] of bKimlikleri) {
-      if (kok.length > 2 && tablo.includes(kok.slice(0, Math.min(kok.length, 5)))) eslesen.push(...idler);
+      if (kok.length > 2 && tablo.includes(kok.slice(0, Math.min(kok.length, 5))))
+        eslesen.push(...idler);
     }
     const liste = eslesen.length > 0 ? eslesen : [...tumBKimlikleri];
     return [...new Set(liste)].slice(0, 12);
@@ -127,7 +131,7 @@ describe.skipIf(dbYok())('guvenlik: kiracilar arasi erisim (IDOR) taramasi', () 
         r.url.includes('/kurumlar/:kurum_id'),
     );
 
-  it('URL\'deki baska kurum kimligi: A belirteci B kurumunun hicbir ucuna erisemez (403)', async () => {
+  it("URL'deki baska kurum kimligi: A belirteci B kurumunun hicbir ucuna erisemez (403)", async () => {
     const rs = kiraciRotalari();
     expect(rs.length).toBeGreaterThan(100);
     const sorunlar: string[] = [];
@@ -136,7 +140,8 @@ describe.skipIf(dbYok())('guvenlik: kiracilar arasi erisim (IDOR) taramasi', () 
       const { durum, url } = await dene(r, a.token, { kurum_id: b.k.kurumId });
       // 400/422: sema dogrulamasi yetki kancasindan once calisir (bos govde); veriye dokunulmadi.
       if (durum === 403) kapali++;
-      else if (durum !== 400 && durum !== 422) sorunlar.push(`${r.method} ${url} -> ${String(durum)}`);
+      else if (durum !== 400 && durum !== 422)
+        sorunlar.push(`${r.method} ${url} -> ${String(durum)}`);
     }
     expect(sorunlar).toEqual([]);
     expect(kapali).toBeGreaterThan(rs.length / 2);
@@ -178,7 +183,8 @@ describe.skipIf(dbYok())('guvenlik: kiracilar arasi erisim (IDOR) taramasi', () 
       headers: bearer(a.token),
     });
     expect([403, 404]).toContain(sil.statusCode);
-    const hala = await sistem`select 1 from hesap.oturumlar where id = ${oturum?.id ?? ''} and iptal_at is null`;
+    const hala =
+      await sistem`select 1 from hesap.oturumlar where id = ${oturum?.id ?? ''} and iptal_at is null`;
     expect(hala.length).toBe(1);
     const liste = await app.inject({ url: '/v1/hesap/oturumlar', headers: bearer(a.token) });
     expect(liste.body).not.toContain(oturum?.id ?? 'yok');

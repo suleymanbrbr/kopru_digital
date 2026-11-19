@@ -4,7 +4,13 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildService } from './app.js';
 import { loadServiceEnv } from './config.js';
 import { sablonUret } from './modules/ogrenme/deneme-excel.js';
-import { bearer, dbYok, kurumluKullanici, testDb, type KurumluKullanici } from './test/yardimcilar.js';
+import {
+  bearer,
+  dbYok,
+  kurumluKullanici,
+  testDb,
+  type KurumluKullanici,
+} from './test/yardimcilar.js';
 import { YakalayanSmsGonderici } from './modules/hesap/index.js';
 
 interface Rota {

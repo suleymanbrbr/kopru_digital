@@ -155,7 +155,9 @@ describe.skipIf(dbYok())('guvenlik: rol yukseltme', () => {
     expect(beklenmeyen).toEqual([]);
     // Yonetim uclari kesinlikle kapali:
     for (const k of gecen) {
-      expect(k).not.toMatch(/abonelik|davetler|modul-ayarlari|paketler|tahsilat|\/gruplar|\/atamalar|ayarlar/);
+      expect(k).not.toMatch(
+        /abonelik|davetler|modul-ayarlari|paketler|tahsilat|\/gruplar|\/atamalar|ayarlar/,
+      );
     }
   }, 120_000);
 
@@ -174,12 +176,17 @@ describe.skipIf(dbYok())('guvenlik: rol yukseltme', () => {
     const kimlik = auth('ogretmen');
     const gecen: string[] = [];
     for (const r of kiraciRotalari()) {
-      if (!/\/abonelik\//.test(r.url) && !(r.method !== 'GET' && /modul-ayarlari|\/finans\/kurumlar\/:kurum_id\/ayarlar/.test(r.url)))
+      if (
+        !/\/abonelik\//.test(r.url) &&
+        !(r.method !== 'GET' && /modul-ayarlari|\/finans\/kurumlar\/:kurum_id\/ayarlar/.test(r.url))
+      )
         continue;
       if ((await kapiSonucu(r, kimlik)) === 0) gecen.push(`${r.method} ${r.url}`);
     }
     expect(gecen).toEqual([]);
-    const kurumPatch = rotalar.find((r) => r.method === 'PATCH' && r.url === '/v1/hesap/kurumlar/:kurum_id');
+    const kurumPatch = rotalar.find(
+      (r) => r.method === 'PATCH' && r.url === '/v1/hesap/kurumlar/:kurum_id',
+    );
     expect(kurumPatch).toBeDefined();
     if (kurumPatch) expect(await kapiSonucu(kurumPatch, kimlik)).toBe(403);
   }, 120_000);
@@ -227,7 +234,8 @@ describe.skipIf(dbYok())('guvenlik: rol yukseltme', () => {
           headers: bearer(token),
           ...(r.method === 'GET' || r.method === 'DELETE' ? {} : { payload: {} }),
         });
-        if (yanit.statusCode !== 403) sorunlar.push(`${r.method} ${url} -> ${String(yanit.statusCode)}`);
+        if (yanit.statusCode !== 403)
+          sorunlar.push(`${r.method} ${url} -> ${String(yanit.statusCode)}`);
       }
     }
     expect(sorunlar).toEqual([]);

@@ -114,7 +114,7 @@ describe.skipIf(dbYok())('guvenlik: api rota envanteri (korumasiz rota birakmaz)
     expect(sorunlar).toEqual([]);
   });
 
-  it('herkese acik allowlist\'te olup artik var olmayan rota yok (liste guncel kalir)', async () => {
+  it("herkese acik allowlist'te olup artik var olmayan rota yok (liste guncel kalir)", async () => {
     await app.ready();
     const mevcut = new Set(rotalar.map(anahtar));
     const eksik = [...HERKESE_ACIK_ALLOWLIST, ...YALNIZ_KIMLIK_ALLOWLIST].filter(

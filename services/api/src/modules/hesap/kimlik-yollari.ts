@@ -30,6 +30,9 @@ import { uyelikSec, uyelikleriGetir } from './uyelik-deposu.js';
 const TELEFON_SAATLIK = 5;
 const IP_SAATLIK = 20;
 const SAAT_MS = 3_600_000;
+/** E-posta girisinde hesap basina basarisiz deneme siniri (IP'den bagimsiz; dagitik kaba kuvvete karsi). */
+const EPOSTA_GIRIS_BASARISIZ_SINIRI = 10;
+const EPOSTA_GIRIS_PENCERE_MS = 15 * 60_000;
 
 const genel = { public: true } as const;
 
@@ -91,6 +94,28 @@ export const kimlikYollari: ServicePlugin = (app) => {
       }
       await tx.insert(otpIstekleri).values({ id: uuidv7(), tanimlayici: telefon, ip });
     });
+  }
+
+  const girisAnahtari = (eposta: string) => `eposta-giris:${eposta.trim().toLowerCase()}`;
+
+  /** Son 15 dakikadaki basarisiz e-posta girisi sayisi; sinira ulasildiysa 429. */
+  async function epostaGirisKilidiniDene(eposta: string): Promise<void> {
+    const [satir] = await db.orm
+      .select({ n: sql<string>`count(*)` })
+      .from(otpIstekleri)
+      .where(
+        and(
+          eq(otpIstekleri.tanimlayici, girisAnahtari(eposta)),
+          gt(otpIstekleri.created_at, new Date(Date.now() - EPOSTA_GIRIS_PENCERE_MS)),
+        ),
+      );
+    if (Number(satir?.n ?? 0) >= EPOSTA_GIRIS_BASARISIZ_SINIRI) {
+      throw new AppError(
+        429,
+        errorCodes.rateLimited,
+        'Bu hesap için çok fazla başarısız giriş denendi. Biraz sonra tekrar deneyin.',
+      );
+    }
   }
 
   const telefonuCoz = (girdi: string) => {
@@ -204,12 +229,25 @@ export const kimlikYollari: ServicePlugin = (app) => {
       },
     },
     async (request, reply) => {
+      await epostaGirisKilidiniDene(request.body.eposta);
       const yanit = await auth.api.signInEmail({
         body: { email: request.body.eposta, password: request.body.parola },
         headers: webBasliklari(request),
         asResponse: true,
       });
-      const { govde, oturumBelirteci } = await baYaniti(yanit, reply);
+      let sonuc: Awaited<ReturnType<typeof baYaniti>>;
+      try {
+        sonuc = await baYaniti(yanit, reply);
+      } catch (err) {
+        // Basarisiz deneme (yanlis parola/yok hesap ayni yanit) hesap anahtariyla sayilir.
+        await db.orm.insert(otpIstekleri).values({
+          id: uuidv7(),
+          tanimlayici: girisAnahtari(request.body.eposta),
+          ip: request.ip,
+        });
+        throw err;
+      }
+      const { govde, oturumBelirteci } = sonuc;
       const user = (govde as { user?: Record<string, unknown> } | null)?.user;
       if (!user || !oturumBelirteci)
         throw new AppError(401, errorCodes.unauthorized, 'Oturum açılamadı.');
