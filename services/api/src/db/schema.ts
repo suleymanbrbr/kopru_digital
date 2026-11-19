@@ -256,6 +256,9 @@ export const kurumlar = hesap.table('kurumlar', {
     .notNull()
     .references(() => kullanicilar.id),
   kapatildi_at: tstz('kapatildi_at'),
+  /** Platform yoneticisi kurumu elle askiya aldiysa an (0018); abonelik isi bu kurumu acamaz. */
+  platform_askida_at: tstz('platform_askida_at'),
+  platform_aski_nedeni: text('platform_aski_nedeni'),
 });
 
 export const subeler = hesap.table('subeler', {

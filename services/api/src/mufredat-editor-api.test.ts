@@ -1,4 +1,3 @@
-import { SignJWT } from 'jose';
 import postgres from 'postgres';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -8,6 +7,7 @@ import {
   bearer,
   dbYok,
   hataMetni,
+  hazirPlatformKullanicisi,
   izoleVeritabani,
   testServisi,
   type TestServisi,
@@ -45,6 +45,8 @@ describe.skipIf(dbYok())('platform mufredat editoru API', () => {
   let sistem: postgres.Sql;
   let y: ReturnType<typeof dersYardimcilari>;
   let platToken: string;
+  let platKullaniciId: string;
+  let izUrls: Awaited<ReturnType<typeof izoleVeritabani>>['urls'];
   let kurum: Awaited<ReturnType<ReturnType<typeof dersYardimcilari>['kur']>>;
 
   // v1 (yayinli): U > S, T, K, E ; U2 ayri unite. S altinda bir kurum alt konusu ve S'e bagli odev var.
@@ -61,21 +63,9 @@ describe.skipIf(dbYok())('platform mufredat editoru API', () => {
   let T2 = '';
   let K2 = '';
 
-  async function jwt(plat: string | null, kullaniciId: string): Promise<string> {
-    const { kimlik } = t.service.app;
-    const { kid, key } = await kimlik.anahtarlar.imzaAnahtari();
-    return new SignJWT(plat ? { plat } : {})
-      .setProtectedHeader({ alg: 'EdDSA', kid, typ: 'JWT' })
-      .setSubject(kullaniciId)
-      .setIssuer(kimlik.issuer)
-      .setAudience(kimlik.audience)
-      .setIssuedAt()
-      .setExpirationTime('15m')
-      .sign(key);
-  }
-
   beforeAll(async () => {
     const iz = await izoleVeritabani();
+    izUrls = iz.urls;
     temizle = iz.temizle;
     t = testServisi({ RATE_LIMIT_MAX: '100000' }, iz.urls);
     sistem = postgres(iz.urls.sistemUrl, { max: 2, onnotice: () => undefined });
@@ -92,7 +82,9 @@ describe.skipIf(dbYok())('platform mufredat editoru API', () => {
     await ekle(K, 'Taşınacak Konu', 'konu', U, 3);
     await ekle(E, 'Silinecek Konu', 'konu', U, 4);
     kurum = await y.kur();
-    platToken = await jwt('yonetici', kurum.k.kullaniciId);
+    const plat = await hazirPlatformKullanicisi(t, sistem, 'yonetici');
+    platToken = plat.token;
+    platKullaniciId = plat.kullaniciId;
 
     // Kurum verisi: S altinda kurum alt konusu ve S konusuna bagli odev.
     const alt = await y.app.inject({
@@ -163,11 +155,71 @@ describe.skipIf(dbYok())('platform mufredat editoru API', () => {
     });
     expect(kurumTokeni.statusCode).toBe(403);
     expect(kurumTokeni.json<Kod>().error.code).toBe('platform_yetkisi_yok');
-    const destek = await jwt('destek', kurum.k.kullaniciId);
-    expect((await istek('POST', '/taslak', { ad: 'x' }, destek)).statusCode).toBe(403);
+    const destek = (await hazirPlatformKullanicisi(t, sistem, 'destek')).token;
+    const destekYanit = await istek('POST', '/taslak', { ad: 'x' }, destek);
+    expect(destekYanit.statusCode).toBe(403);
+    expect(destekYanit.json<Kod>().error.code).toBe('platform_izin_yok');
     expect((await istek('POST', '/taslak/yayinla', {}, destek)).statusCode).toBe(403);
     expect((await istek('POST', '/taslak', {}, kurum.k.token)).statusCode).toBe(403);
     expect((await y.app.inject({ url: '/platform/mufredat/kataloglar' })).statusCode).toBe(401);
+  });
+
+  it('2FA tamamlanmamis platform yoneticisi 403 ikinci_adim_gerekli (okuma ve yazma)', async () => {
+    const ikisiz = (await hazirPlatformKullanicisi(t, sistem, 'yonetici', false)).token;
+    for (const [yontem, yol, govde] of [
+      ['GET', '/surumler/1/agac', undefined],
+      ['POST', '/taslak', { ad: 'x' }],
+      ['POST', '/taslak/yayinla', {}],
+    ] as const) {
+      const r = await istek(yontem, yol, govde, ikisiz);
+      expect(r.statusCode, yol).toBe(403);
+      expect(r.json<Kod>().error.code, yol).toBe('ikinci_adim_gerekli');
+    }
+    const liste = await y.app.inject({
+      url: '/platform/mufredat/kataloglar',
+      headers: bearer(ikisiz),
+    });
+    expect(liste.statusCode).toBe(403);
+    expect(liste.json<Kod>().error.code).toBe('ikinci_adim_gerekli');
+    // Hicbir sey yazilmadi: katalogda taslak yok.
+    const [taslak] = await sistem<{ n: number }[]>`
+      select count(*)::int as n from ogrenme.mufredat_surumleri where yayinlandi_at is null`;
+    expect(taslak?.n).toBe(0);
+  });
+
+  it('IP izin listesi disindaki adres 403 platform_ip_yasak', async () => {
+    const kisitli = testServisi(
+      { RATE_LIMIT_MAX: '100000', PLATFORM_IP_IZINLI: '203.0.113.0/24' },
+      izUrls,
+    );
+    try {
+      const izinli = '203.0.113.9';
+      const k = await hazirPlatformKullanicisi(kisitli, sistem, 'yonetici', true, izinli);
+      const yol = '/platform/mufredat/kataloglar';
+      const red = await kisitli.service.app.inject({
+        url: yol,
+        headers: bearer(k.token),
+        remoteAddress: '192.0.2.50',
+      });
+      expect(red.statusCode).toBe(403);
+      expect(red.json<Kod>().error.code).toBe('platform_ip_yasak');
+      const ok = await kisitli.service.app.inject({
+        url: yol,
+        headers: bearer(k.token),
+        remoteAddress: izinli,
+      });
+      expect(ok.statusCode, ok.body).toBe(200);
+      const yaz = await kisitli.service.app.inject({
+        method: 'POST',
+        url: `${yol}/okul/taslak`,
+        headers: bearer(k.token),
+        remoteAddress: '192.0.2.50',
+        payload: { ad: 'x' },
+      });
+      expect(yaz.statusCode).toBe(403);
+    } finally {
+      await kisitli.service.stop();
+    }
   });
 
   it('katalog listesi; taslak yokken islem 404', async () => {
@@ -424,10 +476,10 @@ describe.skipIf(dbYok())('platform mufredat editoru API', () => {
 
     const [denetim] = await sistem<{ n: number }[]>`
       select count(*)::int n from hesap.denetim_kayitlari
-      where eylem like 'platform.mufredat.%' and aktor_kullanici_id = ${kurum.k.kullaniciId}`;
+      where eylem like 'platform.mufredat.%' and aktor_kullanici_id = ${platKullaniciId}`;
     expect(denetim?.n).toBeGreaterThanOrEqual(8);
     const [yayinDenetimi] = await sistem<{ neden: string }[]>`
-      select neden from hesap.denetim_kayitlari where eylem = 'platform.mufredat.yayinla'`;
+      select neden from hesap.denetim_kayitlari where eylem = 'platform.mufredat.yayinla' and sonra->>'durum' is null`;
     expect(yayinDenetimi?.neden).toBe('2027 müfredatı yayında.');
   });
 });

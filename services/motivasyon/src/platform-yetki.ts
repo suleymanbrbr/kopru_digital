@@ -27,13 +27,13 @@ function ipIzinliMi(ip: string, liste: readonly string[]): boolean {
 /**
  * `/platform/*` uclarinin tek yetki kontrolu: JWT'de `plat = yonetici` (taklit belirteci `imp` olamaz) ve
  * istemci IP'si izin listesinde. Gecersizse AppError firlatir; gecerliyse kimligi doner.
- * Iki adimli dogrulama kaniti belirtece api tarafindan konulur (api platform cekirdegi); claim adi
- * netlesince buraya eklenir.
+ * Ikinci adim: belirtecte gecerli `plat_2fa_exp` claim'i zorunludur (api yalniz taze 2FA'da koyar).
  */
 export function platformYoneticisiGerekli(
   auth: AuthContext | null,
   ip: string,
   erisim: PlatformErisimi,
+  simdi: Date = new Date(),
 ): AuthContext {
   if (!auth) throw new AppError(401, errorCodes.unauthorized, 'Oturum açmanız gerekiyor.');
   if (auth.claims.imp !== undefined) {
@@ -45,6 +45,15 @@ export function platformYoneticisiGerekli(
   }
   if (auth.claims.plat !== 'yonetici') {
     throw new AppError(403, errorCodes.izinYok, 'Bu işlem yalnızca platform yöneticileri içindir.');
+  }
+  // Ikinci adim kaniti (ADR 0004, 2026-11-19): api, oturumda taze 2FA varsa `plat_2fa_exp` (epoch sn) koyar.
+  const ikinciAdimBitis = auth.claims.plat_2fa_exp;
+  if (typeof ikinciAdimBitis !== 'number' || ikinciAdimBitis * 1000 <= simdi.getTime()) {
+    throw new AppError(
+      403,
+      errorCodes.ikinciAdimGerekli,
+      'Platform işlemleri için iki adımlı doğrulamayı tamamlayıp yeni belirteç alın.',
+    );
   }
   const liste = erisim.izinliIpler;
   if (liste.length === 0 ? erisim.uretim : !ipIzinliMi(ip, liste)) {

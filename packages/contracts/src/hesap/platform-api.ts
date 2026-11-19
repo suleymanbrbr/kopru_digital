@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { AboneligiSema, AbonelikKaynakSema, PeriyotSema } from '../abonelik/api.js';
 import { RolSema } from './izinler.js';
 import { ModulKoduSema } from './moduller.js';
 import { kurumDurumSema, kurumTurSema } from './olaylar.js';
@@ -111,8 +112,21 @@ export const PlatformBetaSema = z.object({
   acik: z.boolean(),
   updated_at: zaman,
 });
+export const PlatformAskiDurumuSema = z.object({
+  askida: z.boolean().describe('Platform yöneticisi kurumu elle askıya aldı.'),
+  neden: z.string().nullable(),
+  askida_at: zaman.nullable(),
+});
+export const PlatformAbonelikOzetiSema = z.object({
+  /** Etkin ya da en son abonelik; hiç yoksa `null`. */
+  abonelik: AboneligiSema.nullable(),
+  /** Abonelik `askida` / `sona_erdi`: yazma istekleri `402 abonelik_gerekli`. */
+  yazma_kilitli: z.boolean(),
+});
 export const PlatformKurumDetayYanitSema = PlatformKurumOzetiSema.extend({
   saat_dilimi: z.string(),
+  platform_aski: PlatformAskiDurumuSema,
+  abonelik: PlatformAbonelikOzetiSema,
   uye_sayilari: z.object({
     aktif_toplam: z.number().int(),
     rollere_gore: z.record(RolSema, z.number().int()),
@@ -140,6 +154,86 @@ export const PlatformBetaAyarlaGirdiSema = z.object({
 export const PlatformBetaAyarlaYanitSema = z.object({
   ozellik_kodu: z.string(),
   acik: z.boolean().nullable(),
+});
+
+// --- Platform askisi (abonelik askisindan ayri) -----------------------------------------------
+
+export const PlatformKurumAskiGirdiSema = z.object({ neden: PlatformNedenSema });
+export const PlatformKurumAskiYanitSema = z.object({
+  kurum_id: z.uuid(),
+  durum: kurumDurumSema,
+  platform_aski: PlatformAskiDurumuSema,
+  /** `ac` sonrasi abonelik de kilitliyse kurum `askida` kalir (abonelik askisi). */
+  abonelik_kilitli: z.boolean(),
+  degisti: z.boolean().describe('false: kurum zaten istenen durumdaydı.'),
+});
+
+// --- Abonelik duzeltmeleri (yalniz `yonetici`) ------------------------------------------------
+
+export const PlatformOdemeSema = z.object({
+  id: z.uuid(),
+  abonelik_id: z.uuid(),
+  kaynak: AbonelikKaynakSema,
+  durum: z.enum(['basarili', 'basarisiz', 'iade']),
+  tutar_kurus: z.number().int(),
+  kdv_kurus: z.number().int(),
+  donem_baslangic_at: zaman,
+  donem_bitis_at: zaman,
+  odeme_at: zaman,
+  hata_kodu: z.string().nullable(),
+});
+export const PlatformAbonelikYanitSema = PlatformAbonelikOzetiSema.extend({
+  gecmis: z.array(AboneligiSema).describe('Tüm abonelik kayıtları, yeniden eskiye (en çok 50).'),
+  odemeler: z.array(PlatformOdemeSema).describe('Ödemeler, yeniden eskiye (en çok 50).'),
+});
+
+export const PlatformKurumsalAktivasyonGirdiSema = z.object({
+  plan_kodu: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  sozlesme_no: z.string().trim().min(1).max(100),
+  periyot: PeriyotSema.default('aylik'),
+  donem_baslangic_at: zaman.optional().describe('Varsayılan: şimdi.'),
+  donem_bitis_at: zaman.optional().describe('Varsayılan: periyoda göre 30 / 365 gün.'),
+  fiyat_kurus: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Anlaşılan fiyat; varsayılan plan fiyatı.'),
+  neden: PlatformNedenSema,
+});
+export const PlatformDenemeUzatGirdiSema = z.object({
+  gun: z.number().int().min(1).max(90),
+  neden: PlatformNedenSema,
+});
+export const PlatformEkSureGirdiSema = z.object({
+  gun: z.number().int().min(1).max(60),
+  neden: PlatformNedenSema,
+});
+export const PlatformPlanDegistirGirdiSema = z.object({
+  plan_kodu: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  periyot: PeriyotSema.optional(),
+  hemen: z
+    .boolean()
+    .default(true)
+    .describe(
+      'false: ücretli abonelikte hedef plan dönem sonunda uygulanır (sahip akışıyla aynı).',
+    ),
+  neden: PlatformNedenSema,
+});
+export const PlatformAbonelikIptalGirdiSema = z.object({
+  hemen: z
+    .boolean()
+    .default(false)
+    .describe(
+      'true: abonelik hemen `iptal` olur; false: yenileme iptal edilir, dönem sonunda biter.',
+    ),
+  neden: PlatformNedenSema,
+});
+export const PlatformAbonelikAskiyaAlGirdiSema = z.object({ neden: PlatformNedenSema });
+export const PlatformAbonelikEylemYanitSema = z.object({
+  abonelik: AboneligiSema,
+  kurum_durumu: kurumDurumSema,
+  platform_askida: z.boolean(),
 });
 
 // --- Taklit -----------------------------------------------------------------------------------
@@ -259,6 +353,8 @@ export const PlatformMesajiAcikYanitSema = z.object({
   mesaj: PlatformMesajiSema.nullable(),
 });
 
+export type PlatformAbonelikOzeti = z.infer<typeof PlatformAbonelikOzetiSema>;
+export type PlatformAbonelikYanit = z.infer<typeof PlatformAbonelikYanitSema>;
 export type PlatformKurumDetayYanit = z.infer<typeof PlatformKurumDetayYanitSema>;
 export type PlatformMesaji = z.infer<typeof PlatformMesajiSema>;
 export type TaklitBaslatYanit = z.infer<typeof TaklitBaslatYanitSema>;

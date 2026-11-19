@@ -1,7 +1,7 @@
 import type { Database, Tx } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 
-import { withSistem } from './with-sistem.js';
+import { withSistem, type SistemBaglami } from './with-sistem.js';
 
 /**
  * Abonelik yazmalari `api_sistem` (BYPASSRLS) ile yapilir: `abonelik.abonelikler` tablosuna uygulama rolu
@@ -64,4 +64,19 @@ export async function abonelikGecisAdayiVarMi(
          or (durum = 'askida' and coalesce(ek_sure_bitis_at, donem_bitis_at) + interval '90 days' <= ${an})
     ) as var`);
   return rows[0]?.var === true;
+}
+
+/**
+ * Platform paneli (`/platform/kurumlar/:id/abonelik`): denetim baglami (eylem `platform.abonelik_*`, aktor,
+ * IP, neden) P1 denetim yardimcisindan (`platformBaglami`) gelir; `abonelik.*` yazmalari ayni islemde yapilir.
+ */
+/** `withSistem` baglami (aktor, IP, istek kimligi, denetim eylemi/nedeni); P1 `platformBaglami` uretir. */
+export type PlatformAbonelikBaglami = SistemBaglami;
+
+export function platformAbonelikIslemi<T>(
+  db: Database | null,
+  baglam: PlatformAbonelikBaglami,
+  fn: (tx: Tx) => Promise<T>,
+): Promise<T> {
+  return withSistem(db, baglam, fn);
 }

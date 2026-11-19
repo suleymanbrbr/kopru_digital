@@ -2,7 +2,8 @@ import { dersYoklamaKaydedildiV1 } from '@kopru/contracts';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createDb, withTenant, type Database } from './db.js';
+import { createDb, withTenant, withUser, type Database } from './db.js';
+import { saltOkunurCalistir } from './istek-baglami.js';
 import {
   publishInTx,
   renderOutboxMigration,
@@ -69,6 +70,35 @@ describe.skipIf(!url)('db + outbox (gercek PostgreSQL)', () => {
       sql`select current_setting('app.kurum_id', true) k`,
     );
     expect(after[0]?.k ?? '').toBe('');
+  });
+
+  it('salt okunur istek baglaminda withTenant/withUser islemleri READ ONLY baslar (yazma DB tarafindan reddedilir)', async () => {
+    await db.sql.unsafe(`create table ${schema}.ro_deneme (id int)`);
+    const yaz = (tx: Parameters<Parameters<typeof withTenant>[2]>[0]) =>
+      tx.execute(sql.raw(`insert into ${schema}.ro_deneme values (1)`));
+    const neden = async (islem: Promise<unknown>): Promise<string> => {
+      try {
+        await islem;
+        return 'hata yok';
+      } catch (err) {
+        const e = err as { message: string; cause?: { message?: string } };
+        return `${e.message} ${e.cause?.message ?? ''}`;
+      }
+    };
+    await saltOkunurCalistir(async () => {
+      expect(await neden(withTenant(db, { kurumId }, yaz))).toMatch(/read-only/i);
+      expect(await neden(withUser(db, { kullaniciId: kurumId }, yaz))).toMatch(/read-only/i);
+      // Okuma ve oturum degiskenleri calisir.
+      const oku = await withTenant(db, { kurumId }, (tx) =>
+        tx.execute(sql`select current_setting('app.kurum_id', true) as k`),
+      );
+      expect(oku[0]?.k).toBe(kurumId);
+    });
+    // Baglam disinda yazma serbest.
+    await withTenant(db, { kurumId }, yaz);
+    expect(await query<{ n: number }>(`select count(*)::int n from ${schema}.ro_deneme`)).toEqual([
+      { n: 1 },
+    ]);
   });
 
   it('withTenant gecersiz kurumId ile DB ye gitmeden reddeder', async () => {

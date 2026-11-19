@@ -1,4 +1,4 @@
-import type { Tx } from '@kopru/service-kit';
+import { saltOkunurMu, type Tx } from '@kopru/service-kit';
 import { sql, type SQL } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -142,6 +142,8 @@ export async function dersKatilimcilariniEsitle(
   baglam: DersOlayBaglami,
   olusturanKullaniciId: string | null = null,
 ): Promise<EsitlemeSonucu> {
+  // Taklit (salt okunur islem): okuma uclari yazmadan listeler; esitleme yapilmaz.
+  if (saltOkunurMu()) return bos;
   const idler = await kapsamiCoz(tx, kurumId, kapsam);
   if (idler.length === 0) return bos;
 

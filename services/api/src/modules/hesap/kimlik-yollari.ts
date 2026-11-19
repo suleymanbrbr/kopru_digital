@@ -315,7 +315,10 @@ export const kimlikYollari: ServicePlugin = (app) => {
       const kullaniciId = oturum.user.id;
       const uyelikler = await uyelikleriGetir(db, kullaniciId);
       const [kayit] = await db.orm
-        .select({ etkin_uyelik_id: oturumlar.etkin_uyelik_id })
+        .select({
+          etkin_uyelik_id: oturumlar.etkin_uyelik_id,
+          ikinci_adim_at: oturumlar.ikinci_adim_at,
+        })
         .from(oturumlar)
         .where(eq(oturumlar.id, oturum.session.id));
       const secim = uyelikSec(uyelikler, {
@@ -347,6 +350,15 @@ export const kimlikYollari: ServicePlugin = (app) => {
         .where(eq(kullanicilar.id, kullaniciId));
       const plat =
         platSatir?.rol === 'destek' || platSatir?.rol === 'yonetici' ? platSatir.rol : undefined;
+      // Platform ikinci adiminin kaniti (ADR 0004 degisiklik notu 2026-11-19): yalniz bu oturumda taze bir
+      // dogrulama varsa `plat_2fa_exp` (epoch sn, dogrulama + PLATFORM_IKINCI_ADIM_OMRU_SN) konur; diger
+      // servisler (motivasyon) api DB'sine bakmadan bunu zorunlu kilar. Dogrulamadan sonra istemci
+      // `/auth/token`i yeniden cagirarak yeni belirtec alir.
+      const ikinciAdimBitis =
+        plat !== undefined && kayit?.ikinci_adim_at
+          ? Math.floor(kayit.ikinci_adim_at.getTime() / 1000) +
+            kimlik.env.PLATFORM_IKINCI_ADIM_OMRU_SN
+          : undefined;
       const accessToken = await erisimBelirteciUret(
         kimlik.anahtarlar,
         kimlik.issuer,
@@ -359,6 +371,10 @@ export const kimlikYollari: ServicePlugin = (app) => {
           rol: secim?.rol ?? null,
           roller,
           plat,
+          plat2faBitis:
+            ikinciAdimBitis !== undefined && ikinciAdimBitis * 1000 > Date.now()
+              ? ikinciAdimBitis
+              : undefined,
         },
       );
       const yanit: TokenYanit = {
