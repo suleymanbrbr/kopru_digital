@@ -12,6 +12,7 @@ import { and, eq } from 'drizzle-orm';
 import type { FastifyRequest, preHandlerAsyncHookHandler } from 'fastify';
 
 import { uyelikler } from '../../db/schema.js';
+import { abonelikGerekli, yazmaKilitliMi } from '../abonelik/index.js';
 import type { YetkiBaglami } from './kimlik.js';
 import { modulAcikMi, type ModulBaglami } from './modul-ayarlari.js';
 
@@ -30,7 +31,8 @@ const yasak = (kod: string, mesaj: string) => new AppError(403, kod, mesaj);
  * Kiraci rotalari icin yetki kapisi. ADR 0004 kontrol sirasi: kimlik (service-kit) ve riza (kimlik
  * plugin'i) bu middleware'den once calisir; burada sirayla kiraci -> taklit -> modul -> izin -> kapsam.
  * Basarili olursa `request.yetki` doldurulur (etkin kapsam uyelik `sube_id` ile daraltilir).
- * Abonelik durumu (402) abonelik modulu gelince araya eklenir.
+ * Abonelik durumu (adim 4): `askida`/`sona_erdi` kurumda yazma istekleri `402 abonelik_gerekli`; okuma ve
+ * `abonelik.*` izinli uc noktalar (sahibin plan ekrani, yeni abonelik) acik kalir.
  */
 export function requirePermission(
   izin: IzinKodu,
@@ -64,18 +66,22 @@ export function requirePermission(
     const modul = izinModulu(izin);
     const rol = RolSema.safeParse(auth.rol);
     const baglam = options.modulBaglami?.(request) ?? {};
-    const { uye, acik } = await withTenant(
+    // 4. Abonelik durumu: yalniz yazma istekleri ve abonelik disi izinler icin sorgulanir.
+    const yazmaKapisiGerekli = !YAZMA_OLMAYAN.has(request.method) && !izin.startsWith('abonelik.');
+    const { uye, acik, kilitli } = await withTenant(
       db,
       { kurumId, kullaniciId, roller: auth.roller },
       async (tx) => {
+        const kilitliMi = yazmaKapisiGerekli ? await yazmaKilitliMi(tx, kurumId) : false;
         const acikMi = modul ? await modulAcikMi(tx, kurumId, modul, baglam) : true;
         const [satir] = await tx
           .select({ rol: uyelikler.rol, durum: uyelikler.durum, sube_id: uyelikler.sube_id })
           .from(uyelikler)
           .where(and(eq(uyelikler.id, uyelikId), eq(uyelikler.kullanici_id, kullaniciId)));
-        return { uye: satir, acik: acikMi };
+        return { uye: satir, acik: acikMi, kilitli: kilitliMi };
       },
     );
+    if (kilitli) throw abonelikGerekli();
     if (!acik) throw yasak(errorCodes.modulKapali, 'Bu özellik kurumunuzda kapalı.');
 
     // 6. Izin. Uyelik hala etkin ve belirtecteki rolle ayni olmali (belirtec omru icindeki degisiklikler).

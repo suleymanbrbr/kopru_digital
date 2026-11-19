@@ -19,6 +19,7 @@ import {
   sinifKatilimIstekleri,
   uyelikler,
 } from '../../db/schema.js';
+import { planLimitiniDenetle, yazmaKapisi } from '../abonelik/index.js';
 import { BasarisizDenemeSiniri, katilimKoduNormallestir } from './sinif-kodu.js';
 
 type IstekSatiri = typeof sinifKatilimIstekleri.$inferSelect;
@@ -136,6 +137,9 @@ export const sinifKatilimKullaniciYollari: ServicePlugin = (app) => {
           // Arsivlenmis / sinif olmayan grup: kod fiilen gecersizdir.
           if (g?.tur !== 'sinif' || g.durum !== 'aktif') return null;
 
+          // Kontrol sirasi adim 4: askida/sona_erdi kurumda katilim istegi acilamaz (402 abonelik_gerekli).
+          await yazmaKapisi(tx, c.kurum_id);
+
           const [uye] = await tx
             .select({ id: uyelikler.id, durum: uyelikler.durum })
             .from(uyelikler)
@@ -168,6 +172,10 @@ export const sinifKatilimKullaniciYollari: ServicePlugin = (app) => {
               throw new AppError(409, hesapHataKodlari.zatenUye, 'Bu sınıfın zaten üyesisiniz.');
             }
           }
+
+          // Plan limiti: ogrenci henuz etkin uye degilse ve limit dolmussa istek hic acilmaz (402 plan_limiti);
+          // onay aninda yeniden denetlenir. Mevcut veri silinmez.
+          if (uye?.durum !== 'aktif') await planLimitiniDenetle(tx, c.kurum_id, 'max_ogrenci');
 
           // Grup basina tek bekleyen istek: cakisma varsa mevcut istek (idempotent).
           const [yeni] = await tx

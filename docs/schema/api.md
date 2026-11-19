@@ -170,6 +170,7 @@ Profil: `G`. RLS: hayır.
 | `son_kullanim_at` | timestamptz | hayır | now() | |
 | `iptal_at` | timestamptz | evet | | |
 | `taklit_kayit_id` | uuid | evet | | Taklit oturumu ise `taklit_kayitlari.id` |
+| `ikinci_adim_at` | timestamptz | evet | | Platform kullanıcısının bu oturumda iki adımlı doğrulamayı tamamladığı an (0016); `/platform/*` her istekte bakar |
 
 Kısıtlar: `UNIQUE (belirtec_hash)`. İndeks: `(kullanici_id, iptal_at)`, `(expires_at)` (temizlik). Olaylar: yok.
 
@@ -442,7 +443,7 @@ LEFT JOIN hesap.modul_ayarlari m
 WHERE d.kid IS NOT NULL;
 ```
 
-İndeks: `(kurum_id, modul_kodu)`. Olaylar: `hesap.modul_ayari.degisti.v1`.
+İndeks: `(kurum_id, modul_kodu)`. Olaylar: `hesap.modul_ayari.degisti.v1`. Platform yöneticisi kurum düzeyinde `PUT /platform/kurumlar/:id/moduller/:kod` ile açıp kapatabilir; aynı işlemde aynı olay yayımlanır (`actor` platform kullanıcısıdır, olay yükünde kişisel veri yoktur) ve denetim satırı `platform.modul_ayarla` yazılır.
 
 ### Rol ve izin sözlüğü
 
@@ -536,7 +537,87 @@ Profil: `D` (`kurum_id` NULL olabilir: platform eylemleri). RLS: evet (`kurum_id
 | `istek_id` | uuid | evet | | `korelasyon_id` |
 | `ip` | inet | evet | | |
 
-İndeks: `(kurum_id, created_at DESC)`, `(hedef_turu, hedef_id)`, `(aktor_kullanici_id, created_at DESC)`. Olaylar: yok.
+İndeks: `(kurum_id, created_at DESC)`, `(hedef_turu, hedef_id)`, `(aktor_kullanici_id, created_at DESC)`, `(created_at DESC, id DESC)` ve `(eylem, created_at DESC)` (platform denetim listesi, 0016). Olaylar: yok.
+
+**Platform eylemleri** (`platform.*`, `taklit.*`): her `/platform/*` isteği (okuma, reddedilenler ve yazmalar dahil) bir satır yazar: `aktor_kullanici_id`, `ip` (`request.ip`, [ADR 0009](../adr/0009-guvenilir-proxy-ve-istemci-ip.md)), `istek_id`, `kurum_id`/`hedef_*` (varsa) ve `sonra` içinde yalnız kişisel veri içermeyen ayrıntı (`durum`, `kod`, `red`, arama türü, süzgeç adları, modül/beta kodu). Veri değiştirenler satırı değişiklikle **aynı işlemde** yazar (`withSistem`), `neden` istek gövdesinden gelir; diğerleri `onSend` kancasında yazılır. Arama metni (telefon/e-posta olabilir) ve mesaj metni denetime girmez. Taklit belirteciyle gelen **her** istek `taklit.istek` (`taklit_kayit_id`, `kurum_id` = hedef kurum, `aktor_kullanici_id` = platform kullanıcısı, `sonra.yontem|yol|durum`) olarak yazılır; reddedilenler (401 sonlanmış, 403 yazma/IP) dahil. Eylem adları: `platform.ben`, `platform.ikinci_adim_kur|onayla|dogrula|basarisiz`, `platform.kurum_ara|kurum_detay`, `platform.modul_ayarla`, `platform.beta_ayarla`, `platform.taklit_baslat|taklit_sonlandir`, `platform.denetim_listele`, `platform.sistem_sagligi`, `platform.mesaj_listele|mesaj_yayinla|mesaj_iptal`, `platform.yonetici_ekle` (betik), `taklit.istek`.
+
+### Platform yönetimi tabloları (0016)
+
+#### `hesap.platform_ikinci_adim`
+
+Platform kullanıcılarının TOTP ikinci adımı ([ADR 0004](../adr/0004-kimlik-dogrulama-ve-yetkilendirme.md#değişiklik-notu-2026-11-18-platform-çekirdeği)). Profil: `G`. RLS: hayır; `api_app` erişimi `REVOKE ALL` ile kapalı, yalnız `_sistem` rolü okur/yazar.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `kullanici_id` | uuid | hayır | | FK `kullanicilar`, `UNIQUE` |
+| `sir_sifreli` | bytea | hayır | | TOTP sırrı, AES-256-GCM (`iv(12) + etiket(16) + şifreli`); anahtar `BETTER_AUTH_SECRET`'tan HKDF ile türetilir |
+| `onaylandi_at` | timestamptz | evet | | Kurulum ilk kodla onaylanınca dolar; dolu kayıt yeniden kurulamaz |
+| `son_sayac` | bigint | evet | | En son kabul edilen TOTP adımı (tekrar oynatma koruması) |
+| `yedek_kod_ozetleri` | text[] | hayır | `'{}'` | Tek kullanımlık yedek kodların HMAC-SHA-256 özetleri (düz kod saklanmaz); kullanılan kod diziden çıkar |
+| `yanlis_deneme` | smallint | hayır | `0` | Art arda yanlış sayısı; 5'te 15 dakika kilit |
+| `kilitli_bitis_at` | timestamptz | evet | | Doluysa ve gelecekteyse doğrulama `429` |
+
+Olaylar: yok. Sıfırlama yalnız `platform:yonetici-ekle --2fa-sifirla` betiğiyle.
+
+#### `hesap.platform_mesajlari`
+
+Tüm kullanıcılara görünen bakım/duyuru mesajı. Profil: `G`. RLS: hayır (kiracısız, kişisel veri yok). `api_app` yalnız `SELECT`; yazma `_sistem` ile (`/platform/mesajlar`).
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `created_by` | uuid | evet | | Yayınlayan platform kullanıcısı |
+| `baslik` | text | hayır | | CHECK `char_length BETWEEN 1 AND 120` |
+| `metin` | text | hayır | | CHECK `char_length BETWEEN 1 AND 2000`. Kişisel veri konmaz. |
+| `onem` | text | hayır | `'bilgi'` | CHECK `IN ('bilgi','uyari','kritik')` |
+| `baslangic_at` | timestamptz | hayır | | |
+| `bitis_at` | timestamptz | hayır | | CHECK `bitis_at > baslangic_at` |
+| `iptal_at` | timestamptz | evet | | Erken kaldırma |
+
+İndeks: `(baslangic_at, bitis_at) WHERE iptal_at IS NULL`. Etkin mesaj: `iptal_at IS NULL AND baslangic_at <= now() AND bitis_at > now()`; birden çoksa önem (`kritik` > `uyari` > `bilgi`), sonra en yeni. Olaylar: yok.
+
+#### `hesap.kurum_beta_ozellikleri`
+
+Kuruma özel beta özellik bayrakları. Profil: `KS`. RLS: evet (`kurum_id = aktif_kurum()`); kurum yalnız kendi bayraklarını **okur**, `api_app` yazamaz (`REVOKE INSERT, UPDATE, DELETE`); yazma platform yöneticisi `_sistem` ile.
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ozellik_kodu` | text | hayır | | CHECK `~ '^[a-z][a-z0-9_]{1,39}$'`. Kod listesi kodda sabit değildir; özelliği getiren paket kullanıma alır. |
+| `acik` | boolean | hayır | | |
+| `degistiren_id` | uuid | evet | | Değiştiren platform **kullanıcısı** (`kullanicilar.id`; `modul_ayarlari`ndaki gibi üyelik değil) |
+
+Kısıtlar: `UNIQUE (kurum_id, ozellik_kodu)`. Kayıt yok = kapalı. Olaylar: yok (Faz 1'de yalnız api okur).
+
+Arama indeksi: `kurumlar_ad_trgm_idx` = `GIN (translate(ad, 'İIı', 'iii') gin_trgm_ops)` (`ILIKE` sorgusu aynı `translate` ile yazılır; i/İ/ı farkı yok sayılır).
+
+### Platform yönetimi uçları (`/platform/*`)
+
+Kök yolda (`/v1` değil) ve `hesap` modülünün kök eklentisinde kayıtlıdır; kodu `services/api/src/modules/hesap/platform/`, SQL'i (`withSistem`, ADR 0003) `services/api/src/sistem/platform-*.ts` içindedir. **Kapı sırası** (her istekte; reddedilenler de denetlenir): IP izin listesi (`PLATFORM_IP_IZINLI`, boşsa geliştirmede/testte açık, üretimde **kapalı**) → taklit belirteci olmamalı → `plat` claim'i → veritabanında aktif `platform_rolu` (claim yalnız ipucudur; rol geri alınınca belirteç ömrü beklenmez) → ikinci adım tamamlanmış (`oturumlar.ikinci_adim_at`, `PLATFORM_IKINCI_ADIM_OMRU_SN` = 8 saat; yalnız `ben` ve `ikinci-adim/*` muaf) → rota rolü. KVKK rıza kapısından muaftır (platform kullanıcısı kurum üyesi olmayabilir).
+
+| Yöntem | Yol | Rol | Açıklama |
+| --- | --- | --- | --- |
+| GET | `/ben` | destek | Platform kimliğim, `ikinci_adim: { kurulu, oturumda_dogrulandi, yedek_kod_kalan }` |
+| POST | `/ikinci-adim/kur` | destek | `{ otpauth_uri, sir, yedek_kodlar[10] }` (yalnız burada gösterilir; QR'ı istemci üretir). Onaylı kurulum `409 ikinci_adim_kurulu` |
+| POST | `/ikinci-adim/onayla` | destek | `{ kod }`; kurulumu onaylar ve oturumu doğrulanmış sayar |
+| POST | `/ikinci-adim/dogrula` | destek | `{ kod }` veya `{ yedek_kod }`; oturumu doğrular. 5 yanlış → `429` (15 dk). Aynı TOTP adımı iki kez kabul edilmez |
+| GET | `/kurumlar` | destek | `?q&durum&limit&imlec`; `q` ad (trigram, i/ı farkı yok), kurum kimliği, sahip telefonu (tam) veya e-postası (tam). Sahip iletişimi **maskeli** (`telefon_maskeli`, `eposta_maskeli`) |
+| GET | `/kurumlar/:kurum_id` | destek | Üye sayıları (aktif toplam, role göre, diğer durumlar), durum, modül durumları (kurum düzeyi + alt düzey kapalı sayısı), beta bayrakları |
+| PUT | `/kurumlar/:kurum_id/moduller/:modul_kodu` | yonetici | `{ acik: boolean veya null, neden(≥10) }`; `null` mirasa döner. Aynı işlemde `hesap.modul_ayari.degisti.v1` |
+| PUT | `/kurumlar/:kurum_id/beta/:ozellik_kodu` | yonetici | `{ acik: boolean veya null, neden(≥10) }`; `null` bayrağı siler |
+| POST | `/taklit` | destek | `{ hedef_kullanici_id, kurum_id, neden(≥10) }` → 15 dk, yenilenemez, salt okunur JWT. Hedef: aktif, o kurumda aktif üye, platform kullanıcısı değil (`403`/`404`) |
+| POST | `/taklit/:taklit_id/sonlandir` | destek | Başlatan veya yönetici; belirteç hemen `401` (DB doğrulaması + `sid` iptal listesi). Zaten bitmişse `200` |
+| GET | `/denetim` | yonetici | `?kurum_id&aktor_id&eylem(tam veya onek.*)&baslangic&bitis&limit&imlec`; `(created_at, id)` azalan, imleç mikrosaniye hassasiyetli |
+| GET | `/sistem-sagligi` | destek | `outbox` (bekleyen, en eski yaş sn, hatalı), `kuyruklar` (`pgboss_kurulu`, derinlikler, başarısız), `http` (süreç içi son 60 dk istek/5xx/oran) |
+| GET | `/mesajlar` | destek | Son 50 mesaj (iptal edilenler dahil) |
+| POST | `/mesajlar` | yonetici | `{ baslik, metin, onem, baslangic_at?, bitis_at }` |
+| POST | `/mesajlar/:mesaj_id/iptal` | yonetici | Erken kaldırır; yoksa/iptalse `404` |
+
+Herkese açık (kimliksiz): `GET /v1/platform-mesaji` → `{ mesaj: { id, baslik, metin, onem, baslangic_at, bitis_at } veya null }` (`Cache-Control: public, max-age=30`).
+
+**`destek` ve `yonetici` farkı:** `destek` salt okunur gezinir (kurum arama/detay, sistem sağlığı, mesaj listesi) ve **taklit** başlatabilir; kendi taklidini sonlandırır. `yonetici` her şeyi yapar: modül/beta değişikliği, mesaj yayınlama/iptal, denetim listesi, başkasının taklidini sonlandırma. Platform rolü yalnız `pnpm --filter @kopru/api platform:yonetici-ekle -- <telefon|eposta> [--rol destek|yonetici] [--2fa-sifirla]` betiğiyle verilir (HTTP ucu yok; üretimde de tek yol; `platform.yonetici_ekle` denetimi).
+
+**Taklit belirteci:** `sub` = hedef, `sid` = taklit kaydı, `imp` = `{ taklit_id, bitis }`, `aktor` = platform kullanıcısı, `exp` = `bitis_at` (≤15 dk); `plat` taşımaz, `/auth/token` ile yenilenemez. Kök kancada her istekte: kayıt sonlanmamış, süresi dolmamış ve hedef/kurumla eşleşiyor, platform kullanıcısı hâlâ yetkili değilse `401`; yazma yöntemleri (`POST/PUT/PATCH/DELETE`) tüm rotalarda `403 taklit_salt_okunur`; IP izin listesi uygulanır; her istek `taklit.istek` olarak denetlenir. **Bilinen sınır:** veritabanı işleminin `READ ONLY` açılması (ADR 0004 adım 8) service-kit `withTenant` değişikliği ister ve bu pakette yapılmadı; yazma yöntemleri veritabanına hiç ulaşmadan reddedildiği için etkisi yan etkili `GET` uçlarıyla sınırlıdır.
+
+Hata kodları: `ikinci_adim_gerekli`, `platform_ip_yasak`, `platform_yetkisi_yok`, `platform_izin_yok`, `ikinci_adim_kurulu` (ayrıca `400 kod_gecersiz`, `429 cok_fazla_istek`).
 
 ## `ders`
 
@@ -1695,6 +1776,55 @@ e-Arşiv faturaları. Profil: `KS`. RLS: evet.
 
 Kısıtlar: `UNIQUE (odeme_id, tur)` (bir ödemeye bir fatura), `UNIQUE (kurum_id, fatura_no) WHERE fatura_no IS NOT NULL`, `CHECK (toplam_kurus = matrah_kurus + kdv_kurus)`, `CHECK (durum <> 'kesildi' OR (fatura_no IS NOT NULL AND ettn IS NOT NULL AND kesim_at IS NOT NULL))`. Kesim, ödeme `basarili` olunca pg-boss işinde yapılır; entegratör hatasında 6 deneme, sonra `hata` ve alarm. Kesilmiş fatura silinmez/değiştirilmez; düzeltme `tur='iade'` faturasıyla. Store (Apple/Google) ödemeleri için fatura kesilmez (mağaza keser); yalnızca `iyzico` ve `kurumsal`. İndeks: `(kurum_id, kesim_at DESC)`, `(durum, created_at) WHERE durum IN ('bekliyor','hata')`.
 Olaylar: `abonelik.fatura.kesildi.v1`.
+
+### Uygulama (migration `0015`): çekirdek
+
+Bu bölüm paket A1'in (abonelik çekirdeği) şemadan ve şartnameden farklarını ve davranışını anlatır. Ödeme başlatma, webhook işleyicileri, iyzico/RevenueCat ve e-Arşiv kesimi **sonraki paketin** işidir; `OdemeSaglayici` arayüzü (`modules/abonelik/saglayici.ts`) ve geliştirme sağlayıcısı `SahteOdemeSaglayici` hazırdır.
+
+**Şemadan farklar**
+
+- `abonelikler.kaynak` CHECK'ine `'deneme'` eklendi: kart istemeden başlayan 14 günlük deneme bir ödeme sağlayıcısına bağlı değildir. `durum='deneme'` ise `kaynak='deneme'` ve `deneme_bitis_at` dolu olmalıdır (`abonelikler_deneme_chk`).
+- `abonelikler.bekleyen_plan_id` ve `bekleyen_periyot` (NULL): ücretli abonelikte plan değiştirme isteği dönem sonunda uygulanır; yükseltmenin ödemesi sonraki paketin ödeme akışındadır.
+- `abonelik_odemeleri.ters_cevrilen_id` (metinde vardı, tabloda yoktu) eklendi; `abonelik_olaylari.abonelik_id` FK, `abonelik_olaylari.updated_at` ve `abonelik_odemeleri.updated_at` eklendi.
+- Yazma yetkisi: uygulama rolü (`api_app`) `abonelikler`, `abonelik_odemeleri` ve `faturalar` tablolarına yalnız **okur**; `planlar` için yalnız okur; `abonelik_olaylari` için hiçbir yetkisi yoktur. Yazma `api_sistem` ile `src/sistem/abonelik-sistem.ts` üzerinden yapılır ve her işlem `hesap.denetim_kayitlari`na nedenle yazılır. `kurum_fatura_bilgileri` sahibin yazdığı normal kiracı tablosudur.
+- `ortak.uuid_v7_uret()` yalnız migration tohumları içindir.
+
+**Plan kataloğu tohumu (YER TUTUCU, proje sahibi onayı bekliyor)**
+
+Fiyatlar ve limitler karar verilene kadar yer tutucudur; migration ve bu tablo "onay bekliyor" diye işaretlidir. Gerçek değerler **yeni plan sürümü** (aynı kod, `surum=2`) olarak eklenir; eski satır `aktif=false` olur.
+
+| Kod | Ad | Kurum türü | Aylık (kuruş, KDV hariç) | Yıllık | `max_ogrenci` | `max_ogretmen` | `max_sube` |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `baslangic` | Başlangıç | `bireysel` | 29 900 | 299 000 | 15 | 1 | 1 |
+| `koc` | Koç | `bireysel` | 69 900 | 699 000 | 60 | 1 | 1 |
+| `ekip` | Ekip | `ekip` | 149 900 | 1 499 000 | 150 | 5 | 1 |
+| `kurum` | Kurum | `kurum` | 499 900 | 4 999 000 | 500 | 40 | 5 |
+
+Başlangıç'ın 15 öğrencisi şartnamedeki "16. öğrenci" örneğidir. Modül eşleşmesi de kararlaştırılmadı: tüm planlar bütün modülleri içerir (`moduller` tam liste). Şartnamenin üç paketi (Başlangıç / Koç / Kurum) dışında `ekip` türündeki kurumlar için bir yer tutucu `ekip` planı vardır (`kurum_turu` tek değerlidir; `bireysel` kurum Başlangıç'tan Koç'a yükselebilsin diye iki bireysel plan var). Etkin abonelik yokken geçerli **ücretsiz katman** kodda sabittir (`UCRETSIZ_KATMAN`, yer tutucu): 5 öğrenci, 1 öğretmen, 1 şube.
+
+**Deneme.** `POST /v1/hesap/kurumlar` kurum satırıyla aynı işlemde (`api_sistem`) 14 günlük `deneme` aboneliği açar (plan: bireysel -> `baslangic`, ekip -> `ekip`, kurum -> `kurum`; `fiyat_kurus=0`, `otomatik_yenileme=false`) ve `abonelik.abonelik.degisti.v1` yazar. Migration, aboneliği olmayan mevcut `aktif` kurumlara aynı 14 günlük denemeyi açar (geliştirme verisi; üretimde müşteri yoktur).
+
+**Durum makinesi.** Saf geçiş `modules/abonelik/durum-makinesi.ts` (`sonrakiGecis`, `gecisZinciri`), uygulayıcı `yazma.ts: gecisleriUygula`, zamanlayıcı `gecis-isi.ts` (worker'da saatte bir; pg-boss depoda olmadığı için finans gece işiyle aynı `setInterval` örüntüsü, ona taşınabilir). Kurallar: `deneme` -> `sona_erdi` (deneme bitti); `aktif` -> `iptal` (dönem bitti, iptal istenmişti) ya da `odeme_bekliyor` (dönem bitti, yenileme gelmedi; sağlayıcı webhook'u gecikirse güvenlik ağı); `odeme_bekliyor` -> `ek_sure` (dönem bitişinden itibaren 7 gün, `ek_sure_bitis_at` dönem bitişi + 7 gün; tam erişim sürer); `ek_sure` -> `askida` (salt okunur); `askida` -> `sona_erdi` (askıya geçişten, yani `ek_sure_bitis_at`'ten 90 gün sonra). Uzun süre kapalı kalan worker zinciri tek çalışmada tamamlar. `askida`/`sona_erdi` olunca `hesap.kurumlar.durum='askida'` yapılır ve `hesap.kurum.degisti` yayımlanır; ödeme gelince (`aboneligiAktiflestir`) `aktif`e döner (yalnız `askida` kurum geri döner; `kapali` kuruma dokunulmaz). İşler idempotenttir: vadesi gelen yoksa denetim satırı da yazılmaz; `for update skip locked` ile çoklu worker güvenlidir.
+
+**Kontrol sırası adım 4.** `requirePermission` (`hesap/yetki.ts`) yazma isteklerinde (`GET/HEAD/OPTIONS` dışı) kurum `askida`/`sona_erdi` ise `402 abonelik_gerekli` döner. "Kilitli" tanımı: etkin abonelik yok ve en son abonelik `askida`/`sona_erdi`. `abonelik.*` izinli uç noktalar muaftır; okuma her zaman açıktır. `iptal` olmuş kurum kilitli sayılmaz (ücretsiz katman). Kullanıcı düzeyi iki uç da kapıdan geçer: davet kabulü ve `POST /v1/hesap/sinif-kodu/katil` (kurum belirteçte yok, koddan çözülür) kilitli kurumda `402 abonelik_gerekli` döner.
+
+**Plan hakkı (modül).** `hesap.modul_acik_mi` artık `plan_hakki AND kurum_acik AND kademe_acik AND grup_acik` hesaplar. Plan hakkı: kurumun geçerli planının `moduller` listesi (etkin abonelik, yoksa en son `iptal` olmamış abonelik); abonelik yoksa ya da `iptal`se serbest. `modul_ayarlari` satırı yoksa varsayılan plana bağlıdır; satır plan hakkını **aşamaz**, yalnız daraltır. Diğer servislerdeki `modul_ayari_kopyalari` yalnız `hesap.modul_ayari.degisti` olaylarını izler; plan hakkı olaylarında yok. Olay yükündeki `moduller[]` ile tüketici plan hakkını kendisi çözebilir (tüketici tarafı sonraki iş).
+
+**Limitler.** `max_ogrenci` ve `max_ogretmen` (etkin `aktif` üyeliklerde `count(distinct kullanici_id)` rol başına). Dolduğunda yeni (ya da yeniden etkinleşen) öğrenci/öğretmen üyeliği `402 plan_limiti` ile reddedilir; gövde `error.details`: `{ limit: 'max_ogrenci'|'max_ogretmen', mevcut, ust_sinir }`. Denetlenen yerler: davet kabulü (işlem geri alınır, davet kullanılmamış kalır), sınıf kodu katılım isteği açma ve onay. Kurum başına advisory kilit eşzamanlı kabullerin limiti aşmasını önler. Mevcut veri asla silinmez; limit düşerse yalnız yeni ekleme engellenir. Soru kotası kancası `planAylikUstSiniri` plan limiti `soru_aylik_ogrenci`'yi (`-1` = sınırsız) okur ve kurum ayarıyla `LEAST` alınır. Diğer limitler (`max_sube`, `medya_kota_bayt`, `sms_aylik`) bu pakette uygulanmaz (ilgili modüllerin işi).
+
+**Uç noktalar** (`/v1/abonelik/kurumlar/{kurum_id}/...`, yalnız `sahip`; izinler `abonelik.oku`, `abonelik.yonet`, çekirdek; izin sözlüğü sürümü 10; yönetici dahil diğer roller `403 izin_yok`):
+
+| Uç | İzin | Açıklama |
+| --- | --- | --- |
+| `GET /planlar` | `abonelik.oku` | Kurum türüne uygun aktif planlar |
+| `GET /abonelik` | `abonelik.oku` | Etkin/son abonelik, `ucretsiz`, `yazma_kilitli`, geçerli limitler, kullanım (öğrenci/öğretmen sayısı) |
+| `GET`/`PUT /fatura-bilgileri` | `abonelik.oku` / `abonelik.yonet` | Fatura alıcı bilgisi (VKN/TCKN 10-11 hane; yoksa `null`; upsert, `surum` artar; denetim kaydı kişisel veri içermez) |
+| `POST /abonelik/iptal` | `abonelik.yonet` | Otomatik yenilemeyi iptal: dönem sonunda sona erer, o zamana kadar tam erişim; tekrar çağrı etkisiz. Mağaza aboneliği `409 magaza_uzerinden_yonetilir`, etkin abonelik yoksa `409 etkin_abonelik_yok` |
+| `POST /abonelik/plan-degistir` | `abonelik.yonet` | Denemede plan hemen değişir; ücretli abonelikte `bekleyen_plan_id` olur ve dönem sonunda uygulanır (`uygulama: hemen`/`donem_sonu`); hedef limit mevcut kullanımın altındaysa `limit_asimlari`. Tür uymayan/yok plan `404 plan_bulunamadi` |
+
+**Dış yüzey** (`modules/abonelik/index.ts`, platform paneli ve ödeme paketi için): `kurumsalAboneligiAktiflestir(sistemDb, girdi)` (teklif + fatura ile elle aktivasyon; `kaynak='kurumsal'`, sözleşme no zorunlu, `api_sistem` + denetim), `aboneligiAktiflestir(tx, girdi)` (ödeme alındı; aynı kaynakta satırı günceller, kaynak değişiminde eskisini `sona_erdi` yapıp yenisini ekler, `askida` kalıntıları sonlandırır, kurumu `aktif` yapar), `planDegistirIstegi`, `yenilemeyiIptalEt`, `gecisleriUygula`, `abonelikGecisleriCalistir`, `OdemeSaglayici` / `SahteOdemeSaglayici`.
+
+**Olay.** `abonelik.abonelik.degisti.v1` (`packages/contracts/src/abonelik/olaylar.ts`): oluşma, her durum/plan/dönem/iptal isteği değişimi; kişisel veri ve sağlayıcı kimliği yok.
 
 ## Çapraz kurallar özeti
 

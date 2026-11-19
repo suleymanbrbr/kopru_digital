@@ -166,3 +166,13 @@ Olumsuz:
 ## Değişiklik notu (2026-11-08): `sid` iptal listesi
 
 "Belirteç iptali" paragrafındaki `kv.iptal` kara listesi artık acil durumlarla sınırlı değil: `POST /auth/cikis` ve her oturum iptali `sid`'i KV'ye yazar, `@kopru/service-kit` kimlik doğrulaması (kontrol sırası 1) her istekte bu listeyi sorar. Kova adı `iptal`, TTL belirteç ömrü + 1 dk, NATS erişilemezse okuma fail-open. Ayrıntı ve alternatifler: [ADR 0008](0008-erisim-belirteci-iptali-sid-listesi.md).
+
+## Değişiklik notu (2026-11-18): platform çekirdeği
+
+"Platform yöneticisi ve taklit" bölümünün uygulamasıyla netleşen kararlar (şema ve uçlar: [api.md](../schema/api.md#platform-yönetimi-uçları-platform)):
+
+- **İki adımlı doğrulama (TOTP) zorunludur.** `plat` claim'i tek başına yetmez; `/platform/*` her istekte veritabanından aktif `platform_rolu`'nu ve oturumun `ikinci_adim_at` değerini (en çok `PLATFORM_IKINCI_ADIM_OMRU_SN`, varsayılan 8 saat) doğrular. Better Auth `twoFactor` eklentisi kullanılmadı: eklenti giriş akışına (`twoFactorRedirect`, oturum çerezi) müdahale eder ve tüm kullanıcıların girişini etkiler; burada doğrulama yalnız platform uçlarına bağlı bir oturum özelliğidir. TOTP (RFC 6238) ve yedek kodlar `services/api/src/modules/hesap/platform/totp.ts` içindedir; sır AES-256-GCM ile, yedek kodlar HMAC özetiyle saklanır; 5 yanlışta 15 dk kilit, aynı TOTP adımı ikinci kez kabul edilmez.
+- **IP izin listesi:** `PLATFORM_IP_IZINLI` (IP/CIDR; `/0` reddedilir). İstemci adresi [ADR 0009](0009-guvenilir-proxy-ve-istemci-ip.md)'daki `request.ip`'dir (`TRUST_PROXY` doğru ayarlı olmalı). Boşsa geliştirmede/testte açık, **üretimde kapalı** (fail-closed; açılış hatası yerine istek başına `403 platform_ip_yasak` ve açılışta uyarı). Liste taklit belirteçleri için de geçerlidir.
+- **Roller:** `destek` salt okunur gezinir ve taklit başlatır; `yonetici` ayrıca modül/beta değişikliği, mesaj yayınlama, denetim listesi ve başkasının taklidini sonlandırma yapar. Rol yalnız `platform:yonetici-ekle` betiğiyle verilir.
+- **Taklit:** `sid` = taklit kaydı (iptal listesi ve DB doğrulamasıyla anında sonlandırılır), `aktor` claim'i platform kullanıcısını gösterir. Belirteçli her istek kök kancada canlı doğrulanır, **tüm rotalarda** yazma yöntemleri `403 taklit_salt_okunur` döner ve her istek `taklit_kayit_id` ile denetlenir. Veritabanı işleminin `READ ONLY` açılması (kontrol sırası adım 8'in "son güvence" kısmı) `withTenant`'ın istek bağlamını bilmesini gerektirir (service-kit değişikliği) ve henüz yapılmadı; yan etkili bir `GET` ucu (ör. yoklama okurken katılımcı eşitleme) taklit sırasında yazabilir. İzlenecek iş.
+- **Denetim:** her platform isteği (okuma ve reddedilenler dahil) `hesap.denetim_kayitlari`na düşer; arama metni ve mesaj metni denetime girmez.

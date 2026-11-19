@@ -340,6 +340,13 @@ export const kimlikYollari: ServicePlugin = (app) => {
           son_kullanim_at: new Date(),
         })
         .where(eq(oturumlar.id, oturum.session.id));
+      // Platform kullanicisi: `plat` claim'i (yalniz bilgi; /platform/* her istekte veritabanindan dogrular).
+      const [platSatir] = await db.orm
+        .select({ rol: kullanicilar.platform_rolu })
+        .from(kullanicilar)
+        .where(eq(kullanicilar.id, kullaniciId));
+      const plat =
+        platSatir?.rol === 'destek' || platSatir?.rol === 'yonetici' ? platSatir.rol : undefined;
       const accessToken = await erisimBelirteciUret(
         kimlik.anahtarlar,
         kimlik.issuer,
@@ -351,6 +358,7 @@ export const kimlikYollari: ServicePlugin = (app) => {
           uyelikId: secim?.uyelik_id ?? null,
           rol: secim?.rol ?? null,
           roller,
+          plat,
         },
       );
       const yanit: TokenYanit = {

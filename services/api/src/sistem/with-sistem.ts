@@ -12,6 +12,10 @@ export interface SistemBaglami {
   hedefTuru?: string;
   hedefId?: string;
   istekId?: string;
+  /** Istemci IP'si (ADR 0009 `request.ip`). */
+  ip?: string;
+  /** Taklit oturumu sirasinda yapilan islemlerde `taklit_kayitlari.id`. */
+  taklitKayitId?: string;
   /** Denetim kaydinin `sonra` alanina yazilir (kisisel veri koyma). */
   ayrinti?: Record<string, unknown>;
 }
@@ -30,10 +34,11 @@ export async function withSistem<T>(
   return db.orm.transaction(async (tx) => {
     await tx.execute(sql`
       insert into hesap.denetim_kayitlari
-        (id, kurum_id, created_by, aktor_kullanici_id, eylem, hedef_turu, hedef_id, neden, istek_id, sonra)
+        (id, kurum_id, created_by, aktor_kullanici_id, taklit_kayit_id, eylem, hedef_turu, hedef_id, neden, istek_id, ip, sonra)
       values (${uuidv7()}, ${context.kurumId ?? null}, ${context.aktorKullaniciId ?? null},
-              ${context.aktorKullaniciId ?? null}, ${context.eylem}, ${context.hedefTuru ?? null},
-              ${context.hedefId ?? null}, ${context.neden}, ${context.istekId ?? null},
+              ${context.aktorKullaniciId ?? null}, ${context.taklitKayitId ?? null}, ${context.eylem},
+              ${context.hedefTuru ?? null}, ${context.hedefId ?? null}, ${context.neden},
+              ${context.istekId ?? null}, ${context.ip ?? null}::inet,
               ${context.ayrinti ? JSON.stringify(context.ayrinti) : null}::jsonb)`);
     return fn(tx);
   });

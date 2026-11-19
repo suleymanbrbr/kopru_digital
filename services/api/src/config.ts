@@ -1,4 +1,4 @@
-import { createEnvSchema, loadEnv } from '@kopru/service-kit';
+import { createEnvSchema, gecerliProxyAdresi, loadEnv } from '@kopru/service-kit';
 import { z } from 'zod';
 
 export const serviceName = 'api';
@@ -48,6 +48,21 @@ export const envSchema = base.safeExtend({
   MEDYA_URL: z.url().optional(),
   /** `medya` ic cagrisinin zaman asimi (ms); asilirsa soru yine doner, ek adresleri `null` olur. */
   MEDYA_ZAMAN_ASIMI_MS: z.coerce.number().int().min(100).max(30_000).default(2000),
+  /**
+   * `/platform/*` ve taklit belirteci icin izinli istemci IP/CIDR listesi (virgulle ayrilmis). Istemci IP'si
+   * ADR 0009'daki `request.ip`dir. Bos: gelistirmede/testte acik, uretimde platform uclari kapali (403).
+   */
+  PLATFORM_IP_IZINLI: z
+    .string()
+    .default('')
+    .transform((v) =>
+      v
+        .split(',')
+        .map((i) => i.trim())
+        .filter((i) => i.length > 0),
+    ),
+  /** Platform kullanicisinin ikinci adim dogrulamasinin oturumda gecerli kaldigi sure (sn). */
+  PLATFORM_IKINCI_ADIM_OMRU_SN: z.coerce.number().int().min(60).max(86_400).default(28_800),
 });
 
 export type Env = z.output<typeof envSchema>;
@@ -67,6 +82,12 @@ export function loadServiceEnv(source?: Record<string, string | undefined>): Env
     Buffer.from(env.KAYNAK_PAROLA_ANAHTARI, 'base64').length !== 32
   ) {
     throw new Error('KAYNAK_PAROLA_ANAHTARI 32 bayt olmalı (base64: openssl rand -base64 32).');
+  }
+  const gecersizIp = env.PLATFORM_IP_IZINLI.filter((a) => !gecerliProxyAdresi(a));
+  if (gecersizIp.length > 0) {
+    throw new Error(
+      `PLATFORM_IP_IZINLI yalnız IP veya CIDR listesi olabilir (/0 kabul edilmez); geçersiz: ${gecersizIp.join(', ')}`,
+    );
   }
   if (env.EPOSTA_SAGLAYICI === 'smtp' && !env.SMTP_HOST) {
     throw new Error('EPOSTA_SAGLAYICI=smtp iken SMTP_HOST tanımlanmalı.');

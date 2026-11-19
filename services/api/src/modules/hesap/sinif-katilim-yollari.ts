@@ -22,6 +22,7 @@ import {
   sinifKatilimKodlari,
   uyelikler,
 } from '../../db/schema.js';
+import { planLimitiniDenetle } from '../abonelik/index.js';
 import { grubaOgrenciEkle } from './grup-deposu.js';
 import { grupKapsami } from './kapsam.js';
 import type { YetkiBaglami } from './kimlik.js';
@@ -374,6 +375,11 @@ export const sinifKatilimYollari: ServicePlugin = (app) => {
               eq(uyelikler.rol, 'ogrenci'),
             ),
           );
+        // Plan limiti: yeni (ya da yeniden etkinlesen) ogrenci icin; asilirsa islem geri alinir, istek
+        // `bekliyor` kalir ve 402 plan_limiti doner. Mevcut veri silinmez.
+        if (!mevcut || mevcut.durum === 'ayrildi' || mevcut.durum === 'davetli') {
+          await planLimitiniDenetle(tx, y.kurumId, 'max_ogrenci');
+        }
         let uyelikId: string;
         let yeniUyelik = false;
         if (!mevcut) {

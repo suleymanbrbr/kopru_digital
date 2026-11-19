@@ -26,9 +26,17 @@ export const errorCodes = {
   rizaGerekli: 'riza_gerekli',
   kurumGerekli: 'kurum_gerekli',
   abonelikGerekli: 'abonelik_gerekli',
+  /** 402: planin ogrenci/ogretmen limiti dolu; `details`: `PlanLimitiDetaySema`. */
+  planLimiti: 'plan_limiti',
   modulKapali: 'modul_kapali',
   izinYok: 'izin_yok',
   taklitSaltOkunur: 'taklit_salt_okunur',
+  // Platform yonetimi (ADR 0004)
+  ikinciAdimGerekli: 'ikinci_adim_gerekli',
+  platformIpYasak: 'platform_ip_yasak',
+  platformYetkisiYok: 'platform_yetkisi_yok',
+  platformIzinYok: 'platform_izin_yok',
+  ikinciAdimKurulu: 'ikinci_adim_kurulu',
   ustDuzeyKapali: 'ust_duzey_kapali',
   gecersizTelefon: 'gecersiz_telefon',
   kodGecersiz: 'kod_gecersiz',

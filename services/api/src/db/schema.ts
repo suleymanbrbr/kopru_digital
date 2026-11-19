@@ -111,6 +111,8 @@ export const oturumlar = hesap.table('oturumlar', {
   son_kullanim_at: tstz('son_kullanim_at').notNull().defaultNow(),
   iptal_at: tstz('iptal_at'),
   taklit_kayit_id: uuid('taklit_kayit_id'),
+  /** Platform kullanicisinin ikinci adimi bu oturumda tamamladigi an (0016). */
+  ikinci_adim_at: tstz('ikinci_adim_at'),
 });
 
 export const hesaplar = hesap.table('hesaplar', {
@@ -422,6 +424,43 @@ export const taklitKayitlari = hesap.table('taklit_kayitlari', {
   ip: inet('ip'),
 });
 
+export const platformIkinciAdim = hesap.table('platform_ikinci_adim', {
+  id: uuid('id').primaryKey(),
+  created_at: olusturma(),
+  updated_at: guncelleme(),
+  kullanici_id: uuid('kullanici_id').notNull(),
+  sir_sifreli: bytea('sir_sifreli').notNull(),
+  onaylandi_at: tstz('onaylandi_at'),
+  son_sayac: bigint('son_sayac', { mode: 'number' }),
+  yedek_kod_ozetleri: text('yedek_kod_ozetleri')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  yanlis_deneme: smallint('yanlis_deneme').notNull().default(0),
+  kilitli_bitis_at: tstz('kilitli_bitis_at'),
+});
+
+export const platformMesajlari = hesap.table('platform_mesajlari', {
+  id: uuid('id').primaryKey(),
+  created_at: olusturma(),
+  updated_at: guncelleme(),
+  created_by: uuid('created_by'),
+  baslik: text('baslik').notNull(),
+  metin: text('metin').notNull(),
+  onem: text('onem').notNull().default('bilgi'),
+  baslangic_at: tstz('baslangic_at').notNull(),
+  bitis_at: tstz('bitis_at').notNull(),
+  iptal_at: tstz('iptal_at'),
+});
+
+export const kurumBetaOzellikleri = hesap.table('kurum_beta_ozellikleri', {
+  ...kiraci(),
+  ...surumlu(),
+  ozellik_kodu: text('ozellik_kodu').notNull(),
+  acik: boolean('acik').notNull(),
+  degistiren_id: uuid('degistiren_id'),
+});
+
 export const denetimKayitlari = hesap.table('denetim_kayitlari', {
   id: uuid('id').primaryKey(),
   kurum_id: uuid('kurum_id'),
@@ -440,6 +479,7 @@ export const denetimKayitlari = hesap.table('denetim_kayitlari', {
   ip: inet('ip'),
 });
 
+export * from './schema-abonelik.js';
 export * from './schema-deneme.js';
 export * from './schema-ders.js';
 export * from './schema-finans.js';
