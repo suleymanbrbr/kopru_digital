@@ -32,7 +32,7 @@ bsql() { docker exec -i kopru-postgres-1 psql -q -t -A -U postgres -d "$BIL_DB" 
 
 # ---- OTP ile giris (api logundan kod okunur) -------------------------------------------------
 son_kod() { # $1 telefon (E.164)
-  grep "DEV SMS" "$API_LOG" | grep -F "\"telefon\":\"$1\"" | tail -1 | jq -r '.kod'
+  grep "DEV SMS" "$API_LOG" | grep -F "\"dev_telefon\":\"$1\"" | tail -1 | jq -r '.dev_kod'
 }
 e164() { printf '+9%s' "$1"; } # 05321234567 -> +905321234567
 otp_giris() { # $1 yerel telefon (0532...) -> oturum belirteci

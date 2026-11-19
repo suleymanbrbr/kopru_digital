@@ -135,7 +135,7 @@ pnpm --filter @kopru/api dev                 # API http://localhost:4000
 
 ### Yerelde giriş ve kurum oluşturma (curl)
 
-OTP kodu `API_SMS_SAGLAYICI=log` iken API loguna `[DEV SMS]` satırı olarak düşer. Gerçek Netgsm gönderimi `bildirim` servisiyle gelecek (`SmsGonderici` arayüzü).
+OTP kodu `API_SMS_SAGLAYICI=log` iken API loguna `[DEV SMS]` satırı olarak düşer (`dev_telefon`/`dev_kod` alanları; normal `telefon`/`kod` alanları log redaksiyonuyla maskelenir). `NODE_ENV=production` iken içerik hiç loglanmaz. Gerçek Netgsm gönderimi `bildirim` servisiyle gelecek (`SmsGonderici` arayüzü).
 
 ```sh
 B=localhost:4000; H='content-type: application/json'
