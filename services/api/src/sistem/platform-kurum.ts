@@ -1,5 +1,5 @@
-import { hesapModulAyariDegistiV1, type ModulKodu } from '@kopru/contracts';
-import { publishInTx, type Database } from '@kopru/service-kit';
+import { hesapKurumDegistiV1, hesapModulAyariDegistiV1, type ModulKodu } from '@kopru/contracts';
+import { publishInTx, type Database, type Tx } from '@kopru/service-kit';
 import { sql, type SQL } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -102,23 +102,36 @@ export async function platformKurumAra(
   });
 }
 
-export interface KurumDetayi {
-  kurum: (KurumSatiri & { saat_dilimi: string }) | null;
+export interface KurumDetayi<E = undefined> {
+  kurum:
+    | (KurumSatiri & {
+        saat_dilimi: string;
+        platform_askida_at: string | null;
+        platform_aski_nedeni: string | null;
+      })
+    | null;
+  /** Ayni islemde okunan ek veri (ornegin abonelik ozeti; modul sinirini asmamak icin cagiran verir). */
+  ek: E | undefined;
   sahipler: SahipSatiri[];
   uyeler: { rol: string; durum: string; sayi: number }[];
   modulAyarlari: { modul_kodu: string; kapsam: string; acik: boolean }[];
   beta: { ozellik_kodu: string; acik: boolean; updated_at: string }[];
 }
 
-export async function platformKurumDetayi(
+export async function platformKurumDetayi<E = undefined>(
   sistemDb: Database | null,
   baglam: SistemBaglami,
   kurumId: string,
-): Promise<KurumDetayi> {
+  ekOku?: (tx: Tx) => Promise<E>,
+): Promise<KurumDetayi<E>> {
   return withSistem(sistemDb, baglam, async (tx) => {
-    const [kurum] = await tx.execute<KurumSatiri & { saat_dilimi: string }>(sql`
-      select id, ad, tur, durum, ${isoZaman('created_at')} as created_at, saat_dilimi from hesap.kurumlar where id = ${kurumId}::uuid`);
-    if (!kurum) return { kurum: null, sahipler: [], uyeler: [], modulAyarlari: [], beta: [] };
+    const [kurum] = await tx.execute<NonNullable<KurumDetayi['kurum']>>(sql`
+      select id, ad, tur, durum, ${isoZaman('created_at')} as created_at, saat_dilimi,
+             ${isoZaman('platform_askida_at')} as platform_askida_at, platform_aski_nedeni
+      from hesap.kurumlar where id = ${kurumId}::uuid`);
+    if (!kurum) {
+      return { kurum: null, ek: undefined, sahipler: [], uyeler: [], modulAyarlari: [], beta: [] };
+    }
     const sahipler = await tx.execute<SahipSatiri>(sql`
       select u.kurum_id, u.kullanici_id, k.telefon_e164, k.eposta::text as eposta
       from hesap.uyelikler u join hesap.kullanicilar k on k.id = u.kullanici_id
@@ -137,6 +150,7 @@ export async function platformKurumDetayi(
       where kurum_id = ${kurumId}::uuid order by ozellik_kodu`);
     return {
       kurum,
+      ek: ekOku ? await ekOku(tx) : undefined,
       sahipler: [...sahipler],
       uyeler: [...uyeler],
       modulAyarlari: [...modulAyarlari],
@@ -229,3 +243,154 @@ export async function platformBetaAyarla(
     return { bulundu: true, acik: girdi.acik };
   });
 }
+
+export interface PlatformAskiSonucu {
+  bulundu: boolean;
+  /** Kurum `kapali` ise islem yapilmaz. */
+  kapali: boolean;
+  degisti: boolean;
+  durum: string;
+  platformAskidaAt: string | null;
+  platformAskiNedeni: string | null;
+  abonelikKilitli: boolean;
+}
+
+interface KurumAskiSatiri extends Record<string, unknown> {
+  id: string;
+  ad: string;
+  tur: string;
+  saat_dilimi: string;
+  durum: string;
+  platform_askida_at: string | null;
+  platform_aski_nedeni: string | null;
+}
+
+const askiSatiri = (tx: Tx, kurumId: string) =>
+  tx.execute<KurumAskiSatiri>(sql`
+    select id, ad, tur, saat_dilimi, durum, ${isoZaman('platform_askida_at')} as platform_askida_at,
+           platform_aski_nedeni
+    from hesap.kurumlar where id = ${kurumId}::uuid for update`);
+
+const kurumDegistiOlayi = (
+  tx: Tx,
+  baglam: SistemBaglami & { aktorKullaniciId: string },
+  k: KurumAskiSatiri,
+  durum: 'aktif' | 'askida',
+  correlationId: string,
+) =>
+  publishInTx(
+    tx,
+    hesapKurumDegistiV1.create({
+      kurumId: k.id,
+      actor: { tur: 'kullanici', id: baglam.aktorKullaniciId },
+      correlationId,
+      data: {
+        kurum_id: k.id,
+        ad: k.ad,
+        tur: k.tur as 'bireysel',
+        saat_dilimi: k.saat_dilimi,
+        durum,
+      },
+    }),
+    { table: 'ortak.outbox' },
+  );
+
+/**
+ * Platform askisi (ADR 0004, 2026-11-19): `platform_askida_at` + neden yazilir, `durum` `askida` olur ve
+ * `hesap.kurum.degisti.v1` yayimlanir; kurum kullanicilari kiraci rotalarinda 403 `kurum_askida` alir.
+ * Zaten platform askisindaysa degisiklik yapmaz (idempotent). `kapali` kurum askiya alinmaz.
+ */
+export async function platformKurumuAskiyaAl(
+  sistemDb: Database | null,
+  baglam: SistemBaglami & { aktorKullaniciId: string; kurumId: string },
+  girdi: { neden: string; correlationId: string },
+): Promise<PlatformAskiSonucu> {
+  return withSistem(sistemDb, baglam, async (tx) => {
+    const [k] = await askiSatiri(tx, baglam.kurumId);
+    if (!k) return bosAski(false);
+    if (k.durum === 'kapali') return { ...bosAski(true), kapali: true, durum: k.durum };
+    if (k.platform_askida_at !== null) {
+      return {
+        bulundu: true,
+        kapali: false,
+        degisti: false,
+        durum: k.durum,
+        platformAskidaAt: k.platform_askida_at,
+        platformAskiNedeni: k.platform_aski_nedeni,
+        abonelikKilitli: false,
+      };
+    }
+    const [g] = await tx.execute<{ platform_askida_at: string }>(sql`
+      update hesap.kurumlar
+      set durum = 'askida', platform_askida_at = now(), platform_aski_nedeni = ${girdi.neden}
+      where id = ${baglam.kurumId}::uuid
+      returning ${isoZaman('platform_askida_at')} as platform_askida_at`);
+    // Durum zaten `askida` (abonelik askisi) ise de cagrilan servisler platform sebebini ogrenmez; olay
+    // yalniz `aktif` -> `askida` gecisinde yayimlanir.
+    if (k.durum !== 'askida') {
+      await kurumDegistiOlayi(tx, baglam, k, 'askida', girdi.correlationId);
+    }
+    return {
+      bulundu: true,
+      kapali: false,
+      degisti: true,
+      durum: 'askida',
+      platformAskidaAt: g?.platform_askida_at ?? null,
+      platformAskiNedeni: girdi.neden,
+      abonelikKilitli: false,
+    };
+  });
+}
+
+/**
+ * Platform askisini kaldirir. Abonelik de kilitliyse (`askida`/`sona_erdi`; `abonelikKilitli` geri cagrisi
+ * cagirandan gelir, abonelik modulu sinirina uyar) kurum `askida` KALIR: abonelik askisini platform acmaz.
+ */
+export async function platformKurumunuAc(
+  sistemDb: Database | null,
+  baglam: SistemBaglami & { aktorKullaniciId: string; kurumId: string },
+  girdi: { correlationId: string; abonelikKilitliMi: (tx: Tx) => Promise<boolean> },
+): Promise<PlatformAskiSonucu> {
+  return withSistem(sistemDb, baglam, async (tx) => {
+    const [k] = await askiSatiri(tx, baglam.kurumId);
+    if (!k) return bosAski(false);
+    if (k.durum === 'kapali') return { ...bosAski(true), kapali: true, durum: k.durum };
+    const kilitli = await girdi.abonelikKilitliMi(tx);
+    if (k.platform_askida_at === null) {
+      return {
+        bulundu: true,
+        kapali: false,
+        degisti: false,
+        durum: k.durum,
+        platformAskidaAt: null,
+        platformAskiNedeni: null,
+        abonelikKilitli: kilitli,
+      };
+    }
+    const hedef = kilitli ? 'askida' : 'aktif';
+    await tx.execute(sql`
+      update hesap.kurumlar
+      set durum = ${hedef}, platform_askida_at = null, platform_aski_nedeni = null
+      where id = ${baglam.kurumId}::uuid`);
+    if (hedef !== k.durum) await kurumDegistiOlayi(tx, baglam, k, hedef, girdi.correlationId);
+    return {
+      bulundu: true,
+      kapali: false,
+      degisti: true,
+      durum: hedef,
+      platformAskidaAt: null,
+      platformAskiNedeni: null,
+      abonelikKilitli: kilitli,
+    };
+  });
+}
+
+const bosAski = (bulundu: boolean): PlatformAskiSonucu => ({
+  bulundu,
+  kapali: false,
+  degisti: false,
+  durum: 'aktif',
+  platformAskidaAt: null,
+  platformAskiNedeni: null,
+  abonelikKilitli: false,
+});

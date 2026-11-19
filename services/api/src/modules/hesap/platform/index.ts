@@ -1,5 +1,6 @@
 import type { ServicePlugin } from '@kopru/service-kit';
 
+import { platformAbonelikYollari } from './abonelik-yollari.js';
 import {
   platformDenetimSaglikMesajYollari,
   platformMesajiAcikYol,
@@ -19,6 +20,7 @@ export const platformYollari: ServicePlugin = async (app) => {
       platformKapisiKur(platform, platform.kimlik);
       await platform.register(ikinciAdimYollari);
       await platform.register(platformKurumYollari);
+      await platform.register(platformAbonelikYollari);
       await platform.register(taklitYollari);
       await platform.register(platformDenetimSaglikMesajYollari);
     },

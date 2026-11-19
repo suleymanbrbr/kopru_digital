@@ -1,5 +1,4 @@
-import type { Tx } from '@kopru/service-kit';
-import type { Database } from '@kopru/service-kit';
+import type { Database, Tx } from '@kopru/service-kit';
 
 import { withSistem, type SistemBaglami } from './with-sistem.js';
 

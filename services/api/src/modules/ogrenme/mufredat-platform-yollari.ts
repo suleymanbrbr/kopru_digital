@@ -193,7 +193,6 @@ export const mufredatPlatformYollari: ServicePlugin = (app) => {
       },
     },
     async (request, reply) => {
-      const kullanici = aktor(request);
       const { katalog_kodu: katalog } = request.params;
       const g = request.body;
       const surum = await islem(
