@@ -53,7 +53,9 @@ export async function kullaniciSilindi(
   await tx.execute(sql`delete from bildirim.zamanlanmis_bildirimler where alici_id in ${ids}`);
   const bildirim = await tx.execute(sql`
     delete from bildirim.bildirimler where alici_id in ${ids} returning 1`);
-  const cihaz = await tx.execute(sql`delete from bildirim.cihazlar where kullanici_id = ${kid} returning 1`);
+  const cihaz = await tx.execute(
+    sql`delete from bildirim.cihazlar where kullanici_id = ${kid} returning 1`,
+  );
   await tx.execute(sql`delete from bildirim.tercihler where kullanici_id = ${kid}`);
   await tx.execute(sql`delete from bildirim.kullanici_ayarlari where kullanici_id = ${kid}`);
   await tx.execute(sql`

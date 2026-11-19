@@ -1,8 +1,4 @@
-import {
-  KVKK_VERI_SCOPE,
-  KullaniciVeriIstegiSema,
-  KullaniciVeriYanitSema,
-} from '@kopru/contracts';
+import { KVKK_VERI_SCOPE, KullaniciVeriIstegiSema, KullaniciVeriYanitSema } from '@kopru/contracts';
 import { withTenant, type ServicePlugin } from '@kopru/service-kit';
 
 import { kvkkVeri } from './kvkk.js';
@@ -17,15 +13,18 @@ export const kvkkYollari: ServicePlugin = (app) => {
       config: { servisScope: KVKK_VERI_SCOPE },
       schema: {
         tags: ['ic'],
-        summary: 'Ic uc (servis JWT, `scope=kvkk.veri`): kullanicinin bu kurumdaki dosya kayitlari (KVKK disa aktarma).',
+        summary:
+          'Ic uc (servis JWT, `scope=kvkk.veri`): kullanicinin bu kurumdaki dosya kayitlari (KVKK disa aktarma).',
         body: KullaniciVeriIstegiSema,
         response: { 200: KullaniciVeriYanitSema },
       },
     },
     async (request) => {
       const g = request.body;
-      const bolumler = await withTenant(db, { kurumId: g.kurum_id, kullaniciId: g.kullanici_id }, (tx) =>
-        kvkkVeri(tx, g),
+      const bolumler = await withTenant(
+        db,
+        { kurumId: g.kurum_id, kullaniciId: g.kullanici_id },
+        (tx) => kvkkVeri(tx, g),
       );
       return { servis: 'medya' as const, bolumler };
     },

@@ -13,7 +13,13 @@ import {
   errorCodes,
   type SilmeDogrulama,
 } from '@kopru/contracts';
-import { AppError, withTenant, withUser, type AuthContext, type ServicePlugin } from '@kopru/service-kit';
+import {
+  AppError,
+  withTenant,
+  withUser,
+  type AuthContext,
+  type ServicePlugin,
+} from '@kopru/service-kit';
 import { and, eq, gt, sql } from 'drizzle-orm';
 import { verifyPassword } from 'better-auth/crypto';
 import { uuidv7 } from 'uuidv7';
@@ -50,7 +56,11 @@ export const kvkkYollari: ServicePlugin = (app) => {
     if (!request.auth)
       throw new AppError(401, errorCodes.unauthorized, 'Oturum açmanız gerekiyor.');
     if (yazma && request.auth.claims.imp !== undefined) {
-      throw new AppError(403, errorCodes.taklitSaltOkunur, 'Taklit oturumunda değişiklik yapılamaz.');
+      throw new AppError(
+        403,
+        errorCodes.taklitSaltOkunur,
+        'Taklit oturumunda değişiklik yapılamaz.',
+      );
     }
     return request.auth;
   }
@@ -73,7 +83,10 @@ export const kvkkYollari: ServicePlugin = (app) => {
     const bilgi = await kullaniciBilgisi(kullaniciId);
     const yanlis = () => new AppError(401, errorCodes.kodGecersiz, 'Doğrulama başarısız.');
     if (d.yontem === 'parola') {
-      if (!bilgi.parolaHash || !(await verifyPassword({ hash: bilgi.parolaHash, password: d.parola })))
+      if (
+        !bilgi.parolaHash ||
+        !(await verifyPassword({ hash: bilgi.parolaHash, password: d.parola }))
+      )
         throw yanlis();
       return;
     }
@@ -90,7 +103,12 @@ export const kvkkYollari: ServicePlugin = (app) => {
 
   async function aktifTalep(kullaniciId: string): Promise<Talep | null> {
     const [t] = await withUser(db, { kullaniciId }, (tx) =>
-      tx.select().from(silmeTalepleri).where(and(eq(silmeTalepleri.kullanici_id, kullaniciId), eq(silmeTalepleri.durum, 'beklemede'))),
+      tx
+        .select()
+        .from(silmeTalepleri)
+        .where(
+          and(eq(silmeTalepleri.kullanici_id, kullaniciId), eq(silmeTalepleri.durum, 'beklemede')),
+        ),
     );
     return t ?? null;
   }
@@ -118,7 +136,8 @@ export const kvkkYollari: ServicePlugin = (app) => {
       config: muaf,
       schema: {
         tags: ['hesap'],
-        summary: 'Görünen adı / dili güncelle (hesap.kullanici.degisti.v1 yayımlar; olayda ad taşınmaz)',
+        summary:
+          'Görünen adı / dili güncelle (hesap.kullanici.degisti.v1 yayımlar; olayda ad taşınmaz)',
         body: BenGuncelleGirdiSema,
         response: { 200: BenGuncelleYanitSema },
       },
@@ -135,7 +154,8 @@ export const kvkkYollari: ServicePlugin = (app) => {
           throw new AppError(401, errorCodes.unauthorized, 'Kullanıcı bulunamadı.');
         const degisen: ('gorunen_ad' | 'dil')[] = [];
         const g = request.body;
-        if (g.gorunen_ad !== undefined && g.gorunen_ad !== onceki.gorunen_ad) degisen.push('gorunen_ad');
+        if (g.gorunen_ad !== undefined && g.gorunen_ad !== onceki.gorunen_ad)
+          degisen.push('gorunen_ad');
         if (g.dil !== undefined && g.dil !== onceki.dil) degisen.push('dil');
         if (degisen.length === 0) {
           return { gorunen_ad: onceki.gorunen_ad, dil: onceki.dil, degisen_alanlar: degisen };
@@ -143,9 +163,7 @@ export const kvkkYollari: ServicePlugin = (app) => {
         const [k] = await tx
           .update(kullanicilar)
           .set({
-            ...(degisen.includes('gorunen_ad')
-              ? { gorunen_ad: g.gorunen_ad ?? null }
-              : {}),
+            ...(degisen.includes('gorunen_ad') ? { gorunen_ad: g.gorunen_ad ?? null } : {}),
             ...(degisen.includes('dil') ? { dil: g.dil ?? onceki.dil } : {}),
           })
           .where(eq(kullanicilar.id, kullaniciId))
@@ -221,15 +239,25 @@ export const kvkkYollari: ServicePlugin = (app) => {
       const { kullaniciId } = aktor(request, true);
       const { telefon } = await kullaniciBilgisi(kullaniciId);
       if (!telefon)
-        throw new AppError(409, errorCodes.conflict, 'Hesapta doğrulanmış telefon yok; parola kullanın.');
+        throw new AppError(
+          409,
+          errorCodes.conflict,
+          'Hesapta doğrulanmış telefon yok; parola kullanın.',
+        );
       const sinir = new Date(Date.now() - SAAT_MS);
       const [s] = await db.orm
         .select({ n: sql<string>`count(*)` })
         .from(otpIstekleri)
         .where(and(eq(otpIstekleri.tanimlayici, telefon), gt(otpIstekleri.created_at, sinir)));
       if (Number(s?.n ?? 0) >= KOD_SAATLIK)
-        throw new AppError(429, errorCodes.rateLimited, 'Çok fazla kod istediniz. Bir saat sonra tekrar deneyin.');
-      await db.orm.insert(otpIstekleri).values({ id: uuidv7(), tanimlayici: telefon, ip: request.ip });
+        throw new AppError(
+          429,
+          errorCodes.rateLimited,
+          'Çok fazla kod istediniz. Bir saat sonra tekrar deneyin.',
+        );
+      await db.orm
+        .insert(otpIstekleri)
+        .values({ id: uuidv7(), tanimlayici: telefon, ip: request.ip });
       await auth.api.sendPhoneNumberOTP({ body: { phoneNumber: telefon } });
       return { gonderildi: true as const, gecerlilik_sn: OTP_GECERLILIK_SN };
     },
@@ -259,7 +287,11 @@ export const kvkkYollari: ServicePlugin = (app) => {
         );
       }
       if (await aktifTalep(kullaniciId))
-        throw new AppError(409, errorCodes.silmeTalebiVar, 'Zaten bekleyen bir silme talebiniz var.');
+        throw new AppError(
+          409,
+          errorCodes.silmeTalebiVar,
+          'Zaten bekleyen bir silme talebiniz var.',
+        );
       const simdi = new Date();
       const planlanan = new Date(simdi.getTime() + SILME_SOGUMA_GUN * 86_400_000);
       const [t] = await withUser(db, { kullaniciId }, (tx) =>
@@ -296,7 +328,12 @@ export const kvkkYollari: ServicePlugin = (app) => {
         tx
           .update(silmeTalepleri)
           .set({ durum: 'geri_alindi', geri_alindi_at: new Date() })
-          .where(and(eq(silmeTalepleri.kullanici_id, kullaniciId), eq(silmeTalepleri.durum, 'beklemede')))
+          .where(
+            and(
+              eq(silmeTalepleri.kullanici_id, kullaniciId),
+              eq(silmeTalepleri.durum, 'beklemede'),
+            ),
+          )
           .returning(),
       );
       if (!t) throw new AppError(404, errorCodes.notFound, 'Bekleyen silme talebi yok.');
@@ -310,7 +347,8 @@ export const kvkkYollari: ServicePlugin = (app) => {
       config: { ...muaf, rateLimit: { max: 5, timeWindow: '1 minute' } },
       schema: {
         tags: ['hesap'],
-        summary: 'Kişisel verilerimi indir (KVKK m.11): hesap, üyelik, kendi içeriklerim ve diğer servislerin verisi (JSON)',
+        summary:
+          'Kişisel verilerimi indir (KVKK m.11): hesap, üyelik, kendi içeriklerim ve diğer servislerin verisi (JSON)',
         response: { 200: VerilerimYanitSema },
       },
     },

@@ -7,7 +7,10 @@ import { z } from 'zod';
 export const SILME_SOGUMA_GUN = 30;
 
 export const SilmeDogrulamaSema = z.discriminatedUnion('yontem', [
-  z.object({ yontem: z.literal('otp'), kod: z.string().regex(/^[0-9]{6}$/, 'Kod 6 haneli olmalı.') }),
+  z.object({
+    yontem: z.literal('otp'),
+    kod: z.string().regex(/^[0-9]{6}$/, 'Kod 6 haneli olmalı.'),
+  }),
   z.object({ yontem: z.literal('parola'), parola: z.string().min(1).max(128) }),
 ]);
 export type SilmeDogrulama = z.infer<typeof SilmeDogrulamaSema>;

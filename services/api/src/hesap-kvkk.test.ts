@@ -75,8 +75,12 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
 
     const talep = await talepEt(k, await otpKodu(k));
     expect(talep.statusCode).toBe(201);
-    const gun = (new Date(talep.json<{ talep: { planlanan_at: string; talep_at: string } }>().talep.planlanan_at).getTime() -
-      new Date(talep.json<{ talep: { talep_at: string } }>().talep.talep_at).getTime()) / 86_400_000;
+    const gun =
+      (new Date(
+        talep.json<{ talep: { planlanan_at: string; talep_at: string } }>().talep.planlanan_at,
+      ).getTime() -
+        new Date(talep.json<{ talep: { talep_at: string } }>().talep.talep_at).getTime()) /
+      86_400_000;
     expect(Math.round(gun)).toBe(30);
 
     const ikinci = await talepEt(k, await otpKodu(k));
@@ -110,18 +114,28 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
     const k = await kurumluKullanici(t, 'bireysel');
     await rizaKabulEt(t, k.token);
     await talepEt(k, await otpKodu(k));
-    const sid = (JSON.parse(Buffer.from(k.token.split('.')[1] ?? '', 'base64url').toString()) as { sid: string }).sid;
+    const sid = (
+      JSON.parse(Buffer.from(k.token.split('.')[1] ?? '', 'base64url').toString()) as {
+        sid: string;
+      }
+    ).sid;
     await sistem`update hesap.uyelikler set gorunen_ad = 'Ayse Hoca', ogrenci_no = '123' where kullanici_id = ${k.kullaniciId}`;
     await sistem`update hesap.kullanicilar set gorunen_ad = 'Ayse Hoca', eposta = ${`ayse${uuidv7()}@example.com`} where id = ${k.kullaniciId}`;
 
     // Soguma bitmeden is dokunmaz.
     const iptaller: string[] = [];
-    const onceki = await kvkkSilmeIsle(sistemDb, { log: sessiz, iptalEt: (s) => (iptaller.push(s), Promise.resolve()) });
+    const onceki = await kvkkSilmeIsle(sistemDb, {
+      log: sessiz,
+      iptalEt: (s) => (iptaller.push(s), Promise.resolve()),
+    });
     expect(onceki.tamamlanan).toBe(0);
 
     await sistem`update hesap.silme_talepleri set talep_at = now() - interval '31 days', planlanan_at = now() - interval '1 day'
                   where kullanici_id = ${k.kullaniciId} and durum = 'beklemede'`;
-    const o = await kvkkSilmeIsle(sistemDb, { log: sessiz, iptalEt: (s) => (iptaller.push(s), Promise.resolve()) });
+    const o = await kvkkSilmeIsle(sistemDb, {
+      log: sessiz,
+      iptalEt: (s) => (iptaller.push(s), Promise.resolve()),
+    });
     expect(o.tamamlanan).toBe(1);
     expect(iptaller).toContain(sid);
 
@@ -135,21 +149,27 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
       avatar_url: null,
     });
     expect(u?.anonimlestirildi_at).not.toBeNull();
-    const [h] = await sistem`select count(*)::int n from hesap.hesaplar where kullanici_id = ${k.kullaniciId}`;
-    const [os] = await sistem`select count(*)::int n from hesap.oturumlar where kullanici_id = ${k.kullaniciId}`;
+    const [h] =
+      await sistem`select count(*)::int n from hesap.hesaplar where kullanici_id = ${k.kullaniciId}`;
+    const [os] =
+      await sistem`select count(*)::int n from hesap.oturumlar where kullanici_id = ${k.kullaniciId}`;
     expect([h?.n, os?.n]).toEqual([0, 0]);
-    const [dg] = await sistem`select count(*)::int n from hesap.dogrulamalar where tanimlayici = ${k.telefon}`;
+    const [dg] =
+      await sistem`select count(*)::int n from hesap.dogrulamalar where tanimlayici = ${k.telefon}`;
     expect(dg?.n).toBe(0);
-    const [uy] = await sistem`select gorunen_ad, ogrenci_no from hesap.uyelikler where kullanici_id = ${k.kullaniciId}`;
+    const [uy] =
+      await sistem`select gorunen_ad, ogrenci_no from hesap.uyelikler where kullanici_id = ${k.kullaniciId}`;
     expect(uy).toMatchObject({ gorunen_ad: null, ogrenci_no: null });
     const [kurum] = await sistem`select durum from hesap.kurumlar where id = ${k.kurumId}`;
     expect(kurum?.durum).toBe('kapali');
     // Riza kaydi yasal kanit olarak kalir; ip/user_agent bosalir.
-    const rizalar = await sistem`select ip, user_agent from hesap.rizalar where kullanici_id = ${k.kullaniciId}`;
+    const rizalar =
+      await sistem`select ip, user_agent from hesap.rizalar where kullanici_id = ${k.kullaniciId}`;
     expect(rizalar.length).toBeGreaterThan(0);
     expect(rizalar.every((r) => r.ip === null && r.user_agent === null)).toBe(true);
     // Talep tamamlandi; eski erisim belirteci ile kullanici artik gorunmez.
-    const [tl] = await sistem`select durum, tamamlandi_at from hesap.silme_talepleri where kullanici_id = ${k.kullaniciId}`;
+    const [tl] =
+      await sistem`select durum, tamamlandi_at from hesap.silme_talepleri where kullanici_id = ${k.kullaniciId}`;
     expect(tl?.durum).toBe('tamamlandi');
 
     // Olay: kurumsuz zarf, yalniz kimlikler; kisisel veri yok.
@@ -160,7 +180,9 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
     const yuk = JSON.stringify(olaylar[0]?.payload);
     expect(yuk).not.toContain(k.telefon);
     expect(yuk).not.toContain('Ayse');
-    expect((olaylar[0]?.payload as { data: { uyelik_idleri: string[] } }).data.uyelik_idleri).toContain(k.uyelikId);
+    expect(
+      (olaylar[0]?.payload as { data: { uyelik_idleri: string[] } }).data.uyelik_idleri,
+    ).toContain(k.uyelikId);
     // Idempotent: ikinci kosu bir sey yapmaz.
     const tekrar = await kvkkSilmeIsle(sistemDb, { log: sessiz, iptalEt: () => Promise.resolve() });
     expect(tekrar.tamamlanan).toBe(0);
@@ -189,7 +211,8 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
                   where kullanici_id = ${k.kullaniciId} and durum = 'beklemede'`;
     const o = await kvkkSilmeIsle(sistemDb, { log: sessiz, iptalEt: () => Promise.resolve() });
     expect(o.engellenen).toBeGreaterThanOrEqual(1);
-    const [tl] = await sistem`select durum, engel_nedeni from hesap.silme_talepleri where kullanici_id = ${k.kullaniciId}`;
+    const [tl] =
+      await sistem`select durum, engel_nedeni from hesap.silme_talepleri where kullanici_id = ${k.kullaniciId}`;
     expect(tl).toMatchObject({ durum: 'engellendi', engel_nedeni: 'kurum_sahibi_engeli' });
     const [u] = await sistem`select durum from hesap.kullanicilar where id = ${k.kullaniciId}`;
     expect(u?.durum).toBe('aktif');
@@ -207,7 +230,8 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
     expect(o.tamamlanan).toBeGreaterThanOrEqual(1);
     const [kurum] = await sistem`select durum from hesap.kurumlar where id = ${k.kurumId}`;
     expect(kurum?.durum).toBe('aktif');
-    const [uy] = await sistem`select durum from hesap.uyelikler where kullanici_id = ${k.kullaniciId}`;
+    const [uy] =
+      await sistem`select durum from hesap.uyelikler where kullanici_id = ${k.kullaniciId}`;
     expect(uy?.durum).toBe('ayrildi');
   });
 
@@ -247,9 +271,7 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
         });
       expect((await gor(k.kullaniciId)).length).toBe(1);
       expect((await gor(uuidv7())).length).toBe(0);
-      await expect(
-        app_`select id from hesap.silme_talepleri`,
-      ).resolves.toHaveLength(0);
+      await expect(app_`select id from hesap.silme_talepleri`).resolves.toHaveLength(0);
     } finally {
       await app_.end();
     }
@@ -270,7 +292,9 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
       order by created_at`;
     expect(olaylar.length).toBeGreaterThanOrEqual(1);
     expect(JSON.stringify(olaylar.at(-1)?.payload)).not.toContain('Yeni Gizli Ad');
-    expect((olaylar.at(-1)?.payload as { data: { degisen_alanlar: string[] } }).data.degisen_alanlar).toContain('gorunen_ad');
+    expect(
+      (olaylar.at(-1)?.payload as { data: { degisen_alanlar: string[] } }).data.degisen_alanlar,
+    ).toContain('gorunen_ad');
     void tokenAl;
   });
 });

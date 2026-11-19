@@ -1,8 +1,4 @@
-import {
-  KVKK_VERI_SCOPE,
-  KullaniciVeriYanitSema,
-  type VerilerimYanit,
-} from '@kopru/contracts';
+import { KVKK_VERI_SCOPE, KullaniciVeriYanitSema, type VerilerimYanit } from '@kopru/contracts';
 import { withTenant, withUser, type Database, type Tx } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -78,7 +74,10 @@ async function servisVerisi(
  * servislerin verisini her kurum icin servis JWT'siyle (`POST /ic/kvkk/veri`) toplar. Ulasilamayan servis
  * `eksik_servisler`e yazilir (kismi sonuc; istemci yeniden dener).
  */
-export async function verilerimiTopla(app: FastifyInstance, kullaniciId: string): Promise<VerilerimYanit> {
+export async function verilerimiTopla(
+  app: FastifyInstance,
+  kullaniciId: string,
+): Promise<VerilerimYanit> {
   const db: Database = app.kimlik.db;
   const { env } = app.kimlik;
   const [hesap] = await withUser(db, { kullaniciId }, async (tx) =>
@@ -112,7 +111,10 @@ export async function verilerimiTopla(app: FastifyInstance, kullaniciId: string)
       kurumVerisi(tx, kullaniciId, idler),
     );
     for (const [ad, satirlar] of Object.entries(v)) {
-      bolumler[ad] = [...(bolumler[ad] ?? []), ...satirlar.map((s) => ({ kurum_id: kurumId, ...s }))];
+      bolumler[ad] = [
+        ...(bolumler[ad] ?? []),
+        ...satirlar.map((s) => ({ kurum_id: kurumId, ...s })),
+      ];
     }
     const girdi = { kurum_id: kurumId, kullanici_id: kullaniciId, uyelik_idleri: idler };
     const hedefler = [
@@ -128,7 +130,10 @@ export async function verilerimiTopla(app: FastifyInstance, kullaniciId: string)
       }
       const hedef = (servisler[ad] ??= {});
       for (const [bolum, satirlar] of Object.entries(s)) {
-        hedef[bolum] = [...(hedef[bolum] ?? []), ...satirlar.map((x) => ({ kurum_id: kurumId, ...x }))];
+        hedef[bolum] = [
+          ...(hedef[bolum] ?? []),
+          ...satirlar.map((x) => ({ kurum_id: kurumId, ...x })),
+        ];
       }
     }
   }

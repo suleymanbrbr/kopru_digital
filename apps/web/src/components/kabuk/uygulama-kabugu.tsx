@@ -1,7 +1,14 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { ArrowLeftRight, BellRing, LogOut, Menu, MonitorSmartphone } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  BellRing,
+  LogOut,
+  Menu,
+  MonitorSmartphone,
+  ShieldCheck,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
@@ -108,6 +115,14 @@ function KullaniciAlani({ tiklandi }: { tiklandi?: () => void }) {
       >
         <MonitorSmartphone className="size-[1.125rem]" aria-hidden />
         {t('hesap.oturumlar.menu')}
+      </Link>
+      <Link
+        href={`/${uyelik.kurumId}/ayarlar/hesabim`}
+        onClick={tiklandi}
+        className="flex h-11 items-center gap-3 rounded-orta px-3 text-sm font-medium text-metin-ikincil transition-colors hover:bg-yuzey-ikincil hover:text-metin lg:h-10"
+      >
+        <ShieldCheck className="size-[1.125rem]" aria-hidden />
+        {t('hesap.kvkk.menu')}
       </Link>
       <button
         type="button"

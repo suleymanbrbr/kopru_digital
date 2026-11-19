@@ -95,6 +95,8 @@ interface KurumDurumu {
 interface Depo {
   kurumlar: Record<string, KurumDurumu>;
   oturumlar: Kayit[];
+  /** KVKK silme talebi (tek, bellekte). */
+  silme: Kayit | null;
 }
 
 const OGRENCI_ADLARI = [
@@ -324,7 +326,7 @@ function oturumlariKur(): Kayit[] {
 
 const kutu = globalThis as unknown as { __kopruHesapMock?: Depo };
 function depo(): Depo {
-  kutu.__kopruHesapMock ??= { kurumlar: {}, oturumlar: oturumlariKur() };
+  kutu.__kopruHesapMock ??= { kurumlar: {}, oturumlar: oturumlariKur(), silme: null };
   return kutu.__kopruHesapMock;
 }
 
@@ -806,10 +808,89 @@ function kurumdaIsle(kurumId: string, kalan: string[], istek: Istek): Yanit {
 }
 
 /** Kiracisiz uc noktalar: oturumlar, davet kabulu, sinif kodu ile katilim. */
+const SOGUMA_GUN = 30;
+
+/** KVKK: hesap silme talebi ve veri disa aktarma (`/v1/hesap/ben/*`). Kod `123456`, parola `parola123`. `kvkk-engel` senaryosu sahip engeli doner. */
+function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
+  const g = govdeNesnesi(istek.govde);
+  const talepYaniti = (t: Kayit) => ({ talep: t });
+  if (parcalar[1] === 'verilerim' && istek.yontem === 'GET') {
+    return {
+      durum: 200,
+      govde: {
+        olusturuldu_at: simdi(),
+        kullanici_id: MOCK_KULLANICI_ID,
+        hesap: {
+          id: MOCK_KULLANICI_ID,
+          gorunen_ad: 'Deneme Kullanıcı',
+          telefon_e164: '+905321234567',
+          dil: 'tr',
+        },
+        bolumler: { uyelikler: [{ kurum_id: 'kurum-ege', rol: 'ogretmen' }], rizalar: [] },
+        servisler: {
+          motivasyon: { xp_ozeti: [] },
+          bildirim: { cihazlar: [] },
+          medya: { dosyalar: [] },
+        },
+        eksik_servisler: istek.senaryo === 'kvkk-eksik' ? ['medya'] : [],
+      },
+    };
+  }
+  if (parcalar[1] !== 'silme-talebi') return bulunamadi();
+  if (parcalar[2] === 'kod-gonder' && istek.yontem === 'POST') {
+    return { durum: 200, govde: { gonderildi: true, gecerlilik_sn: 300 } };
+  }
+  if (istek.yontem === 'GET' && parcalar.length === 2) {
+    return {
+      durum: 200,
+      govde: {
+        talep: d.silme,
+        soguma_gun: SOGUMA_GUN,
+        engeller:
+          istek.senaryo === 'kvkk-engel'
+            ? [{ kurum_id: uid(), kurum_ad: 'Ege Işık Dershanesi', diger_uye_sayisi: 14 }]
+            : [],
+        dogrulama_yontemleri: ['otp', 'parola'],
+      },
+    };
+  }
+  if (istek.yontem === 'POST' && parcalar.length === 2) {
+    const dg = govdeNesnesi(g.dogrulama);
+    const dogru =
+      (dg.yontem === 'otp' && dg.kod === '123456') ||
+      (dg.yontem === 'parola' && dg.parola === 'parola123');
+    if (!dogru) return hata(401, 'kod_gecersiz', 'Doğrulama başarısız.');
+    if (istek.senaryo === 'kvkk-engel') {
+      return hata(409, 'kurum_sahibi_engeli', 'Kurumun tek sahibisiniz.', {
+        kurumlar: [{ kurum_id: uid(), kurum_ad: 'Ege Işık Dershanesi', diger_uye_sayisi: 14 }],
+      });
+    }
+    if (d.silme?.durum === 'beklemede')
+      return hata(409, 'silme_talebi_var', 'Zaten bekleyen bir talebiniz var.');
+    d.silme = {
+      id: uid(),
+      durum: 'beklemede',
+      talep_at: simdi(),
+      planlanan_at: gunSonra(SOGUMA_GUN),
+      geri_alindi_at: null,
+      tamamlandi_at: null,
+    };
+    return { durum: 201, govde: talepYaniti(d.silme) };
+  }
+  if (istek.yontem === 'DELETE' && parcalar.length === 2) {
+    if (d.silme?.durum !== 'beklemede') return bulunamadi();
+    d.silme = { ...d.silme, durum: 'geri_alindi', geri_alindi_at: simdi() };
+    return { durum: 200, govde: talepYaniti(d.silme) };
+  }
+  return bulunamadi();
+}
+
 function kiracisiz(parcalar: string[], istek: Istek): Yanit {
   const d = depo();
   const { yontem } = istek;
   const g = govdeNesnesi(istek.govde);
+
+  if (parcalar[0] === 'ben') return kvkkMock(parcalar, istek, d);
 
   if (parcalar[0] === 'oturumlar') {
     if (yontem === 'GET' && parcalar.length === 1) {

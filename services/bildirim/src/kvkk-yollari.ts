@@ -1,8 +1,4 @@
-import {
-  KVKK_VERI_SCOPE,
-  KullaniciVeriIstegiSema,
-  KullaniciVeriYanitSema,
-} from '@kopru/contracts';
+import { KVKK_VERI_SCOPE, KullaniciVeriIstegiSema, KullaniciVeriYanitSema } from '@kopru/contracts';
 import { withTenant, type ServicePlugin } from '@kopru/service-kit';
 
 import { kvkkVeri } from './kvkk.js';
@@ -17,7 +13,8 @@ export const kvkkYollari: ServicePlugin = (app) => {
       config: { servisScope: KVKK_VERI_SCOPE },
       schema: {
         tags: ['ic'],
-        summary: 'Ic uc (servis JWT, `scope=kvkk.veri`): kullanicinin bu kurumdaki bildirim verisi (KVKK disa aktarma).',
+        summary:
+          'Ic uc (servis JWT, `scope=kvkk.veri`): kullanicinin bu kurumdaki bildirim verisi (KVKK disa aktarma).',
         body: KullaniciVeriIstegiSema,
         response: { 200: KullaniciVeriYanitSema },
       },

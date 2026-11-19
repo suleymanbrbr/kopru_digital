@@ -241,7 +241,9 @@ async function kullaniciyiAnonimlestir(
      where kabul_eden_kullanici_id = ${kid}`);
 
   // Riza kayitlari yasal kanit olarak kalir; yalniz ip ve user_agent silinir.
-  await tx.execute(sql`update hesap.rizalar set ip = null, user_agent = null where kullanici_id = ${kid}`);
+  await tx.execute(
+    sql`update hesap.rizalar set ip = null, user_agent = null where kullanici_id = ${kid}`,
+  );
 
   const [k] = await tx.execute<{ telefon_e164: string | null; eposta: string | null }>(sql`
     select telefon_e164, eposta from hesap.kullanicilar where id = ${kid} for update`);
