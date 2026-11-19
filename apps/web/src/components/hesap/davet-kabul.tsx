@@ -3,7 +3,7 @@
 import { DavetKabulYanitSema } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
-import { CircleCheck, MailX, UserCheck } from 'lucide-react';
+import { CircleCheck, MailX, UserCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,7 +22,7 @@ import { useOturum } from '@/oturum/saglayici';
 // Mock kurum kimlikleri UUID degildir; gercek api UUID doner.
 const kabulSema = DavetKabulYanitSema.extend({ kurum_id: z.string(), uyelik_id: z.string() });
 
-type Sonuc = 'bekliyor' | 'basarili' | 'gecersiz' | 'zaten-uye';
+type Sonuc = 'bekliyor' | 'basarili' | 'gecersiz' | 'zaten-uye' | 'limit';
 
 /**
  * Davet kabul sayfasi (`/davet/<belirtec>`, herkese acik yol). Oturum yoksa girise, KVKK
@@ -60,6 +60,12 @@ export function DavetKabul({ belirtec }: { belirtec: string }) {
       } else if (e instanceof UygulamaHatasi && e.kod === 'zaten_uye') {
         devamSil();
         setSonuc('zaten-uye');
+      } else if (
+        e instanceof UygulamaHatasi &&
+        (e.kod === 'plan_limiti' || e.kod === 'abonelik_gerekli')
+      ) {
+        // Davetli kurumun planini yukseltemez: kendi kurumundaki "Planini yukselt" penceresi uygun degil.
+        setSonuc('limit');
       } else {
         setHata(hataMesaji(e));
       }
@@ -103,6 +109,23 @@ export function DavetKabul({ belirtec }: { belirtec: string }) {
             aciklama={t('hesap.davetKabul.zatenUyeAciklama')}
           >
             <Link href="/kurum-sec" className={dugmeStili()}>
+              {t('hesap.davetKabul.kurumListesi')}
+            </Link>
+          </BosDurum>
+        </Kart>
+      </Kapsayici>
+    );
+  }
+  if (sonuc === 'limit') {
+    return (
+      <Kapsayici>
+        <Kart>
+          <BosDurum
+            ikon={Users}
+            baslik={t('hesap.davetKabul.limitBaslik')}
+            aciklama={t('hesap.davetKabul.limitAciklama')}
+          >
+            <Link href="/kurum-sec" className={dugmeStili({ gorunum: 'ikincil' })}>
               {t('hesap.davetKabul.kurumListesi')}
             </Link>
           </BosDurum>

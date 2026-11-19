@@ -5,7 +5,8 @@ import { bffIstek, UygulamaHatasi } from '@/lib/api';
 import { XP_OLAYI, xpOlasiMi } from '@/lib/motivasyon/xp';
 import { belirteciYenile, erisimBelirteciAl } from '@/oturum/saglayici';
 
-export type Servis = 'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon' | 'bildirim';
+export type Servis =
+  'hesap' | 'ders' | 'finans' | 'ogrenme' | 'medya' | 'motivasyon' | 'bildirim' | 'abonelik';
 
 interface IstekSecenekleri<S> {
   yontem?: string;
@@ -86,6 +87,14 @@ export function bildirimIstek<S extends z.ZodType>(
   secenekler: IstekSecenekleri<S> = {},
 ) {
   return servisIstek('bildirim', yol, secenekler);
+}
+
+/** Abonelik (`/api/abonelik/*` -> `API_URL/v1/abonelik/*`); yalniz sahip uc noktalari. */
+export function abonelikIstek<S extends z.ZodType>(
+  yol: string,
+  secenekler: IstekSecenekleri<S> = {},
+) {
+  return servisIstek('abonelik', yol, secenekler);
 }
 
 /** Motivasyon servisi (`/api/motivasyon/*` -> `MOTIVASYON_URL/v1/motivasyon/*`). */

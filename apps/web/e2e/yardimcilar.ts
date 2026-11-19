@@ -36,3 +36,32 @@ export async function girisYap(page: Page, kurumAdi: string, opsiyon: { kvkkOnay
     await expect(page).toHaveURL(/\/kurum-[a-z]+\/bugun$/);
   }
 }
+
+/**
+ * Abonelik mock senaryosu (`mock_senaryo` cerezi): teste ozel anahtar kullanilir, paralel testler ve
+ * masaustu/mobil projeleri birbirinin durumunu bozmaz. Giristen once cagrilir.
+ */
+export async function abonelikSenaryosu(page: Page, senaryo: string): Promise<void> {
+  const anahtar = `e${Math.random().toString(36).slice(2, 10)}`;
+  await page.context().addCookies([
+    {
+      name: 'mock_senaryo',
+      value: `${anahtar}:${senaryo}`,
+      url: process.env.E2E_BASE_URL ?? `http://localhost:${process.env.E2E_MOCK_PORT ?? '3000'}`,
+    },
+  ]);
+}
+
+/** Platform mesaji mock'u (`mock_platform_mesaji`: bilgi | uyari | kritik). */
+export async function platformMesaji(
+  page: Page,
+  onem: 'bilgi' | 'uyari' | 'kritik',
+): Promise<void> {
+  await page.context().addCookies([
+    {
+      name: 'mock_platform_mesaji',
+      value: onem,
+      url: process.env.E2E_BASE_URL ?? `http://localhost:${process.env.E2E_MOCK_PORT ?? '3000'}`,
+    },
+  ]);
+}
