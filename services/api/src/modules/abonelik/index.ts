@@ -5,8 +5,8 @@ import { abonelikYollari } from './yollar.js';
 
 /**
  * abonelik modulu: plan katalogu, kurum abonelikleri (deneme, aktif, ek sure, askida), plan limitleri ve
- * sahip uc noktalari (`/v1/abonelik/kurumlar/:kurum_id/...`). Odeme saglayicilari (iyzico, RevenueCat) ve
- * e-Arsiv sonraki pakettedir; `OdemeSaglayici` arayuzu hazirdir. Kimlik katmani (`app.kimlik`) yoksa
+ * sahip uc noktalari (`/v1/abonelik/kurumlar/:kurum_id/...`), odeme saglayicilari (iyzico web odemesi,
+ * RevenueCat magaza webhook'u), cift kanal engeli ve e-Arsiv fatura isi. Kimlik katmani (`app.kimlik`) yoksa
  * rotalar kaydolmaz.
  */
 export const abonelikModule = defineModule('abonelik', async (app) => {

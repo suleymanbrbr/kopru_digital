@@ -180,7 +180,7 @@ describe('IyzicoSaglayici (protokol sabitleri tek yerde)', () => {
       yonlendirmeUrl: null,
       formIcerigi: '<script>iyzi</script>',
     });
-    const istek = JSON.parse(String(f.cagrilar[0]?.init?.body)) as Record<string, unknown>;
+    const istek = JSON.parse(f.cagrilar[0]?.init?.body as string) as Record<string, unknown>;
     expect(istek).toMatchObject({
       conversationId: 'o-1',
       callbackUrl: 'http://api/donus',

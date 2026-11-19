@@ -2541,6 +2541,186 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/abonelik/kurumlar/{kurum_id}/faturalar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** e-Arsiv fatura gecmisi (meta). PDF dosyasi hazir degilse `pdf_dosya_id` null doner; en yeni ustte. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            faturalar: {
+                                /** @enum {string} */
+                                durum: "bekliyor" | "kesildi" | "hata" | "iptal";
+                                fatura_no: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                kdv_kurus: number;
+                                kdv_orani: number;
+                                /** Format: date-time */
+                                kesim_at: string | null;
+                                matrah_kurus: number;
+                                /** Format: uuid */
+                                odeme_id: string;
+                                /** Format: uuid */
+                                pdf_dosya_id: string | null;
+                                toplam_kurus: number;
+                                /** @enum {string} */
+                                tur: "e_arsiv" | "iade";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/odeme/baslat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Web odemesi (iyzico yinelenen abonelik) baslat: saglayicinin odeme sayfasi adresi ya da gomulecek form doner. Fatura bilgisi yoksa 422 fatura_bilgisi_gerekli; baska kanalda (magaza, kurumsal) etkin ucretli abonelik varsa 409 abonelik_baska_kanalda; iyzico aboneligi zaten aktifse 409 abonelik_zaten_aktif; kanal yapilandirilmamissa 503 odeme_kanali_kapali. Deneme sirasinda ucretliye gecis cift abonelik sayilmaz. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default aylik
+                         * @enum {string}
+                         */
+                        periyot?: "aylik" | "yillik";
+                        plan_kodu: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            form_icerigi: string | null;
+                            /** @enum {string} */
+                            kaynak: "iyzico";
+                            kdv_kurus: number;
+                            /** Format: uuid */
+                            oturum_id: string;
+                            tutar_kurus: number;
+                            yonlendirme_url: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/kurumlar/{kurum_id}/odemeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Abonelik odeme gecmisi (basarili, basarisiz, iade); en yeni ustte. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            odemeler: {
+                                /** Format: uuid */
+                                abonelik_id: string;
+                                /** Format: date-time */
+                                donem_baslangic_at: string;
+                                /** Format: date-time */
+                                donem_bitis_at: string;
+                                /** @enum {string} */
+                                durum: "basarili" | "basarisiz" | "iade";
+                                hata_kodu: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                kaynak: "deneme" | "iyzico" | "apple" | "google" | "kurumsal";
+                                kdv_kurus: number;
+                                /** Format: date-time */
+                                odeme_at: string;
+                                /** Format: uuid */
+                                ters_cevrilen_id: string | null;
+                                tutar_kurus: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/abonelik/kurumlar/{kurum_id}/planlar": {
         parameters: {
             query?: never;
@@ -2595,6 +2775,118 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/odeme/iyzico/donus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** iyzico odeme sayfasi donusu (callback; form govdesinde `token`). Sonucu isler ve web uygulamasina 303 ile yonlendirir (`/abonelik?odeme=basarili|basarisiz|bekliyor|hata`). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/webhook/iyzico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** iyzico abonelik webhook (kimliksiz; imza basligi dogrulanir). Ham govde saklanir, hemen 200 doner, isleme arka planda yapilir. Imza gecersizse 401; kanal kapaliysa 503. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            durum: "alindi" | "tekrar" | "yoksayildi";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/abonelik/webhook/revenuecat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RevenueCat (App Store / Google Play) webhook (kimliksiz; Authorization basligi paylasilan sirla dogrulanir). `app_user_id` kurum kimligidir. Ham govde saklanir, hemen 200 doner. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            durum: "alindi" | "tekrar" | "yoksayildi";
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

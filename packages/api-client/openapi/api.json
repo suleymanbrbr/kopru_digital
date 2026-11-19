@@ -5649,6 +5649,373 @@
         ]
       }
     },
+    "/v1/abonelik/kurumlar/{kurum_id}/faturalar": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "faturalar": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durum": {
+                            "enum": [
+                              "bekliyor",
+                              "kesildi",
+                              "hata",
+                              "iptal"
+                            ],
+                            "type": "string"
+                          },
+                          "fatura_no": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kdv_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "kdv_orani": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "kesim_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "matrah_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "odeme_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "pdf_dosya_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "toplam_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "tur": {
+                            "enum": [
+                              "e_arsiv",
+                              "iade"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "odeme_id",
+                          "tur",
+                          "durum",
+                          "fatura_no",
+                          "matrah_kurus",
+                          "kdv_kurus",
+                          "toplam_kurus",
+                          "kdv_orani",
+                          "kesim_at",
+                          "pdf_dosya_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "faturalar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "e-Arsiv fatura gecmisi (meta). PDF dosyasi hazir degilse `pdf_dosya_id` null doner; en yeni ustte.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/kurumlar/{kurum_id}/odeme/baslat": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "periyot": {
+                    "default": "aylik",
+                    "enum": [
+                      "aylik",
+                      "yillik"
+                    ],
+                    "type": "string"
+                  },
+                  "plan_kodu": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plan_kodu"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "form_icerigi": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kaynak": {
+                      "enum": [
+                        "iyzico"
+                      ],
+                      "type": "string"
+                    },
+                    "kdv_kurus": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "oturum_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "tutar_kurus": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "yonlendirme_url": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "oturum_id",
+                    "kaynak",
+                    "yonlendirme_url",
+                    "form_icerigi",
+                    "tutar_kurus",
+                    "kdv_kurus"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Web odemesi (iyzico yinelenen abonelik) baslat: saglayicinin odeme sayfasi adresi ya da gomulecek form doner. Fatura bilgisi yoksa 422 fatura_bilgisi_gerekli; baska kanalda (magaza, kurumsal) etkin ucretli abonelik varsa 409 abonelik_baska_kanalda; iyzico aboneligi zaten aktifse 409 abonelik_zaten_aktif; kanal yapilandirilmamissa 503 odeme_kanali_kapali. Deneme sirasinda ucretliye gecis cift abonelik sayilmaz.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/kurumlar/{kurum_id}/odemeler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "odemeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "abonelik_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "donem_baslangic_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "donem_bitis_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "durum": {
+                            "enum": [
+                              "basarili",
+                              "basarisiz",
+                              "iade"
+                            ],
+                            "type": "string"
+                          },
+                          "hata_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak": {
+                            "enum": [
+                              "deneme",
+                              "iyzico",
+                              "apple",
+                              "google",
+                              "kurumsal"
+                            ],
+                            "type": "string"
+                          },
+                          "kdv_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "odeme_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "ters_cevrilen_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "tutar_kurus": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "abonelik_id",
+                          "kaynak",
+                          "durum",
+                          "tutar_kurus",
+                          "kdv_kurus",
+                          "donem_baslangic_at",
+                          "donem_bitis_at",
+                          "odeme_at",
+                          "hata_kodu",
+                          "ters_cevrilen_id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "odemeler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Abonelik odeme gecmisi (basarili, basarisiz, iade); en yeni ustte.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
     "/v1/abonelik/kurumlar/{kurum_id}/planlar": {
       "get": {
         "parameters": [
@@ -5793,6 +6160,87 @@
           }
         },
         "summary": "Kurum turune uygun aktif planlari listele (plan yukseltme/dusurme secenekleri).",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/odeme/iyzico/donus": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "iyzico odeme sayfasi donusu (callback; form govdesinde `token`). Sonucu isler ve web uygulamasina 303 ile yonlendirir (`/abonelik?odeme=basarili|basarisiz|bekliyor|hata`).",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/webhook/iyzico": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "durum": {
+                      "enum": [
+                        "alindi",
+                        "tekrar",
+                        "yoksayildi"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "durum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "iyzico abonelik webhook (kimliksiz; imza basligi dogrulanir). Ham govde saklanir, hemen 200 doner, isleme arka planda yapilir. Imza gecersizse 401; kanal kapaliysa 503.",
+        "tags": [
+          "abonelik"
+        ]
+      }
+    },
+    "/v1/abonelik/webhook/revenuecat": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "durum": {
+                      "enum": [
+                        "alindi",
+                        "tekrar",
+                        "yoksayildi"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "durum"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "RevenueCat (App Store / Google Play) webhook (kimliksiz; Authorization basligi paylasilan sirla dogrulanir). `app_user_id` kurum kimligidir. Ham govde saklanir, hemen 200 doner.",
         "tags": [
           "abonelik"
         ]
