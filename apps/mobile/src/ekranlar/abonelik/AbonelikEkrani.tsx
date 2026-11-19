@@ -210,7 +210,7 @@ export function AbonelikEkrani({ yoklama, platform = Platform.OS }: AbonelikEkra
           testID="abonelik-durum-adi"
         >
           {t(`mobil.abonelik.durum.${d.durum}`)}
-          {d.kaynak ? ` · ${t(`mobil.abonelik.kaynak.${d.kaynak}`)}` : ''}
+          {d.kaynak && d.kaynak !== 'deneme' ? ` · ${t(`mobil.abonelik.kaynak.${d.kaynak}`)}` : ''}
         </Metin>
         {durumMetni(ozet, d) ? (
           <Metin varyant="ikincil" testID="abonelik-durum-aciklama">

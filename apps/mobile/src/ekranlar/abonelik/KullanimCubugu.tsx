@@ -14,7 +14,6 @@ interface Props {
 /** Kullanim cubugu: dolulugu renge ek olarak "x / y" metniyle de bildirir (%90+ uyari rengi). */
 export function KullanimCubugu({ ad, mevcut, ustSinir, testID }: Props) {
   const oran = ustSinir ? Math.min(1, mevcut / ustSinir) : 0;
-  const dolu = ustSinir !== null && mevcut >= ustSinir;
   const deger =
     ustSinir === null
       ? t('mobil.abonelik.kullanim.degerSinirsiz', { mevcut })
@@ -43,7 +42,7 @@ export function KullanimCubugu({ ad, mevcut, ustSinir, testID }: Props) {
       <View className="h-2 overflow-hidden rounded-tam bg-yuzeyIkincil">
         <View
           testID={testID ? `${testID}-dolgu` : undefined}
-          className={`h-2 rounded-tam ${dolu ? 'bg-hata' : oran >= 0.9 ? 'bg-uyari' : 'bg-birincil'}`}
+          className={`h-2 rounded-tam ${oran >= 0.9 ? 'bg-uyari' : 'bg-birincil'}`}
           style={{ width: `${Math.round(oran * 100)}%` }}
         />
       </View>
