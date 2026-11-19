@@ -11,6 +11,14 @@ export const abonelikHataKodlari = {
   planBulunamadi: 'plan_bulunamadi',
   etkinAboneligiYok: 'etkin_abonelik_yok',
   magazaUzerindenYonetilir: 'magaza_uzerinden_yonetilir',
+  /** Kurumun baska kanalda (magaza, kurumsal) etkin ucretli aboneligi var: ikinci abonelik acilmaz. */
+  abonelikBaskaKanalda: 'abonelik_baska_kanalda',
+  /** iyzico aboneligi zaten `aktif`; yeni odeme baslatilmaz (plan degisikligi: `plan-degistir`). */
+  abonelikZatenAktif: 'abonelik_zaten_aktif',
+  /** Odeme baslatmak icin kurum fatura bilgisi (`PUT /fatura-bilgileri`) zorunlu. */
+  faturaBilgisiGerekli: 'fatura_bilgisi_gerekli',
+  /** Odeme saglayicisi bu ortamda yapilandirilmamis (env eksik). */
+  odemeKanaliKapali: 'odeme_kanali_kapali',
 } as const;
 
 const zaman = z.iso.datetime({ offset: true });
@@ -155,3 +163,67 @@ export const PlanDegistirYanitSema = z.object({
 export const IptalYanitSema = z.object({ abonelik: AboneligiSema });
 
 export const AbonelikKurumParamSema = KurumParamSema;
+
+export const OdemeBaslatGirdiSema = z.object({
+  plan_kodu: z.string().min(1).max(64),
+  periyot: PeriyotSema.default('aylik'),
+});
+
+export const OdemeBaslatYanitSema = z.object({
+  oturum_id: z.uuid(),
+  kaynak: z.literal('iyzico'),
+  /** Saglayicinin odeme sayfasi adresi; form icerigi donen saglayicida `null`. */
+  yonlendirme_url: z.string().nullable(),
+  /** Saglayicinin gomulecek odeme formu (HTML/JS parcasi); yonlendirme donen saglayicida `null`. */
+  form_icerigi: z.string().nullable(),
+  /** KDV dahil tutar (kurus): plan fiyati + KDV. */
+  tutar_kurus: z.number().int().nonnegative(),
+  kdv_kurus: z.number().int().nonnegative(),
+});
+
+export const ODEME_DURUMLARI = ['basarili', 'basarisiz', 'iade'] as const;
+export const OdemeDurumSema = z.enum(ODEME_DURUMLARI);
+
+export const OdemeKaydiSema = z.object({
+  id: z.uuid(),
+  abonelik_id: z.uuid(),
+  kaynak: AbonelikKaynakSema,
+  durum: OdemeDurumSema,
+  /** KDV dahil (kurus). */
+  tutar_kurus: z.number().int().nonnegative(),
+  kdv_kurus: z.number().int().nonnegative(),
+  donem_baslangic_at: zaman,
+  donem_bitis_at: zaman,
+  odeme_at: zaman,
+  hata_kodu: z.string().nullable(),
+  /** `iade` satirinda iade edilen `basarili` odemenin kimligi. */
+  ters_cevrilen_id: z.uuid().nullable(),
+});
+
+export const OdemeGecmisiSorguSema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+export const OdemeGecmisiYanitSema = z.object({ odemeler: z.array(OdemeKaydiSema) });
+
+export const FATURA_DURUMLARI = ['bekliyor', 'kesildi', 'hata', 'iptal'] as const;
+
+export const FaturaKaydiSema = z.object({
+  id: z.uuid(),
+  odeme_id: z.uuid(),
+  tur: z.enum(['e_arsiv', 'iade']),
+  durum: z.enum(FATURA_DURUMLARI),
+  fatura_no: z.string().nullable(),
+  matrah_kurus: z.number().int().nonnegative(),
+  kdv_kurus: z.number().int().nonnegative(),
+  toplam_kurus: z.number().int().nonnegative(),
+  kdv_orani: z.number().int(),
+  kesim_at: zaman.nullable(),
+  /** PDF dosyasi hazir degilse `null` (yalniz meta doner). */
+  pdf_dosya_id: z.uuid().nullable(),
+});
+
+export const FaturaGecmisiYanitSema = z.object({ faturalar: z.array(FaturaKaydiSema) });
+
+/** iyzico odeme sayfasi donus (callback) ve webhook uclarinin ortak yaniti. */
+export const WebhookYanitSema = z.object({ durum: z.enum(['alindi', 'tekrar', 'yoksayildi']) });

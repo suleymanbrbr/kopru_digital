@@ -139,3 +139,16 @@ export const faturalar = abonelik.table('faturalar', {
   hata: text('hata'),
   deneme_sayisi: smallint('deneme_sayisi').notNull().default(0),
 });
+
+/** Sahibin baslattigi odeme oturumu (migrations/0019): saglayici belirteci -> kurum + plan + periyot. */
+export const odemeOturumlari = abonelik.table('odeme_oturumlari', {
+  ...kiraci(),
+  kaynak: text('kaynak').notNull(),
+  dis_islem_id: text('dis_islem_id'),
+  plan_id: uuid('plan_id').notNull(),
+  periyot: text('periyot').notNull(),
+  tutar_kurus: bigint('tutar_kurus', { mode: 'number' }).notNull(),
+  kdv_kurus: bigint('kdv_kurus', { mode: 'number' }).notNull(),
+  durum: text('durum').notNull().default('bekliyor'),
+  dis_abonelik_id: text('dis_abonelik_id'),
+});

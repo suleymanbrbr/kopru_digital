@@ -27,3 +27,33 @@ export const abonelikAbonelikDegistiV1 = defineEvent(
 );
 
 export type AbonelikAbonelikDegistiV1 = EventOf<typeof abonelikAbonelikDegistiV1>;
+
+/** Odeme sonuclandi (basarili, basarisiz, iade). Saglayici kimligi ve kisisel veri tasimaz. */
+export const abonelikOdemeIslendiV1 = defineEvent(
+  'abonelik.odeme.islendi',
+  1,
+  z.object({
+    odeme_id: z.uuid(),
+    abonelik_id: z.uuid(),
+    durum: z.enum(['basarili', 'basarisiz', 'iade']),
+    tutar_kurus: z.number().int().nonnegative(),
+    donem_bitis_at: z.iso.datetime({ offset: true }),
+    hata_kodu: z.string().nullable(),
+  }),
+);
+export type AbonelikOdemeIslendiV1 = EventOf<typeof abonelikOdemeIslendiV1>;
+
+/** e-Arsiv fatura (ya da iade faturasi) kesildi. */
+export const abonelikFaturaKesildiV1 = defineEvent(
+  'abonelik.fatura.kesildi',
+  1,
+  z.object({
+    fatura_id: z.uuid(),
+    odeme_id: z.uuid(),
+    tur: z.enum(['e_arsiv', 'iade']),
+    fatura_no: z.string(),
+    toplam_kurus: z.number().int().nonnegative(),
+    pdf_dosya_id: z.uuid().nullable(),
+  }),
+);
+export type AbonelikFaturaKesildiV1 = EventOf<typeof abonelikFaturaKesildiV1>;

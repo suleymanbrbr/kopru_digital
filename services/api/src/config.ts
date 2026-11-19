@@ -61,6 +61,37 @@ export const envSchema = base.safeExtend({
         .map((i) => i.trim())
         .filter((i) => i.length > 0),
     ),
+  /**
+   * Web odemesi (iyzico). `kapali` (varsayilan): odeme baslatma ve iyzico webhook 503 `odeme_kanali_kapali`.
+   * `gercek`: IYZICO_API_KEY + IYZICO_SECRET_KEY gerekir (eksikse kanal kapali kalir, acilista uyari).
+   * `sahte`: yalniz gelistirme/test (uretimde reddedilir); ag cagrisi yok, imza `x-sahte-imza` (SAHTE_ODEME_SIRRI).
+   */
+  ODEME_IYZICO: z.enum(['kapali', 'sahte', 'gercek']).default('kapali'),
+  IYZICO_API_KEY: z.string().min(1).optional(),
+  IYZICO_SECRET_KEY: z.string().min(1).optional(),
+  IYZICO_BASE_URL: z.url().default('https://sandbox-api.iyzipay.com'),
+  /** `{"<plan_kodu>:<aylik|yillik>": "<iyzico pricingPlanReferenceCode>"}` JSON'u. */
+  IYZICO_PLAN_KODLARI: z
+    .string()
+    .default('{}')
+    .transform((v, ctx) => {
+      try {
+        return z.record(z.string(), z.string()).parse(JSON.parse(v));
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'IYZICO_PLAN_KODLARI geçerli bir JSON nesnesi olmalı',
+        });
+        return z.NEVER;
+      }
+    }),
+  SAHTE_ODEME_SIRRI: z.string().min(8).default('sahte-sir'),
+  /** RevenueCat webhook "Authorization header value" (paylasilan sir). Yoksa magaza webhook'u kapali (503). */
+  REVENUECAT_WEBHOOK_SIRRI: z.string().min(8).optional(),
+  /** Magaza sandbox olaylari islensin mi? Varsayilan: uretim disinda evet. */
+  REVENUECAT_SANDBOX_KABUL: z.stringbool().optional(),
+  /** e-Arsiv entegratoru. `log`: gercek entegrator gelene kadar hicbir yere gonderilmez. */
+  EARSIV_SAGLAYICI: z.enum(['log']).default('log'),
   /** Platform kullanicisinin ikinci adim dogrulamasinin oturumda gecerli kaldigi sure (sn). */
   PLATFORM_IKINCI_ADIM_OMRU_SN: z.coerce.number().int().min(60).max(86_400).default(28_800),
 });
@@ -88,6 +119,9 @@ export function loadServiceEnv(source?: Record<string, string | undefined>): Env
     throw new Error(
       `PLATFORM_IP_IZINLI yalnız IP veya CIDR listesi olabilir (/0 kabul edilmez); geçersiz: ${gecersizIp.join(', ')}`,
     );
+  }
+  if (env.NODE_ENV === 'production' && env.ODEME_IYZICO === 'sahte') {
+    throw new Error('ODEME_IYZICO=sahte üretimde kullanılamaz.');
   }
   if (env.EPOSTA_SAGLAYICI === 'smtp' && !env.SMTP_HOST) {
     throw new Error('EPOSTA_SAGLAYICI=smtp iken SMTP_HOST tanımlanmalı.');
