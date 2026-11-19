@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { PlatformMesajiAfisi } from '../ekranlar/abonelik/AbonelikKatmanlari';
 import { BildirimAfisi } from '../ekranlar/bildirim/BildirimAfisi';
 import { BildirimYonlendirici } from '../ekranlar/bildirim/BildirimYonlendirici';
 import { DavetBildirimi } from '../ekranlar/DavetBildirimi';
@@ -92,6 +93,7 @@ export default function KokDuzen() {
             <Yonlendirme />
             <BildirimYonlendirici />
             <BildirimAfisi />
+            <PlatformMesajiAfisi />
             <DavetBildirimi />
           </Acilis>
         </VurguluTema>

@@ -1,3 +1,4 @@
+import type { AbonelikAdapter } from './abonelikTipleri';
 import type { BildirimAdapter } from './bildirimTipleri';
 import type { KayitAdapter } from './kayitTipleri';
 import type { MedyaAdapter } from './medyaTipleri';
@@ -93,4 +94,6 @@ export interface Adaptorler {
   motivasyon: MotivasyonAdapter;
   /** Push cihaz kaydi, gelen kutusu, tercihler (bildirim servisi). */
   bildirim: BildirimAdapter;
+  /** Abonelik durumu, planlar ve platform mesaji. */
+  abonelik: AbonelikAdapter;
 }

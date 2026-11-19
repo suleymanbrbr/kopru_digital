@@ -67,6 +67,8 @@ export function kuyrukHataMesaji(kod: string | undefined): string {
   if (kod === 'izin_yok') return t('mobil.hata.izinYok');
   if (kod === 'modul_kapali') return t('mobil.hata.modulKapali');
   if (kod === 'abonelik_gerekli') return t('mobil.hata.abonelikGerekli');
+  if (kod === 'plan_limiti') return t('hata.plan_limiti');
+  if (kod === 'kurum_askida') return t('hata.kurum_askida');
   return t('ortak.hataGenel');
 }
 
@@ -82,6 +84,12 @@ export function hataMesaji(e: unknown): string {
       return t('mobil.hata.rizaGerekli');
     case 'abonelik_gerekli':
       return t('mobil.hata.abonelikGerekli');
+    case 'plan_limiti':
+      return t('hata.plan_limiti');
+    case 'kurum_askida':
+      return t('hata.kurum_askida');
+    case 'abonelik_baska_kanalda':
+      return t('hata.abonelik_baska_kanalda');
     case 'modul_kapali':
       return t('mobil.hata.modulKapali');
     case 'izin_yok':

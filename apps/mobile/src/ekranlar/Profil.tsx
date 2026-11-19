@@ -39,7 +39,8 @@ function Satir({
     | 'phone-portrait-outline'
     | 'key-outline'
     | 'notifications-outline'
-    | 'megaphone-outline';
+    | 'megaphone-outline'
+    | 'card-outline';
 }) {
   return (
     <Pressable
@@ -94,6 +95,15 @@ export function Profil() {
             etiket={t('mobil.profil.kurumYonet')}
             onPress={() => {
               router.push('/kurum');
+            }}
+          />
+        ) : null}
+        {rol === 'sahip' ? (
+          <Satir
+            ikon="card-outline"
+            etiket={t('mobil.profil.abonelik')}
+            onPress={() => {
+              router.push('/abonelik');
             }}
           />
         ) : null}

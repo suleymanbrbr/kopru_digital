@@ -3,6 +3,7 @@ import { MODUL_KODLARI, type ModulDurumu } from '@kopru/contracts';
 
 import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import { abonelikAdaptoru } from './gercekAbonelik';
 import { bildirimAdaptoru } from './gercekBildirim';
 import { kayitAdaptoru } from './gercekKayit';
 import { medyaAdaptoru } from './gercekMedya';
@@ -121,7 +122,8 @@ interface ApiUyelik {
 
 /**
  * HTTP yanitini adaptor hata modeline cevirir (ADR 0004 hata kodlari).
- * 401 -> yetkisiz, 402 -> abonelik_gerekli, 403 -> riza_gerekli | modul_kapali | izin_yok,
+ * 401 -> yetkisiz, 402 -> abonelik_gerekli | plan_limiti (detay: limit, mevcut, ust_sinir),
+ * 403 kurum_askida, 409 abonelik_baska_kanalda, 403 -> riza_gerekli | modul_kapali | izin_yok,
  * 410 -> kod_gecersiz | davet_gecersiz, 409 -> zaten_uye | cakisma, 429 -> cok_istek.
  * OTP adaptorleri 429'u `otp_cok_deneme`ye cevirir.
  */
@@ -135,10 +137,12 @@ export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
     ...(detay !== undefined ? { detay } : {}),
   };
   if (durum === 401) return new ApiHata('yetkisiz', mesaj, sec);
+  if (kod === 'plan_limiti') return new ApiHata('plan_limiti', mesaj, sec);
   if (durum === 402 || kod === 'abonelik_gerekli') {
     return new ApiHata('abonelik_gerekli', mesaj, sec);
   }
   if (durum === 403) {
+    if (kod === 'kurum_askida') return new ApiHata('kurum_askida', mesaj, sec);
     if (kod === 'riza_gerekli') return new ApiHata('riza_gerekli', mesaj, sec);
     if (kod === 'modul_kapali') return new ApiHata('modul_kapali', mesaj, sec);
     // izin_yok, yasak, kurum_gerekli, taklit_salt_okunur ... : kullaniciya tek tip "yetkin yok"
@@ -147,6 +151,9 @@ export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
   // Sinif kodu / davet: 410 (tum "kullanilamaz" nedenleri ayni yanit).
   if (durum === 410 && kod === 'davet_gecersiz') return new ApiHata('davet_gecersiz', mesaj, sec);
   if (durum === 410) return new ApiHata('kod_gecersiz', mesaj, sec);
+  if (durum === 409 && kod === 'abonelik_baska_kanalda') {
+    return new ApiHata('abonelik_baska_kanalda', mesaj, sec);
+  }
   if (durum === 409 && kod === 'zaten_uye') return new ApiHata('zaten_uye', mesaj, sec);
   if (durum === 409) return new ApiHata('cakisma', mesaj, sec);
   // OTP dogrulamada yanlis kod 400 kod_gecersiz doner (sinif kodunun 410'undan farkli).
@@ -323,6 +330,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   });
 
   const bildirim = bildirimAdaptoru({ bildirim: bildirimIstemcisi, etkinKurum, veriAl });
+  const abonelik = abonelikAdaptoru({ yetkili, ham, etkinKurum, veriAl });
 
   return {
     ...operasyon,
@@ -332,6 +340,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     medya,
     motivasyon,
     bildirim,
+    abonelik,
     auth: {
       async otpIste(telefon) {
         otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));

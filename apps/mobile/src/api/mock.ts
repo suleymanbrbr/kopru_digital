@@ -1,5 +1,10 @@
 import type { BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
+import {
+  mockAbonelik,
+  type MockAbonelikKontrolu,
+  type MockAbonelikSenaryosu,
+} from './mockAbonelik';
 import { mockBildirim } from './mockBildirim';
 import { mockKayit } from './mockKayit';
 import { mockMedya } from './mockMedya';
@@ -176,7 +181,20 @@ function moduller(rol: MobilRol | Rol, kurum: 'a' | 'b') {
 }
 
 /** Backend olmadan calisan sahte adaptorler (EXPO_PUBLIC_API_MOCK=1). */
-export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorler {
+const abonelikKontrolleri = new WeakMap<Adaptorler, MockAbonelikKontrolu>();
+
+/** Mock adaptorlerin abonelik senaryo kontrolu (gelistirme ve testler). */
+export function mockAbonelikKontrolu(a: Adaptorler): MockAbonelikKontrolu {
+  const k = abonelikKontrolleri.get(a);
+  if (!k) throw new Error('Mock abonelik kontrolu yok');
+  return k;
+}
+
+export function mockAdaptorler(
+  depo: BelirtecDeposu,
+  gecikmeMs = 350,
+  abonelikSenaryolari: readonly MockAbonelikSenaryosu[] = ['deneme'],
+): Adaptorler {
   let telefon: string | null = null;
   let kvkkSurum: string | null = null;
   const ekUyelikler: Uyelik[] = [];
@@ -257,6 +275,7 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
   const medya = mockMedya({ gecikmeMs: Math.min(gecikmeMs, 200), isle: 300 });
   const motivasyon = mockMotivasyon(operasyonSecenekleri);
   const bildirim = mockBildirim(operasyonSecenekleri);
+  const abonelik = mockAbonelik(operasyonSecenekleri, abonelikSenaryolari);
 
   /** Eylem basariyla bitince mock motivasyon XP yazar (gercekte olay hatti yapar). */
   function xpKancali<T>(hedef: T, kancalar: Record<string, (sonuc: unknown) => void>): T {
@@ -297,7 +316,8 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
     },
   });
 
-  return {
+  const sonuc: Adaptorler = {
+    abonelik: abonelik.adaptor,
     ders: operasyon.ders,
     finans: operasyon.finans,
     ogrenme: ogrenmeXp,
@@ -527,4 +547,30 @@ export function mockAdaptorler(depo: BelirtecDeposu, gecikmeMs = 350): Adaptorle
       },
     },
   };
+
+  // Senaryo yazma/okuma hatasi veriyorsa (limit dolu, salt okunur, kurum askida) mock bunu atar.
+  const dersOlustur = sonuc.ders.dersOlustur;
+  sonuc.ders = {
+    ...sonuc.ders,
+    async dersOlustur(...a) {
+      const h = abonelik.yazmaHatasi();
+      if (h) throw h;
+      return dersOlustur(...a);
+    },
+  };
+  const { ogretmenBugun, ogrenciBugun } = sonuc.veri;
+  sonuc.veri = {
+    async ogretmenBugun() {
+      const h = abonelik.okumaHatasi();
+      if (h) throw h;
+      return ogretmenBugun();
+    },
+    async ogrenciBugun() {
+      const h = abonelik.okumaHatasi();
+      if (h) throw h;
+      return ogrenciBugun();
+    },
+  };
+  abonelikKontrolleri.set(sonuc, abonelik);
+  return sonuc;
 }

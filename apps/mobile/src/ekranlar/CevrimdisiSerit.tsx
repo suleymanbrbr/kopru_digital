@@ -6,6 +6,7 @@ import { Pressable, View } from 'react-native';
 import { Ikon } from '../ui/Ikon';
 import { Metin } from '../ui/Metin';
 import { useServisler } from '../uygulama/baglam';
+import { AbonelikSeridi } from './abonelik/AbonelikKatmanlari';
 
 /**
  * Cevrimdisiyken ya da bekleyen degisiklik varken ekran ustunde bilgi seridi. Kalici hatayla
@@ -39,6 +40,7 @@ export function CevrimdisiSerit() {
 
   return (
     <>
+      <AbonelikSeridi />
       {bilgiGoster ? (
         <View
           accessibilityRole="alert"

@@ -2747,6 +2747,129 @@ export const tr = {
   },
   // --- Mobil uygulama (apps/mobile) ---
   mobil: {
+    /** Abonelik (yalnız sahip), limit / askı deneyimi ve platform mesajı. */
+    abonelik: {
+      baslik: 'Abonelik',
+      durumBaslik: 'Durum',
+      planBaslik: 'Planın',
+      ucretsizPlan: 'Ücretsiz katman',
+      durum: {
+        deneme: 'Deneme',
+        aktif: 'Aktif',
+        odeme_bekliyor: 'Ödeme bekleniyor',
+        ek_sure: 'Ek süre',
+        askida: 'Askıda',
+        iptal: 'İptal edildi',
+        sona_erdi: 'Sona erdi',
+        ucretsiz: 'Ücretsiz katman',
+      },
+      kaynak: {
+        deneme: 'Deneme',
+        apple: 'App Store',
+        google: 'Google Play',
+        iyzico: 'Web (kart)',
+        kurumsal: 'Kurumsal',
+      },
+      denemeKalan: 'Denemenin bitmesine {n} gün kaldı.',
+      denemeBugun: 'Deneme bugün bitiyor.',
+      ekSureKalan: 'Ödemen alınamadı; ek süren {n} gün sürecek. Aboneliğini yenile.',
+      askidaAciklama:
+        'Aboneliğin askıda. Verilerin duruyor; aboneliği yenileyene kadar yalnızca görüntüleyebilirsin.',
+      sonaErdi: 'Aboneliğin sona erdi. Verilerin duruyor; yeniden abone olunca devam edebilirsin.',
+      iptalBitis: 'Aboneliğin iptal edildi. {tarih} tarihine kadar kullanmaya devam edebilirsin.',
+      yenilenme: 'Bir sonraki yenilenme: {tarih}',
+      periyot: { aylik: 'Aylık', yillik: 'Yıllık' },
+      kullanim: {
+        baslik: 'Kullanım',
+        ogrenci: 'Öğrenci',
+        ogretmen: 'Öğretmen',
+        deger: '{mevcut} / {ust}',
+        degerSinirsiz: '{mevcut} (sınırsız)',
+        etiket: '{ad}: {mevcut} / {ust}',
+        etiketSinirsiz: '{ad}: {mevcut}, sınırsız',
+      },
+      planlar: {
+        baslik: 'Mağaza planları',
+        limitler: 'En çok {ogrenci} öğrenci, {ogretmen} öğretmen',
+        sinirsiz: 'sınırsız',
+        yakinda: 'Yakında',
+        yakindaAciklama: 'Bu plan mağazada henüz yayında değil.',
+        mevcut: 'Mevcut planın',
+        satinAl: 'Satın al',
+        planDegistir: 'Bu plana geç',
+        etiket: '{plan}, {periyot}, {fiyat}',
+        yuklenemedi: 'Mağaza planları şu anda alınamadı. Bağlantını kontrol edip tekrar dene.',
+        bos: 'Bu kurum türü için mağazada plan bulunamadı.',
+      },
+      satinAlma: {
+        bekleniyor: 'Satın alma tamamlandı. Aboneliğin etkinleştiriliyor…',
+        basarili: 'Aboneliğin etkinleşti. Teşekkürler!',
+        isleniyor:
+          'Ödemen işleniyor. Abonelik birkaç dakika içinde etkinleşecek; durumu yenileyebilirsin.',
+        yenile: 'Durumu yenile',
+        iptal: 'Satın alma iptal edildi.',
+        hata: 'Satın alma tamamlanamadı. Tekrar dene.',
+        magazaYok: 'Mağaza şu anda kullanılamıyor. Daha sonra tekrar dene.',
+      },
+      geriYukle: {
+        dugme: 'Satın alımları geri yükle',
+        bekleniyor: 'Satın alımların kontrol ediliyor…',
+        basarili: 'Aboneliğin geri yüklendi.',
+        bulunamadi: 'Geri yüklenecek etkin bir abonelik bulunamadı.',
+        hata: 'Satın alımlar geri yüklenemedi. Tekrar dene.',
+      },
+      yonet: {
+        dugme: 'Aboneliği yönet',
+        aciklama: 'Yenileme ve iptal işlemleri mağazanın abonelik ayarlarından yapılır.',
+      },
+      kapali: {
+        baska_kanal:
+          'Aboneliğin başka bir mağazada etkin. Bu cihazdan ikinci bir abonelik başlatılamaz; aboneliğini o mağazadan yönet.',
+        kurumsal:
+          'Kurumun kurumsal sözleşmeyle abone. Plan değişikliği için hesap yöneticinle iletişime geç.',
+        web: 'Aboneliğin Köprü web sitesinden yönetiliyor. Bu uygulamadan ikinci bir abonelik başlatılamaz.',
+        magaza_yok: 'Bu cihazda mağaza satın alması desteklenmiyor.',
+      },
+      sahipDegil: 'Abonelik bilgilerini yalnızca kurum sahibi görebilir.',
+      yuklenemedi: 'Abonelik bilgisi alınamadı.',
+      serit: {
+        saltOkunur:
+          'Kurumunun aboneliği etkin değil. Verilerini görebilirsin, yeni kayıt ekleyemezsin.',
+        saltOkunurSahip: 'Aboneliğin etkin değil; yalnızca görüntüleyebilirsin. Aboneliği yenile.',
+        denemeBitiyor: 'Denemenin bitmesine {n} gün kaldı. Aboneliğini başlat.',
+        denemeBugun: 'Deneme bugün bitiyor. Aboneliğini başlat.',
+        ac: 'Abonelik ekranını aç',
+      },
+      limit: {
+        baslik: 'Planının sınırına ulaştın',
+        aciklama: '{limit}: {mevcut} / {ust}. Yeni eklemek için planını yükselt.',
+        aciklamaKisa: 'Planının sınırına ulaştın. Yeni eklemek için planını yükselt.',
+        sahipDugme: 'Planını yükselt',
+        digerAciklama:
+          'Daha fazlasını eklemek için kurum sahibine planı yükseltmesini bildir. Mevcut verilerin etkilenmez.',
+        tamam: 'Tamam',
+        ad: {
+          max_ogrenci: 'Öğrenci sınırı',
+          max_ogretmen: 'Öğretmen sınırı',
+          max_sube: 'Şube sınırı',
+          sms_aylik: 'Aylık SMS sınırı',
+          medya_kota_bayt: 'Medya alanı',
+          soru_aylik_ogrenci: 'Aylık soru sınırı',
+          bilinmeyen: 'Plan sınırı',
+        },
+      },
+      aski: {
+        baslik: 'Kurumun askıya alındı',
+        aciklama:
+          'Bu kurumun hesabı askıya alındı. Verilerin silinmedi. Destek ekibiyle iletişime geç.',
+        tekrarDene: 'Tekrar dene',
+        kurumDegistir: 'Başka kuruma geç',
+      },
+    },
+    platformMesaji: {
+      kapat: 'Mesajı kapat',
+      onem: { bilgi: 'Bilgi', uyari: 'Uyarı', kritik: 'Önemli' },
+    },
     sekmeler: {
       bugun: 'Bugün',
       dersler: 'Dersler',
@@ -3267,6 +3390,7 @@ export const tr = {
       },
     },
     profil: {
+      abonelik: 'Abonelik',
       baslik: 'Profil',
       kurum: 'Kurum',
       kurumYonet: 'Kurum bilgileri ve modüller',

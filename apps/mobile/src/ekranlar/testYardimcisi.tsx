@@ -11,9 +11,10 @@ import { act } from 'react';
 import type { ReactElement } from 'react';
 import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 
+import { abonelikUyariYoneticisi } from '../abonelik/uyari';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
-import { mockAdaptorler } from '../api/mock';
+import { mockAbonelikKontrolu, mockAdaptorler } from '../api/mock';
 import { mockMedya } from '../api/mockMedya';
 import {
   sahtePlatform,
@@ -22,6 +23,7 @@ import {
 } from '../bildirim/sahtePlatform';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
+import { sahteMagazaOlustur } from '../magaza';
 import { OdakYoneticisi } from '../motivasyon/odak';
 import { XpYoneticisi } from '../motivasyon/xpYonetici';
 import { GeriBildirimDeposu, geriBildirimIsleyicisiKaydet } from '../offline/geriBildirim';
@@ -57,6 +59,7 @@ export interface Ortam {
   yukleme: YuklemeKuyrugu;
   /** Bildirim yoneticisinin sahte isletim sistemi katmani. */
   push: SahtePlatform;
+  magaza: ReturnType<typeof sahteMagazaOlustur>;
 }
 
 export const OGRETMEN = ['+905551110001', 'uyelik-ogretmen-a'] as const;
@@ -149,8 +152,16 @@ export function ortamKur(): Ortam {
       void queryClient.invalidateQueries({ queryKey: ['bildirim'] });
     },
   });
+  const abonelikUyari = abonelikUyariYoneticisi();
+  const magaza = sahteMagazaOlustur({
+    satinAlindi: (teklif) => {
+      mockAbonelikKontrolu(adaptorler).satinAlindi(teklif.planKodu, 'apple');
+    },
+  });
   const servisler = {
     bildirim,
+    abonelikUyari,
+    magaza,
     adaptorler,
     oturum,
     queryClient,
@@ -175,6 +186,7 @@ export function ortamKur(): Ortam {
     gonderim,
     yukleme,
     push,
+    magaza,
     giris: async (telefon, uyelikId) => {
       await adaptorler.auth.otpDogrula(telefon, '123456');
       await oturum.girisTamamlandi();

@@ -150,6 +150,12 @@ export const HATA_KODLARI = [
   'yetkisiz',
   'riza_gerekli',
   'abonelik_gerekli',
+  /** 402 plan_limiti: plan sinirina ulasildi; `detay`: limit, mevcut, ust_sinir. */
+  'plan_limiti',
+  /** 403 kurum_askida: kurum hesabi platform tarafindan askiya alindi. */
+  'kurum_askida',
+  /** 409 abonelik_baska_kanalda: kurum baska bir kanaldan zaten abone. */
+  'abonelik_baska_kanalda',
   'modul_kapali',
   'izin_yok',
   'dogrulama',

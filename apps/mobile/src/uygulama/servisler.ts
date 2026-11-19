@@ -3,6 +3,11 @@ import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+import {
+  abonelikUyariYoneticisi,
+  hatalariGozle,
+  type AbonelikUyariYoneticisi,
+} from '../abonelik/uyari';
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
 import { cevrimiciKorumaliBildirim } from '../api/cevrimiciBildirim';
@@ -10,6 +15,7 @@ import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliMotivasyon } from '../api/cevrimiciMotivasyon';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { cevrimiciKorumaliOperasyon } from '../api/cevrimiciOperasyon';
+import { mockAbonelikKontrolu } from '../api/mock';
 import { apiHatasiMi } from '../api/tipler';
 import { expoPushPlatformu } from '../bildirim/platform';
 import { bildirimYoneticisiOlustur, type BildirimYoneticisi } from '../bildirim/yonetici';
@@ -19,6 +25,7 @@ import { guvenliDavetDeposu } from '../depo/davetDeposu';
 import { kv, webDeposuOlarak, type KvDepo } from '../depo/kv';
 import { cevrimiciKorumali } from '../hesap/cevrimici';
 import { yeniIstekId } from '../lib/kimlik';
+import { uygulamaMagazasi, type MagazaSaglayici } from '../magaza';
 import { OdakYoneticisi } from '../motivasyon/odak';
 import { XpYoneticisi } from '../motivasyon/xpYonetici';
 import { modulAcikMi } from '../nav/yapilandirma';
@@ -60,6 +67,10 @@ export interface Servisler {
   odak: OdakYoneticisi;
   /** Push izni, cihaz kaydi, bildirime dokunma ve uygulama ici afis. */
   bildirim: BildirimYoneticisi;
+  /** 402/403 abonelik hatalarindan turetilen uyari durumu (limit, salt okunur, askida). */
+  abonelikUyari: AbonelikUyariYoneticisi;
+  /** Mağaza satin alma saglayicisi (RevenueCat ya da sahte). */
+  magaza: MagazaSaglayici;
 }
 
 /** Uygulama omru boyunca tek kez kurulan servisler. */
@@ -70,7 +81,8 @@ export function servisleriKur(): Servisler {
   const operasyon = cevrimiciKorumaliOperasyon(ham.ders, ham.finans, () =>
     agGozlemcisi.cevrimiciMi(),
   );
-  const adaptorler: Adaptorler = {
+  const abonelikUyari = abonelikUyariYoneticisi();
+  const birlesik: Adaptorler = {
     ...ham,
     hesap: cevrimiciKorumali(ham.hesap, () => agGozlemcisi.cevrimiciMi()),
     ders: operasyon.ders,
@@ -80,6 +92,23 @@ export function servisleriKur(): Servisler {
     motivasyon: cevrimiciKorumaliMotivasyon(ham.motivasyon, () => agGozlemcisi.cevrimiciMi()),
     bildirim: cevrimiciKorumaliBildirim(ham.bildirim, () => agGozlemcisi.cevrimiciMi()),
   };
+  // Her adaptor hatasi (kuyruktan gelenler dahil) abonelik uyari durumunu besler.
+  const adaptorler = hatalariGozle(birlesik, (e) => {
+    abonelikUyari.hataIsle(e);
+  });
+  const magaza = uygulamaMagazasi(
+    () => adaptorler.abonelik.planlar().then((p) => p.map((x) => x.kod)),
+    ortam.apiMock
+      ? {
+          satinAlindi: (teklif) => {
+            mockAbonelikKontrolu(ham).satinAlindi(
+              teklif.planKodu,
+              Platform.OS === 'android' ? 'google' : 'apple',
+            );
+          },
+        }
+      : {},
+  );
   const geriBildirimDeposu = new GeriBildirimDeposu(kv());
 
   const oturumRef: { current: OturumYoneticisi | null } = { current: null };
@@ -109,6 +138,8 @@ export function servisleriKur(): Servisler {
     cikisOncesi: () => bildirimRef.current?.cikis() ?? Promise.resolve(),
     temizle: () => {
       queryClient.clear();
+      abonelikUyari.sifirla();
+      void magaza.logOut().catch(() => undefined);
       xpRef.current?.sifirla();
       odakRef.current?.sifirla();
     },
@@ -293,5 +324,7 @@ export function servisleriKur(): Servisler {
     xp,
     odak,
     bildirim,
+    abonelikUyari,
+    magaza,
   };
 }
