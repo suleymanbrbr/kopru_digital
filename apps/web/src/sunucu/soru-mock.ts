@@ -14,6 +14,7 @@ import {
 
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import { medyaMockAdres, medyaMockHazirMi } from './medya-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -144,16 +145,16 @@ const uid = () => crypto.randomUUID();
 const SAAT_MS = 3_600_000;
 const GUN_MS = 86_400_000;
 const UTC3 = 3 * SAAT_MS;
-const once = (saat: number) => new Date(Date.now() - saat * SAAT_MS).toISOString();
+const once = (saat: number) => new Date(mockSimdi() - saat * SAAT_MS).toISOString();
 const yerelGun = (iso: string | number) =>
   new Date((typeof iso === 'number' ? iso : Date.parse(iso)) + UTC3).toISOString().slice(0, 10);
 const yerelAy = (iso: string) => yerelGun(iso).slice(0, 7);
 const gunSonu = (): string => {
-  const g = yerelGun(Date.now());
+  const g = yerelGun(mockSimdi());
   return new Date(Date.parse(`${g}T00:00:00Z`) + GUN_MS - UTC3).toISOString();
 };
 const aySonu = (): string => {
-  const d = new Date(Date.now() + UTC3);
+  const d = new Date(mockSimdi() + UTC3);
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) - UTC3).toISOString();
 };
 
@@ -405,7 +406,7 @@ function detay(s: MSoru, kaynak: string) {
 function kota(ogrenciId: string) {
   const d = depo();
   const benim = d.sorular.filter((s) => s.ogrenci_id === ogrenciId);
-  const bugun = yerelGun(Date.now());
+  const bugun = yerelGun(mockSimdi());
   const ay = bugun.slice(0, 7);
   const gunluk = benim.filter((s) => yerelGun(s.created_at) === bugun).length;
   const aylik = benim.filter((s) => yerelAy(s.created_at) === ay).length;
@@ -544,7 +545,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
     if (eksik.length > 0) {
       return hata(409, 'dosya_hazir_degil', 'Dosya henüz hazır değil.', { dosya_idleri: eksik });
     }
-    const simdi = new Date().toISOString();
+    const simdi = new Date(mockSimdi()).toISOString();
     const hedef = g.data.brans_kodu === 'fizik' ? OGRETMEN2.id : OGRETMEN.id;
     const masa = d.masalar.find(
       (x) => x.aktif && x.arsivlendi_at === null && x.brans_kodu === g.data.brans_kodu,
@@ -635,7 +636,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
           return hata(409, 'soru_durumu_gecersiz', 'Soru henüz cevaplanmadı.');
         }
         s.durum = 'cozuldu';
-        s.cozuldu_at = new Date().toISOString();
+        s.cozuldu_at = new Date(mockSimdi()).toISOString();
         s.cozulduKaynagi = 'ogrenci';
         s.son_hareket_at = s.cozuldu_at;
       }
@@ -665,7 +666,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
           dosya_idleri: e.eksik,
         });
       }
-      const simdi = new Date().toISOString();
+      const simdi = new Date(mockSimdi()).toISOString();
       const yeni = mesaj(OGRENCI, 'ogrenci', 'takip', g.data.metin, simdi, s.mesajlar.length, e.ek);
       yeni.istekId = g.data.istek_id ?? null;
       s.mesajlar.push(yeni);
@@ -693,7 +694,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
         neden: g.data.neden,
         aciklama: g.data.aciklama ?? null,
         durum: 'acik',
-        created_at: new Date().toISOString(),
+        created_at: new Date(mockSimdi()).toISOString(),
         kapandi_at: null,
         kapatma_notu: null,
       };
@@ -726,7 +727,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
       if (g.data.istek_id && s.mesajlar.some((x) => x.istekId === g.data.istek_id)) {
         return ok(detay(s, kaynak));
       }
-      const simdi = new Date().toISOString();
+      const simdi = new Date(mockSimdi()).toISOString();
       const yazar = rolu(kurumId) === 'ogretmen' ? OGRETMEN : YONETICI;
       const yeni = mesaj(
         yazar,
@@ -796,7 +797,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
       const g = SoruMusaitlikGirdiSema.safeParse(govde);
       if (!g.success) return dogrulama();
       d.musait = g.data.musait;
-      d.musaitDegilTarihi = g.data.musait ? null : yerelGun(Date.now());
+      d.musaitDegilTarihi = g.data.musait ? null : yerelGun(mockSimdi());
       return ok({ musait: d.musait, musait_degil_tarihi: d.musaitDegilTarihi });
     }
   }
@@ -844,7 +845,7 @@ export function soruMock(istek: MockIstek): MockYanit | null {
       const g = SoruBildirimKapatGirdiSema.safeParse(govde ?? {});
       if (!g.success) return dogrulama();
       b.durum = 'kapandi';
-      b.kapandi_at = new Date().toISOString();
+      b.kapandi_at = new Date(mockSimdi()).toISOString();
       b.kapatma_notu = g.data.not ?? null;
       return ok(b);
     }
@@ -891,7 +892,7 @@ function masaIsle(kalan: string[], istek: MockIstek): MockYanit {
           gorunen_ad: adBul(id) ?? null,
         })),
         surum: 1,
-        created_at: new Date().toISOString(),
+        created_at: new Date(mockSimdi()).toISOString(),
       };
       d.masalar.push(masa);
       return ok(masa, 201);
@@ -912,7 +913,7 @@ function masaIsle(kalan: string[], istek: MockIstek): MockYanit {
       return ok(masa);
     }
     if (m === 'DELETE') {
-      masa.arsivlendi_at = new Date().toISOString();
+      masa.arsivlendi_at = new Date(mockSimdi()).toISOString();
       return { durum: 204 };
     }
   }
@@ -940,8 +941,8 @@ function masaIsle(kalan: string[], istek: MockIstek): MockYanit {
 
 function olcum(sorgu: URLSearchParams) {
   const d = depo();
-  const bit = sorgu.get('bitis') ?? yerelGun(Date.now());
-  const bas = sorgu.get('baslangic') ?? yerelGun(Date.now() - 30 * GUN_MS);
+  const bit = sorgu.get('bitis') ?? yerelGun(mockSimdi());
+  const bas = sorgu.get('baslangic') ?? yerelGun(mockSimdi() - 30 * GUN_MS);
   const kume = d.sorular.filter((s) => {
     const g = yerelGun(s.created_at);
     return g >= bas && g <= bit;

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, simdi, test } from './yardimcilar';
 
 /**
  * Mock modda motivasyon ekranlari: karakter secimi, yuva, odak, XP geri bildirimi (ogrenci `Atlas`);
@@ -13,7 +13,7 @@ import { girisYap } from './yardimcilar';
 const IST = 'Europe/Istanbul';
 function tarih(gun = 0): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: IST }).format(
-    new Date(Date.now() + gun * 86_400_000),
+    new Date(simdi() + gun * 86_400_000),
   );
 }
 function haftaGunu(gun: number): string {
@@ -158,7 +158,6 @@ test.describe('ogrenci', () => {
   });
 
   test('odak: serbest sure bitince +XP ucar, seviye atlayinca kutlama acilir', async ({ page }) => {
-    await page.clock.install();
     await girisYap(page, 'Atlas Etüt Merkezi');
     // Yuva: sonraki seviyeye kalan XP okunur; odak suresi onu asacak sekilde secilir (en az 5 dk).
     await git(page, 'Karakterim', 'Yuva');

@@ -1,4 +1,5 @@
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -74,7 +75,7 @@ function yap(
   once: number,
   ek: Partial<MockDuyuru> & Pick<MockDuyuru, 'baslik' | 'govde'>,
 ): MockDuyuru {
-  const an = Date.now() - once;
+  const an = mockSimdi() - once;
   return {
     id: mockDuyuruKimligi(n),
     hedef_turu: 'kurum',
@@ -129,14 +130,14 @@ function tohumla(kurumId: string): MockDuyuru[] {
         govde:
           'Kütüphanede sessizlik esastır. Kurallar: https://ornek.kurum.test/kutuphane — ayrıca javascript:alert(1) gibi metinler bağlantı olmaz.',
         inbox: true,
-        benOkudu: iso(Date.now() - 2 * GUN + 10 * DK),
+        benOkudu: iso(mockSimdi() - 2 * GUN + 10 * DK),
       }),
       yap(4, 6 * GUN, {
         ...kurumHedefi,
         baslik: 'Yeni dönem kayıtları',
         govde: 'Yeni dönem kayıtları başladı. Sorularını öğretmenine iletebilirsin.',
         inbox: true,
-        benOkudu: iso(Date.now() - 6 * GUN + 10 * DK),
+        benOkudu: iso(mockSimdi() - 6 * GUN + 10 * DK),
       }),
     ];
   }
@@ -162,7 +163,7 @@ function tohumla(kurumId: string): MockDuyuru[] {
       govde: 'Yoklamalar 14 gün sonra kilitlenir. Eksik yoklamaları tamamla.',
       hedef_roller: ['ogretmen'],
       inbox: true,
-      benOkudu: iso(Date.now() - 3 * GUN + 10 * DK),
+      benOkudu: iso(mockSimdi() - 3 * GUN + 10 * DK),
       alici_sayisi: 3,
       okunan_sayisi: 2,
     }),
@@ -177,7 +178,7 @@ function tohumla(kurumId: string): MockDuyuru[] {
       okunan_sayisi: 2,
       okuyanlar: ogrenciler.slice(0, 2).map((o, i) => ({
         alici_id: o.uyelik_id,
-        okundu_at: iso(Date.now() - (30 + i * 20) * DK),
+        okundu_at: iso(mockSimdi() - (30 + i * 20) * DK),
       })),
     }),
     yap(11, 1 * GUN, {
@@ -212,7 +213,7 @@ function tohumla(kurumId: string): MockDuyuru[] {
         okunan_sayisi: 4,
         okuyanlar: ogrenciler.slice(0, 4).map((o, i) => ({
           alici_id: o.uyelik_id,
-          okundu_at: iso(Date.now() - (60 + i * 15) * DK),
+          okundu_at: iso(mockSimdi() - (60 + i * 15) * DK),
         })),
       }),
     );
@@ -280,7 +281,7 @@ export function duyuruMock(kurumId: string, parcalar: string[], istek: MockIstek
   const yazabilir = rol !== 'ogrenci';
   const yonetici = rol === 'yonetici' || rol === 'sahip';
   const liste = depo(kurumId);
-  const an = Date.now();
+  const an = mockSimdi();
   const [, , , a, b] = parcalar;
   const gorunen = liste.filter((d) => !d.silindi);
   const yonetebilir = (d: MockDuyuru) => yonetici || d.yazar_id === BEN_UYELIK_ID;

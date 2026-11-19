@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, test } from './yardimcilar';
 
 /**
  * Mock modda ders kayitlari, materyaller ve ders sonu geri bildirimi. Kayit/geri bildirim mock deposu

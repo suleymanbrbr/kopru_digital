@@ -1,6 +1,7 @@
 module.exports = {
   preset: 'jest-expo',
   setupFiles: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.zaman.js'],
   testMatch: ['<rootDir>/src/**/*.test.ts', '<rootDir>/src/**/*.test.tsx'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
   transformIgnorePatterns: [
