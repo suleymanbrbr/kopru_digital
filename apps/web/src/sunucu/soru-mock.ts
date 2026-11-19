@@ -1,4 +1,3 @@
-import { mockSimdi } from './mock-zaman';
 import {
   SORU_SES_EN_FAZLA_SN,
   SoruAyarlariGuncelleGirdiSema,
@@ -15,6 +14,7 @@ import {
 
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import { medyaMockAdres, medyaMockHazirMi } from './medya-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**

@@ -1,6 +1,6 @@
-import { mockSimdi } from './mock-zaman';
 import { MEDYA_TUR_KURALLARI, medyaYuklemeIstegiSema, type MedyaDosyaTuru } from '@kopru/contracts';
 
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**

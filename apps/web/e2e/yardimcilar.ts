@@ -13,9 +13,9 @@ export function simdi(): number {
  * sunucudaki mock saatle ayni olur. Saat akmaya devam eder; `page.clock.fastForward` calisir.
  */
 export const test = temel.extend({
-  context: async ({ context }, use) => {
+  context: async ({ context }, kullan) => {
     await context.clock.install({ time: simdi() });
-    await use(context);
+    await kullan(context);
   },
 });
 

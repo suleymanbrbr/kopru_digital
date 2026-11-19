@@ -48,6 +48,6 @@ export default defineConfig({
     url: `http://localhost:${String(port)}/giris`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
-    env: { NEXT_PUBLIC_API_MOCK: '1', E2E_KAYMA_MS: process.env.E2E_KAYMA_MS ?? '0' },
+    env: { NEXT_PUBLIC_API_MOCK: '1', E2E_KAYMA_MS: process.env.E2E_KAYMA_MS },
   },
 });

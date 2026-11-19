@@ -1,6 +1,6 @@
-import { mockSimdi } from './mock-zaman';
 import { mockDersBaglami, type MockDers } from './ders-mock';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 import { urlCoz } from '@/lib/kayit/saglayici';

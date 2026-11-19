@@ -1,5 +1,5 @@
-import { mockSimdi } from './mock-zaman';
 import { duyuruMock, duyuruMockSifirla, mockDuyuruKimligi } from './duyuru-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
