@@ -46,6 +46,10 @@ export const envSchema = base.safeExtend({
    * ve mesaj ekleri adressiz doner (`adres_alinamadi: true`).
    */
   MEDYA_URL: z.url().optional(),
+  /** KVKK veri disa aktarma: diger servislerin taban adresleri (`POST /ic/kvkk/veri`, servis JWT'si). */
+  MOTIVASYON_URL: z.url().optional(),
+  BILDIRIM_URL: z.url().optional(),
+  KVKK_SERVIS_ZAMAN_ASIMI_MS: z.coerce.number().int().min(100).max(30_000).default(3000),
   /** `medya` ic cagrisinin zaman asimi (ms); asilirsa soru yine doner, ek adresleri `null` olur. */
   MEDYA_ZAMAN_ASIMI_MS: z.coerce.number().int().min(100).max(30_000).default(2000),
   /**

@@ -42,6 +42,10 @@ export const errorCodes = {
   ustDuzeyKapali: 'ust_duzey_kapali',
   gecersizTelefon: 'gecersiz_telefon',
   kodGecersiz: 'kod_gecersiz',
+  /** 409: kurumun tek sahibi; hesap silinemez (`details.kurumlar`). */
+  kurumSahibiEngeli: 'kurum_sahibi_engeli',
+  /** 409: zaten bekleyen bir silme talebi var. */
+  silmeTalebiVar: 'silme_talebi_var',
 } as const;
 
 export type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
