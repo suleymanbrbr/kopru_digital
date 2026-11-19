@@ -116,6 +116,53 @@ jobs:
             apps/web/test-results
           retention-days: 7
 
+  # Platform yonetim paneli: mock API modunda giris -> 2FA -> kurum -> mufredat -> motivasyon akislari,
+  # axe (iki tema) ve mobil tasma denetimi. Gercek servislerle deneme: apps/admin/scripts/gercek-akis.sh.
+  admin-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Admin build (mock API)
+        run: pnpm turbo run build --filter=@kopru/admin
+        env:
+          NEXT_PUBLIC_API_MOCK: '1'
+
+      - name: Playwright tarayıcısı
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || true)"
+          if [ -n "$CHROME" ]; then
+            echo "Hazir Chrome kullaniliyor: $CHROME ($("$CHROME" --version))"
+            echo "PLAYWRIGHT_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          else
+            pnpm --filter @kopru/admin exec playwright install --with-deps chromium
+          fi
+
+      - name: Playwright e2e (masaüstü + mobil)
+        run: pnpm --filter @kopru/admin e2e
+        env:
+          E2E_HAZIR: '1'
+          NEXT_PUBLIC_API_MOCK: '1'
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: admin-playwright-rapor
+          path: |
+            apps/admin/playwright-report
+            apps/admin/test-results
+          retention-days: 7
+
   # Mobil: lint/typecheck/test ana "verify" isinde de calisir (turbo tum paketleri kosar);
   # bu is ek olarak Expo bagimlilik/paket sagligini ve JS paketinin derlendigini dogrular.
   mobil:
