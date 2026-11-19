@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
+import { AbonelikKatmani } from '../../ekranlar/abonelik/AbonelikKatmanlari';
 import { XpKatmani } from '../../ekranlar/motivasyon/XpKatmani';
 import { ortam } from '../../ortam';
 import { useTema } from '../../tema/TemaSaglayici';
@@ -53,6 +54,11 @@ export default function UygulamaDuzeni() {
         <Stack.Screen name="duyuru/[id]" options={{ title: t('mobil.duyuru.detayBaslik') }} />
         <Stack.Screen name="duyuru-yaz" options={{ title: t('mobil.duyuru.yaz.baslik') }} />
         <Stack.Screen name="kurum" options={{ title: t('mobil.kurum.baslik') }} />
+        <Stack.Screen name="abonelik" options={{ title: t('mobil.abonelik.baslik') }} />
+        <Stack.Screen
+          name="plan-limiti"
+          options={{ title: t('mobil.abonelik.limit.baslik'), presentation: 'modal' }}
+        />
         <Stack.Screen name="oturumlar" options={{ title: t('mobil.oturumlar.baslik') }} />
         <Stack.Screen name="katilim" options={{ title: t('mobil.sinifKodu.baslik') }} />
         <Stack.Screen name="ders-ekle" options={{ title: t('mobil.ders.formBaslik') }} />
@@ -90,6 +96,7 @@ export default function UygulamaDuzeni() {
         </Stack.Protected>
       </Stack>
       <XpKatmani />
+      <AbonelikKatmani />
     </View>
   );
 }

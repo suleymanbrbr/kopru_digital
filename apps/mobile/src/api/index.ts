@@ -5,6 +5,7 @@ import { ortam } from '../ortam';
 import type { Adaptorler } from './adaptorler';
 import { gercekAdaptorler } from './gercek';
 import { mockAdaptorler } from './mock';
+import type { MockAbonelikSenaryosu } from './mockAbonelik';
 import { ApiHata } from './tipler';
 
 /** Api adresi tanimli degilken (mock da kapaliysa): her cagri `yapilandirma` hatasi verir. */
@@ -140,6 +141,7 @@ function baglanmamisAdaptorler(): Adaptorler {
       duyuruArsivle: hata,
       duyuruSil: hata,
     },
+    abonelik: { ozet: hata, planlar: hata, platformMesaji: hata },
     medya: { izinAl: hata, yukle: hata, tamam: hata, durum: hata, yerelBilgi: hata },
     hesap: {
       sinifKoduKatil: hata,
@@ -163,7 +165,12 @@ function baglanmamisAdaptorler(): Adaptorler {
  * (`@kopru/api-client`); ikisi de yoksa `yapilandirma` hatasi.
  */
 export function adaptorleriOlustur(depo: BelirtecDeposu): Adaptorler {
-  if (ortam.apiMock) return mockAdaptorler(depo);
+  if (ortam.apiMock) {
+    const senaryolar = ortam.mockAbonelik
+      ? (ortam.mockAbonelik.split(',') as MockAbonelikSenaryosu[])
+      : undefined;
+    return mockAdaptorler(depo, undefined, senaryolar);
+  }
   if (ortam.apiUrl) {
     return gercekAdaptorler({
       apiUrl: ortam.apiUrl,

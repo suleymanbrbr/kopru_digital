@@ -123,6 +123,7 @@ function plan(
       soru_aylik_ogrenci: -1,
     },
     moduller: [],
+    magaza_urun_kodlari: null,
   };
 }
 

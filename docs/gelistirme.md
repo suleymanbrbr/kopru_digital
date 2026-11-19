@@ -303,6 +303,16 @@ Bildirim servisi çekirdeğinin (`services/bildirim`) mobil yüzü: push kaydı,
 - **Soğuk açılış ölçümü:** `src/lib/olcum.ts` (yalnız `__DEV__`) Metro'ya `[olcum] ...` yazar; `apps/mobile/scripts/soguk-acilis-olcumu.sh <metro-log>` uygulamayı öldürüp yeniden açar ve toplam süreyi basar. Soğuk açılışta kalıcı sorgu önbelleği artık silinmez (`uyelikSec` yalnız uyelikten uyelige geçişte temizler). Gelişmiş: Metro dosya izleyicisi bu Mac'te güvenilmez; kod değişince Metro'yu yeniden başlat.
 - **Elle deneme:** `apps/mobile/scripts/duyuru-bugun-akisi.sh` (başlıktaki kurulum: ayrı NATS, api, bildirim, motivasyon + worker'lar).
 
+### Abonelik, limit ve platform mesajı (mobil)
+
+- **Ekran:** Profil > Abonelik (yalnız sahip; diğer roller bu uçları hiç çağırmaz). Plan, durum (deneme kalan gün, ek süre, askıda, iptal -> bitiş), kullanım çubukları, mağaza planları (`/planlar` + mağaza teklifleri), satın al, "satın alımları geri yükle", "aboneliği yönet" (App Store / Google Play ayar sayfası; web satın alma bağlantısı yok, Apple kuralı). Kurum iyzico/kurumsal ya da başka mağaza kanalından aboneyse satın alma kapalıdır ve açıklama görünür.
+- **Mağaza arayüzü** (`src/magaza/`): `MagazaSaglayici` (`logIn(kurumId)`, `teklifleriGetir`, `satinAl`, `geriYukle`). Gerçek `react-native-purchases` (katalog 10.16.0) yalnız `EXPO_PUBLIC_REVENUECAT_IOS` / `_ANDROID` doluysa, iOS/Android'de ve Expo Go'da değilken **tembel** yüklenir; aksi halde sahte sağlayıcı (geliştirme, testler, simülatör). Config eklentisi gerekmez; native modül olduğundan **yeni geliştirme derlemesi** (`expo prebuild`/`pnpm ios`) şarttır. Mağaza ürünü api'nin `/planlar` yanıtındaki `magaza_urun_kodlari` (`{apple?, google?} | null`) ile plana eşlenir; alan boşsa plan "Yakında" görünür (Google ürün kimliğinde `:temelplan` eki yok sayılır). Sahte sağlayıcının teklifleri (`kopru.<plan>.<aylik|yillik>`) yalnız mock/geliştirme içindir.
+- **Satın alma sonrası:** sunucu aktivasyonu RevenueCat webhook'uyla olur; istemci `GET .../abonelik`'i en çok 15 sn yoklar, aktif olmazsa "işleniyor" mesajı + "durumu yenile".
+- **Limit/askı:** her adaptör hatası izlenir (`abonelik/uyari.ts`): `402 plan_limiti` -> "Planını yükselt" sayfası (sahibe abonelik ekranı, diğer rollere "kurum sahibine bildir"), `402 abonelik_gerekli` -> salt okunur şeridi, `403 kurum_askida` -> askı ekranı. Sahibe deneme bitimine <= 3 gün kala şerit.
+- **Platform mesajı:** açılışta ve öne gelişte `GET /v1/platform-mesaji`; kapatılan mesajın kimliği cihazda saklanır.
+- **Mock senaryoları:** `EXPO_PUBLIC_MOCK_ABONELIK=deneme_bitiyor,mesaj` (virgüllü): deneme, deneme_bitiyor, ek_sure, askida, iptal, aktif_apple, aktif_google, aktif_iyzico, kurumsal, limit_dolu, salt_okunur, kurum_askida, mesaj.
+- **Gerçek api denemesi:** `apps/mobile/scripts/abonelik-akisi.sh` (kullanıcı + kurum açar, `webhook` ile RevenueCat INITIAL_PURCHASE gönderir; başlığındaki adımlara bakın).
+
 ### Doğrulama
 
 ```sh

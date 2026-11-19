@@ -67,6 +67,12 @@ export const PlanLimitiDetaySema = z.object({
 });
 export type PlanLimitiDetay = z.infer<typeof PlanLimitiDetaySema>;
 
+/** Plan basina magaza urun kodlari (RevenueCat urun kimligi); tanimli degilse `null` (mobil "yakinda" gosterir). */
+export const MagazaUrunKodlariSema = z.object({
+  apple: z.string().optional(),
+  google: z.string().optional(),
+});
+
 export const AbonelikPlanSema = z.object({
   id: z.uuid(),
   kod: z.string(),
@@ -78,6 +84,7 @@ export const AbonelikPlanSema = z.object({
   kdv_orani: z.number().int(),
   limitler: PlanLimitleriSema,
   moduller: z.array(z.string()),
+  magaza_urun_kodlari: MagazaUrunKodlariSema.nullable(),
 });
 export type AbonelikPlanTipi = z.infer<typeof AbonelikPlanSema>;
 

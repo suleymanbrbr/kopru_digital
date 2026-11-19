@@ -11,12 +11,14 @@ import { act } from 'react';
 import type { ReactElement } from 'react';
 import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 
+import { abonelikUyariYoneticisi } from '../abonelik/uyari';
 import { mockAdaptorler } from '../api/mock';
 import { ApiHata } from '../api/tipler';
 import KurumSec from '../app/(onboarding)/kurum-sec';
 import { testBildirimYoneticisi } from '../bildirim/sahtePlatform';
 import { bellekBelirtecDeposu } from '../depo/belirtecDeposu';
 import { bellekKv } from '../depo/kv';
+import { sahteMagazaOlustur } from '../magaza';
 import { OdakYoneticisi } from '../motivasyon/odak';
 import { XpYoneticisi } from '../motivasyon/xpYonetici';
 import { GeriBildirimDeposu } from '../offline/geriBildirim';
@@ -129,6 +131,8 @@ function ortamKur(): Ortam {
       yeniId: () => '00000000-0000-7000-b000-000000000001',
       cevrimiciMi: () => cevrimici.deger,
     }),
+    abonelikUyari: abonelikUyariYoneticisi(),
+    magaza: sahteMagazaOlustur(),
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,

@@ -40,6 +40,16 @@ export function planLimitleri(plan: Pick<PlanSatiri, 'limitler'>): PlanLimitleri
   return sonuc.success ? sonuc.data : UCRETSIZ_KATMAN;
 }
 
+/** `planlar.magaza_urun_kodlari` jsonb'sinden yalniz bilinen (apple/google) metin anahtarlari; bos ya da bozuksa null. */
+function magazaUrunKodlari(ham: unknown): AbonelikPlanTipi['magaza_urun_kodlari'] {
+  if (typeof ham !== 'object' || ham === null) return null;
+  const h = ham as Record<string, unknown>;
+  const sonuc: { apple?: string; google?: string } = {};
+  if (typeof h.apple === 'string' && h.apple) sonuc.apple = h.apple;
+  if (typeof h.google === 'string' && h.google) sonuc.google = h.google;
+  return sonuc.apple || sonuc.google ? sonuc : null;
+}
+
 export function planYaniti(plan: PlanSatiri): AbonelikPlanTipi {
   return {
     id: plan.id,
@@ -52,6 +62,7 @@ export function planYaniti(plan: PlanSatiri): AbonelikPlanTipi {
     kdv_orani: plan.kdv_orani,
     limitler: planLimitleri(plan),
     moduller: plan.moduller,
+    magaza_urun_kodlari: magazaUrunKodlari(plan.magaza_urun_kodlari),
   };
 }
 

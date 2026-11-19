@@ -32,6 +32,11 @@ export const ortam = {
   pushSahte: __DEV__ && (process.env.EXPO_PUBLIC_PUSH_SAHTE as string | undefined) === '1',
   /** Expo push belirteci icin EAS proje kimligi (bos: `app.config` extra.eas.projectId). */
   easProjeKimligi: (process.env.EXPO_PUBLIC_EAS_PROJE_ID as string | undefined) ?? '',
+  /** Mock mod abonelik senaryolari (virgullu; bkz. `api/mockAbonelik.ts`). */
+  mockAbonelik: (process.env.EXPO_PUBLIC_MOCK_ABONELIK as string | undefined) ?? '',
+  /** RevenueCat genel SDK anahtarlari (bos: sahte magaza saglayicisi). */
+  revenueCatIos: (process.env.EXPO_PUBLIC_REVENUECAT_IOS as string | undefined) ?? '',
+  revenueCatAndroid: (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID as string | undefined) ?? '',
   /** Gelistirici ekranlari (Bilesenler) yalnizca gelistirme derlemesinde acilir. */
   gelistirici: __DEV__,
 } as const;
