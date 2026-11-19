@@ -93,5 +93,5 @@ set -a
 # shellcheck disable=SC1090
 . "$TMP/tohum.env"
 set +a
-export GERCEK_API_URL="http://localhost:$API_PORT" E2E_ADMIN_PORT="$ADMIN_PORT"
+export GERCEK_MOTIVASYON_URL="http://localhost:$MOT_PORT" GERCEK_API_URL="http://localhost:$API_PORT" E2E_ADMIN_PORT="$ADMIN_PORT"
 (cd "$KOK/apps/admin" && pnpm exec playwright test --config playwright.gercek.config.ts)

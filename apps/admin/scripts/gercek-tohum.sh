@@ -40,15 +40,19 @@ ID2=$(kurum_ac "sahip2-$RUN@example.com" "$K2")
 
 YONETICI="yonetici-$RUN@example.com"
 DESTEK="destek-$RUN@example.com"
+BELIRTEC="belirtec-$RUN@example.com"
 kayit "$YONETICI" "Platform Yöneticisi" >/dev/null
 kayit "$DESTEK" "Platform Destek" >/dev/null
+kayit "$BELIRTEC" "Belirtec Kontrol" >/dev/null
 pnpm --silent --filter @kopru/api platform:yonetici-ekle -- "$YONETICI" --rol yonetici >/dev/null
 pnpm --silent --filter @kopru/api platform:yonetici-ekle -- "$DESTEK" --rol destek >/dev/null
+pnpm --silent --filter @kopru/api platform:yonetici-ekle -- "$BELIRTEC" --rol yonetici >/dev/null
 
 cikti() { printf '%s=%q\n' "$1" "$2"; }
 cikti GERCEK_RUN "$RUN"
 cikti GERCEK_YONETICI "$YONETICI"
 cikti GERCEK_DESTEK "$DESTEK"
+cikti GERCEK_BELIRTEC "$BELIRTEC"
 cikti GERCEK_PAROLA "$PAROLA"
 cikti GERCEK_KURUM1 "$K1"
 cikti GERCEK_KURUM1_ID "$ID1"

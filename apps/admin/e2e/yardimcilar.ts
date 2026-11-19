@@ -37,6 +37,8 @@ export async function ikinciAdimKur(page: Page) {
 export async function panelAc(page: Page, telefon = YONETICI_TELEFON) {
   await girisYap(page, telefon);
   const kur = page.getByRole('button', { name: 'Kurulumu başlat' });
+  // Ben yanıtı gelene kadar iki ekrandan biri görünür olur.
+  await expect(kur.or(page.getByLabel('Doğrulama kodu'))).toBeVisible();
   if (await kur.isVisible().catch(() => false)) {
     await ikinciAdimKur(page);
   } else {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { istemciIpCoz } from './istemci-ip';
-import { IKINCI_ADIM_BFF_KAPISI, ikinciAdimTamam, taklitYoluIzinliMi, yolIzinliMi } from './vekil';
+import { taklitYoluIzinliMi, yolIzinliMi } from './vekil';
 
 const ID = '0190a000-0000-7000-8000-000000000001';
 
@@ -13,6 +13,11 @@ describe('vekil allowlist', () => {
     ['GET', `kurumlar/${ID}`],
     ['PUT', `kurumlar/${ID}/moduller/finans`],
     ['PUT', `kurumlar/${ID}/beta/yeni_rapor`],
+    ['GET', `kurumlar/${ID}/abonelik`],
+    ['POST', `kurumlar/${ID}/abonelik/deneme-uzat`],
+    ['POST', `kurumlar/${ID}/abonelik/kurumsal-aktivasyon`],
+    ['POST', `kurumlar/${ID}/askiya-al`],
+    ['POST', `kurumlar/${ID}/ac`],
     ['POST', 'taklit'],
     ['POST', `taklit/${ID}/sonlandir`],
     ['GET', 'denetim'],
@@ -35,6 +40,9 @@ describe('vekil allowlist', () => {
     ['DELETE', `kurumlar/${ID}`],
     ['POST', 'kurumlar'],
     ['PUT', `kurumlar/${ID}/diger/x`],
+    ['GET', `kurumlar/${ID}/abonelik/deneme-uzat`],
+    ['POST', `kurumlar/${ID}/abonelik/bilinmeyen`],
+    ['PUT', `kurumlar/${ID}/askiya-al`],
     // api beta kodu: harfle başlar, tire yok (BetaOzellikKoduSema)
     ['PUT', `kurumlar/${ID}/beta/yeni-rapor`],
     ['PUT', `kurumlar/${ID}/beta/1deneme`],
@@ -74,26 +82,5 @@ describe('istemciIpCoz', () => {
     expect(istemciIpCoz('1.2.3.4, 10.0.0.1', 2)).toBe('1.2.3.4');
     expect(istemciIpCoz('hile', 1)).toBeNull();
     expect(istemciIpCoz(null, 1)).toBeNull();
-  });
-});
-
-describe('BFF ikinci adım kapısı', () => {
-  it('müfredat ve motivasyon yollarında devreye girer, diğerlerinde girmez', () => {
-    expect(IKINCI_ADIM_BFF_KAPISI.test('mufredat/kataloglar')).toBe(true);
-    expect(IKINCI_ADIM_BFF_KAPISI.test('motivasyon/ayarlar')).toBe(true);
-    expect(IKINCI_ADIM_BFF_KAPISI.test('kurumlar')).toBe(false);
-    expect(IKINCI_ADIM_BFF_KAPISI.test('ben')).toBe(false);
-  });
-
-  it('yalnız oturumda doğrulanmış ikinci adımı kabul eder', () => {
-    expect(ikinciAdimTamam({ ikinci_adim: { kurulu: true, oturumda_dogrulandi: true } })).toBe(
-      true,
-    );
-    expect(ikinciAdimTamam({ ikinci_adim: { kurulu: true, oturumda_dogrulandi: false } })).toBe(
-      false,
-    );
-    expect(ikinciAdimTamam({ ikinci_adim: {} })).toBe(false);
-    expect(ikinciAdimTamam(null)).toBe(false);
-    expect(ikinciAdimTamam('x')).toBe(false);
   });
 });

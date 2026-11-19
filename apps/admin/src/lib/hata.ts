@@ -10,6 +10,9 @@ const KODLAR = tr.yonetim.hata as Record<string, string>;
  */
 export function hataMetni(hata: unknown): string {
   if (hata instanceof YonetimHatasi) {
+    // 409 conflict: sunucunun durum aciklamasi (ornegin "Deneme disinda uzatilamaz") ayrintilidir.
+    if (hata.kod === 'conflict' && hata.message && hata.message !== 'İstek başarısız.')
+      return hata.message;
     const bilinen = KODLAR[hata.kod];
     if (bilinen) return bilinen;
     if (hata.durum === 0) return KODLAR.hizmet_kullanilamiyor ?? '';

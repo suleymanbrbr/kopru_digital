@@ -1,5 +1,6 @@
 import { MODUL_KODLARI } from '@kopru/contracts';
 
+import { abonelikCikti, abonelikMock, askiCikti, kilitliMi } from './abonelik';
 import type { MockDenetim, MockKurum, MockMesaj, MockRol } from './durum';
 import { ADMIN_ID, durum, durumuSifirla, simdi, yeniId } from './durum';
 import { motivasyonMock } from './motivasyon';
@@ -161,6 +162,8 @@ function kurumDetay(k: MockKurum) {
       };
     }),
     beta_ozellikleri: k.beta,
+    abonelik: { abonelik: abonelikCikti(k.abonelik), yazma_kilitli: kilitliMi(k.abonelik) },
+    platform_aski: askiCikti(k),
   };
 }
 
@@ -352,6 +355,23 @@ export function mockPlatform(istek: MockPlatformIstek): MockYanit {
         ayrinti: { ozellik_kodu: kod, acik: g.acik },
       });
       return { durum: 200, govde: { ozellik_kodu: kod, acik: g.acik ?? false } };
+    }
+    const ek = p.slice(2);
+    if (ek[0] === 'abonelik' || ek[0] === 'askiya-al' || ek[0] === 'ac') {
+      if (yontem !== 'GET' && !yonetici) return yoneticiGerekli();
+      const yanit = abonelikMock(kurum, yontem, ek, g, (eylem, neden, ayrinti) => {
+        denetle(eylem, {
+          kurum_id: kurum.id,
+          hedef_turu: 'kurum',
+          hedef_id: kurum.id,
+          neden,
+          ...(ayrinti ? { ayrinti } : {}),
+        });
+      });
+      if (yanit) {
+        if (yontem === 'GET') denetle('platform.abonelik_oku', { kurum_id: kurum.id });
+        return yanit;
+      }
     }
     return hata(404, 'bulunamadi', 'Kaynak bulunamadı.');
   }

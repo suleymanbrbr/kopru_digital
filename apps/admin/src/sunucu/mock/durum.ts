@@ -8,6 +8,32 @@ import { MODUL_KODLARI } from '@kopru/contracts';
 export type KurumDurumu = 'aktif' | 'askida' | 'kapali';
 export type KurumTuru = 'bireysel' | 'ekip' | 'kurum';
 
+export type AbonelikDurumu =
+  'deneme' | 'aktif' | 'odeme_bekliyor' | 'ek_sure' | 'askida' | 'iptal' | 'sona_erdi';
+
+export interface MockAbonelik {
+  id: string;
+  durum: AbonelikDurumu;
+  kaynak: 'deneme' | 'iyzico' | 'apple' | 'google' | 'kurumsal';
+  plan_kodu: string;
+  periyot: 'aylik' | 'yillik';
+  fiyat_kurus: number;
+  donem_baslangic_at: string;
+  donem_bitis_at: string;
+  deneme_bitis_at?: string;
+  ek_sure_bitis_at?: string;
+  iptal_istendi_at?: string;
+  bekleyen_plan_kodu?: string;
+  gecmis: MockAbonelik[];
+  odemeler: {
+    id: string;
+    tutar_kurus: number;
+    kdv_kurus: number;
+    durum: string;
+    odeme_at: string;
+  }[];
+}
+
 export interface MockKurum {
   id: string;
   ad: string;
@@ -19,6 +45,9 @@ export interface MockKurum {
   diger: number;
   moduller: Record<string, { acik: boolean; ayarVar: boolean; altKapali: number }>;
   beta: { ozellik_kodu: string; acik: boolean; updated_at: string }[];
+  abonelik: MockAbonelik;
+  /** Platform askisi (doluysa). */
+  aski?: { askida_at: string; neden: string };
 }
 
 export interface MockDenetim {
@@ -144,7 +173,7 @@ export const yeniId = (): string => crypto.randomUUID();
 
 export const simdi = (): string => new Date().toISOString();
 
-const KURUMLAR: Omit<MockKurum, 'moduller' | 'beta' | 'created_at'>[] = (
+const KURUMLAR: Omit<MockKurum, 'moduller' | 'beta' | 'abonelik' | 'created_at'>[] = (
   [
     ['Ege Işık Dershanesi', 'kurum', 'aktif', '532 111 22 01'],
     ['Bornova Fen Kursu', 'kurum', 'aktif', '532 111 22 02'],
@@ -179,6 +208,39 @@ const KURUMLAR: Omit<MockKurum, 'moduller' | 'beta' | 'created_at'>[] = (
   };
 });
 
+function abonelikUret(i: number): MockAbonelik {
+  const bas = new Date(Date.UTC(2026, 10, 1)).toISOString();
+  const bit = new Date(Date.UTC(2026, 10, 15)).toISOString();
+  const temel = {
+    id: sabitUuid('400', i + 1),
+    plan_kodu: 'kurum',
+    periyot: 'aylik' as const,
+    donem_baslangic_at: bas,
+    donem_bitis_at: bit,
+    gecmis: [],
+    odemeler: [],
+  };
+  if (i % 3 === 1) {
+    return {
+      ...temel,
+      durum: 'aktif',
+      kaynak: 'iyzico',
+      fiyat_kurus: 499900,
+      donem_bitis_at: new Date(Date.UTC(2026, 11, 1)).toISOString(),
+      odemeler: [
+        {
+          id: sabitUuid('500', i + 1),
+          tutar_kurus: 499900,
+          kdv_kurus: 83317,
+          durum: 'basarili',
+          odeme_at: bas,
+        },
+      ],
+    };
+  }
+  return { ...temel, durum: 'deneme', kaynak: 'deneme', fiyat_kurus: 0, deneme_bitis_at: bit };
+}
+
 function kurumlariUret(): MockKurum[] {
   return KURUMLAR.map((k, i) => ({
     ...k,
@@ -193,6 +255,7 @@ function kurumlariUret(): MockKurum[] {
         },
       ]),
     ),
+    abonelik: abonelikUret(i),
     beta: i % 2 === 0 ? [{ ozellik_kodu: 'yeni_rapor', acik: true, updated_at: simdi() }] : [],
   }));
 }

@@ -30,6 +30,14 @@ export const IZINLI: readonly { yontem: string; desen: RegExp }[] = [
   { yontem: 'GET', desen: /^kurumlar$/ },
   { yontem: 'GET', desen: new RegExp(`^kurumlar/${UUID}$`) },
   { yontem: 'PUT', desen: new RegExp(`^kurumlar/${UUID}/(?:moduller|beta)/[a-z][a-z0-9_]{1,39}$`) },
+  { yontem: 'GET', desen: new RegExp(`^kurumlar/${UUID}/abonelik$`) },
+  {
+    yontem: 'POST',
+    desen: new RegExp(
+      `^kurumlar/${UUID}/abonelik/(?:kurumsal-aktivasyon|deneme-uzat|ek-sure|plan-degistir|iptal|askiya-al)$`,
+    ),
+  },
+  { yontem: 'POST', desen: new RegExp(`^kurumlar/${UUID}/(?:askiya-al|ac)$`) },
   { yontem: 'POST', desen: /^taklit$/ },
   { yontem: 'POST', desen: new RegExp(`^taklit/${UUID}/sonlandir$`) },
   { yontem: 'GET', desen: /^denetim$/ },
@@ -58,25 +66,6 @@ export const TAKLIT_OKUMA_IZINLI: readonly RegExp[] = [
   /^hesap\/modul-ayarlari\/etkin-tumu$/,
   new RegExp(`^hesap/kurumlar/${UUID}$`),
 ];
-
-/** `api` kapisinin 2FA'yi denetlemedigi (ogrenme/motivasyon servisleri) yollar: BFF denetler. */
-export const IKINCI_ADIM_BFF_KAPISI = /^(?:mufredat|motivasyon)\//;
-
-const IKINCI_ADIM_GEREKLI: UstYanit = {
-  durum: 403,
-  govde: {
-    error: {
-      code: 'ikinci_adim_gerekli',
-      message: 'Platform işlemleri için iki adımlı doğrulamayı tamamlayın.',
-    },
-  },
-};
-
-/** `GET /platform/ben` yanitinda ikinci adim bu oturumda dogrulanmis mi? */
-export function ikinciAdimTamam(ben: unknown): boolean {
-  if (!nesneMi(ben) || !nesneMi(ben.ikinci_adim)) return false;
-  return ben.ikinci_adim.oturumda_dogrulandi === true;
-}
 
 /** Parca guvenli karakterlerden olusur (`..`, bosluk, sorgu vb. gecmez). */
 const PARCA = /^[A-Za-z0-9_-]+$/;
@@ -188,23 +177,8 @@ export async function platformVekili(
     const hata = await uret();
     if (hata) return erisimHatasi(hata);
   }
-  const cagir = async (): Promise<UstYanit> => {
-    const girdi = { yontem, yol, arama, govde, erisim: erisim ?? '', gelen: request.headers };
-    if (IKINCI_ADIM_BFF_KAPISI.test(yol)) {
-      // Mufredat ve motivasyon uclari 2FA'yi kendileri denetlemez (api tarafinda belirtece tasinana kadar):
-      // BFF, kimligi sorarak ikinci adimin bu oturumda tamamlandigini kendisi garanti eder.
-      const ben = await platformCagri({
-        ...girdi,
-        yontem: 'GET',
-        yol: 'ben',
-        arama: '',
-        govde: undefined,
-      });
-      if (ben.durum !== 200) return ben;
-      if (!ikinciAdimTamam(ben.govde)) return IKINCI_ADIM_GEREKLI;
-    }
-    return platformCagri(girdi);
-  };
+  const cagir = () =>
+    platformCagri({ yontem, yol, arama, govde, erisim: erisim ?? '', gelen: request.headers });
 
   let ust = await cagir();
   if (ust.durum === 401 && !yenilendi) {

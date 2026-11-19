@@ -15,6 +15,7 @@ import { OnayPenceresi } from '../ui/onay-penceresi';
 import { Rozet } from '../ui/rozet';
 import { Tablo, Td, Th } from '../ui/tablo';
 import { Uyari } from '../ui/uyari';
+import { AbonelikKarti, AskiKarti } from './abonelik';
 import { DURUM_TONU } from './kurum-listesi';
 
 import { platform } from '@/lib/api';
@@ -486,13 +487,11 @@ export function KurumDetaySayfasi({ id }: { id: string }) {
           )}
         </Kart>
 
-        <Kart aria-labelledby="abonelik-baslik">
-          <KartBasligi id="abonelik-baslik" baslik={t('yonetim.kurum.abonelik')} />
-          <p className="text-sm text-metin-ikincil">{t('yonetim.kurum.aboneligiYok')}</p>
-        </Kart>
+        <AskiKarti kurum={k} yonetici={yonetici} />
       </div>
 
       <div className="mt-4 flex flex-col gap-4">
+        <AbonelikKarti kurum={k} yonetici={yonetici} />
         <ModullerKarti kurum={k} yonetici={yonetici} />
         <BetaKarti kurum={k} yonetici={yonetici} />
       </div>

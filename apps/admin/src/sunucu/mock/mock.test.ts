@@ -298,3 +298,95 @@ describe('mock müfredat', () => {
     ).toBe('birlestirme_gecersiz');
   });
 });
+
+describe('mock abonelik ve platform askısı', () => {
+  function ilkKurum(e: string) {
+    const k = (cagri(e, 'GET', 'kurumlar').govde as { kurumlar: { id: string }[] }).kurumlar[0];
+    return `kurumlar/${k?.id ?? ''}`;
+  }
+  const NEDEN = 'Müşteri talebi üzerine düzeltme';
+
+  it('detayda abonelik özeti ve platform askısı bulunur; geçmiş/ödemeler ayrı uçta', () => {
+    const e = dogrulanmisOturum();
+    const yol = ilkKurum(e);
+    const d = cagri(e, 'GET', yol).govde as {
+      abonelik: { abonelik: { durum: string } | null; yazma_kilitli: boolean };
+      platform_aski: { askida: boolean };
+    };
+    expect(d.abonelik.abonelik?.durum).toBe('deneme');
+    expect(d.platform_aski.askida).toBe(false);
+    const a = cagri(e, 'GET', `${yol}/abonelik`).govde as {
+      gecmis: unknown[];
+      odemeler: unknown[];
+    };
+    expect(a.gecmis).toEqual([]);
+    expect(a.odemeler).toEqual([]);
+  });
+
+  it('deneme uzatma gün sınırını ve nedeni doğrular', () => {
+    const e = dogrulanmisOturum();
+    const yol = `${ilkKurum(e)}/abonelik/deneme-uzat`;
+    expect(cagri(e, 'POST', yol, { gun: 7, neden: 'kısa' }).durum).toBe(400);
+    expect(cagri(e, 'POST', yol, { gun: 91, neden: NEDEN }).durum).toBe(400);
+    const once = (
+      cagri(e, 'GET', ilkKurum(e)).govde as { abonelik: { abonelik: { deneme_bitis_at: string } } }
+    ).abonelik.abonelik.deneme_bitis_at;
+    expect(cagri(e, 'POST', yol, { gun: 7, neden: NEDEN }).durum).toBe(200);
+    const sonra = (
+      cagri(e, 'GET', ilkKurum(e)).govde as { abonelik: { abonelik: { deneme_bitis_at: string } } }
+    ).abonelik.abonelik.deneme_bitis_at;
+    expect(Date.parse(sonra) - Date.parse(once)).toBe(7 * 86_400_000);
+  });
+
+  it('kurumsal aktivasyon aboneliği aktif yapar ve eskisini geçmişe alır; olmayan plan 404', () => {
+    const e = dogrulanmisOturum();
+    const yol = `${ilkKurum(e)}/abonelik/kurumsal-aktivasyon`;
+    expect(kod(cagri(e, 'POST', yol, { plan_kodu: 'yok', sozlesme_no: 'S-1', neden: NEDEN }))).toBe(
+      'plan_bulunamadi',
+    );
+    expect(
+      cagri(e, 'POST', yol, { plan_kodu: 'kurum', sozlesme_no: 'S-1', neden: NEDEN }).durum,
+    ).toBe(200);
+    const a = cagri(e, 'GET', `${ilkKurum(e)}/abonelik`).govde as {
+      abonelik: { durum: string; kaynak: string };
+      gecmis: { durum: string }[];
+    };
+    expect(a.abonelik).toMatchObject({ durum: 'aktif', kaynak: 'kurumsal' });
+    expect(a.gecmis[0]?.durum).toBe('deneme');
+    // aktif abonelikte deneme uzatılamaz
+    expect(
+      kod(cagri(e, 'POST', `${ilkKurum(e)}/abonelik/deneme-uzat`, { gun: 3, neden: NEDEN })),
+    ).toBe('conflict');
+  });
+
+  it('platform askısı kurumu askıya alır, açar; abonelik kilitliyse askıda kalır; destek yapamaz', () => {
+    const e = dogrulanmisOturum();
+    const yol = ilkKurum(e);
+    const al = cagri(e, 'POST', `${yol}/askiya-al`, { neden: NEDEN }).govde as {
+      degisti: boolean;
+      durum: string;
+      platform_aski: { askida: boolean };
+    };
+    expect(al).toMatchObject({ degisti: true, durum: 'askida' });
+    expect(al.platform_aski.askida).toBe(true);
+    expect(
+      (cagri(e, 'POST', `${yol}/askiya-al`, { neden: NEDEN }).govde as { degisti: boolean })
+        .degisti,
+    ).toBe(false);
+
+    cagri(e, 'POST', `${yol}/abonelik/askiya-al`, { neden: NEDEN });
+    const ac = cagri(e, 'POST', `${yol}/ac`, { neden: NEDEN }).govde as {
+      durum: string;
+      abonelik_kilitli: boolean;
+    };
+    expect(ac).toMatchObject({ durum: 'askida', abonelik_kilitli: true });
+
+    const destek = dogrulanmisOturum('501 000 00 00');
+    expect(kod(cagri(destek, 'POST', `${yol}/askiya-al`, { neden: NEDEN }))).toBe(
+      'platform_izin_yok',
+    );
+    expect(kod(cagri(destek, 'POST', `${yol}/abonelik/iptal`, { neden: NEDEN }))).toBe(
+      'platform_izin_yok',
+    );
+  });
+});

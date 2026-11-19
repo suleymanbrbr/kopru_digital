@@ -65,3 +65,14 @@ export interface TaklitOzeti {
   rol: string;
   bitis_at: string;
 }
+
+type AbonelikYolu = '/platform/kurumlar/{kurum_id}/abonelik';
+export type AbonelikYaniti = Yanit<A[AbonelikYolu]['get'], 200>;
+export type AbonelikKaydi = NonNullable<AbonelikYaniti['abonelik']>;
+export type Odeme = AbonelikYaniti['odemeler'][number];
+export type AbonelikEylemYaniti = Yanit<
+  A['/platform/kurumlar/{kurum_id}/abonelik/deneme-uzat']['post'],
+  200
+>;
+export type AskiYaniti = Yanit<A['/platform/kurumlar/{kurum_id}/askiya-al']['post'], 200>;
+export type PlatformAski = NonNullable<KurumDetayi['platform_aski']>;

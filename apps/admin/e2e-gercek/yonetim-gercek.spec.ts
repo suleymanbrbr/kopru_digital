@@ -24,7 +24,7 @@ test('yönetici: giriş → 2FA → kurum → modül → denetim → taklit → 
 
   await epostaIleGir(page, yonetici, parola);
 
-  // 2FA olmadan müfredat/motivasyon uçları BFF'te de kapalı (api bu uçlarda 2FA denetlemez).
+  // 2FA olmadan müfredat/motivasyon uçları servislerde kapalı (`plat_2fa_exp` yok; BFF ek kapı koymaz).
   const motivasyon = await page.request.get('/api/platform/motivasyon/ayarlar');
   expect(motivasyon.status()).toBe(403);
   expect(((await motivasyon.json()) as { error: { code: string } }).error.code).toBe(
@@ -139,6 +139,143 @@ test('yönetici: giriş → 2FA → kurum → modül → denetim → taklit → 
   await page.getByRole('button', { name: 'İptal et: Planlı bakım' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'İptal et' }).click();
   await expect(page.getByText('Mesaj kaldırıldı.')).toBeVisible();
+});
+
+test('belirteç: 2FA sonrası /auth/token plat_2fa_exp taşır; öncesinde servisler 403 verir', async () => {
+  const api = ortam('GERCEK_API_URL');
+  const mot = ortam('GERCEK_MOTIVASYON_URL');
+  const json = { 'content-type': 'application/json' };
+  const giris = await fetch(`${api}/auth/eposta/giris`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({ eposta: ortam('GERCEK_BELIRTEC'), parola: ortam('GERCEK_PAROLA') }),
+  });
+  const oturum = ((await giris.json()) as { oturum_belirteci: string }).oturum_belirteci;
+  const token = async () => {
+    const r = await fetch(`${api}/auth/token`, {
+      method: 'POST',
+      headers: { ...json, authorization: `Bearer ${oturum}` },
+      body: '{}',
+    });
+    const jwt = ((await r.json()) as { access_token: string }).access_token;
+    const claims = JSON.parse(
+      Buffer.from(jwt.split('.')[1] ?? '', 'base64url').toString(),
+    ) as Record<string, unknown>;
+    return { jwt, claims };
+  };
+  const bearer = (jwt: string) => ({ ...json, authorization: `Bearer ${jwt}` });
+
+  const once = await token();
+  expect(once.claims.plat).toBe('yonetici');
+  expect(once.claims.plat_2fa_exp).toBeUndefined();
+  const motOnce = await fetch(`${mot}/platform/motivasyon/ayarlar`, { headers: bearer(once.jwt) });
+  expect(motOnce.status).toBe(403);
+  expect(((await motOnce.json()) as { error: { code: string } }).error.code).toBe(
+    'ikinci_adim_gerekli',
+  );
+  const mufOnce = await fetch(`${api}/platform/mufredat/kataloglar`, { headers: bearer(once.jwt) });
+  expect(mufOnce.status).toBe(403);
+  expect(((await mufOnce.json()) as { error: { code: string } }).error.code).toBe(
+    'ikinci_adim_gerekli',
+  );
+
+  const kur = (await (
+    await fetch(`${api}/platform/ikinci-adim/kur`, {
+      method: 'POST',
+      headers: bearer(once.jwt),
+      body: '{}',
+    })
+  ).json()) as { sir: string };
+  const onayla = await fetch(`${api}/platform/ikinci-adim/onayla`, {
+    method: 'POST',
+    headers: bearer(once.jwt),
+    body: JSON.stringify({ kod: await yeniKod(kur.sir) }),
+  });
+  expect(onayla.status).toBe(200);
+
+  const sonra = await token();
+  expect(typeof sonra.claims.plat_2fa_exp).toBe('number');
+  expect(sonra.claims.plat_2fa_exp as number).toBeGreaterThan(Date.now() / 1000);
+  expect(
+    (await fetch(`${mot}/platform/motivasyon/ayarlar`, { headers: bearer(sonra.jwt) })).status,
+  ).toBe(200);
+  expect(
+    (await fetch(`${api}/platform/mufredat/kataloglar`, { headers: bearer(sonra.jwt) })).status,
+  ).toBe(200);
+});
+
+test('yönetici: abonelik düzeltmesi ve platform askısı', async ({ page }) => {
+  const kurum = ortam('GERCEK_KURUM2');
+  await epostaIleGir(page, ortam('GERCEK_YONETICI'), ortam('GERCEK_PAROLA'));
+  await page.getByLabel('Doğrulama kodu').fill(await yeniKod(yoneticiSir));
+  await page.getByRole('button', { name: 'Doğrula', exact: true }).click();
+  await expect(page).toHaveURL(/\/kurumlar$/);
+  await page.getByLabel('Kurum ara').fill(kurum);
+  await page.getByRole('button', { name: 'Ara', exact: true }).click();
+  await page.getByRole('link', { name: kurum }).click();
+
+  const abonelik = page.getByRole('region', { name: 'Abonelik', exact: true });
+  await expect(abonelik.getByText('Deneme', { exact: true }).first()).toBeVisible();
+  await ekran(page, 'abonelik-ozet');
+
+  // Denemeyi uzat
+  await abonelik.getByRole('button', { name: 'Denemeyi uzat' }).click();
+  await page.getByRole('dialog').getByLabel('Gün sayısı').fill('7');
+  await page.getByRole('dialog').getByLabel(/Neden/).fill('Müşteri talebi üzerine deneme uzatma');
+  await ekran(page, 'abonelik-deneme-uzat-onay', { tamSayfa: false });
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi uzat' }).click();
+  await expect(page.getByText('Abonelik işlemi kaydedildi ve denetime yazıldı.')).toBeVisible();
+
+  // Kurumsal aktivasyon
+  await abonelik.getByRole('button', { name: 'Kurumsal aktivasyon' }).click();
+  const akt = page.getByRole('dialog');
+  await akt.getByLabel('Sözleşme numarası').fill('S-2026-0142');
+  await akt.getByLabel(/Fiyat/).fill('4.999,00');
+  await akt.getByLabel(/Neden/).fill('Teklif ve fatura ile kurumsal aktivasyon');
+  await ekran(page, 'abonelik-kurumsal-onay', { tamSayfa: false });
+  await akt.getByRole('button', { name: 'Kurumsal aktivasyon' }).click();
+  await expect(abonelik.getByText('Kurumsal', { exact: true }).first()).toBeVisible();
+  await expect(abonelik.getByText('Aktif', { exact: true }).first()).toBeVisible();
+  await ekran(page, 'abonelik-kurumsal');
+
+  // Aboneliği askıya al + platform askısı al/aç: abonelik kilitliyse kurum askıda kalır
+  await abonelik.getByRole('button', { name: 'Aboneliği askıya al' }).click();
+  await page.getByRole('dialog').getByLabel(/Neden/).fill('Ödeme anlaşmazlığı: abonelik askıda');
+  await page.getByRole('dialog').getByRole('button', { name: 'Aboneliği askıya al' }).click();
+  await expect(abonelik.getByText(/Abonelik kilitli/)).toBeVisible();
+
+  const aski = page.getByRole('region', { name: 'Platform askısı', exact: true });
+  await aski.getByRole('button', { name: 'Platform askısına al' }).click();
+  await page.getByRole('dialog').getByLabel(/Neden/).fill('Platform askısı denemesi');
+  await page.getByRole('dialog').getByRole('button', { name: 'Platform askısına al' }).click();
+  await expect(page.getByText('Kurum platform askısına alındı.')).toBeVisible();
+  await ekran(page, 'platform-aski');
+  await aski.getByRole('button', { name: 'Askıyı aç' }).click();
+  await page.getByRole('dialog').getByLabel(/Neden/).fill('Platform askısı denemesi bitti');
+  await page.getByRole('dialog').getByRole('button', { name: 'Askıyı aç' }).click();
+  await expect(page.getByText('Platform askısı kaldırıldı.')).toBeVisible();
+  await expect(page.getByText(/Abonelik de kilitli/)).toBeVisible();
+  await ekran(page, 'platform-aski-acildi-kilitli');
+
+  // Düzelt: ek süre ver (kilitli abonelik yeniden yazılabilir olur)
+  await abonelik.getByRole('button', { name: 'Ek süre ver' }).click();
+  await page.getByRole('dialog').getByLabel('Gün sayısı').fill('5');
+  await page.getByRole('dialog').getByLabel(/Neden/).fill('Ödeme bekleniyor: ek süre tanındı');
+  await page.getByRole('dialog').getByRole('button', { name: 'Ek süre ver' }).click();
+  await expect(page.getByText('Abonelik işlemi kaydedildi ve denetime yazıldı.')).toBeVisible();
+  await expect(abonelik.getByText('Ek süre', { exact: true }).first()).toBeVisible();
+  await ekran(page, 'abonelik-ek-sure');
+
+  // Denetimde abonelik işlemleri
+  await menuGit(page, 'Denetim kayıtları');
+  const denetim = page.getByRole('region', { name: 'Denetim kayıtları' });
+  await expect(
+    denetim.locator('code', { hasText: 'platform.abonelik_kurumsal_aktivasyon' }).first(),
+  ).toBeVisible();
+  await expect(
+    denetim.locator('code', { hasText: 'platform.kurum_askiya_al' }).first(),
+  ).toBeVisible();
+  await ekran(page, 'denetim-abonelik');
 });
 
 test('yönetici: müfredat editörü (taslak → işlemler → fark → yayın)', async ({ page }) => {
