@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Platform yonetimi (Next.js) - yalnizca yer tutucu",
+  "description": "Platform yonetim paneli (Next.js): kurumlar, taklit, denetim, mufredat editoru, motivasyon ayarlari",
   "scripts": {
     "hazirla": "tsx ../web/scripts/tema.ts --cikti src/app/tema.generated.css",
     "predev": "pnpm run hazirla",
@@ -12,28 +12,49 @@
     "build": "next build",
     "start": "next start --port 3001",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "pretest": "pnpm run hazirla",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:gercek": "playwright test --config playwright.gercek.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "catalog:",
+    "@kopru/contracts": "workspace:*",
     "@kopru/i18n": "workspace:*",
     "@kopru/ui-tokens": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "clsx": "catalog:",
+    "lucide-react": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwindcss": "catalog:"
+    "tailwind-merge": "catalog:",
+    "tailwindcss": "catalog:",
+    "uqr": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@kopru/api-client": "workspace:*",
     "@kopru/config": "workspace:*",
     "@next/eslint-plugin-next": "catalog:",
+    "@playwright/test": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
+    "globals": "catalog:",
+    "jsdom": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

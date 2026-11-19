@@ -13,8 +13,18 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "plugins": [{ "name": "next" }]
+    "types": ["node", "vitest/globals"],
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["next-env.d.ts", "src", "*.ts", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "src",
+    "e2e",
+    "e2e-gercek",
+    "*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
