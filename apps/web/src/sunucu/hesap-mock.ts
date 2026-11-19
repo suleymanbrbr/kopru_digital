@@ -41,9 +41,9 @@ function ilk<T>(oge: T | undefined): T {
 }
 
 const uid = () => crypto.randomUUID();
-const simdi = () => new Date().toISOString();
-const gunOnce = (g: number) => new Date(Date.now() - g * 86_400_000).toISOString();
-const gunSonra = (g: number) => new Date(Date.now() + g * 86_400_000).toISOString();
+const simdi = () => new Date(mockSimdi()).toISOString();
+const gunOnce = (g: number) => new Date(mockSimdi() - g * 86_400_000).toISOString();
+const gunSonra = (g: number) => new Date(mockSimdi() + g * 86_400_000).toISOString();
 const tarih = (iso: string) => iso.slice(0, 10);
 
 function rastgele(uzunluk: number, alfabe = ALFABE): string {
@@ -946,3 +946,4 @@ export function hesapMock(istek: Istek): Yanit {
   }
   return kiracisiz(parcalar, istek);
 }
+import { mockSimdi } from './mock-zaman';

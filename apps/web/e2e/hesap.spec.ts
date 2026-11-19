@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, test } from './yardimcilar';
 
 /**
  * Mock modda hesap ekranlari (gruplar, davetler, oturumlar, sinif kodu, davet kabul, e-posta dogrulama).

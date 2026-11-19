@@ -1,4 +1,5 @@
 import { duyuruMock, duyuruMockSifirla, mockDuyuruKimligi } from './duyuru-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -100,7 +101,7 @@ function oge(
 }
 
 function tohumla(kurumId: string): MockOge[] {
-  const n = Date.now();
+  const n = mockSimdi();
   if (kurumId === 'kurum-atlas') {
     const baslangic = [
       oge(
@@ -353,7 +354,7 @@ export function bildirimMock(istek: MockIstek): MockYanit {
       return ok({ okunmamis: gorunen(d).filter((o) => o.okundu_at === null).length });
     }
     if (a === 'tumunu-oku' && istek.yontem === 'POST') {
-      const simdi = new Date().toISOString();
+      const simdi = new Date(mockSimdi()).toISOString();
       let n = 0;
       for (const o of d.ogeler) {
         if (o.okundu_at === null) {
@@ -366,7 +367,7 @@ export function bildirimMock(istek: MockIstek): MockYanit {
     if (a && (b === 'okundu' || b === 'arsivle') && istek.yontem === 'POST') {
       const o = d.ogeler.find((x) => x.id === a);
       if (!o) return bulunamadi();
-      const simdi = new Date().toISOString();
+      const simdi = new Date(mockSimdi()).toISOString();
       o.okundu_at ??= simdi;
       if (b === 'arsivle') o.arsivlendi_at ??= simdi;
       return ok({ id: o.id, okundu_at: o.okundu_at, arsivlendi_at: o.arsivlendi_at });

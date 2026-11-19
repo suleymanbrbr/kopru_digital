@@ -1,4 +1,5 @@
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
 /**
@@ -41,9 +42,9 @@ const bulunamadi = () => hata(404, 'bulunamadi', 'Kaynak bulunamadı.');
 const izinYok = () => hata(403, 'izin_yok', 'Bu işlem için yetkin yok.');
 
 const uid = () => crypto.randomUUID();
-const simdi = () => new Date().toISOString();
-const bugun = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
-const gunOnce = (g: number) => new Date(Date.now() - g * 86_400_000).toISOString();
+const simdi = () => new Date(mockSimdi()).toISOString();
+const bugun = () => new Date(mockSimdi() + 3 * 3_600_000).toISOString().slice(0, 10);
+const gunOnce = (g: number) => new Date(mockSimdi() - g * 86_400_000).toISOString();
 
 const kutu = globalThis as unknown as { __kopruFinansMock?: Record<string, FinansDurumu> };
 

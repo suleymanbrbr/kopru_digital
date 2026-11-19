@@ -1,9 +1,9 @@
 import { deflateSync } from 'node:zlib';
 
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, test } from './yardimcilar';
 
 /**
  * Mock modda "soru sor": ogrenci fotografla sorar -> ogretmen metin + cizimli fotografla cevaplar -> ogrenci

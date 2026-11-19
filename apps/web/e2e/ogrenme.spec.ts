@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { xlsxOku, xlsxYaz } from '../src/sunucu/xlsx-mini';
-import { girisYap } from './yardimcilar';
+import { girisYap, simdi, test } from './yardimcilar';
 
 /**
  * Mock modda ogrenme ekranlari: mufredat, odev, haftalik plan, deneme. Mock veri sunucu surecinde
@@ -17,7 +17,7 @@ const IST = 'Europe/Istanbul';
 
 function tarih(gun = 0): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: IST }).format(
-    new Date(Date.now() + gun * 86_400_000),
+    new Date(simdi() + gun * 86_400_000),
   );
 }
 function haftaGunu(gun: number): string {

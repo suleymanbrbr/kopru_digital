@@ -84,6 +84,8 @@ docker compose -f infra/docker/compose.yaml exec postgres psql -U postgres -c 'c
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/kopru_test pnpm test
 ```
 
+**Web e2e saat kuralı.** `apps/web` Playwright paketi (mock modu) gün saatinden ve haftanın gününden bağımsızdır: `playwright.config.ts` referans anı olarak koşu gününün İstanbul tarihiyle 12:00'yi seçer ve gerçek saate göre sabit kaymayı `E2E_KAYMA_MS` ile hem mock sunucuya (`src/sunucu/mock-zaman.ts` → `mockSimdi()`) hem tarayıcıya (`e2e/yardimcilar.ts` içindeki genişletilmiş `test` fixture'ı) verir. Spec dosyaları `test`'i `./yardimcilar`'dan almalı ve `Date.now()` yerine `simdi()` kullanmalı; mock dosyalarında `Date.now()` / `new Date()` yerine `mockSimdi()`. Başka bir an denemek için: `E2E_SIMDI_ISO=2026-11-18T23:30:00+03:00 npx playwright test`.
+
 Turbo, `DATABASE_URL` ve `NATS_URL` değerlerini test önbellek anahtarına katar. `lint`, `typecheck` ve `test`, bağımlı paketlerin derlenmiş çıktısına (`dist`) ihtiyaç duyduğu için önce `^build` çalışır.
 
 ## Bağımlılık sınırları (ESLint ile zorlanır)

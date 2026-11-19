@@ -1,4 +1,23 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test as temel, type Page } from '@playwright/test';
+
+/**
+ * E2E'nin tek "simdi"si: `playwright.config.ts` gercek saate sabit bir kayma (`E2E_KAYMA_MS`) hesaplar,
+ * mock sunucu (`mockSimdi`) ve tarayici ayni kaymayi kullanir. Testlerde `Date.now()` yerine `simdi()`.
+ */
+export function simdi(): number {
+  return Date.now() + Number(process.env.E2E_KAYMA_MS ?? 0);
+}
+
+/**
+ * Tum spec dosyalari bunu kullanir (dogrudan `@playwright/test`'ten `test` degil): her sayfanin saati
+ * sunucudaki mock saatle ayni olur. Saat akmaya devam eder; `page.clock.fastForward` calisir.
+ */
+export const test = temel.extend({
+  context: async ({ context }, kullan) => {
+    await context.clock.install({ time: simdi() });
+    await kullan(context);
+  },
+});
 
 /** Telefon -> OTP -> KVKK -> kurum secimi akisini calistirir ve secilen kurumun Bugun ekraninda biter. */
 export async function girisYap(page: Page, kurumAdi: string, opsiyon: { kvkkOnay?: boolean } = {}) {
