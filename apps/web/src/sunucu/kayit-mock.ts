@@ -1,3 +1,4 @@
+import { mockSimdi } from './mock-zaman';
 import { mockDersBaglami, type MockDers } from './ders-mock';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import type { MockIstek, MockYanit } from './vekil';
@@ -88,8 +89,8 @@ const govdeNesnesi = (g: unknown): Kayit =>
   typeof g === 'object' && g !== null ? (g as Kayit) : {};
 const yerelTarih = (iso: string) => new Date(Date.parse(iso) + UTC3_MS).toISOString().slice(0, 10);
 const onceki = (gun: number, saat = 0) =>
-  new Date(Date.now() - gun * GUN_MS - saat * SAAT_MS).toISOString();
-const sonraki = (gun: number) => new Date(Date.now() + gun * GUN_MS).toISOString();
+  new Date(mockSimdi() - gun * GUN_MS - saat * SAAT_MS).toISOString();
+const sonraki = (gun: number) => new Date(mockSimdi() + gun * GUN_MS).toISOString();
 
 // --- Tohum -------------------------------------------------------------------------------------
 
@@ -311,7 +312,7 @@ function hedefAdlari(b: Baglam, k: Kaynak): string[] {
 }
 
 function durumu(k: Kaynak): Kaynak['durum'] {
-  if (k.durum === 'aktif' && k.gecerlilik !== null && Date.parse(k.gecerlilik) < Date.now()) {
+  if (k.durum === 'aktif' && k.gecerlilik !== null && Date.parse(k.gecerlilik) < mockSimdi()) {
     return 'suresi_doldu';
   }
   return k.durum;
@@ -462,7 +463,7 @@ function ekle(
       return hata(422, 'kaynak_url_gecersiz', 'Bağlantı geçersiz.', { alan: 'url' });
     }
     const bitis = typeof l.gecerlilik_bitis_at === 'string' ? l.gecerlilik_bitis_at : null;
-    if (bitis !== null && Date.parse(bitis) <= Date.now()) {
+    if (bitis !== null && Date.parse(bitis) <= mockSimdi()) {
       return hata(422, 'kaynak_suresi_gecmis', 'Son erişim tarihi gelecekte olmalı.');
     }
     yeniler.push(
@@ -479,8 +480,8 @@ function ekle(
         ogrenciAdlari: adlar as string[],
         konuId: typeof l.konu_id === 'string' ? l.konu_id : null,
         bransKodu: hedef.brans,
-        olusturma: new Date().toISOString(),
-        guncelleme: new Date().toISOString(),
+        olusturma: new Date(mockSimdi()).toISOString(),
+        guncelleme: new Date(mockSimdi()).toISOString(),
       }),
     );
   }
@@ -521,7 +522,7 @@ function guncelle(d: Depo, b: Baglam, k: Kaynak, g: Kayit, uygunAlicilar: string
   }
   if (g.durum === 'gizli') k.durum = 'gizli';
   else if (g.durum === 'aktif') k.durum = 'aktif';
-  k.guncelleme = new Date().toISOString();
+  k.guncelleme = new Date(mockSimdi()).toISOString();
   return { durum: 200, govde: kaynakDetayi(d, b, k) };
 }
 
@@ -573,7 +574,7 @@ function personelKaynak(d: Depo, b: Baglam, parca: string[], istek: MockIstek): 
           .map((a) => ({
             ogrenci_id: idOf(b, a) ?? uid(),
             gorunen_ad: a,
-            izledi_at: harita?.get(a) ?? new Date().toISOString(),
+            izledi_at: harita?.get(a) ?? new Date(mockSimdi()).toISOString(),
           })),
         izlemeyenler: hedef
           .filter((a) => !harita?.has(a))
@@ -611,7 +612,7 @@ function personelKaynak(d: Depo, b: Baglam, parca: string[], istek: MockIstek): 
     const acik = d.sorunlar.filter((s) => s.kaynakId === k.id && s.durum === 'acik');
     for (const s of acik) {
       s.durum = 'cozuldu';
-      s.cozuldu = new Date().toISOString();
+      s.cozuldu = new Date(mockSimdi()).toISOString();
     }
     if (k.durum === 'bozuk') k.durum = 'aktif';
     return {
@@ -680,7 +681,7 @@ function kayitlarim(d: Depo, b: Baglam, parca: string[], istek: MockIstek): Mock
   if (alt === 'izledim' && yontem === 'POST') {
     const harita = d.izlemeler.get(k.id) ?? new Map<string, string>();
     const onceden = harita.get(ad);
-    const simdi = onceden ?? new Date().toISOString();
+    const simdi = onceden ?? new Date(mockSimdi()).toISOString();
     harita.set(ad, simdi);
     d.izlemeler.set(k.id, harita);
     return { durum: 200, govde: { kaynak_id: k.id, izledi_at: simdi, ilk: onceden === undefined } };
@@ -706,7 +707,7 @@ function kayitlarim(d: Depo, b: Baglam, parca: string[], istek: MockIstek): Mock
       neden,
       aciklama: typeof g.aciklama === 'string' && g.aciklama.length > 0 ? g.aciklama : null,
       durum: 'acik',
-      olusturma: new Date().toISOString(),
+      olusturma: new Date(mockSimdi()).toISOString(),
       cozuldu: null,
     };
     d.sorunlar.push(sorun);
@@ -770,7 +771,7 @@ function ogrenciDersiUygun(b: Baglam, d: MockDers): 'uygun' | 'yoklama' | 'katil
 
 function bekleyen(dp: Depo, b: Baglam): MockYanit {
   const ad = adOf(b, b.ogrenciId) ?? '';
-  const simdi = Date.now();
+  const simdi = mockSimdi();
   const liste = b.dersler
     .filter(
       (d) =>
@@ -805,18 +806,18 @@ function geriBildirimVer(dp: Depo, b: Baglam, d: MockDers, istek: MockIstek): Mo
   const g = govdeNesnesi(istek.govde);
   const deger = g.deger;
   if (deger !== 'anladim' && deger !== 'kismen' && deger !== 'anlamadim') return dogrulama();
-  if (d.durum === 'iptal' || Date.parse(d.bitis_at) > Date.now()) {
+  if (d.durum === 'iptal' || Date.parse(d.bitis_at) > mockSimdi()) {
     return hata(422, 'geri_bildirim_ders_bitmedi', 'Ders henüz bitmedi.');
   }
   if (ogrenciDersiUygun(b, d) !== 'uygun') {
     return hata(422, 'geri_bildirim_yoklama_uygun_degil', 'Bu ders için geri bildirim verilemez.');
   }
-  if (Date.now() > Date.parse(d.bitis_at) + PENCERE_MS) {
+  if (mockSimdi() > Date.parse(d.bitis_at) + PENCERE_MS) {
     return hata(409, 'geri_bildirim_guncelleme_suresi_doldu', 'Güncelleme süresi doldu.');
   }
   const ad = adOf(b, b.ogrenciId) ?? '';
   const mevcut = dp.geriBildirimler.find((x) => x.dersId === d.id && x.ogrenciAd === ad);
-  const simdi = new Date().toISOString();
+  const simdi = new Date(mockSimdi()).toISOString();
   const konu = typeof g.konu_id === 'string' ? g.konu_id : null;
   const not = typeof g.not === 'string' && g.not.length > 0 ? g.not : null;
   if (mevcut) {

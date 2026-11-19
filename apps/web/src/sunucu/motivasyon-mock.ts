@@ -1,3 +1,4 @@
+import { mockSimdi } from './mock-zaman';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import type { MockIstek, MockYanit } from './vekil';
 
@@ -26,7 +27,7 @@ const hata = (durum: number, kod: string, mesaj: string, details?: unknown): Moc
 const ok = (govde: unknown, durum = 200): MockYanit => ({ durum, govde });
 
 /** Kurum saatiyle (UTC+3) bugun; 04:00 kurali mock'ta yok sayilir. */
-const bugunGun = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
+const bugunGun = () => new Date(mockSimdi() + 3 * 3_600_000).toISOString().slice(0, 10);
 const gunEkle = (tarih: string, gun: number) =>
   new Date(Date.parse(`${tarih}T00:00:00Z`) + gun * GUN_MS).toISOString().slice(0, 10);
 const pazartesi = (tarih: string) =>
@@ -360,7 +361,7 @@ function hareket(kural: string, xp: number, gunOnce: number): Hareket {
     xp,
     gun: gunEkle(bugunGun(), -gunOnce),
     kismi: false,
-    created_at: new Date(Date.now() - gunOnce * GUN_MS - 3_600_000).toISOString(),
+    created_at: new Date(mockSimdi() - gunOnce * GUN_MS - 3_600_000).toISOString(),
   };
 }
 
@@ -448,7 +449,7 @@ function durumGovdesi(d: KurumDurumu, ogrenciId: string) {
         aciklama: r.aciklama,
         kategori: r.kategori,
         kademe: r.kademe,
-        kazanildi_at: new Date(Date.now() - 6 * GUN_MS).toISOString(),
+        kazanildi_at: new Date(mockSimdi() - 6 * GUN_MS).toISOString(),
       })),
       // Gizli rozetler kazanilana kadar listelenmez.
       kilitli: ROZETLER.filter((r) => !kazanildi.has(r.kod) && !r.gizli).map((r) => ({
@@ -513,7 +514,7 @@ function xpYaz(d: KurumDurumu, kural: string, xp: number, beceri?: string): void
     xp,
     gun: d.gunTarihi,
     kismi: false,
-    created_at: new Date().toISOString(),
+    created_at: new Date(mockSimdi()).toISOString(),
   });
   d.hareketler.length = Math.min(d.hareketler.length, 20);
 }
@@ -683,7 +684,7 @@ function karakterIstegi(d: KurumDurumu, yontem: string, alt: string, govde: unkn
           ad,
           nadirlik,
           sahip,
-          acildi_at: sahip ? new Date(Date.now() - 5 * GUN_MS).toISOString() : null,
+          acildi_at: sahip ? new Date(mockSimdi() - 5 * GUN_MS).toISOString() : null,
           kusanildi: d.karakter?.kusanilan[slot] === kod,
           acilma_kosulu: kosul,
         };
@@ -709,7 +710,7 @@ function karakterIstegi(d: KurumDurumu, yontem: string, alt: string, govde: unkn
       d.karakter = {
         tur_kodu: tur,
         ad,
-        secildi_at: new Date().toISOString(),
+        secildi_at: new Date(mockSimdi()).toISOString(),
         tur_hakki: 1,
         kusanilan: {},
       };
@@ -786,7 +787,8 @@ function odakIstegi(d: KurumDurumu, yontem: string, alt: string, govde: unknown)
     const oturum: Oturum = {
       id: uid(),
       istemci_id: istemciId,
-      baslangic_at: typeof g.baslangic_at === 'string' ? g.baslangic_at : new Date().toISOString(),
+      baslangic_at:
+        typeof g.baslangic_at === 'string' ? g.baslangic_at : new Date(mockSimdi()).toISOString(),
       bitis_at: null,
       planlanan_dk: dk,
       gerceklesen_sn: 0,
@@ -817,7 +819,7 @@ function odakIstegi(d: KurumDurumu, yontem: string, alt: string, govde: unknown)
       });
     }
     const baslangic = Date.parse(oturum.baslangic_at);
-    const bitis = typeof g.bitis_at === 'string' ? Date.parse(g.bitis_at) : Date.now();
+    const bitis = typeof g.bitis_at === 'string' ? Date.parse(g.bitis_at) : mockSimdi();
     const sn = Math.max(
       0,
       Math.min(Math.floor((bitis - baslangic) / 1000), oturum.planlanan_dk * 60 + 60, 3 * 3600),
@@ -874,7 +876,7 @@ function ogrenciOzeti(kurumId: string, ogrenciId: string): MockYanit {
   d.karakter = {
     tur_kodu: TURLER[h % 3]?.kod ?? 'kivilcim',
     ad: 'Yoldaş',
-    secildi_at: new Date().toISOString(),
+    secildi_at: new Date(mockSimdi()).toISOString(),
     tur_hakki: 1,
     kusanilan: {},
   };
@@ -941,7 +943,7 @@ function yildizIstegi(
       grup_id: grupId,
       hafta_baslangic: hafta,
       gerekce,
-      created_at: new Date().toISOString(),
+      created_at: new Date(mockSimdi()).toISOString(),
     };
     d.verilenYildizlar.push(yildiz);
     d.aldigiYildizlar.push(yildiz);
@@ -959,7 +961,7 @@ function aldigiYildizlar(kurumId: string, ogrenciId: string): MockYanit {
     grup_id: uid(),
     hafta_baslangic: pazartesi(gunEkle(bugunGun(), -21)),
     gerekce: 'Bu ay her derse hazırlıklı geldi.',
-    created_at: new Date(Date.now() - 21 * GUN_MS).toISOString(),
+    created_at: new Date(mockSimdi() - 21 * GUN_MS).toISOString(),
   };
   return ok({
     yildizlar: [...d.aldigiYildizlar.filter((y) => y.ogrenci_id === ogrenciId), eski],
@@ -984,7 +986,7 @@ function duraklatmaIstegi(
   if (yontem === 'DELETE' && duraklatmaId) {
     const k = liste.find((x) => x.id === duraklatmaId && x.iptal_at === null);
     if (!k) return hata(404, 'bulunamadi', 'Duraklatma bulunamadı.');
-    k.iptal_at = new Date().toISOString();
+    k.iptal_at = new Date(mockSimdi()).toISOString();
     return { durum: 204 };
   }
   if (yontem === 'POST' && !duraklatmaId) {
@@ -1011,7 +1013,7 @@ function duraklatmaIstegi(
       bitis_gun: bit,
       neden,
       iptal_at: null,
-      created_at: new Date().toISOString(),
+      created_at: new Date(mockSimdi()).toISOString(),
     };
     liste.push(yeni);
     return ok(yeni, 201);

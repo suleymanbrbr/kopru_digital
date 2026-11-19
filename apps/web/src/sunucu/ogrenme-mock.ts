@@ -1,3 +1,4 @@
+import { mockSimdi } from './mock-zaman';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import type { MockIstek, MockYanit } from './vekil';
 import { xlsxOku, xlsxYaz, type Hucre } from './xlsx-mini';
@@ -30,8 +31,8 @@ const uid = () => crypto.randomUUID();
 /** Mock kurum kimlikleri (`kurum-ege`...) UUID degildir; sozlesmelerdeki `uuid` alanlari icin sabit deger. */
 const KURUM_UUID = '00000000-0000-4000-8000-00000000c0de';
 const GUN_MS = 86_400_000;
-const simdi = () => new Date().toISOString();
-const bugun = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
+const simdi = () => new Date(mockSimdi()).toISOString();
+const bugun = () => new Date(mockSimdi() + 3 * 3_600_000).toISOString().slice(0, 10);
 const gunEkle = (tarih: string, gun: number) =>
   new Date(Date.parse(`${tarih}T00:00:00Z`) + gun * GUN_MS).toISOString().slice(0, 10);
 const haftaGunu = (tarih: string) => (new Date(`${tarih}T00:00:00Z`).getUTCDay() + 6) % 7;
@@ -424,7 +425,7 @@ function kur(kurumId: string): Durum {
       hedef_turu: 'grup',
       hedef_id: sinif?.id ?? uid(),
       veren_id: ogretmenId,
-      son_teslim_at: new Date(Date.now() + sonGun * GUN_MS).toISOString(),
+      son_teslim_at: new Date(mockSimdi() + sonGun * GUN_MS).toISOString(),
       hedef_soru_sayisi: 20,
       fotograf_gerekli: false,
       durum,
@@ -739,7 +740,7 @@ function ozetSatiri(kurumId: string, o: Odev, r: OgrOdev): Kayit {
   const gecikme =
     r.durum === 'atandi' &&
     o.son_teslim_at !== null &&
-    Date.parse(o.son_teslim_at as string) < Date.now();
+    Date.parse(o.son_teslim_at as string) < mockSimdi();
   return {
     ogrenci_odev_id: r.id,
     ogrenci_id: r.ogrenci_id,
@@ -827,7 +828,7 @@ function odevIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYan
         durum: 'teslim_edildi',
         teslim_edildi: true,
         teslim_at: simdi(),
-        gec_teslim: o.son_teslim_at !== null && Date.parse(o.son_teslim_at as string) < Date.now(),
+        gec_teslim: o.son_teslim_at !== null && Date.parse(o.son_teslim_at as string) < mockSimdi(),
         yapilan_soru_sayisi: yapilan,
         dogru_sayisi: d,
         yanlis_sayisi: y,

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { girisYap } from './yardimcilar';
+import { girisYap, simdi, test } from './yardimcilar';
 
 /**
  * Mock modda takvim, yoklama ve finans ekranlari. Mock veri sunucu surecinde ortaktir; testler yalniz
@@ -12,9 +12,9 @@ test.skip(({ isMobile }) => isMobile, 'Durumlu mock veri: yalniz masaustu projes
 const IST = 'Europe/Istanbul';
 
 /** Istanbul yerel tarihi (`YYYY-MM-DD`), `gun` gun kaydirilmis. */
-function tarih(gun = 0, simdi = Date.now()): string {
+function tarih(gun = 0, an = simdi()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: IST }).format(
-    new Date(simdi + gun * 86_400_000),
+    new Date(an + gun * 86_400_000),
   );
 }
 function saat(simdi: number): string {
@@ -162,8 +162,8 @@ test.describe('yoklama', () => {
 
   /** `saatOnce` saat once baslamis bir ders ekler (tohum derslerle cakismasin diye 5 ve 8 saat). */
   async function gecmisDersEkle(page: Page, grup: string, saatOnce: number) {
-    const simdi = Date.now() - saatOnce * 3_600_000;
-    const f = await dersFormuDoldur(page, { grup, tarih: tarih(0, simdi), saat: saat(simdi) });
+    const an = simdi() - saatOnce * 3_600_000;
+    const f = await dersFormuDoldur(page, { grup, tarih: tarih(0, an), saat: saat(an) });
     await f.getByRole('button', { name: 'Dersi ekle' }).click();
     // Tohum derslerden biriyle (ornegin bugun 20:00) saat cakisabilir; onaylanir.
     const yine = f.getByRole('button', { name: 'Yine de ekle' });

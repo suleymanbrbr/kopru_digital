@@ -1,3 +1,4 @@
+import { mockSimdi } from './mock-zaman';
 import { MEDYA_TUR_KURALLARI, medyaYuklemeIstegiSema, type MedyaDosyaTuru } from '@kopru/contracts';
 
 import type { MockIstek, MockYanit } from './vekil';
@@ -64,7 +65,7 @@ export function medyaMockAdres(kaynak: string, id: string, sureSn: number | null
     genislik: null,
     yukseklik: null,
     sure_sn: sureSn,
-    gecerlilik_bitis_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+    gecerlilik_bitis_at: new Date(mockSimdi() + 10 * 60_000).toISOString(),
   };
 }
 
@@ -89,7 +90,7 @@ function durumYaniti(d: MockDosya, kaynak: string, durum: string) {
             asil_url: adresKok(kaynak, d.id),
             kucuk_url: d.mime.startsWith('image/') ? adresKok(kaynak, d.id) : null,
             orta_url: d.mime.startsWith('image/') ? adresKok(kaynak, d.id) : null,
-            gecerlilik_bitis_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+            gecerlilik_bitis_at: new Date(mockSimdi() + 10 * 60_000).toISOString(),
           }
         : null,
   };
@@ -134,7 +135,7 @@ export function medyaMock(istek: MockIstek): MockYanit {
                 yontem: 'PUT',
                 url: adresKok(kaynak, d.id),
                 basliklar: { 'content-type': d.mime },
-                gecerlilik_bitis_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+                gecerlilik_bitis_at: new Date(mockSimdi() + 15 * 60_000).toISOString(),
               }
             : null,
       },

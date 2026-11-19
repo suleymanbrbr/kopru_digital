@@ -1,3 +1,4 @@
+import { mockSimdi } from './mock-zaman';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
 import type { MockIstek, MockYanit } from './vekil';
 import { xlsxYaz } from './xlsx-mini';
@@ -41,7 +42,7 @@ const oran = (pay: number, payda: number) => ({
 
 function donemTarihleri(donem: Donem) {
   const gun = Number(donem);
-  const bitis = new Date();
+  const bitis = new Date(mockSimdi());
   const baslangic = new Date(bitis.getTime() - (gun - 1) * 86_400_000);
   const g = (d: Date) => d.toISOString().slice(0, 10);
   return { donem_gun: gun, baslangic: g(baslangic), bitis: g(bitis) };
@@ -177,7 +178,7 @@ function suzulmusOgrenciler(kurumId: string, sorgu: URLSearchParams) {
   return [...harita.values()].sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
 }
 
-const yariDonem = (sira: number) => new Date(Date.now() - (sira + 1) * 86_400_000).toISOString();
+const yariDonem = (sira: number) => new Date(mockSimdi() - (sira + 1) * 86_400_000).toISOString();
 
 function listeUret(servis: Servis, ad: string, kurumId: string, sorgu: URLSearchParams) {
   const ogrenciler = suzulmusOgrenciler(kurumId, sorgu);
