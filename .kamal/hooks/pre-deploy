@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Kamal pre-deploy: veritabani gocunu YENI imajdan, OWNER rolle calistirir (ADR 0005, ADR 0003).
+#
+# Kamal bu hook'u imaj kayit defterine itildikten sonra, yeni konteynerler baslamadan once calistirir; goc
+# basarisizsa (cikis kodu != 0) dagitim durur ve eski surum calismaya devam eder.
+#
+# Owner baglantisi (<SERVIS>_DATABASE_OWNER_URL) uygulama konteynerinin ortamina GIRMEZ: komut satirinda da
+# gorunmez, sunucuya ssh ile stdin uzerinden `--env-file /dev/stdin` olarak verilir ve konteyner biter bitmez
+# yok olur. Goc yalniz birincil sunucuda, bir kez calisir (SQL gocleri idempotenttir, migrasyonlar tablosunda
+# ozet denetlenir).
+#
+# Genislet-daralt kurali zorunludur (docs/isletim/dagitim.md): eski surum, yeni semayla calismaya devam
+# edebilmelidir, cunku rolling guncellemede iki surum bir arada calisir.
+set -euo pipefail
+
+servis="${KOPRU_SERVIS:?KOPRU_SERVIS gerekli}"
+case "$servis" in
+  api | motivasyon | bildirim | medya) ;;
+  *)
+    echo "pre-deploy: $servis icin goc yok (web/admin veritabani kullanmaz)."
+    exit 0
+    ;;
+esac
+
+# Sirlar: .kamal/secrets-common ve .kamal/secrets.<hedef> (kabuk bicimi, komut yerine koyma icerebilir).
+set -a
+[ -f .kamal/secrets-common ] && . .kamal/secrets-common
+if [ -n "${KAMAL_DESTINATION:-}" ] && [ -f ".kamal/secrets.${KAMAL_DESTINATION}" ]; then
+  . ".kamal/secrets.${KAMAL_DESTINATION}"
+fi
+set +a
+
+ad_buyuk="$(printf '%s' "$servis" | tr '[:lower:]' '[:upper:]')"
+owner_degisken="${ad_buyuk}_DATABASE_OWNER_URL"
+owner_url="${!owner_degisken:-}"
+if [ -z "$owner_url" ]; then
+  echo "pre-deploy: $owner_degisken tanimli degil (.kamal/secrets.${KAMAL_DESTINATION:-<hedef>})." >&2
+  exit 1
+fi
+
+kayit_defteri="$(awk '/^registry:/{f=1} f && /server:/{print $2; exit}' config/deploy.yml)"
+imaj="${kayit_defteri}/kopru/${servis}:${KAMAL_VERSION:?KAMAL_VERSION gerekli}"
+birincil="${KAMAL_HOSTS%%,*}"
+kullanici="$(awk '/^ssh:/{f=1} f && /user:/{print $2; exit}' config/deploy.yml)"
+
+echo "pre-deploy: ${servis} gocu ${kullanici}@${birincil} uzerinde calisiyor (${imaj})"
+printf 'DATABASE_OWNER_URL=%s\n' "$owner_url" |
+  ssh -o BatchMode=yes "${kullanici}@${birincil}" \
+    "docker run --rm -i --env-file /dev/stdin '${imaj}' node dist/db/migrate-cli.js migrate"
