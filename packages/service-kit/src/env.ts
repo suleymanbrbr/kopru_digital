@@ -46,6 +46,8 @@ export function createEnvSchema(options: { defaultPort: number }) {
       RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
       OPENAPI_ENABLED: z.stringbool().optional(),
       OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
+      /** Worker canlilik dosyasi (Docker HEALTHCHECK, `infra/docker/saglik.mjs`); tanimsizsa yazilmaz. */
+      WORKER_SAGLIK_DOSYASI: z.string().min(1).optional(),
     })
     .check((ctx) => {
       const gecersiz = ctx.value.TRUST_PROXY.filter((adres) => !gecerliProxyAdresi(adres));

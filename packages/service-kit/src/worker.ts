@@ -1,6 +1,7 @@
 import { connect, type NatsConnection } from 'nats';
 import type { Logger } from 'pino';
 
+import { canlilikDosyasiBaslat } from './canlilik.js';
 import { createDb, type Database } from './db.js';
 import type { BaseEnv } from './env.js';
 import { createLogger } from './logger.js';
@@ -58,6 +59,17 @@ export async function runWorker(options: WorkerOptions): Promise<{ stop(): Promi
 
   const cleanup = await options.setup?.({ name, env, log, db, nats });
   if (cleanup) cleanups.push(cleanup);
+
+  // Docker HEALTHCHECK icin canlilik dosyasi (yalniz WORKER_SAGLIK_DOSYASI tanimliysa).
+  if (env.WORKER_SAGLIK_DOSYASI) {
+    const durdur = canlilikDosyasiBaslat(env.WORKER_SAGLIK_DOSYASI, () =>
+      nats ? !nats.isClosed() : true,
+    );
+    cleanups.push(() => {
+      durdur();
+      return Promise.resolve();
+    });
+  }
 
   log.info('worker hazır');
 
