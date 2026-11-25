@@ -22,6 +22,9 @@ export function kaynakUrlCoz(girdi: string): { url: string; saglayici: KaynakSag
   const kirpilmis = girdi.trim();
   if (kirpilmis.length > KAYNAK_URL_MAKS)
     throw urlHatasi('Bağlantı en çok 2000 karakter olabilir.');
+  // Bosluk/denetim karakteri: `new URL` sekmeyi/satir sonunu sessizce siler; saklanan metin ile cozulen adres ayrismasin.
+  if (/[\s\p{Cc}]/u.test(kirpilmis))
+    throw urlHatasi('Bağlantıda boşluk veya denetim karakteri olamaz.');
   if (!/^https:\/\//i.test(kirpilmis)) throw urlHatasi('Bağlantı https:// ile başlamalı.');
   // Sema harfi kucuge cevrilir: veritabani CHECK'i (`url ~ '^https://'`) buyuk/kucuk harf duyarlidir.
   const url = `https://${kirpilmis.slice('https://'.length)}`;

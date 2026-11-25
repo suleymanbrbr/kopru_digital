@@ -50,6 +50,11 @@ describe('kaynakUrlCoz: saglayici tanima', () => {
     'https://',
     'https:// bosluklu.com',
     'zoom.us/rec/x',
+    'https://zoom.us/rec/a\nb',
+    'https://zoo\tm.us/x',
+    'https://zoom.us/x\u0000y',
+    'JaVaScRiPt:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
   ])('gecersiz url 422 kaynak_url_gecersiz: %s', (url) => {
     try {
       kaynakUrlCoz(url);

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { OTURUM_CEREZI } from '@/sunucu/bff';
+import { cspOlustur } from '@/sunucu/csp';
 
 /**
  * Hafif yonlendirme: oturum cerezi yoksa giris disindaki sayfalara girilmez, varsa giris sayfasi
@@ -8,6 +9,12 @@ import { OTURUM_CEREZI } from '@/sunucu/bff';
  * sayfalar rol ve ikinci adim durumunu `/api/platform/ben` ile ogrenir.
  */
 export function proxy(request: NextRequest) {
+  const yanit = yonlendir(request);
+  yanit.headers.set('Content-Security-Policy', cspOlustur(process.env.NODE_ENV === 'production'));
+  return yanit;
+}
+
+function yonlendir(request: NextRequest): NextResponse {
   const cerezVar = request.cookies.has(OTURUM_CEREZI);
   const { pathname } = request.nextUrl;
 
