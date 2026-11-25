@@ -53,7 +53,7 @@ jobs:
       - name: HTTP sürecini çalıştır ve canlılık ucunu dene
         run: |
           docker run -d --name uygulama -p ${{ matrix.port }}:${{ matrix.port }} \
-            -e BETTER_AUTH_SECRET=ci-icin-uretilmis-sir-0123456789abcdef \
+            -e BETTER_AUTH_SECRET=ci-icin-uretilmis-sir-0123456789abcdef -e AUTH_ENABLED=true \
             -e S3_ENDPOINT=http://127.0.0.1:9 -e S3_ACCESS_KEY_ID=ci -e S3_SECRET_ACCESS_KEY=ci \
             kopru/${{ matrix.ad }}:ci
           for i in $(seq 1 30); do
@@ -71,7 +71,7 @@ jobs:
         if: ${{ matrix.ad != 'web' && matrix.ad != 'admin' }}
         run: |
           docker run -d --name worker \
-            -e BETTER_AUTH_SECRET=ci-icin-uretilmis-sir-0123456789abcdef \
+            -e BETTER_AUTH_SECRET=ci-icin-uretilmis-sir-0123456789abcdef -e AUTH_ENABLED=true \
             -e S3_ENDPOINT=http://127.0.0.1:9 -e S3_ACCESS_KEY_ID=ci -e S3_SECRET_ACCESS_KEY=ci \
             -e WORKER_SAGLIK_DOSYASI=/tmp/worker-canli \
             kopru/${{ matrix.ad }}:ci node dist/worker.js
