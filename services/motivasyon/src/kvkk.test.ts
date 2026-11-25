@@ -53,14 +53,18 @@ describe.skipIf(dbYok())(
         karakter: 1,
         odak: 1,
       });
-      const kar = async (id: string) =>
-        (await o.sistem`select ad from motivasyon.ogrenci_karakterleri where ogrenci_id = ${id}`)[0]
-          ?.ad;
+      const kar = async (id: string): Promise<unknown> => {
+        const [r] =
+          await o.sistem`select ad from motivasyon.ogrenci_karakterleri where ogrenci_id = ${id}`;
+        return r?.ad as unknown;
+      };
       expect(await kar(a)).toBe(ANONIM_KARAKTER_ADI);
       expect(await kar(b)).toBe('Mehmet');
-      const cihaz = async (id: string) =>
-        (await o.sistem`select cihaz from motivasyon.odak_oturumlari where ogrenci_id = ${id}`)[0]
-          ?.cihaz;
+      const cihaz = async (id: string): Promise<unknown> => {
+        const [r] =
+          await o.sistem`select cihaz from motivasyon.odak_oturumlari where ogrenci_id = ${id}`;
+        return r?.cihaz as unknown;
+      };
       expect(await cihaz(a)).toBeNull();
       expect(await cihaz(b)).not.toBeNull();
       const [xp] =

@@ -55,6 +55,9 @@ export async function kurumEngelleriniBul(tx: Tx, kullaniciId: string): Promise<
     .map((s) => ({ kurum_id: s.kurum_id, kurum_ad: s.kurum_ad, diger_uye_sayisi: s.diger_uye }));
 }
 
+/** Talep baska worker'da islendi/geri alindi: denetim satiri dahil islem geri alinir. */
+class TalepAtlandi extends Error {}
+
 export interface SilmeIsiSonucu {
   tamamlanan: number;
   engellenen: number;
@@ -106,6 +109,7 @@ export async function kvkkSilmeIsle(
         sonuc.engellenen++;
       }
     } catch (err) {
+      if (err instanceof TalepAtlandi) continue;
       sonuc.hata++;
       b.log.error({ err, talep_id: talep.id }, 'hesap silme işi başarısız');
     }
@@ -113,7 +117,7 @@ export async function kvkkSilmeIsle(
   return sonuc;
 }
 
-type Sonuc = { durum: 'tamam'; sidler: string[] } | { durum: 'engel' } | { durum: 'atlandi' };
+type Sonuc = { durum: 'tamam'; sidler: string[] } | { durum: 'engel' };
 
 async function kullaniciyiAnonimlestir(
   tx: Tx,
@@ -124,7 +128,7 @@ async function kullaniciyiAnonimlestir(
   const at = simdi.toISOString();
   const [kilitli] = await tx.execute<{ id: string }>(sql`
     select id from hesap.silme_talepleri where id = ${talep.id} and durum = 'beklemede' for update skip locked`);
-  if (!kilitli) return { durum: 'atlandi' };
+  if (!kilitli) throw new TalepAtlandi();
 
   const engeller = await kurumEngelleriniBul(tx, kid);
   if (engeller.length > 0) {

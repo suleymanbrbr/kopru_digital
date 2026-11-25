@@ -26,6 +26,7 @@ j() { curl -sS -H 'content-type: application/json' "$@"; }
 adim() { printf '\n== %s\n' "$*"; }
 sart() { if [ "$#" -ne 3 ]; then echo "BASARISIZ: sart 3 arguman ister ($1)"; exit 2; fi; if [ "$2" != "$3" ]; then echo "BASARISIZ: $1 (beklenen $3, gelen $2)"; exit 1; fi; echo "ok: $1 -> $2"; }
 durum() { curl -sS -o /dev/null -w '%{http_code}' -H 'content-type: application/json' "$@"; }
+sil() { curl -sS -o /dev/null -w '%{http_code}' -X DELETE "$@"; } # govdesiz DELETE: content-type basligi gonderilmez
 asql() { $PSQL -d kopru_k1_api -c "$1"; }
 msql() { $PSQL -d kopru_k1_mot -c "$1"; }
 bsql() { $PSQL -d kopru_k1_bil -c "$1"; }
@@ -121,9 +122,9 @@ echo "$TALEP" | jq -c .talep
 sart "talep beklemede" "$(echo "$TALEP" | jq -r .talep.durum)" beklemede
 sart "ikinci talep (409)" "$(durum -X POST "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR" -d "$(jq -nc --arg p "$PAROLA" '{dogrulama:{yontem:"parola",parola:$p}}')")" 409
 sart "bekleyen talepte hesap calisir (ben 200)" "$(durum "$API/v1/hesap/ben" -H "authorization: Bearer $OGR")" 200
-sart "geri al (200)" "$(durum -X DELETE "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR")" 200
+sart "geri al (200)" "$(sil "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR")" 200
 sart "geri alinca durum" "$(j "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR" | jq -r .talep.durum)" geri_alindi
-sart "ikinci geri al (404)" "$(durum -X DELETE "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR")" 404
+sart "ikinci geri al (404)" "$(sil "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR")" 404
 sleep 4
 sart "geri alinan talepte veri yerinde (kullanici aktif)" "$(asql "select durum from hesap.kullanicilar where id = '$OG_K'")" aktif
 sart "yeniden talep (201)" "$(durum -X POST "$API/v1/hesap/ben/silme-talebi" -H "authorization: Bearer $OGR" -d "$(jq -nc --arg p "$PAROLA" '{dogrulama:{yontem:"parola",parola:$p}}')")" 201
@@ -140,10 +141,10 @@ bekle "talep tamamlandi" "[ \"\$(asql \"select durum from hesap.silme_talepleri 
 
 adim "7) api: kisisel veri gitti, kanit ve defter kaldi"
 asql "select durum, telefon_e164 is null as tel_yok, eposta is null as eposta_yok, gorunen_ad is null as ad_yok, anonimlestirildi_at is not null as zaman from hesap.kullanicilar where id = '$OG_K'"
-sart "kullanici anonim" "$(asql "select durum || '/' || (eposta is null) || '/' || (gorunen_ad is null) from hesap.kullanicilar where id = '$OG_K'")" "silindi/t/t"
+sart "kullanici anonim" "$(asql "select durum || '/' || (eposta is null) || '/' || (gorunen_ad is null) from hesap.kullanicilar where id = '$OG_K'")" "silindi/true/true"
 sart "hesaplar (giris yontemleri) silindi" "$(asql "select count(*) from hesap.hesaplar where kullanici_id = '$OG_K'")" 0
 sart "oturumlar silindi" "$(asql "select count(*) from hesap.oturumlar where kullanici_id = '$OG_K'")" 0
-sart "uyelik: ad ve no yok, ayrildi" "$(asql "select (gorunen_ad is null) || '/' || durum from hesap.uyelikler where id = '$OG_UYELIK'")" "t/ayrildi"
+sart "uyelik: ad ve no yok, ayrildi" "$(asql "select (gorunen_ad is null) || '/' || durum from hesap.uyelikler where id = '$OG_UYELIK'")" "true/ayrildi"
 sart "riza kaniti duruyor (ip/user_agent yok)" "$(asql "select count(*) > 0 and bool_and(ip is null and user_agent is null) from hesap.rizalar where kullanici_id = '$OG_K'")" t
 sart "soru mesaji metni silindi" "$(asql "select count(*) from ogrenme.soru_mesajlari where yazar_id = '$OG_UYELIK' and metin is distinct from '[silindi]'")" 0
 sart "soru kaydi duruyor" "$(asql "select count(*) from ogrenme.sorular where ogrenci_id = '$OG_UYELIK'")" 1

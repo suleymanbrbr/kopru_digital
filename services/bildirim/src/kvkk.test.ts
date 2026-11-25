@@ -52,7 +52,7 @@ describe.skipIf(dbYok())(
         `select count(*)::int n from bildirim.${tablo} where ${kosul} = $1`,
         [deger],
       );
-      return (r as { n: number }).n;
+      return (r as unknown as { n: number }).n;
     };
 
     it('silindi: kullanicinin kutusu, cihaz, tercih, ayar, gonderim silinir; baskasininki kalir; idempotent', async () => {

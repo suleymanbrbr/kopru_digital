@@ -812,6 +812,8 @@ const SOGUMA_GUN = 30;
 
 /** KVKK: hesap silme talebi ve veri disa aktarma (`/v1/hesap/ben/*`). Kod `123456`, parola `parola123`. `kvkk-engel` senaryosu sahip engeli doner. */
 function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
+  // Cerez `anahtar:senaryo` bicimindedir (abonelik mock'uyla ayni).
+  const senaryo = istek.senaryo?.split(':').pop();
   const g = govdeNesnesi(istek.govde);
   const talepYaniti = (t: Kayit) => ({ talep: t });
   if (parcalar[1] === 'verilerim' && istek.yontem === 'GET') {
@@ -832,7 +834,7 @@ function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
           bildirim: { cihazlar: [] },
           medya: { dosyalar: [] },
         },
-        eksik_servisler: istek.senaryo === 'kvkk-eksik' ? ['medya'] : [],
+        eksik_servisler: senaryo === 'kvkk-eksik' ? ['medya'] : [],
       },
     };
   }
@@ -847,7 +849,7 @@ function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
         talep: d.silme,
         soguma_gun: SOGUMA_GUN,
         engeller:
-          istek.senaryo === 'kvkk-engel'
+          senaryo === 'kvkk-engel'
             ? [{ kurum_id: uid(), kurum_ad: 'Ege Işık Dershanesi', diger_uye_sayisi: 14 }]
             : [],
         dogrulama_yontemleri: ['otp', 'parola'],
@@ -860,7 +862,7 @@ function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
       (dg.yontem === 'otp' && dg.kod === '123456') ||
       (dg.yontem === 'parola' && dg.parola === 'parola123');
     if (!dogru) return hata(401, 'kod_gecersiz', 'Doğrulama başarısız.');
-    if (istek.senaryo === 'kvkk-engel') {
+    if (senaryo === 'kvkk-engel') {
       return hata(409, 'kurum_sahibi_engeli', 'Kurumun tek sahibisiniz.', {
         kurumlar: [{ kurum_id: uid(), kurum_ad: 'Ege Işık Dershanesi', diger_uye_sayisi: 14 }],
       });
