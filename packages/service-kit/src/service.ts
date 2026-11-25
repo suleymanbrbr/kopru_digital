@@ -26,6 +26,7 @@ import { errorHandler, notFoundHandler } from './errors.js';
 import { BellekIptalDeposu, NatsIptalDeposu, type IptalDeposu } from './iptal.js';
 import { installIstekBaglami } from './istek-baglami.js';
 import { createLogger } from './logger.js';
+import { metrikler } from './metrikler.js';
 import { createServisJwtVerifier, installServisAuth, type VerifyServisJwt } from './servis-auth.js';
 import { installShutdownHandlers } from './shutdown.js';
 
@@ -111,13 +112,13 @@ export function createService(options: CreateServiceOptions): Service {
     // bos liste = baslik yok sayilir (`true`/`*` env semasinda reddedilir).
     trustProxy: env.TRUST_PROXY.length > 0 ? env.TRUST_PROXY : false,
     genReqId: (request) => headerValue(request.headers['x-request-id']) ?? uuidv7(),
-    // correlationId tum istek loglarinda (gelen/biten istek dahil) gorunsun.
+    // korelasyon_id tum istek loglarinda (gelen/biten istek dahil) gorunsun.
     childLoggerFactory: (log, bindings, options, request) => {
       const reqId: unknown = bindings.reqId;
       return log.child(
         {
           ...bindings,
-          correlationId: headerValue(request.headers['x-correlation-id']) ?? reqId,
+          korelasyon_id: headerValue(request.headers['x-correlation-id']) ?? reqId,
         },
         options,
       );
@@ -135,6 +136,7 @@ export function createService(options: CreateServiceOptions): Service {
     : null;
   let natsConnection: NatsConnection | null = null;
 
+  if (db) metrikler.dbHavuzuIzle('uygulama', db.sql);
   app.decorate('db', db);
   app.decorate('nats', { getter: () => natsConnection });
   const iptal: IptalDeposu =
@@ -159,6 +161,16 @@ export function createService(options: CreateServiceOptions): Service {
     request.correlationId = headerValue(request.headers['x-correlation-id']) ?? request.id;
     void reply.header('x-request-id', request.id);
     void reply.header('x-correlation-id', request.correlationId);
+  });
+
+  // HTTP metrikleri (RED): rota SABLONU ile (kart sayisi sabit); kurum/kisi etiketi yok. Saglik
+  // uclari olcume girmez (yuk dengeleyici/Kamal yoklamasi gecikme dagilimini bozmasin).
+  app.addHook('onResponse', (request, reply, done) => {
+    const rota = request.routeOptions.url;
+    if (rota !== '/health' && rota !== '/ready') {
+      metrikler.httpIstek(request.method, rota, reply.statusCode, reply.elapsedTime / 1000);
+    }
+    done();
   });
 
   // --- Eklentiler ----------------------------------------------------------

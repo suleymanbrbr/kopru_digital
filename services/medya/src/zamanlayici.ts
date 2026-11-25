@@ -1,3 +1,5 @@
+import { metrikler } from '@kopru/service-kit';
+
 interface Log {
   error(nesne: Record<string, unknown>, mesaj: string): void;
 }
@@ -31,7 +33,8 @@ export function periyodikIs(
   let durdu = false;
   const tur = () => {
     if (calisan || durdu) return;
-    calisan = is()
+    calisan = metrikler
+      .isiOlc(ad, is)
       .catch((err: unknown) => {
         log.error({ err, is: ad }, 'zamanlanmış iş başarısız');
       })

@@ -104,7 +104,7 @@ export function createKimlik(env: Env, options: KimlikSecenekleri = {}) {
       const sistemDb = env.DATABASE_SISTEM_URL
         ? createDb({ url: env.DATABASE_SISTEM_URL, max: 5 })
         : null;
-      const sms = options.sms ?? new LogSmsGonderici(app.log);
+      const sms = options.sms ?? new LogSmsGonderici(app.log, env.NODE_ENV === 'production');
       const eposta = options.eposta ?? epostaGondericiOlustur(env, app.log);
       const hizmet: KimlikHizmeti = {
         env,

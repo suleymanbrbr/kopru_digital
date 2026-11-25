@@ -1,4 +1,4 @@
-import type { Database } from '@kopru/service-kit';
+import { metrikler, type Database } from '@kopru/service-kit';
 import { sql } from 'drizzle-orm';
 
 import { iso } from './ortak.js';
@@ -185,5 +185,9 @@ export async function gonderimIsle(b: GonderimBagimliliklari): Promise<GonderimO
       }
     }
   });
+  metrikler.bildirimGonderim('gonderildi', ozet.gonderildi);
+  metrikler.bildirimGonderim('yeniden', ozet.yenidenDenecek);
+  metrikler.bildirimGonderim('basarisiz', ozet.basarisiz);
+  metrikler.bildirimGonderim('atlandi', ozet.atlandi);
   return ozet;
 }
