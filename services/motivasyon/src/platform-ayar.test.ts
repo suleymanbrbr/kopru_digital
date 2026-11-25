@@ -173,6 +173,9 @@ describe('platform yetki kontrolu (saf)', () => {
   });
 });
 
+/** Tohum surum 1 + goc 0008 surumu (gunluk soru kurali): guncel varsayim son surumdur. */
+const TOHUM_SURUM = 2;
+
 describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
   let o: Ortam;
   let servis: Service;
@@ -228,8 +231,8 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     // Paylasilan test veritabani: sonraki dosyalar icin tohum degerlerine don.
     const t = await yoneticiTokeni();
     const son = govde(await cagir('GET', `${URL}?limit=1`, t)) as { gecerli: { surum: number } };
-    if (son.gecerli.surum > 1)
-      await cagir('POST', `${URL}/geri-al`, t, { surum: 1, neden: 'test sonu' });
+    if (son.gecerli.surum > TOHUM_SURUM)
+      await cagir('POST', `${URL}/geri-al`, t, { surum: TOHUM_SURUM, neden: 'test sonu' });
     await servis.stop();
     await o.kapat();
   });
@@ -262,7 +265,9 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     }
     expect(await xpKurali('yoklama_geldi')).toBe(20);
     expect(
-      (await o.sistem`select 1 from motivasyon.platform_ayar_surumleri where surum > 1`).length,
+      (
+        await o.sistem`select 1 from motivasyon.platform_ayar_surumleri where surum > ${TOHUM_SURUM}`
+      ).length,
     ).toBe(0);
   });
 
@@ -290,13 +295,14 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     }
   });
 
-  it('GET: tohum degerleri ve surum 1 gecmisi', async () => {
+  it('GET: son surum = guncel tablolar (tohum + goc 0008 surumu)', async () => {
     const r = await cagir('GET', URL, await yoneticiTokeni());
     expect(r.statusCode).toBe(200);
     const b = govde(r);
-    expect(b.gecerli.surum).toBe(1);
+    expect(b.gecerli.surum).toBe(TOHUM_SURUM);
     expect(b.gecerli.degerler).toEqual(TOHUM_DEGERLER);
-    expect(b.gecmis).toHaveLength(1);
+    expect(b.gecmis).toHaveLength(2);
+    expect(b.gecmis[1]?.degerler.kurallar.gunluk_soru).toBeUndefined();
     expect(b.gecmis[0]?.degistiren_kullanici_id).toBeNull();
     expect(b.gecmis[0]?.degerler).toEqual(TOHUM_DEGERLER);
   });
@@ -332,7 +338,9 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     expect(ayni.statusCode).toBe(422);
     expect(govde(ayni).error.code).toBe('degisiklik_yok');
     expect(
-      (await o.sistem`select 1 from motivasyon.platform_ayar_surumleri where surum > 1`).length,
+      (
+        await o.sistem`select 1 from motivasyon.platform_ayar_surumleri where surum > ${TOHUM_SURUM}`
+      ).length,
     ).toBe(0);
     expect(await xpKurali('yoklama_geldi')).toBe(20);
   });
@@ -349,8 +357,8 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     });
     expect(r.statusCode).toBe(200);
     const v = govde(r) as PlatformAyarSurumu;
-    expect(v.surum).toBe(2);
-    expect(v.onceki_surum).toBe(1);
+    expect(v.surum).toBe(TOHUM_SURUM + 1);
+    expect(v.onceki_surum).toBe(TOHUM_SURUM);
     expect(v.geri_alinan_surum).toBeNull();
     expect(v.degistiren_kullanici_id).toBe(yonetici);
     expect(v.neden).toBe("Yoklama XP'si artirildi");
@@ -383,10 +391,10 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     const t = await put({
       neden: 'Kayit tavani dusuruldu',
       tavanlar: { kayit: 8 },
-      beklenen_surum: 2,
+      beklenen_surum: TOHUM_SURUM + 1,
     });
     expect(t.statusCode).toBe(200);
-    expect(govde(t).surum).toBe(3);
+    expect(govde(t).surum).toBe(TOHUM_SURUM + 2);
     const c = { kurumId: uuidv7(), ogrenciId: uuidv7() };
     for (const dakika of [0, 1]) {
       await o.isle(c.kurumId, (tx) => kayitIzlendiIsle(tx, olay.kayitIzlendi(c, dk(T0, dakika))));
@@ -401,7 +409,7 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     const r = await put({ neden: 'catisma', tavanlar: { kayit: 16 }, beklenen_surum: 1 });
     expect(r.statusCode).toBe(409);
     expect(govde(r).error.code).toBe('surum_catismasi');
-    expect(govde(r).error.details.guncel_surum).toBe(3);
+    expect(govde(r).error.details.guncel_surum).toBe(TOHUM_SURUM + 2);
   });
 
   it('uyari: varsayimi bozan degisiklik uygulanir ve uyarilar yanitta doner', async () => {
@@ -411,7 +419,7 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     });
     expect(r.statusCode).toBe(200);
     const v = govde(r) as PlatformAyarSurumu;
-    expect(v.surum).toBe(4);
+    expect(v.surum).toBe(TOHUM_SURUM + 3);
     const kodlar = v.uyarilar.map((u) => u.kod);
     expect(kodlar).toEqual(expect.arrayContaining(['haftalik_xp_degisti', 'kural_kapatildi']));
     expect(await xpKurali('odak_oturumu')).toBe(0);
@@ -422,12 +430,12 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
 
   it('geri al: eski surumun degerleriyle yeni surum; gecmis silinmez; yeni olay eski degerle', async () => {
     expect((await geriAl(99)).statusCode).toBe(404);
-    const r = await geriAl(1, 'Tohuma donus');
+    const r = await geriAl(TOHUM_SURUM, 'Tohuma donus');
     expect(r.statusCode).toBe(201);
     const v = govde(r) as PlatformAyarSurumu;
-    expect(v.surum).toBe(5);
-    expect(v.geri_alinan_surum).toBe(1);
-    expect(v.onceki_surum).toBe(4);
+    expect(v.surum).toBe(TOHUM_SURUM + 4);
+    expect(v.geri_alinan_surum).toBe(TOHUM_SURUM);
+    expect(v.onceki_surum).toBe(TOHUM_SURUM + 3);
     expect(v.degerler).toEqual(TOHUM_DEGERLER);
     expect(await xpKurali('yoklama_geldi')).toBe(20);
     expect(await xpKurali('odak_oturumu')).toBe(1);
@@ -437,13 +445,13 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
     expect(await toplamXp(d.kurumId, d.ogrenciId)).toBe(20);
 
     // Zaten ayni degerler: degisiklik yok
-    const ayni = await geriAl(1);
+    const ayni = await geriAl(TOHUM_SURUM);
     expect(ayni.statusCode).toBe(422);
     expect(govde(ayni).error.code).toBe('degisiklik_yok');
 
     const gecmis = govde(await cagir('GET', `${URL}?limit=50`, await yoneticiTokeni()));
-    expect(gecmis.gecmis.map((s: { surum: number }) => s.surum)).toEqual([5, 4, 3, 2, 1]);
-    expect(gecmis.gecerli.surum).toBe(5);
+    expect(gecmis.gecmis.map((s: { surum: number }) => s.surum)).toEqual([6, 5, 4, 3, 2, 1]);
+    expect(gecmis.gecerli.surum).toBe(6);
     // Eski surumun degerleri degismedi (yalniz ekleme)
     expect(gecmis.gecmis[3]?.degerler.kurallar.yoklama_geldi?.xp).toBe(25);
   });
@@ -455,11 +463,11 @@ describe.skipIf(dbYok())('platform ayar uclari (gercek PostgreSQL)', () => {
       cagir('PUT', URL, t, { neden: 'es zamanli 2', tavanlar: { soru: 21 } }),
     ]);
     expect([x.statusCode, y.statusCode]).toEqual([200, 200]);
-    expect([govde(x).surum, govde(y).surum].sort()).toEqual([6, 7]);
+    expect([govde(x).surum, govde(y).surum].sort()).toEqual([7, 8]);
     // Son surum iki degisikligi de icerir (ikincisi birincinin ustune uygulandi)
     const son = govde(await cagir('GET', `${URL}?limit=1`, t));
     expect(son.gecerli.degerler.tavanlar).toMatchObject({ kayit: 16, soru: 21 });
-    expect((await geriAl(1)).statusCode).toBe(201);
+    expect((await geriAl(TOHUM_SURUM)).statusCode).toBe(201);
   });
 
   it('erisim: uygulama rolu platform_ayar_surumleri tablosunu yazamaz; satir degistirilemez; kiraci verisi yok', async () => {

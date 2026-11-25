@@ -61,7 +61,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
     expect(await sayi('brans_beceri_eslemesi')).toBe(16);
     expect(await sayi('kozmetik_tanimlari')).toBe(12);
     expect(await sayi('motivasyon_ayarlari')).toBe(15);
-    expect(await sayi('platform_ayar_surumleri')).toBe(1);
+    expect(await sayi('platform_ayar_surumleri')).toBe(2);
   });
 
   it('degistirilmis migration reddedilir', async () => {

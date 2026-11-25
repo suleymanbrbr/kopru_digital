@@ -17,14 +17,15 @@ insert into motivasyon.motivasyon_ayarlari (anahtar, deger, aciklama) values
   ('supheli.gunluk_soru_pencere_sn',   '600', 'Supheli ornek: gunluk soru kayitlarinin toplandigi pencere (sn)'),
   ('supheli.gunluk_soru_esik',         '150', 'Pencerede toplam soru bu sayidan FAZLA ise yeni kayit XP almaz');
 
--- Surum 1 "ilk tohum degerleri"dir: yeni kural tohuma da eklenir (platform ayar GET'i gecerli degerlerle tohumun
--- ayni olmasini bekler; sonraki surumler `xp_kurallari`ndan tam kopya alir). Yalniz bu migration icin, defter
--- tetikleyicisi gecici olarak kapatilir; baska satira dokunulmaz.
-alter table motivasyon.platform_ayar_surumleri disable trigger platform_ayar_surumleri_degismez_trg;
-update motivasyon.platform_ayar_surumleri
-   set degerler = jsonb_set(
-         jsonb_set(degerler, '{kurallar,gunluk_soru}',
-                   '{"xp": 2, "olay_basi_ust_sinir": null, "gec_carpani": 1, "aktif": true}'::jsonb),
-         '{tavanlar,gunluk_soru}', '10'::jsonb)
- where surum = 1 and not (degerler->'kurallar' ? 'gunluk_soru');
-alter table motivasyon.platform_ayar_surumleri enable trigger platform_ayar_surumleri_degismez_trg;
+-- Platform ayar defteri yalniz eklemelidir: yeni kural ve tavan, guncel tablolarin tam kopyasiyla YENI bir surum
+-- satiri olarak yazilir (onceki surumlere dokunulmaz).
+insert into motivasyon.platform_ayar_surumleri (id, surum, degerler, onceki_surum, degistiren_kullanici_id, neden)
+select gen_random_uuid(), m.surum + 1,
+       jsonb_build_object(
+         'kurallar', (select jsonb_object_agg(kod, jsonb_build_object(
+                        'xp', xp, 'olay_basi_ust_sinir', olay_basi_ust_sinir,
+                        'gec_carpani', gec_carpani::float8, 'aktif', aktif))
+                      from motivasyon.xp_kurallari),
+         'tavanlar', (select jsonb_object_agg(kod, gunluk_ust_sinir) from motivasyon.xp_tavanlari)),
+       m.surum, null, 'Göç 0008: günlük soru XP kuralı'
+  from (select max(surum) as surum from motivasyon.platform_ayar_surumleri) m;
