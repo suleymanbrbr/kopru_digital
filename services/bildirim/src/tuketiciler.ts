@@ -18,7 +18,6 @@ import {
 import type { NatsConnection } from 'nats';
 
 import { sonradanKatilanaDagit } from './duyuru.js';
-import { kullaniciDegisti, kullaniciSilindi } from './kvkk.js';
 import { ESLEMELER } from './eslemeler/index.js';
 import {
   atamaDegisti,
@@ -29,6 +28,7 @@ import {
   modulAyariDegisti,
   uyelikDegisti,
 } from './kopya.js';
+import { kullaniciDegisti, kullaniciSilindi } from './kvkk.js';
 
 export interface TuketiciBagimliliklari {
   nats: Pick<NatsConnection, 'jetstream' | 'jetstreamManager'>;
