@@ -17,8 +17,11 @@ export function cerez(request: NextRequest, ad: string): string | undefined {
 }
 
 function guvenliMi(request: NextRequest): boolean {
+  // Uretimde her zaman Secure (proxy basligi eksik gelse bile cerez duz HTTP'ye gitmez).
   return (
-    request.nextUrl.protocol === 'https:' || request.headers.get('x-forwarded-proto') === 'https'
+    process.env.NODE_ENV === 'production' ||
+    request.nextUrl.protocol === 'https:' ||
+    request.headers.get('x-forwarded-proto') === 'https'
   );
 }
 
@@ -71,10 +74,14 @@ export function hataYaniti(
  * (SameSite=Strict cerez ile birlikte ikinci katman).
  */
 export function ayniKaynakMi(request: NextRequest): boolean {
-  const origin = request.headers.get('origin');
-  if (!origin) return true;
+  // Tarayici `Sec-Fetch-Site` gonderiyorsa yalniz ayni origin (ya da kullanici eylemi: `none`) kabul edilir.
+  const site = request.headers.get('sec-fetch-site');
+  if (site !== null && site !== 'same-origin' && site !== 'none') return false;
+  const host = request.headers.get('host');
+  const kaynak = request.headers.get('origin') ?? request.headers.get('referer');
+  if (!kaynak) return true;
   try {
-    return new URL(origin).host === request.headers.get('host');
+    return new URL(kaynak).host === host;
   } catch {
     return false;
   }
