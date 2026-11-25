@@ -353,7 +353,8 @@ export const kvkkYollari: ServicePlugin = (app) => {
       },
     },
     async (request, reply) => {
-      const { kullaniciId } = aktor(request, false);
+      // Toplu kişisel veri dışa aktarımı yalnız kullanıcının kendisine: taklit oturumu (destek) indiremez.
+      const { kullaniciId } = aktor(request, true);
       void reply.header('content-disposition', 'attachment; filename="verilerim.json"');
       void reply.header('cache-control', 'no-store');
       return verilerimiTopla(app, kullaniciId);
