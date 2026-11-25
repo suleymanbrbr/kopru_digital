@@ -218,6 +218,33 @@ Solo hoca hem sahip hem öğretmen rolündedir ve kurum menülerini (şube, kade
 
 **Kapsam dışı:** Veliye otomatik mesaj ya da rapor (Faz 2), kitap içeriği/PDF barındırma, otomatik (öğretmen onaysız) yönlendirme.
 
+### Öğretmen değerlendirmeleri, önerilen kaynaklar ve öğrenci koçluk görünümü
+
+> Proje sahibi isteğiyle eklendi (25 Kasım 2026). Kararlar: ayrı “koç” rolü yok; öğrencinin **tüm öğretmenleri** (ona ders veren ya da atanmış) birbirlerinin değerlendirmelerini görür. Öğrencinin görüp görmeyeceğini öğretmen her yorumda seçer (varsayılan: görmez). Veli tarafı yok.
+
+**Amaç:** Bir öğrencinin öğretmenleri onun hakkında düzenli (haftalık ya da daha sık) değerlendirme yazsın ve kaynak önersin; öğrenciyle ilgilenen her öğretmen (koçluk yapan dahil) öğrencinin durumunu tek sayfada görerek rehberlik etsin.
+
+**Kim:** Öğretmen (yalnız kendi öğrencileri: ders verdiği ya da atandığı), sahip/yönetici (kurum), öğrenci (yalnız kendisine görünür işaretlenenler ve kendisine önerilen kaynaklar).
+
+**Akış (öğretmen):** Öğrenci kartı → “Değerlendirme yaz” → dönem (bu hafta ön seçili; tek gün de olabilir) → ders/branş (isteğe bağlı) → kısa ölçekler (çalışma düzeni, derse katılım, ödev disiplini, anlama düzeyi: 1–5, hepsi isteğe bağlı) → serbest yorum → “öğrenci görsün” anahtarı (kapalı) → kaydet. Aynı yerden “Kaynak öner” → kaynak kitap/test (kurumun kaynak kitaplarından), ders materyali/link ya da serbest metin → isteğe bağlı konu ve not → öğrenciye görünür.
+
+**Öğrenci koçluk görünümü (öğrenci kartı, personel için):** tek sayfada
+
+- Öğretmen değerlendirmeleri zaman çizelgesi (öğretmen, ders, dönem, ölçekler, yorum; öğrenciye görünenler işaretli), son 4 haftanın ölçek eğilimi.
+- Öğrencinin kullandığı kaynaklar (günlük soru kayıtlarından ve ödevlerden: kitap/test ilerlemesi, son kullanım).
+- Öğretmenlerin önerdiği kaynaklar (kim, ne zaman, öğrenci başladı mı: günlük kayıtta o kaynak kullanıldıysa “başladı”).
+- Konu analizi özeti ve sistem önerileri (günlük soru takibinden), haftalık plan ve ödev durumu bağlantıları.
+
+**Öğrenci sayfası (öğrencinin kendisi):** kendisine görünür değerlendirmeler ve önerilen kaynaklar (“Öğretmenimin önerdikleri”), öneriyi tek dokunuşla günlük kayıtta kaynak olarak seçebilme.
+
+**Faz 1 kapsamı:** Değerlendirme yazma/düzenleme (yazarı, 7 gün içinde; sonrası yeni kayıt), silme yerine geri çekme (yazar ya da sahip/yönetici), öğrenciye görünürlük anahtarı, ölçekler isteğe bağlı; kaynak önerisi ve geri çekme; koçluk görünümü; öğrencinin görünür değerlendirmelerinde ve yeni öneride uygulama içi bildirim (push yok); değerlendirme hatırlatması: öğretmene haftada bir “bu hafta değerlendirmesi olmayan öğrencilerin” listesi (Bugün ekranında kart).
+
+**Kalite çıtası:** Bir değerlendirme 30 saniyede yazılır; koçluk görünümü 2 saniyede açılır; öğrenci, kendisine görünür işaretlenmemiş hiçbir değerlendirmeyi hiçbir uçtan göremez (testle kilitli); öğretmen, öğrencisi olmayan bir öğrencinin değerlendirmesini göremez.
+
+**Sonraki iyileştirmeler:** Değerlendirme şablonları (kurumun kendi ölçekleri), dönem sonu özet raporu, veliye paylaşım (Faz 2 veli modülü), yapay zekâ ile değerlendirmelerden özet.
+
+**Kapsam dışı:** Veliye görünürlük (Faz 2), öğrenciler arası karşılaştırma/sıralama, öğrencinin değerlendirmeye cevap yazması.
+
 ## Soru sor
 
 **Amaç:** Öğrenci takıldığı an yardım alır; öğretmen yükünü kontrol ederek hızlı ve zengin cevap verir. Rakipten en net ayrışabileceğimiz özellik.
