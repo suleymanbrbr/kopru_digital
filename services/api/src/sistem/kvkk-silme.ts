@@ -105,7 +105,7 @@ export async function kvkkSilmeIsle(
           });
         }
         b.log.info({ kullanici_id: talep.kullanici_id }, 'hesap anonimleştirildi');
-      } else if (r.durum === 'engel') {
+      } else {
         sonuc.engellenen++;
       }
     } catch (err) {

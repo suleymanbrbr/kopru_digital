@@ -14,8 +14,8 @@ import {
 } from './modules/abonelik/index.js';
 import { geceIsiZamanla } from './modules/finans/index.js';
 import { kaynakSuresiniDoldur } from './sistem/ders-kaynak-sure-sonu.js';
-import { kvkkSilmeIsle } from './sistem/kvkk-silme.js';
 import { dersSaatlikIs } from './sistem/ders-seri-uret.js';
+import { kvkkSilmeIsle } from './sistem/kvkk-silme.js';
 import { medyaKopyaTuketiciBaslat } from './sistem/medya-kopya-tuketici.js';
 import { soruKotaSayaclariniTemizle, soruOtomatikCoz } from './sistem/soru-isleri.js';
 

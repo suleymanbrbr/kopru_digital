@@ -20,15 +20,15 @@ import {
   type AuthContext,
   type ServicePlugin,
 } from '@kopru/service-kit';
-import { and, eq, gt, sql } from 'drizzle-orm';
 import { verifyPassword } from 'better-auth/crypto';
+import { and, eq, gt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
 import { hesaplar, kullanicilar, otpIstekleri, silmeTalepleri } from '../../db/schema.js';
 import { kurumEngelleriniBul, type KurumEngeli } from '../../sistem/kvkk-silme.js';
 import { OTP_GECERLILIK_SN } from './better-auth.js';
-import { olayYaz } from './olaylar.js';
 import { verilerimiTopla } from './kvkk-veri.js';
+import { olayYaz } from './olaylar.js';
 
 const muaf = { rizaMuaf: true } as const;
 const SAAT_MS = 3_600_000;

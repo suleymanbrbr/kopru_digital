@@ -12,7 +12,6 @@ import {
   rizaKabulEt,
   testDb,
   testServisi,
-  tokenAl,
   type KurumluKullanici,
 } from './test/yardimcilar.js';
 
@@ -295,6 +294,5 @@ describe.skipIf(dbYok())('hesap: KVKK silme talebi, anonimlestirme, veri disa ak
     expect(
       (olaylar.at(-1)?.payload as { data: { degisen_alanlar: string[] } }).data.degisen_alanlar,
     ).toContain('gorunen_ad');
-    void tokenAl;
   });
 });
