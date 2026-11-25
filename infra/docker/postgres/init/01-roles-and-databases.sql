@@ -43,3 +43,11 @@ create role motivasyon_owner nologin;
 create role motivasyon_app login nosuperuser nobypassrls password 'motivasyon_app';
 create role motivasyon_sistem login nosuperuser bypassrls password 'motivasyon_sistem';
 grant motivasyon_owner to motivasyon;
+
+-- bildirim servisi (ADR 0003 deseni): migration kullanicisi `bildirim` (db sahibi) bildirim_owner rolune gecerek
+-- tablolari olusturur. Uygulama `bildirim_app` (NOBYPASSRLS), sistem isleri (gonderim, bakim, outbox relay)
+-- `bildirim_sistem` (BYPASSRLS). Superuser olmayan migration kullanicisi icin (uretime yakin yerel deneme) gerekir.
+create role bildirim_owner nologin;
+create role bildirim_app login nosuperuser nobypassrls password 'bildirim_app';
+create role bildirim_sistem login nosuperuser bypassrls password 'bildirim_sistem';
+grant bildirim_owner to bildirim;

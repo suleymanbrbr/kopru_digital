@@ -1,0 +1,326 @@
+# Uretime yakin yerel deneme: TUM imajlar (6 HTTP + 4 worker) NODE_ENV=production ile, kendi altyapisiyla.
+# Gelistirme altyapisindan (compose.yaml, proje "kopru") bagimsizdir: ayri proje adi, ayri hacimler, kendi
+# postgres/nats/S3/mailpit'i; mevcut kopru-* konteynerleriyle ve 5432/5433/4222/9000 portlariyla CAKISMAZ.
+#
+# Kullanim (repo kokunden):
+#   docker compose -f infra/docker/compose.prod-yerel.yaml build         # imajlari derler (yavas, onbellekli)
+#   docker compose -f infra/docker/compose.prod-yerel.yaml up -d --wait
+#   infra/scripts/duman-testi.sh
+#   docker compose -f infra/docker/compose.prod-yerel.yaml down -v        # her seyi (hacimler dahil) siler
+#
+# Portlar (ana makine): 41800 api, 41801 motivasyon, 41802 bildirim, 41803 medya, 41804 web, 41805 admin,
+#                       41806 postgres, 41807 nats, 41808 S3, 41809 mailpit arayuzu.
+# Sirlar burada YALNIZ yerel deneme degerleridir (gercek sir degil); uretimde gizli yoneticiden gelir.
+name: kopru-prod-yerel
+
+x-ortak: &ortak
+  restart: 'no'
+  environment: &ortak-env
+    NODE_ENV: production
+    LOG_LEVEL: info
+    NATS_URL: nats://nats:4222
+    # api kendi JWKS'ini yayinlar; digerleri bu adresten dogrular. iss, api'nin genel adresiyle eslesmeli.
+    JWKS_URL: http://api:4000/.well-known/jwks.json
+    JWT_ISSUER: http://localhost:41800
+    JWT_AUDIENCE: kopru
+
+x-worker: &worker-ortak
+  restart: 'no'
+  command: ['node', 'dist/worker.js']
+  healthcheck:
+    test: ['CMD', 'node', 'saglik.mjs']
+    interval: 10s
+    timeout: 10s
+    retries: 30
+    start_period: 20s
+
+services:
+  # ---------------------------------------------------------------- altyapi
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ['41806:5432']
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  nats:
+    image: nats:alpine
+    command: ['-js', '-sd', '/data', '-m', '8222']
+    ports: ['41807:4222']
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8222/healthz || exit 1']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  s3:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: yerel-erisim
+      RUSTFS_SECRET_KEY: yerel-gizli-anahtar
+    ports: ['41808:9000']
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'curl -fsS http://127.0.0.1:9000/health || wget -qO- http://127.0.0.1:9000/health || exit 1',
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  s3-kova:
+    # Uretimde kova altyapi tarafindan olusturulur (S3_KOVA_YAPILANDIR kapali); burada tek seferlik is.
+    image: amazon/aws-cli:latest
+    depends_on:
+      s3: { condition: service_healthy }
+    restart: 'no'
+    environment:
+      AWS_ACCESS_KEY_ID: yerel-erisim
+      AWS_SECRET_ACCESS_KEY: yerel-gizli-anahtar
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        aws --endpoint-url http://s3:9000 s3api head-bucket --bucket medya-ozel 2>/dev/null ||
+        aws --endpoint-url http://s3:9000 s3api create-bucket --bucket medya-ozel
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ['41809:8025']
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # ------------------------------------------------------------------- goc
+  # Goc, imajin icinden ve OWNER rolle calisir (uretimde Kamal pre-deploy hook ayni komutu kullanir).
+  goc-api:
+    image: kopru/api:prod-yerel
+    build: { context: ../.., dockerfile: services/api/Dockerfile }
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    command: ['node', 'dist/db/migrate-cli.js', 'migrate']
+    environment:
+      DATABASE_OWNER_URL: postgres://api:api@postgres:5432/api
+
+  goc-motivasyon:
+    image: kopru/motivasyon:prod-yerel
+    build: { context: ../.., dockerfile: services/motivasyon/Dockerfile }
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    command: ['node', 'dist/db/migrate-cli.js', 'migrate']
+    environment:
+      DATABASE_OWNER_URL: postgres://motivasyon:motivasyon@postgres:5432/motivasyon
+
+  goc-bildirim:
+    image: kopru/bildirim:prod-yerel
+    build: { context: ../.., dockerfile: services/bildirim/Dockerfile }
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    command: ['node', 'dist/db/migrate-cli.js', 'migrate']
+    environment:
+      DATABASE_OWNER_URL: postgres://bildirim:bildirim@postgres:5432/bildirim
+
+  goc-medya:
+    image: kopru/medya:prod-yerel
+    build: { context: ../.., dockerfile: services/medya/Dockerfile }
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    command: ['node', 'dist/db/migrate-cli.js', 'migrate']
+    environment:
+      DATABASE_OWNER_URL: postgres://medya:medya@postgres:5432/medya
+
+  # ------------------------------------------------------------------- api
+  api: &api
+    <<: *ortak
+    image: kopru/api:prod-yerel
+    depends_on:
+      goc-api: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+    ports: ['41800:4000']
+    environment: &api-env
+      <<: *ortak-env
+      DATABASE_URL: postgres://api_app:api_app@postgres:5432/api
+      DATABASE_SISTEM_URL: postgres://api_sistem:api_sistem@postgres:5432/api
+      PUBLIC_URL: http://localhost:41800
+      WEB_URL: http://localhost:41804
+      BETTER_AUTH_SECRET: yerel-deneme-icin-uretilmis-sir-0123456789abcdef
+      MEDYA_URL: http://medya:4003
+      MOTIVASYON_URL: http://motivasyon:4001
+      BILDIRIM_URL: http://bildirim:4002
+      API_KVKK_ARALIK_MS: '3600000'
+      EPOSTA_SAGLAYICI: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
+      CORS_ORIGINS: http://localhost:41804
+    healthcheck:
+      test: ['CMD', 'node', 'saglik.mjs']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  api-worker:
+    <<: *worker-ortak
+    image: kopru/api:prod-yerel
+    depends_on:
+      goc-api: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+    environment:
+      <<: *api-env
+      WORKER_SAGLIK_DOSYASI: /tmp/worker-canli
+
+  # ----------------------------------------------------------- motivasyon
+  motivasyon:
+    <<: *ortak
+    image: kopru/motivasyon:prod-yerel
+    depends_on:
+      goc-motivasyon: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+      api: { condition: service_healthy }
+    ports: ['41801:4001']
+    environment: &motivasyon-env
+      <<: *ortak-env
+      AUTH_ENABLED: 'true'
+      DATABASE_URL: postgres://motivasyon_app:motivasyon_app@postgres:5432/motivasyon
+      DATABASE_SISTEM_URL: postgres://motivasyon_sistem:motivasyon_sistem@postgres:5432/motivasyon
+    healthcheck:
+      test: ['CMD', 'node', 'saglik.mjs']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  motivasyon-worker:
+    <<: *worker-ortak
+    image: kopru/motivasyon:prod-yerel
+    depends_on:
+      goc-motivasyon: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+    environment:
+      <<: *motivasyon-env
+      WORKER_SAGLIK_DOSYASI: /tmp/worker-canli
+
+  # -------------------------------------------------------------- bildirim
+  bildirim:
+    <<: *ortak
+    image: kopru/bildirim:prod-yerel
+    depends_on:
+      goc-bildirim: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+      api: { condition: service_healthy }
+    ports: ['41802:4002']
+    environment: &bildirim-env
+      <<: *ortak-env
+      AUTH_ENABLED: 'true'
+      DATABASE_URL: postgres://bildirim_app:bildirim_app@postgres:5432/bildirim
+      DATABASE_SISTEM_URL: postgres://bildirim_sistem:bildirim_sistem@postgres:5432/bildirim
+      PUSH_SAGLAYICI: log
+    healthcheck:
+      test: ['CMD', 'node', 'saglik.mjs']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  bildirim-worker:
+    <<: *worker-ortak
+    image: kopru/bildirim:prod-yerel
+    depends_on:
+      goc-bildirim: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+    environment:
+      <<: *bildirim-env
+      WORKER_SAGLIK_DOSYASI: /tmp/worker-canli
+
+  # ----------------------------------------------------------------- medya
+  medya:
+    <<: *ortak
+    image: kopru/medya:prod-yerel
+    depends_on:
+      goc-medya: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+      s3-kova: { condition: service_completed_successfully }
+      api: { condition: service_healthy }
+    ports: ['41803:4003']
+    environment: &medya-env
+      <<: *ortak-env
+      AUTH_ENABLED: 'true'
+      DATABASE_URL: postgres://medya_app:medya_app@postgres:5432/medya
+      DATABASE_SISTEM_URL: postgres://medya_sistem:medya_sistem@postgres:5432/medya
+      S3_ENDPOINT: http://s3:9000
+      S3_GENEL_ENDPOINT: http://localhost:41808
+      S3_BUCKET: medya-ozel
+      S3_ACCESS_KEY_ID: yerel-erisim
+      S3_SECRET_ACCESS_KEY: yerel-gizli-anahtar
+      CORS_ORIGINS: http://localhost:41804
+    healthcheck:
+      test: ['CMD', 'node', 'saglik.mjs']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  medya-worker:
+    <<: *worker-ortak
+    image: kopru/medya:prod-yerel
+    depends_on:
+      goc-medya: { condition: service_completed_successfully }
+      nats: { condition: service_healthy }
+      s3-kova: { condition: service_completed_successfully }
+    environment:
+      <<: *medya-env
+      WORKER_SAGLIK_DOSYASI: /tmp/worker-canli
+
+  # ------------------------------------------------------- web ve admin
+  web:
+    image: kopru/web:prod-yerel
+    build: { context: ../.., dockerfile: apps/web/Dockerfile }
+    restart: 'no'
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ['41804:3000']
+    environment:
+      API_URL: http://api:4000
+      MEDYA_URL: http://medya:4003
+      BILDIRIM_URL: http://bildirim:4002
+      MOTIVASYON_URL: http://motivasyon:4001
+      WEB_CSP_EK_KAYNAKLAR: http://localhost:41808
+    healthcheck:
+      test: ['CMD', 'node', 'saglik.mjs']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  admin:
+    image: kopru/admin:prod-yerel
+    build: { context: ../.., dockerfile: apps/admin/Dockerfile }
+    restart: 'no'
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ['41805:3001']
+    environment:
+      API_URL: http://api:4000
+      MOTIVASYON_URL: http://motivasyon:4001
+      WEB_CSP_EK_KAYNAKLAR: http://localhost:41808
+    healthcheck:
+      test: ['CMD', 'node', 'saglik.mjs']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s

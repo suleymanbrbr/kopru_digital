@@ -1,0 +1,113 @@
+<%#
+  PRODUCTION hedefi (ADR 0005: en az iki uygulama sanal makinesi). Kullanim: KOPRU_SERVIS=<servis> kamal deploy -d production
+  <...> ile yazilanlar YER TUTUCUDUR; gercek degerlerle degistirmeden dagitim yapilmaz.
+  Sirlar: .kamal/secrets-common ve .kamal/secrets.production (ornek: .kamal/secrets.example).
+%>
+<%
+  servis = ENV.fetch('KOPRU_SERVIS')
+  makineler = ['<PROD_VM1_IP>', '<PROD_VM2_IP>']
+
+  api_alan = 'api.<ALAN_ADI>'
+  web_alan = 'app.<ALAN_ADI>'
+  # IP KISITI (admin): kamal-proxy IP filtresi sunmaz. Yonetim paneli yalniz yonetim ag(lar)indan acilmali:
+  # yuk dengeleyicide/guvenlik grubunda bu alan adina kaynak IP kisiti uygulayin. Ek savunma: api
+  # PLATFORM_IP_IZINLI (/platform/* ve taklit yalniz bu IP/CIDR'lerden; istemci IP'si ADR 0009).
+  admin_alan = 'admin.<ALAN_ADI>'
+
+  # Mobil istemci tek taban adresle (api_alan) yol tabanli yonlendirmeyle servislere ulasir (ADR 0005 uygulama notu).
+  # /ic/* yollari hicbir zaman bir yol onekiyle disari acilmaz.
+  proxy = {
+    'api' => { 'host' => api_alan },
+    'medya' => { 'host' => api_alan, 'path_prefix' => '/v1/dosyalar' },
+    'bildirim' => { 'host' => api_alan, 'path_prefix' => '/v1/bildirim' },
+    'motivasyon' => { 'host' => api_alan, 'path_prefix' => '/v1/motivasyon' },
+    'web' => { 'host' => web_alan },
+    'admin' => { 'host' => admin_alan },
+  }.fetch(servis)
+
+  # ADR 0009: yalniz Kamal docker agi (kamal-proxy + dis konteynerler). `docker network inspect kamal` ile dogrulayin.
+  guvenilen = '<KAMAL_AG_ALT_AGI>'   # ornek bicim: 172.18.0.0/16
+
+  ortak = {
+    'TRUST_PROXY' => guvenilen,
+    'JWKS_URL' => 'http://api:4000/.well-known/jwks.json',
+    'JWT_ISSUER' => "https://#{api_alan}",
+    'JWT_AUDIENCE' => 'kopru',
+    'NATS_URL' => '<NATS_URL>',
+    'OTEL_EXPORTER_OTLP_ENDPOINT' => '<OTEL_TOPLAYICI_URL>',
+  }
+  servise_ozel = {
+    'api' => {
+      'PUBLIC_URL' => "https://#{api_alan}",
+      'WEB_URL' => "https://#{web_alan}",
+      'MEDYA_URL' => 'http://medya:4003',
+      # KVKK veri disa aktarma / silme: diger servislerin ic adresleri (servis JWT'si ile /ic/kvkk/*)
+      'MOTIVASYON_URL' => 'http://motivasyon:4001',
+      'BILDIRIM_URL' => 'http://bildirim:4002',
+      # KVKK isi araligi (ms, worker; process.env'den ONEKLI adla okunur). Varsayilan 1 saat.
+      'API_KVKK_ARALIK_MS' => '3600000',
+      'CORS_ORIGINS' => "https://#{web_alan}",
+      'EPOSTA_SAGLAYICI' => 'smtp',
+      'SMTP_HOST' => '<SMTP_ADRESI>',
+      'SMTP_PORT' => '587',
+      'EPOSTA_GONDEREN' => 'Köprü <no-reply@<ALAN_ADI>>',
+      'PLATFORM_IP_IZINLI' => '<PLATFORM_YONETIM_IP_ARALIGI>',
+      'ODEME_IYZICO' => 'gercek',
+    },
+    'motivasyon' => { 'AUTH_ENABLED' => 'true', 'PLATFORM_IP_IZINLI' => '<PLATFORM_YONETIM_IP_ARALIGI>' },
+    'bildirim' => { 'AUTH_ENABLED' => 'true', 'PUSH_SAGLAYICI' => 'expo' },
+    'medya' => {
+      'AUTH_ENABLED' => 'true',
+      'S3_ENDPOINT' => '<S3_UC_NOKTASI>',
+      'S3_GENEL_ENDPOINT' => '<S3_GENEL_UC_NOKTASI>',
+      'S3_BUCKET' => 'medya-ozel',
+      'S3_REGION' => '<S3_BOLGE>',
+      'CORS_ORIGINS' => "https://#{web_alan}",
+    },
+    'web' => {
+      'API_URL' => 'http://api:4000',
+      'MEDYA_URL' => 'http://medya:4003',
+      'BILDIRIM_URL' => 'http://bildirim:4002',
+      'MOTIVASYON_URL' => 'http://motivasyon:4001',
+      # Istemci -> yuk dengeleyici -> kamal-proxy -> web: iki guvenilen sicrama (ADR 0009). LB yoksa 1.
+      'WEB_GUVENILEN_PROXY_SAYISI' => '2',
+      # CSP connect/img/media icin S3 uyumlu depolamanin GENEL adresi (presigned yukleme/okuma)
+      'WEB_CSP_EK_KAYNAKLAR' => '<S3_GENEL_UC_NOKTASI>',
+    },
+    'admin' => {
+      'API_URL' => 'http://api:4000',
+      'MOTIVASYON_URL' => 'http://motivasyon:4001',
+      'ADMIN_GUVENILEN_PROXY_SAYISI' => '2',
+      'WEB_CSP_EK_KAYNAKLAR' => '<S3_GENEL_UC_NOKTASI>',
+    },
+  }.fetch(servis)
+  # web/admin Next.js uygulamalari servis ortak sozlesmesini (TRUST_PROXY, JWKS...) kullanmaz.
+  env_clear = %w[web admin].include?(servis) ? servise_ozel : ortak.merge(servise_ozel)
+%>
+servers:
+  web:
+    hosts:
+<% makineler.each do |m| %>
+      - "<%= m %>"
+<% end %>
+<% if %w[api motivasyon bildirim medya].include?(servis) %>
+  worker:
+    hosts:
+<% makineler.each do |m| %>
+      - "<%= m %>"
+<% end %>
+<% end %>
+
+proxy:
+  # Iki sunucuda Let's Encrypt desteklenmez (Kamal); TLS saglayici yuk dengeleyicide (veya ozel sertifikayla ssl: true) sonlandirilir (ADR 0005).
+  ssl: false
+  host: "<%= proxy['host'] %>"
+<% if proxy['path_prefix'] %>
+  path_prefix: "<%= proxy['path_prefix'] %>"
+<% end %>
+
+env:
+  clear:
+<% env_clear.each do |anahtar, deger| %>
+    <%= anahtar %>: "<%= deger %>"
+<% end %>

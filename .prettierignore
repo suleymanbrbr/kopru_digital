@@ -22,3 +22,7 @@ apps/mobile/.expo
 apps/mobile/src/karakter/gorseller.generated.ts
 apps/mobile/expo-env.d.ts
 .claude
+
+# Kamal yapilandirmasi ERB (<% %>) icerir, YAML olarak bicimlendirilemez
+/config
+/.kamal

@@ -1,0 +1,55 @@
+name: Imajlar
+
+# Konteyner imajlarini derler ve calistirip saglik ucunu dener (ADR 0005). IMAJ ITILMEZ (push yok):
+# kayit defteri secilene kadar yalnizca "derleniyor ve aciliyor mu" denetlenir.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: imajlar-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  imaj:
+    name: imaj (${{ matrix.ad }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { ad: api, dockerfile: services/api/Dockerfile, port: 4000, yol: /health }
+          - { ad: motivasyon, dockerfile: services/motivasyon/Dockerfile, port: 4001, yol: /health }
+          - { ad: bildirim, dockerfile: services/bildirim/Dockerfile, port: 4002, yol: /health }
+          - { ad: medya, dockerfile: services/medya/Dockerfile, port: 4003, yol: /health }
+          - { ad: web, dockerfile: apps/web/Dockerfile, port: 3000, yol: /api/saglik }
+          - { ad: admin, dockerfile: apps/admin/Dockerfile, port: 3001, yol: /api/saglik }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Katman onbellegi (GitHub Actions onbellegi): bagimlilik katmani yalniz pnpm-lock.yaml degisince yenilenir.
+      - name: İmajı derle
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: true
+          tags: kopru/${{ matrix.ad }}:ci
+          cache-from: type=gha,scope=imaj-${{ matrix.ad }}
+          cache-to: type=gha,mode=max,scope=imaj-${{ matrix.ad }}
+
+      - name: İmaj boyutu
+        run: docker image ls kopru/${{ matrix.ad }}:ci --format '{{.Repository}}:{{.Tag}} {{.Size}}'
+
+      # HTTP sureci (NODE_ENV=production, AUTH_ENABLED=true) saglik ucunu, worker ise kendi NATS konteyneriyle
+      # BAGLI olarak canlilik dosyasini denemeli. Ayni betik yerelde de calisir: infra/scripts/imaj-denemesi.sh
+      - name: İmajı üretim ayarıyla çalıştır ve sağlık uçlarını dene
+        run: infra/scripts/imaj-denemesi.sh ${{ matrix.ad }} ${{ matrix.port }} ${{ matrix.yol }}

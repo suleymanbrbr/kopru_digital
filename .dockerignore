@@ -1,10 +1,45 @@
-**/node_modules
-**/dist
-**/.turbo
-**/coverage
+# Build baglami monorepo kokudur (docker build -f services/<servis>/Dockerfile .).
+# Yalniz imaj icin gerekenler baglama girer; sirlar ve yerel ciktilar asla.
+
+# Surum kontrolu, sirlar
 .git
+.github
 .env
 .env.*
 !.env.example
+.kamal/secrets
+.kamal/secrets-*
+.kamal/secrets.*
+
+# Bagimlilik ve derleme ciktilari (imajda yeniden uretilir)
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/.expo
+**/coverage
+**/*.tsbuildinfo
+**/.vitest-cache
+
+# Testler ve test ciktilari
+**/e2e
+**/e2e-gercek
+**/ekran
+**/playwright-report
+**/test-results
+
+# Dokumanlar, dagitim yapilandirmasi; altyapidan yalniz saglik denetim betigi girer
 docs
-infra
+**/docs
+*.md
+config
+.kamal
+infra/*
+!infra/docker
+infra/docker/*
+!infra/docker/saglik.mjs
+!infra/docker/next-baslat.mjs
+
+# Mobil: imaja girmez; yalniz paket manifesti kalir (pnpm kilit dosyasi onu bekler)
+apps/mobile/*
+!apps/mobile/package.json
