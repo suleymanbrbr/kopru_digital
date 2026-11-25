@@ -160,6 +160,9 @@ services:
       WEB_URL: http://localhost:41804
       BETTER_AUTH_SECRET: yerel-deneme-icin-uretilmis-sir-0123456789abcdef
       MEDYA_URL: http://medya:4003
+      MOTIVASYON_URL: http://motivasyon:4001
+      BILDIRIM_URL: http://bildirim:4002
+      API_KVKK_ARALIK_MS: '3600000'
       EPOSTA_SAGLAYICI: smtp
       SMTP_HOST: mailpit
       SMTP_PORT: '1025'

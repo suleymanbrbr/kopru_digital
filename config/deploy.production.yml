@@ -41,6 +41,11 @@
       'PUBLIC_URL' => "https://#{api_alan}",
       'WEB_URL' => "https://#{web_alan}",
       'MEDYA_URL' => 'http://medya:4003',
+      # KVKK veri disa aktarma / silme: diger servislerin ic adresleri (servis JWT'si ile /ic/kvkk/*)
+      'MOTIVASYON_URL' => 'http://motivasyon:4001',
+      'BILDIRIM_URL' => 'http://bildirim:4002',
+      # KVKK isi araligi (ms, worker; process.env'den ONEKLI adla okunur). Varsayilan 1 saat.
+      'API_KVKK_ARALIK_MS' => '3600000',
       'CORS_ORIGINS' => "https://#{web_alan}",
       'EPOSTA_SAGLAYICI' => 'smtp',
       'SMTP_HOST' => '<SMTP_ADRESI>',
