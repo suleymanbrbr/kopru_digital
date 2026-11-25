@@ -100,7 +100,7 @@ Durum makinesi: `yukleme_bekliyor` -> `yuklendi` -> `isleniyor` -> `hazir` | `is
 4. `ogrenme.soru.yeniden_acildi.v1`: ilgili `silinecek_at = NULL` (silinmiş olanlara dokunulmaz).
    Kural 3-4 sıra bağımsızdır: dosyanın `saklama_olay_at`inden eski `occurredAt`li olay yok sayılır. `kullanici_silindi`, `kurum_kapandi`, `birakildi`, `yukleme_zaman_asimi` nedenli daha güçlü planlar `soru.cozuldu` ile ezilmez; yeniden açılma yalnız `soru_cozuldu` nedenli planı geri alır.
 5. `ortak.dosya.birakildi.v1`: `hemen_sil` ise `now()`, değilse yetim kuralı.
-6. `hesap.kullanici.silindi.v1`: kullanıcının tüm dosyaları `now()` (`avatar` ve kullanıcı içeriği; `fatura_pdf` hariç, kurum varlığıdır).
+6. `hesap.kullanici.silindi.v1`: kullanıcının tüm dosyaları `now()` (`silme_nedeni='kullanici_silindi'`); **kalanlar** (kurum varlığı): `odev_eki`, `kurum_logosu`, `fatura_pdf`. Öğretmenin soru cevap dosyaları silinir (proje sahibi onayı bekliyor). Bkz. [kvkk-silme.md](kvkk-silme.md). Dışa aktarma: `POST /ic/kvkk/veri` (dosya kayıtları).
 7. Kurum `kapali`: kurumun dosyaları 90 gün sonra.
 
 Silme işi (worker, `medya_sistem`): 5 dakikada bir; aynı turda yükleme zaman aşımı, yetim kuralı (hazır, bağlanmamış ve planı olmayan dosyaya `hazir_at + yetim_saat`) ve takılan işleme geri alma da çalışır. Günlük `processed_events` temizliği (30 gün) ve gece kota denetimi (İstanbul 03:00) ayrı zamanlanır. `WHERE silinecek_at <= now() AND durum <> 'silindi' ORDER BY silinecek_at LIMIT 200 FOR UPDATE SKIP LOCKED`; her dosya için nesne + küçük resimler depolamadan silinir (nesne yoksa hata sayılmaz), sonra `durum='silindi'`, `depolama_anahtari=NULL`, kota düşülür, `medya.dosya.silindi.v1` yayımlanır. Silme başarısızsa satır `silinecek_at` yarın olarak ertelenir ve hata sayacı artar. Nesne silinirken `.yukleme` (ham yükleme) ve küçük resim nesneleri de silinir. `islenemedi` dosyalar `silinecek_at = now()` ile (neden `yetim`) bir sonraki turda silinir.
@@ -149,7 +149,7 @@ Olay zarfında özne sürümü olmadığından sıralama `son_olay_at` (olay `oc
 | `ortak.dosya.birakildi.v1` | Bağlantıyı çöz, yetim/silme kuralı | `medya.baglama` |
 | `ogrenme.soru.cozuldu.v1` | `silinecek_at = olay.silinecek_at` (`silme_nedeni='soru_cozuldu'`) | `medya.saklama` |
 | `ogrenme.soru.yeniden_acildi.v1` | `silinecek_at = NULL` (yalnız `soru_cozuldu` nedenli plan) | `medya.saklama` |
-| `hesap.kullanici.silindi.v1` | Kullanıcı dosyalarını sil | `medya.saklama` (**henüz bağlı değil**: sözleşme `contracts`ta yok; olay kullanıcı düzeyinde, zarf `kurumId` zorunlu) |
+| `hesap.kullanici.silindi.v1` | Kullanıcı dosyalarını sil | `medya.kvkk` (sistem rolü, `kiraci:'yok'`; zarf `kurumId` nil UUID, ADR 0010) |
 | `hesap.kurum.degisti.v1` | `kurum_kopyalari` upsert; `kapali` ise silme planı | `medya.kopya` |
 | `abonelik.abonelik.degisti.v1` | Kota ve durum güncelle | `medya.kopya` |
 

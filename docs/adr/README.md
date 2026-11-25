@@ -13,6 +13,7 @@ Biçim: Michael Nygard. Her kayıt `Başlık`, `Durum`, `Bağlam`, `Karar`, `Son
 | [0007](0007-para-ve-defterler.md) | Para ve defterler: kuruş, append-only defter, ters kayıt | Kabul edildi |
 | [0008](0008-erisim-belirteci-iptali-sid-listesi.md) | Erişim belirteci iptali: NATS KV `sid` listesi | Kabul edildi |
 | [0009](0009-guvenilir-proxy-istemci-ip.md) | Güvenilir proxy ve gerçek istemci IP'si | Kabul edildi |
+| [0010](0010-kullanici-duzeyi-olaylar-ve-kvkk-silme.md) | Kullanıcı düzeyi olaylar ve KVKK hesap silme | Kabul edildi |
 
 Şema dokümanları: [../schema/README.md](../schema/README.md).
 

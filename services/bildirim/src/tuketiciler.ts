@@ -1,4 +1,6 @@
 import {
+  hesapKullaniciDegistiV1,
+  hesapKullaniciSilindiV1,
   hesapAtamaDegistiV1,
   hesapGrupDegistiV1,
   hesapGrupUyesiDegistiV1,
@@ -26,11 +28,17 @@ import {
   modulAyariDegisti,
   uyelikDegisti,
 } from './kopya.js';
+import { kullaniciDegisti, kullaniciSilindi } from './kvkk.js';
 
 export interface TuketiciBagimliliklari {
   nats: Pick<NatsConnection, 'jetstream' | 'jetstreamManager'>;
   /** `bildirim_app` baglantisi: RLS atlanamaz, `kiraci: 'olaydan'` ile kurum baglami ayarlanir. */
   db: Pick<Database, 'orm'>;
+  /**
+   * `bildirim_sistem` (BYPASSRLS) baglantisi: kullanici duzeyi olaylar (`hesap.kullanici.*`) kurumlar arasi
+   * temizlik yaptigindan bununla ve `kiraci: 'yok'` ile islenir. Verilmezse bu tuketici baslamaz.
+   */
+  sistemDb?: Pick<Database, 'orm'>;
   log: TuketiciBaglami['log'];
   /** Testlerde paylasilan NATS'ta cakismamak icin tuketici adi soneki (uretimde bos). */
   sonek?: string;
@@ -41,10 +49,8 @@ export interface TuketiciBagimliliklari {
  * Tuketicileri baslatir: `bildirim.kopya` (hesap kopyalari) ve `bildirim.uretim` (olaydan bildirim; olay
  * eslemeleri `eslemeler/index.ts` listesinden).
  *
- * TODO(bildirim.kopya): `hesap.kullanici.degisti.v1` ve `hesap.kullanici.silindi.v1` sozlesmeleri
- * `@kopru/contracts`ta yok (kullanici duzeyinde olay, zarf `kurumId` zorunlu); gelince ayni tuketiciye
- * kullanici kopyasi ve veri temizligi (cihaz/tercih/ayar silme) eklenir. Abonelik olaylari da (kurum
- * kopyasinin abonelik alanlari) sonraki pakette.
+ * `bildirim.kullanici` (yalniz `sistemDb` verilirse): `hesap.kullanici.degisti/silindi` (KVKK, kvkk.ts).
+ * TODO: abonelik olaylari (kurum kopyasinin abonelik alanlari) sonraki pakette.
  */
 export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuketici[]> {
   const ek = b.sonek ?? '';
@@ -107,5 +113,23 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
       await esleme.isle(tx, olay, baglam);
     },
   });
-  return [kopya, uretim];
+  const tuketiciler = [kopya, uretim];
+  if (b.sistemDb) {
+    tuketiciler.push(
+      await startConsumer({
+        nats: b.nats,
+        db: b.sistemDb,
+        log: b.log,
+        kiraci: 'yok',
+        ...(b.baslangic ? { baslangic: b.baslangic } : {}),
+        tuketici: `bildirim.kullanici${ek}`,
+        olaylar: [hesapKullaniciDegistiV1, hesapKullaniciSilindiV1] as const,
+        isle: async (tx, olay) => {
+          if (olay.type === 'hesap.kullanici.degisti') return kullaniciDegisti(tx, olay);
+          await kullaniciSilindi(tx, olay);
+        },
+      }),
+    );
+  }
+  return tuketiciler;
 }

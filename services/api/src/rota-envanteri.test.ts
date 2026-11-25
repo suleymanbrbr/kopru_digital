@@ -57,6 +57,13 @@ describe.skipIf(dbYok())('guvenlik: api rota envanteri (korumasiz rota birakmaz)
     'POST /v1/hesap/sinif-kodu/katil',
     'GET /v1/hesap/sinif-kodu/istekler',
     'POST /v1/hesap/sinif-kodu/istekler/:istek_id/iptal',
+    // KVKK (hesap düzeyi; yalnız kendi kaydı, taklit oturumu yazamaz): docs/schema/kvkk-silme.md
+    'PATCH /v1/hesap/ben',
+    'GET /v1/hesap/ben/silme-talebi',
+    'POST /v1/hesap/ben/silme-talebi/kod-gonder',
+    'POST /v1/hesap/ben/silme-talebi',
+    'DELETE /v1/hesap/ben/silme-talebi',
+    'GET /v1/hesap/ben/verilerim',
   ]);
   /**
    * Kimliksiz erişilebilen rotalar. Giriş uçları kendi hız sınırlarını ve oturum belirteci denetimini taşır;

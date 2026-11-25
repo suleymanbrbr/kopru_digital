@@ -17,6 +17,7 @@ import {
 import { sql } from 'drizzle-orm';
 
 import { karakterYollari } from './karakter-yollari.js';
+import { kvkkYollari } from './kvkk-yollari.js';
 import { odakYollari } from './odak-yollari.js';
 import { gunHesapla, iso, kurumBilgisi, modulAcikMi } from './ortak.js';
 import { seriYollari } from './seri-yollari.js';
@@ -326,6 +327,7 @@ export function yollariOlustur(secenek: YolSecenekleri = {}): ServicePlugin {
     app.register(odakYollari({ simdi }));
     app.register(yildizYollari({ simdi }));
     app.register(karakterYollari({ simdi }));
+    app.register(kvkkYollari);
 
     return seriYollari({ simdi })(app, {});
   };
