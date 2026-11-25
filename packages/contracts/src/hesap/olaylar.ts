@@ -8,9 +8,12 @@ import { ModulKoduSema } from './moduller.js';
  * `hesap` olaylari (docs/schema/olaylar.md). Yukler `snake_case`, iletisim bilgisi (telefon, e-posta)
  * ve gizli icerik tasimaz. `*.degisti` olaylari kaydin tam guncel durumudur.
  *
- * Not: `hesap.kullanici.degisti` / `hesap.kullanici.silindi` kullanici duzeyindedir (kurum_id yok);
- * mevcut zarf `kurumId` zorunlu kildigi icin zarf kullanici duzeyini destekleyene kadar tanimlanmadi.
+ * Not: `hesap.kullanici.degisti` / `hesap.kullanici.silindi` kullanici duzeyindedir (kurum yok); zarfin
+ * `kurumId` alani bu olaylarda `KULLANICI_DUZEYI_KURUM_ID` (nil UUID) olur (ADR 0010).
  */
+
+/** Kullanici duzeyi olaylarda zarfin `kurumId` degeri (nil UUID). Tuketiciler `kiraci: 'yok'` calisir. */
+export const KULLANICI_DUZEYI_KURUM_ID = '00000000-0000-0000-0000-000000000000';
 
 export const kurumTurSema = z.enum(['bireysel', 'ekip', 'kurum']);
 export const kurumDurumSema = z.enum(['aktif', 'askida', 'kapali']);
@@ -112,6 +115,29 @@ export const hesapDavetKabulEdildiV1 = defineEvent(
     davet_eden_id: z.uuid(),
     uyelik_id: z.uuid(),
     rol: RolSema,
+  }),
+);
+
+export const hesapKullaniciDegistiV1 = defineEvent(
+  'hesap.kullanici.degisti',
+  1,
+  z.object({
+    kullanici_id: z.uuid(),
+    dil: z.string(),
+    durum: z.enum(['aktif', 'askida', 'silindi']),
+    /** Degisen alan adlari (deger tasinmaz): `olusturuldu`, `gorunen_ad`, `dil`, `durum`. */
+    degisen_alanlar: z.array(z.enum(['olusturuldu', 'gorunen_ad', 'dil', 'durum'])),
+  }),
+);
+
+/** KVKK silme/anonimlestirme tamamlandi. Yalniz kimlikler ve zaman; kisisel veri yok. */
+export const hesapKullaniciSilindiV1 = defineEvent(
+  'hesap.kullanici.silindi',
+  1,
+  z.object({
+    kullanici_id: z.uuid(),
+    uyelik_idleri: z.array(z.uuid()),
+    anonimlestirildi_at: z.iso.datetime({ offset: true }),
   }),
 );
 

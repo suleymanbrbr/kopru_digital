@@ -8430,6 +8430,283 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Görünen adı / dili güncelle (hesap.kullanici.degisti.v1 yayımlar; olayda ad taşınmaz) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        dil?: "tr";
+                        gorunen_ad?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degisen_alanlar: ("gorunen_ad" | "dil")[];
+                            dil: string;
+                            gorunen_ad: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/hesap/ben/silme-talebi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hesap silme talebi durumu, olası engeller ve kullanılabilir doğrulama yöntemleri */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dogrulama_yontemleri: ("otp" | "parola")[];
+                            engeller: {
+                                diger_uye_sayisi: number;
+                                kurum_ad: string;
+                                /** Format: uuid */
+                                kurum_id: string;
+                            }[];
+                            soguma_gun: number;
+                            talep: {
+                                /** @enum {string} */
+                                durum: "beklemede" | "geri_alindi" | "tamamlandi" | "engellendi";
+                                /** Format: date-time */
+                                geri_alindi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                planlanan_at: string;
+                                /** Format: date-time */
+                                talep_at: string;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Hesap silme talebi (yeniden doğrulama: OTP ya da parola). 30 gün içinde geri alınabilir, sonra kalıcı anonimleştirme. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        dogrulama: {
+                            kod: string;
+                            /** @enum {string} */
+                            yontem: "otp";
+                        } | {
+                            parola: string;
+                            /** @enum {string} */
+                            yontem: "parola";
+                        };
+                        /**
+                         * @default web
+                         * @enum {string}
+                         */
+                        kaynak?: "web" | "ios" | "android";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            talep: {
+                                /** @enum {string} */
+                                durum: "beklemede" | "geri_alindi" | "tamamlandi" | "engellendi";
+                                /** Format: date-time */
+                                geri_alindi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                planlanan_at: string;
+                                /** Format: date-time */
+                                talep_at: string;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        /** Bekleyen hesap silme talebini geri al (soğuma süresi içinde) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            talep: {
+                                /** @enum {string} */
+                                durum: "beklemede" | "geri_alindi" | "tamamlandi" | "engellendi";
+                                /** Format: date-time */
+                                geri_alindi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date-time */
+                                planlanan_at: string;
+                                /** Format: date-time */
+                                talep_at: string;
+                                /** Format: date-time */
+                                tamamlandi_at: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/ben/silme-talebi/kod-gonder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hesap silme için kendi telefonuna doğrulama kodu (OTP) gönder */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            gecerlilik_sn: number;
+                            /** @enum {boolean} */
+                            gonderildi: true;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/ben/verilerim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kişisel verilerimi indir (KVKK m.11): hesap, üyelik, kendi içeriklerim ve diğer servislerin verisi (JSON) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bolumler: {
+                                [key: string]: {
+                                    [key: string]: unknown;
+                                }[];
+                            };
+                            eksik_servisler: string[];
+                            hesap: {
+                                [key: string]: unknown;
+                            };
+                            /** Format: uuid */
+                            kullanici_id: string;
+                            /** Format: date-time */
+                            olusturuldu_at: string;
+                            servisler: {
+                                [key: string]: {
+                                    [key: string]: {
+                                        [key: string]: unknown;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };

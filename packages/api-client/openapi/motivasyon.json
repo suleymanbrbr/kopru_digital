@@ -8,6 +8,87 @@
   },
   "openapi": "3.0.3",
   "paths": {
+    "/ic/kvkk/veri": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "kullanici_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "kurum_id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string"
+                  },
+                  "uyelik_idleri": {
+                    "items": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kurum_id",
+                  "kullanici_id",
+                  "uyelik_idleri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bolumler": {
+                      "additionalProperties": {
+                        "items": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "type": "object"
+                    },
+                    "servis": {
+                      "enum": [
+                        "motivasyon",
+                        "bildirim",
+                        "medya"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "servis",
+                    "bolumler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ic uc (servis JWT, `scope=kvkk.veri`): kullanicinin bu kurumdaki oyunlastirma verisi (KVKK disa aktarma).",
+        "tags": [
+          "ic"
+        ]
+      }
+    },
     "/platform/motivasyon/ayarlar": {
       "get": {
         "parameters": [

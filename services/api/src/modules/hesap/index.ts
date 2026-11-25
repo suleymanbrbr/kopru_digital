@@ -3,6 +3,7 @@ import { davetYollari } from './davet-yollari.js';
 import { grupYollari } from './grup-yollari.js';
 import { hesapYollari } from './hesap-yollari.js';
 import { kimlikYollari } from './kimlik-yollari.js';
+import { kvkkYollari } from './kvkk-yollari.js';
 import { oturumYollari } from './oturum-yollari.js';
 import { platformYollari } from './platform/index.js';
 import { raporYollari } from './rapor.js';
@@ -21,6 +22,7 @@ export const hesapModule = defineModule(
       await app.register(grupYollari);
       await app.register(davetYollari());
       await app.register(oturumYollari);
+      await app.register(kvkkYollari);
       await app.register(raporYollari);
       await app.register(sinifKatilimYollari);
       await app.register(sinifKatilimKullaniciYollari);

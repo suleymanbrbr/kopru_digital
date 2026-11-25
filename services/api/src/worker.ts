@@ -1,4 +1,5 @@
 import {
+  NatsIptalDeposu,
   createDb,
   islenmisOlaylariTemizle,
   metrikler,
@@ -15,6 +16,7 @@ import {
 import { geceIsiZamanla } from './modules/finans/index.js';
 import { kaynakSuresiniDoldur } from './sistem/ders-kaynak-sure-sonu.js';
 import { dersSaatlikIs } from './sistem/ders-seri-uret.js';
+import { kvkkSilmeIsle } from './sistem/kvkk-silme.js';
 import { medyaKopyaTuketiciBaslat } from './sistem/medya-kopya-tuketici.js';
 import { soruKotaSayaclariniTemizle, soruOtomatikCoz } from './sistem/soru-isleri.js';
 
@@ -28,6 +30,7 @@ const telemetry = startTelemetry(`${serviceName}-worker`, env.OTEL_EXPORTER_OTLP
  * gunluk isine tasinir.
  */
 const DERS_SERI_ARALIGI_MS = 60 * 60 * 1000;
+const KVKK_ARALIK_MS = Number(process.env.API_KVKK_ARALIK_MS ?? 60 * 60 * 1000);
 const GUNLUK_ARALIK_MS = 24 * 60 * 60 * 1000;
 
 // Ayri surec: isler / olay tuketicileri buraya `setup` ile eklenir.
@@ -100,6 +103,20 @@ await runWorker({
     };
     void gunluk();
     const gunlukZamanlayici = setInterval(() => void gunluk(), GUNLUK_ARALIK_MS);
+    // KVKK hesap silme: soguma suresi dolan talepler (saatte bir; idempotent, coklu worker guvenli).
+    const iptal = new NatsIptalDeposu(() => nats, { log });
+    const kvkkIs = async () => {
+      try {
+        await metrikler.isiOlc('kvkk-silme', async () => {
+          const o = await kvkkSilmeIsle(db, { log, iptalEt: (sid) => iptal.iptalEt(sid) });
+          if (o.tamamlanan + o.engellenen + o.hata > 0) log.info(o, 'KVKK hesap silme işi');
+        });
+      } catch (err) {
+        log.error({ err }, 'KVKK hesap silme işi başarısız');
+      }
+    };
+    void kvkkIs();
+    const kvkkZamanlayici = setInterval(() => void kvkkIs(), KVKK_ARALIK_MS);
     const finansIsleriniDurdur = geceIsiZamanla(db, log);
     // Abonelik durum makinesi (saatlik): deneme/ek sure/askida gecisleri ve kurum durumu esitleme.
     const abonelikIsiniDurdur = abonelikGecisIsiZamanla(db, log);
@@ -110,6 +127,7 @@ await runWorker({
       await abonelikIsiniDurdur();
       clearInterval(zamanlayici);
       clearInterval(gunlukZamanlayici);
+      clearInterval(kvkkZamanlayici);
       await finansIsleriniDurdur();
       for (const kapat of kapatilacaklar) await kapat();
     };

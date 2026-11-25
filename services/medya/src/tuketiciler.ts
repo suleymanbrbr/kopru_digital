@@ -1,4 +1,5 @@
 import {
+  hesapKullaniciSilindiV1,
   hesapKurumDegistiV1,
   ogrenmeSoruCozulduV1,
   ogrenmeSoruYenidenAcildiV1,
@@ -16,6 +17,8 @@ import {
 import { sql } from 'drizzle-orm';
 import type { NatsConnection } from 'nats';
 
+import { kullaniciSilindi } from './kvkk.js';
+
 export const KURUM_KAPANMA_SILME_GUN = 90;
 
 type Log = TuketiciBaglami['log'];
@@ -24,6 +27,8 @@ export interface TuketiciBagimliliklari {
   nats: Pick<NatsConnection, 'jetstream' | 'jetstreamManager'>;
   /** `medya_app` baglantisi: RLS atlanamaz, `kiraci: 'olaydan'` ile kurum baglami ayarlanir. */
   db: Pick<Database, 'orm'>;
+  /** `medya_sistem` (BYPASSRLS): `hesap.kullanici.silindi` kurumlar arasi dosya planlar. Verilmezse baslamaz. */
+  sistemDb?: Pick<Database, 'orm'>;
   log: Log;
   /** Testlerde paylasilan NATS'ta cakismamak icin tuketici adi soneki (uretimde bos). */
   sonek?: string;
@@ -159,9 +164,8 @@ async function soruYenidenAcildi(
 /**
  * Tuketicileri baslatir (`medya.baglama`, `medya.saklama`, `medya.kopya`).
  *
- * TODO(medya.saklama): `hesap.kullanici.silindi.v1` (kullanici dosyalari `now()`) sozlesmesi
- * `@kopru/contracts`ta hala yok (olay kullanici duzeyinde, zarf `kurumId` zorunlu); gelince ayni tuketiciye eklenir.
- * `abonelik.abonelik.degisti.v1` de henuz yok (kota `VARSAYILAN_KOTA_BAYT`).
+ * `medya.kvkk` (yalniz `sistemDb` verilirse): `hesap.kullanici.silindi.v1` (kvkk.ts).
+ * TODO: `abonelik.abonelik.degisti.v1` de henuz yok (kota `VARSAYILAN_KOTA_BAYT`).
  */
 export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuketici[]> {
   const ek = b.sonek ?? '';
@@ -190,5 +194,21 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
     olaylar: [hesapKurumDegistiV1] as const,
     isle: (tx, olay) => kurumDegisti(tx, olay),
   });
-  return [baglama, saklama, kopya];
+  const tuketiciler = [baglama, saklama, kopya];
+  if (b.sistemDb) {
+    tuketiciler.push(
+      await startConsumer({
+        nats: b.nats,
+        db: b.sistemDb,
+        log: b.log,
+        kiraci: 'yok',
+        tuketici: `medya.kvkk${ek}`,
+        olaylar: [hesapKullaniciSilindiV1] as const,
+        isle: async (tx, olay) => {
+          await kullaniciSilindi(tx, olay);
+        },
+      }),
+    );
+  }
+  return tuketiciler;
 }

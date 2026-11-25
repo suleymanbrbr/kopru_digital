@@ -4,6 +4,60 @@
  */
 
 export interface paths {
+    "/ic/kvkk/veri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ic uc (servis JWT, `scope=kvkk.veri`): kullanicinin bu kurumdaki dosya kayitlari (KVKK disa aktarma). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        kullanici_id: string;
+                        /** Format: uuid */
+                        kurum_id: string;
+                        uyelik_idleri: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bolumler: {
+                                [key: string]: {
+                                    [key: string]: unknown;
+                                }[];
+                            };
+                            /** @enum {string} */
+                            servis: "motivasyon" | "bildirim" | "medya";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ic/okuma-adresleri": {
         parameters: {
             query?: never;
