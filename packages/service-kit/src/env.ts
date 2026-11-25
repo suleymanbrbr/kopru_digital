@@ -57,6 +57,15 @@ export function createEnvSchema(options: { defaultPort: number }) {
           input: ctx.value.TRUST_PROXY,
         });
       }
+      // Guvenlik denetimi S1: unutulan bayrak uretimde kimlik dogrulamasini sessizce kapatmasin.
+      if (ctx.value.NODE_ENV === 'production' && !ctx.value.AUTH_ENABLED) {
+        ctx.issues.push({
+          code: 'custom',
+          message: 'Üretimde AUTH_ENABLED=true olmalıdır',
+          path: ['AUTH_ENABLED'],
+          input: ctx.value.AUTH_ENABLED,
+        });
+      }
       if (ctx.value.AUTH_ENABLED && !ctx.value.JWKS_URL) {
         ctx.issues.push({
           code: 'custom',

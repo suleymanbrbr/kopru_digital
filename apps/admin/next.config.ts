@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { sabitBasliklar } from './src/sunucu/csp';
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -9,13 +11,7 @@ const config: NextConfig = {
     return Promise.resolve([
       {
         source: '/:path*',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'no-referrer' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'Cache-Control', value: 'no-store' },
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-        ],
+        headers: sabitBasliklar(process.env.NODE_ENV === 'production'),
       },
     ]);
   },
