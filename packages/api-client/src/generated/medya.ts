@@ -91,7 +91,7 @@ export interface paths {
                         mime_tipi: string;
                         sha256: string;
                         /** @enum {string} */
-                        tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
+                        tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "gunluk_soru_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
                     };
                 };
             };
@@ -111,7 +111,7 @@ export interface paths {
                                 id: string;
                                 mime_tipi: string;
                                 /** @enum {string} */
-                                tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
+                                tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "gunluk_soru_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
                             };
                             yukleme: {
                                 basliklar: {
@@ -142,7 +142,7 @@ export interface paths {
                                 id: string;
                                 mime_tipi: string;
                                 /** @enum {string} */
-                                tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
+                                tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "gunluk_soru_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
                             };
                             yukleme: {
                                 basliklar: {
@@ -213,7 +213,7 @@ export interface paths {
                             mime_tipi: string;
                             sure_sn: number | null;
                             /** @enum {string} */
-                            tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
+                            tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "gunluk_soru_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
                             yukseklik: number | null;
                         };
                     };
@@ -277,7 +277,7 @@ export interface paths {
                             mime_tipi: string;
                             sure_sn: number | null;
                             /** @enum {string} */
-                            tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
+                            tur: "soru_fotografi" | "soru_cevap_fotografi" | "soru_cizim" | "soru_ses" | "odev_eki" | "odev_teslim_fotografi" | "gunluk_soru_fotografi" | "kurum_logosu" | "avatar" | "fatura_pdf";
                             yukseklik: number | null;
                         };
                     };
