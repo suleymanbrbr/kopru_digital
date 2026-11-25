@@ -1,0 +1,213 @@
+{
+  "uid": "kopru-worker-isleri",
+  "title": "Köprü / Worker işleri",
+  "description": "Zamanlayıcı işlerinin başarı/hata sayısı, süresi ve son başarılı çalışmadan geçen süre. Alarmlar: KopruIsBasarisiz, KopruIsGecikti*.",
+  "tags": ["kopru", "isletim"],
+  "timezone": "Europe/Istanbul",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "ds",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "label": "Veri kaynağı"
+      },
+      {
+        "name": "servis",
+        "type": "query",
+        "label": "Servis",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${ds}"
+        },
+        "query": {
+          "query": "label_values(kopru_http_istek_suresi_seconds_count, service_name)",
+          "refId": "servis"
+        },
+        "definition": "label_values(service_name)",
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "İş çalışmaları (sonuca göre, 30 dk)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "expr": "sum by (service_name, is, sonuc) (increase(kopru_is_calisma_total{service_name=~\"$servis\"}[30m]))",
+          "legendFormat": "{{service_name}} {{is}} {{sonuc}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Son başarılı çalışmadan geçen süre",
+      "description": "Eşikler işe göredir (15 dk / 3 sa / 30 sa); ayrıntı infra/gozlem/alarmlar/alarmlar.yaml.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "expr": "time() - kopru_is_son_basarili_zaman_seconds{service_name=~\"$servis\"}",
+          "legendFormat": "{{service_name}} {{is}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "İş süresi p95",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (service_name, is, le) (rate(kopru_is_sure_seconds_bucket{service_name=~\"$servis\"}[30m])))",
+          "legendFormat": "{{service_name}} {{is}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Başarısız çalışma oranı",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "expr": "sum by (service_name, is) (increase(kopru_is_calisma_total{service_name=~\"$servis\",sonuc=\"hata\"}[30m])) / sum by (service_name, is) (increase(kopru_is_calisma_total{service_name=~\"$servis\"}[30m]))",
+          "legendFormat": "{{service_name}} {{is}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        }
+      }
+    }
+  ]
+}

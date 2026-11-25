@@ -52,7 +52,7 @@ export async function sablonUret(
   ];
   ws.addRow(basliklar).font = { bold: true };
   ws.columns = basliklar.map((b, i) => ({ width: i === 0 ? 38 : i < 3 ? 18 : 14 }));
-  for (const u of uyeler) ws.addRow([u.id, u.ogrenci_no ?? '', hucreMetni(u.gorunen_ad)]);
+  for (const u of uyeler) ws.addRow([u.id, hucreMetni(u.ogrenci_no), hucreMetni(u.gorunen_ad)]);
   // Puan hucreleri: 0..soru sayisi arasi tam sayi (Excel icinde uyari; sunucu yine dogrular).
   const sonSatir = Math.max(uyeler.length + 1, 31);
   kural.bolumler.forEach((b, i) => {
@@ -75,7 +75,8 @@ export async function sablonUret(
   bilgi.addRow([`Yanlış katsayısı: ${kural.yanlis_katsayisi}`]);
   bilgi.addRow([]);
   bilgi.addRow(['bölüm kodu', 'bölüm', 'soru sayısı']).font = { bold: true };
-  for (const b of kural.bolumler) bilgi.addRow([b.bolum_kodu, b.ad, b.soru_sayisi]);
+  for (const b of kural.bolumler)
+    bilgi.addRow([hucreMetni(b.bolum_kodu), hucreMetni(b.ad), b.soru_sayisi]);
   bilgi.addRow([]);
   for (const satir of [
     'Her bölüm için doğru ve yanlış sayısını girin; boş sayısı otomatik hesaplanır.',

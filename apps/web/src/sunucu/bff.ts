@@ -15,8 +15,11 @@ export function cerezYaz(response: NextResponse, request: NextRequest, deger: st
   response.cookies.set(OTURUM_CEREZI, deger, {
     httpOnly: true,
     sameSite: 'lax',
+    // Uretimde her zaman Secure (TLS sonlandiran proxy basligi eksik gelse bile cerez duz HTTP'ye gitmez).
     secure:
-      request.nextUrl.protocol === 'https:' || request.headers.get('x-forwarded-proto') === 'https',
+      process.env.NODE_ENV === 'production' ||
+      request.nextUrl.protocol === 'https:' ||
+      request.headers.get('x-forwarded-proto') === 'https',
     path: '/',
     maxAge: OTUZ_GUN_SN,
   });
@@ -41,10 +44,14 @@ export function hatayiCevir(hata: unknown): NextResponse {
  * (SameSite=Lax cerez ile birlikte ikinci katman).
  */
 export function ayniKaynakMi(request: NextRequest): boolean {
-  const origin = request.headers.get('origin');
-  if (!origin) return true;
+  // Tarayici `Sec-Fetch-Site` gonderiyorsa yalniz ayni origin (ya da kullanici eylemi: `none`) kabul edilir.
+  const site = request.headers.get('sec-fetch-site');
+  if (site !== null && site !== 'same-origin' && site !== 'none') return false;
+  const host = request.headers.get('host');
+  const kaynak = request.headers.get('origin') ?? request.headers.get('referer');
+  if (!kaynak) return true;
   try {
-    return new URL(origin).host === request.headers.get('host');
+    return new URL(kaynak).host === host;
   } catch {
     return false;
   }

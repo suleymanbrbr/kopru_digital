@@ -1,0 +1,325 @@
+# Prometheus alarm kurallari (ADR 0005 "Gozlemlenebilirlik"). Prometheus + Alertmanager yiginina yuklenir:
+#   rule_files: ['/etc/prometheus/kopru/alarmlar.yaml']
+# Dogrulama: `promtool check rules infra/gozlem/alarmlar/alarmlar.yaml` (bkz. infra/gozlem/scripts/alarmlari-dogrula.sh)
+#
+# Etiketler: `service_name` = OTel servis adi (api, bildirim, motivasyon, medya; worker surecleri `<ad>-worker`).
+# Metrik adlari OTLP -> Prometheus ceviriminden gelir (ornek: kopru_http_istek_suresi_seconds_bucket).
+# `severity`: kritik = nobetciyi uyandirir (7/24), uyari = is saatinde bakilir. Her alarmin
+# `runbook` baglantisi docs/isletim/el-kitabi.md'deki bolumdur.
+#
+# ESIK GEREKCELERI (Faz 1 trafigi dusuk; esikler baslangic degeridir, ilk 4 haftanin verisiyle gozden gecirilir):
+# - Dusuk trafikte oran alarmlari yanlis tetiklenmesin diye hepsinde en az istek/olay sayisi sarti var.
+# - `for:` sureleri gecici dalgalanmayi (deploy, tek yavas sorgu) eler; kritikte kisa tutuldu.
+
+groups:
+  # ------------------------------------------------------------------------------------------------
+  - name: kopru-http
+    rules:
+      - alert: KopruP95GecikmeYuksek
+        # p95 > 1 sn: etkilesimli (ders/yoklama/odev) akislarda 1 sn "yavas" algisinin siniridir. 5 dk'lik pencere,
+        # 10 dk surerse uyari. En az ~0,05 istek/sn (5 dk'da 15 istek) yoksa degerlendirilmez.
+        expr: |
+          histogram_quantile(0.95, sum by (service_name, le) (rate(kopru_http_istek_suresi_seconds_bucket[5m]))) > 1
+          and on (service_name) sum by (service_name) (rate(kopru_http_istek_suresi_seconds_count[5m])) > 0.05
+        for: 10m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} p95 gecikme {{ $value | humanizeDuration }} (esik 1 sn)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprup95gecikmeyuksek'
+
+      - alert: KopruP95GecikmeKritik
+        # p95 > 3 sn 5 dk: kullanici istekleri zaman asimina yaklasiyor (istemci zaman asimi 10 sn).
+        expr: |
+          histogram_quantile(0.95, sum by (service_name, le) (rate(kopru_http_istek_suresi_seconds_bucket[5m]))) > 3
+          and on (service_name) sum by (service_name) (rate(kopru_http_istek_suresi_seconds_count[5m])) > 0.05
+        for: 5m
+        labels: { severity: kritik }
+        annotations:
+          ozet: '{{ $labels.service_name }} p95 gecikme {{ $value | humanizeDuration }} (esik 3 sn)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprup95gecikmeyuksek'
+
+      - alert: Kopru5xxOraniYuksek
+        # %2: 100 istekte 2 sunucu hatasi. Bozuk bir surum ya da bagimlilik (DB/NATS) kesintisinin ilk isareti.
+        # En az 30 istek/5 dk sarti: tek bir hatanin %100 gorunmesini engeller.
+        expr: |
+          (sum by (service_name) (rate(kopru_http_5xx_total[5m])) / sum by (service_name) (rate(kopru_http_istek_suresi_seconds_count[5m]))) > 0.02
+          and on (service_name) sum by (service_name) (increase(kopru_http_istek_suresi_seconds_count[5m])) >= 30
+        for: 5m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} 5xx orani %{{ $value | humanizePercentage }} (esik %2)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopru5xxoraniyuksek'
+
+      - alert: Kopru5xxOraniKritik
+        # %10: hizmet fiilen bozuk; sure kisa (3 dk).
+        expr: |
+          (sum by (service_name) (rate(kopru_http_5xx_total[5m])) / sum by (service_name) (rate(kopru_http_istek_suresi_seconds_count[5m]))) > 0.10
+          and on (service_name) sum by (service_name) (increase(kopru_http_istek_suresi_seconds_count[5m])) >= 30
+        for: 3m
+        labels: { severity: kritik }
+        annotations:
+          ozet: '{{ $labels.service_name }} 5xx orani %{{ $value | humanizePercentage }} (esik %10)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopru5xxoraniyuksek'
+
+  # ------------------------------------------------------------------------------------------------
+  - name: kopru-olaylar
+    rules:
+      - alert: KopruDlqyeOlayDustu
+        # DLQ'ya dusen her olay bir insan kararidir (ADR 0002: 8 teslim denemesi tukendi ya da kalici hata).
+        # 15 dk icinde en az 1 olay: uyari. 10+ olay: kritik (toplu bozulma, genelde bozuk bir surum).
+        expr: sum by (service_name, tuketici) (increase(kopru_tuketici_dlq_total[15m])) > 0
+        labels: { severity: uyari }
+        annotations:
+          ozet: "{{ $labels.service_name }} / {{ $labels.tuketici }}: son 15 dk'da {{ $value }} olay DLQ'ya dustu"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudlqyeolaydustu'
+
+      - alert: KopruDlqToplu
+        expr: sum by (service_name, tuketici) (increase(kopru_tuketici_dlq_total[15m])) >= 10
+        labels: { severity: kritik }
+        annotations:
+          ozet: "{{ $labels.service_name }} / {{ $labels.tuketici }}: son 15 dk'da {{ $value }} olay DLQ'ya dustu"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudlqyeolaydustu'
+
+      - alert: KopruDlqStreamDolu
+        # DLQ stream'indeki toplam mesaj (kalici borc). Kaynak: prometheus-nats-exporter (jetstream). Exporter kurulana
+        # kadar bu kural veri uretmez; yukaridaki sayac tabanli alarmlar yine calisir.
+        expr: max by (stream_name) (jetstream_stream_total_messages{stream_name="DLQ"}) > 0
+        for: 1h
+        labels: { severity: uyari }
+        annotations:
+          ozet: "DLQ stream'inde {{ $value }} islenmemis mesaj var (1 saattir)"
+          runbook: 'docs/isletim/el-kitabi.md#dlqdaki-olayi-yeniden-oynatma'
+
+      - alert: KopruOutboxGecikmesi
+        # ADR 0005: now() - min(created_at) bekleyenler icin. Relay 1 sn'de bir doner; 2 dk'dan eski bekleyen satir
+        # relay'in durdugunu ya da NATS'a ulasamadigini gosterir ("olaydan push p95 < 30 sn" hedefi cok onceden bozulur).
+        expr: max by (service_name) (kopru_outbox_en_eski_yas_seconds) > 120
+        for: 5m
+        labels: { severity: uyari }
+        annotations:
+          ozet: "{{ $labels.service_name }} outbox'ta en eski bekleyen {{ $value | humanizeDuration }}"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruoutboxgecikmesi'
+
+      - alert: KopruOutboxGecikmesiKritik
+        expr: max by (service_name) (kopru_outbox_en_eski_yas_seconds) > 600
+        for: 5m
+        labels: { severity: kritik }
+        annotations:
+          ozet: "{{ $labels.service_name }} outbox'ta en eski bekleyen {{ $value | humanizeDuration }} (esik 10 dk)"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruoutboxgecikmesi'
+
+      - alert: KopruOutboxBirikiyor
+        # Saniyede onlarca olay degil, binlerce bekleyen: relay yetismiyor ya da tikali.
+        expr: max by (service_name) (kopru_outbox_bekleyen) > 1000
+        for: 10m
+        labels: { severity: uyari }
+        annotations:
+          ozet: "{{ $labels.service_name }} outbox'ta {{ $value }} bekleyen olay"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruoutboxgecikmesi'
+
+      - alert: KopruTuketiciHataOrani
+        # Hata + yeniden_dene orani %20 (en az 20 mesaj): bagimli veri gelmiyor ya da isleyici bozuk.
+        expr: |
+          (sum by (service_name, tuketici) (increase(kopru_tuketici_islenen_total{sonuc="hata"}[15m]))
+            / sum by (service_name, tuketici) (increase(kopru_tuketici_islenen_total[15m]))) > 0.2
+          and on (service_name, tuketici) sum by (service_name, tuketici) (increase(kopru_tuketici_islenen_total[15m])) >= 20
+        for: 10m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} / {{ $labels.tuketici }} hata orani {{ $value | humanizePercentage }}'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudlqyeolaydustu'
+
+      - alert: KopruWorkerMetrigiYok
+        # Worker sureci her 15 sn outbox gauge'u yayar. 10 dk yoksa surec calismiyor ya da telemetri kopuk.
+        expr: |
+          count by (service_name) (kopru_outbox_bekleyen offset 1h) unless count by (service_name) (kopru_outbox_bekleyen)
+        for: 10m
+        labels: { severity: kritik }
+        annotations:
+          ozet: "{{ $labels.service_name }} outbox metrigi 10 dk'dir gelmiyor (worker durmus olabilir)"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruworkermetrigiyok'
+
+  # ------------------------------------------------------------------------------------------------
+  - name: kopru-isler
+    rules:
+      - alert: KopruIsBasarisiz
+        # 30 dk'da 3+ basarisiz calisma: tek seferlik hata yeniden denemeyle gecer, tekrarlayan hata gecmez.
+        expr: sum by (service_name, is) (increase(kopru_is_calisma_total{sonuc="hata"}[30m])) >= 3
+        labels: { severity: uyari }
+        annotations:
+          ozet: "{{ $labels.service_name }} / {{ $labels.is }} isi 30 dk'da {{ $value }} kez basarisiz"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruisbasarisiz'
+
+      - alert: KopruIsGecikti15dk
+        # Sik (<=10 dk) calisan isler: son basarili calismadan 15 dk gecti.
+        expr: |
+          (time() - kopru_is_son_basarili_zaman_seconds{is=~"gonderim-isle|zamanlanmis-uret|duyuru-dagit|abonelik-odeme|isleme|seri-gece|seri-risk|odak-temizlik|haftalik-sifirlama"}) > 900
+          or (time() - kopru_is_son_basarili_zaman_seconds{service_name="medya-worker", is="bakim"}) > 900
+        for: 5m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} / {{ $labels.is }} son basarili calismadan {{ $value | humanizeDuration }} gecti'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruisbasarisiz'
+
+      - alert: KopruIsGecikti3sa
+        # Saatlik tikla calisan isler (erken donenler dahil): 3 saat.
+        expr: |
+          (time() - kopru_is_son_basarili_zaman_seconds{is=~"ders-saatlik|abonelik-gecis|gece-kota|gunluk-temizlik"}) > 10800
+          or (time() - kopru_is_son_basarili_zaman_seconds{service_name="bildirim-worker", is="bakim"}) > 10800
+        for: 10m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} / {{ $labels.is }} son basarili calismadan {{ $value | humanizeDuration }} gecti'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruisbasarisiz'
+
+      - alert: KopruIsGecikti30sa
+        # Gunde bir calisan isler (finans gece isi 03:00, api gunluk bakim): 30 saat.
+        expr: (time() - kopru_is_son_basarili_zaman_seconds{service_name="api-worker", is=~"finans-gece|gunluk-bakim"}) > 108000
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} / {{ $labels.is }} son basarili calismadan {{ $value | humanizeDuration }} gecti'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruisbasarisiz'
+
+  # ------------------------------------------------------------------------------------------------
+  - name: kopru-guvenlik-ve-odeme
+    rules:
+      - alert: KopruIptalKontrolAtlandi
+        # ADR 0008: iptal listesine (NATS KV) ulasilamayinca kontrol ATLANIR (fail-open); iptal edilmis oturumlar
+        # gecici olarak gecerli sayilir. Tek bir olay bile guvenlik riskidir -> hemen uyari, 15 dk surerse kritik.
+        expr: sum by (service_name) (increase(kopru_iptal_kontrol_atlandi_total[5m])) > 0
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} iptal listesi kontrolu atlandi (fail-open) - NATS KV erisimi kontrol edin'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruiptalkontrolatlandi'
+
+      - alert: KopruIptalKontrolAtlandiSuruyor
+        expr: sum by (service_name) (increase(kopru_iptal_kontrol_atlandi_total[5m])) > 0
+        for: 15m
+        labels: { severity: kritik }
+        annotations:
+          ozet: "{{ $labels.service_name }} iptal listesi 15 dk'dir erisilemiyor; iptaller uygulanmiyor"
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruiptalkontrolatlandi'
+
+      - alert: KopruBildirimGonderimHatasi
+        # Kalici + tukenen denemeli basarisiz gonderim orani %10 (en az 30 gonderim/15 dk). Cihaz jetonu gecersizligi
+        # (DeviceNotRegistered) dogal olarak birkac yuzde basarisiz uretir; %10 ustu saglayici/anahtar sorununa isaret eder.
+        expr: |
+          (sum(increase(kopru_bildirim_gonderim_total{sonuc="basarisiz"}[15m]))
+            / sum(increase(kopru_bildirim_gonderim_total{sonuc=~"gonderildi|basarisiz"}[15m]))) > 0.1
+          and sum(increase(kopru_bildirim_gonderim_total{sonuc=~"gonderildi|basarisiz"}[15m])) >= 30
+        for: 15m
+        labels: { severity: uyari }
+        annotations:
+          ozet: 'Push gonderim hata orani {{ $value | humanizePercentage }} (esik %10)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprubildirimgonderimhatasi'
+
+      - alert: KopruOdemeOlayIslenemiyor
+        # abonelik_olay_isleme_alarm: deneme siniri asildi, elle mudahale gerekir (para alinmis olabilir).
+        expr: sum(increase(kopru_abonelik_alarm_total{tur=~"olay_isleme|webhook_isleme"}[15m])) > 0
+        labels: { severity: kritik }
+        annotations:
+          ozet: 'Odeme saglayici olayi islenemedi ({{ $value }} adet, son 15 dk)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruodemeolayislenemiyor'
+
+      - alert: KopruOdemeCiftKanal
+        # abonelik_cift_kanal_alarm: baska kanalda etkin ucretli abonelik varken odeme alindi; iade gerekebilir.
+        expr: sum(increase(kopru_abonelik_alarm_total{tur="cift_kanal"}[1h])) > 0
+        labels: { severity: kritik }
+        annotations:
+          ozet: 'Cift kanal odeme alarmi: iade gerekebilir ({{ $value }} adet, son 1 sa)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruodemeciftkanal'
+
+      - alert: KopruWebhookImzaHatasi
+        # Gecersiz imzali webhook: yanlis sir (anahtar donusumu sonrasi) ya da sahte istek denemesi. 15 dk'da 5+.
+        expr: sum(increase(kopru_abonelik_alarm_total{tur="webhook_imza"}[15m])) >= 5
+        labels: { severity: uyari }
+        annotations:
+          ozet: 'Odeme webhook imza dogrulamasi {{ $value }} kez basarisiz (son 15 dk)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruodemeolayislenemiyor'
+
+      - alert: KopruFaturaHata
+        # Fatura deneme siniri asildi (durum='hata') ya da odeme alindi ama fatura bilgisi yok: yasal yukumluluk.
+        expr: sum(increase(kopru_abonelik_alarm_total{tur=~"fatura|fatura_bilgisi_yok"}[1h])) > 0
+        labels: { severity: uyari }
+        annotations:
+          ozet: 'Fatura kesilemedi ({{ $value }} adet, son 1 sa)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprufaturahata'
+
+  # ------------------------------------------------------------------------------------------------
+  - name: kopru-veritabani-ve-yedek
+    rules:
+      - alert: KopruDbHavuzuDoluyor
+        # Bekleyen sorgu var ve kullanim havuzun %90'inda: baglanti havuzu darbogazi (yavaslama oncesi isareti).
+        expr: |
+          (kopru_db_havuz_kullanimda / kopru_db_havuz_azami) > 0.9
+          and kopru_db_havuz_bekleyen > 0
+        for: 5m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.service_name }} / {{ $labels.havuz }} DB havuzu dolu (%{{ $value | humanizePercentage }})'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudbhavuzudoluyor'
+
+      # Asagidakiler node_exporter ve postgres_exporter (sunucu tarafi) gerektirir; ADR 0005 yigininda kurulur.
+      - alert: KopruDiskDoluyor
+        # Veri diski bos alani < %15 uyari; < %8 kritik (PostgreSQL disk dolunca yazma durur, WAL birikir).
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint=~"/var/lib/postgresql.*|/"} / node_filesystem_size_bytes{mountpoint=~"/var/lib/postgresql.*|/"}) < 0.15
+        for: 10m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.instance }} {{ $labels.mountpoint }} bos alan %{{ $value | humanizePercentage }}'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudiskdoluyor'
+
+      - alert: KopruDiskKritik
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint=~"/var/lib/postgresql.*|/"} / node_filesystem_size_bytes{mountpoint=~"/var/lib/postgresql.*|/"}) < 0.08
+        for: 5m
+        labels: { severity: kritik }
+        annotations:
+          ozet: '{{ $labels.instance }} {{ $labels.mountpoint }} bos alan %{{ $value | humanizePercentage }}'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudiskdoluyor'
+
+      - alert: KopruDiskDolacak
+        # 6 saatlik egilimle 24 saat icinde dolacaksa (hizli buyume: kopuk WAL arsivi, replika slotu).
+        expr: predict_linear(node_filesystem_avail_bytes{mountpoint=~"/var/lib/postgresql.*"}[6h], 24 * 3600) < 0
+        for: 30m
+        labels: { severity: uyari }
+        annotations:
+          ozet: '{{ $labels.instance }} {{ $labels.mountpoint }} 24 saat icinde dolacak (6 sa egilimi)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudiskdoluyor'
+
+      - alert: KopruWalBirikiyor
+        # pg_wal dizini 5 GB ustu: normal (max_wal_size + wal_keep_size ~ 3-4 GB) ustu; arsiv basarisiz ya da replika
+        # yuvasi (replication slot) geride. postgres_exporter `pg_wal_size_bytes`.
+        expr: pg_wal_size_bytes > 5 * 1024 * 1024 * 1024
+        for: 15m
+        labels: { severity: kritik }
+        annotations:
+          ozet: '{{ $labels.instance }} pg_wal {{ $value | humanize1024 }}B (esik 5 GiB)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudiskdoluyor'
+
+      - alert: KopruWalArsivHatasi
+        # archive_command basarisiz: yedek deposuna WAL gitmiyor -> PITR bosluk, disk sisme.
+        expr: increase(pg_stat_archiver_failed_count[15m]) > 0
+        for: 10m
+        labels: { severity: kritik }
+        annotations:
+          ozet: '{{ $labels.instance }} WAL arsivleme basarisiz (pgBackRest archive-push)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-koprudiskdoluyor'
+
+      - alert: KopruYedekYasli
+        # Gunluk tam yedek 03:30'da; 26 saat = bir gunluk + 2 saat tolerans. Yedek yasi yedek.sh'nin metriginden
+        # (node_exporter textfile collector: kopru_pgbackrest_son_basarili_yedek_zaman).
+        expr: (time() - max by (instance) (kopru_pgbackrest_son_basarili_yedek_zaman{tur="tam"})) > 26 * 3600
+        labels: { severity: kritik }
+        annotations:
+          ozet: 'Son basarili tam yedek {{ $value | humanizeDuration }} once (esik 26 sa)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruyedekyasli'
+
+      - alert: KopruYedekMetrigiYok
+        expr: absent(kopru_pgbackrest_son_basarili_yedek_zaman{tur="tam"})
+        for: 2h
+        labels: { severity: uyari }
+        annotations:
+          ozet: 'Yedek metrigi gelmiyor (yedek.sh calismiyor ya da textfile collector kapali)'
+          runbook: 'docs/isletim/el-kitabi.md#alarm-kopruyedekyasli'

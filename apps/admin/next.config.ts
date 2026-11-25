@@ -2,6 +2,8 @@ import { fileURLToPath } from 'node:url';
 
 import type { NextConfig } from 'next';
 
+import { sabitBasliklar } from './src/sunucu/csp';
+
 // Docker imaji `NEXT_STANDALONE=1` ile derler (bagimsiz sunucu: `node apps/admin/server.js`).
 // Yerel gelistirme, e2e ve `next start` akisi degismez.
 const standalone = process.env.NEXT_STANDALONE === '1';
@@ -22,13 +24,7 @@ const config: NextConfig = {
     return Promise.resolve([
       {
         source: '/:path*',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'no-referrer' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'Cache-Control', value: 'no-store' },
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-        ],
+        headers: sabitBasliklar(process.env.NODE_ENV === 'production'),
       },
     ]);
   },

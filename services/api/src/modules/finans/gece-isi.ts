@@ -1,4 +1,4 @@
-import type { Database } from '@kopru/service-kit';
+import { metrikler, type Database } from '@kopru/service-kit';
 
 import { geceIsleriniCalistir, type GeceIsiGunlugu } from '../../sistem/finans-gece-isleri.js';
 import { bugunIstanbul } from './ortak.js';
@@ -28,10 +28,12 @@ export function geceIsiZamanla(
     const gun = bugunIstanbul(an);
     if (saat !== 3 || sonCalisma === gun) return;
     sonCalisma = gun;
-    geceIsleriniCalistir(db, log, gun).catch((err: unknown) => {
-      log.error({ err: String(err) }, 'finans_gece_isi_hatasi');
-      sonCalisma = null;
-    });
+    metrikler
+      .isiOlc('finans-gece', () => geceIsleriniCalistir(db, log, gun))
+      .catch((err: unknown) => {
+        log.error({ err: String(err) }, 'finans_gece_isi_hatasi');
+        sonCalisma = null;
+      });
   };
   const zamanlayici = setInterval(kontrol, SAAT_MS);
   zamanlayici.unref();

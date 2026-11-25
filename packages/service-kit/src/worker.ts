@@ -5,6 +5,7 @@ import { canlilikDosyasiBaslat } from './canlilik.js';
 import { createDb, type Database } from './db.js';
 import type { BaseEnv } from './env.js';
 import { createLogger } from './logger.js';
+import { metrikler } from './metrikler.js';
 import { ensureEventStream, startOutboxRelay } from './outbox.js';
 import { installShutdownHandlers } from './shutdown.js';
 
@@ -38,6 +39,7 @@ export async function runWorker(options: WorkerOptions): Promise<{ stop(): Promi
   const db = env.DATABASE_URL
     ? createDb({ url: env.DATABASE_URL, max: env.DATABASE_POOL_MAX })
     : null;
+  if (db) metrikler.dbHavuzuIzle('sistem', db.sql);
   const nats = env.NATS_URL
     ? await connect({ servers: env.NATS_URL, name: `${name}-worker` })
     : null;

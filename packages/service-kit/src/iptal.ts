@@ -1,6 +1,8 @@
 import type { FastifyBaseLogger } from 'fastify';
 import type { KV, NatsConnection } from 'nats';
 
+import { metrikler } from './metrikler.js';
+
 /** Erisim belirteci omru (api `ERISIM_BELIRTECI_OMRU_SN`) + saat sapmasi payi. KV kaydi bu sure sonra silinir. */
 export const IPTAL_KAYIT_OMRU_MS = (15 * 60 + 60) * 1000;
 /** NATS KV kovasi adi (ADR 0008). Anahtar = `sid`. */
@@ -128,6 +130,7 @@ export class NatsIptalDeposu implements IptalDeposu {
       return iptal;
     } catch (err) {
       this.atlaBitis = simdi + this.atla;
+      metrikler.iptalKontrolAtlandi();
       this.secenekler.log?.warn(
         { err },
         'iptal listesine ulaşılamadı: kontrol atlandı (fail-open, ADR 0008)',

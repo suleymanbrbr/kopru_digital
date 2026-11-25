@@ -1,4 +1,4 @@
-import type { Database } from '@kopru/service-kit';
+import { metrikler, type Database } from '@kopru/service-kit';
 import { eq } from 'drizzle-orm';
 
 import {
@@ -80,6 +80,7 @@ async function faturayiKes(
     const sonuc = await faturaHatasiYaz(db, f, mesaj);
     const nesne = { faturaId: f.id, kurumId: f.kurum_id, deneme: f.deneme_sayisi, hata: mesaj };
     if (sonuc === 'hata') {
+      metrikler.abonelikAlarm('fatura');
       log.error(nesne, 'abonelik_fatura_alarm: fatura kesilemedi, deneme sınırı aşıldı');
       return 'hata';
     }
@@ -103,6 +104,7 @@ export async function faturalariKes(
 ): Promise<FaturaIsiOzeti> {
   const { adaylar, takilan } = await faturaAdaylariniAl(db, simdi, limit, kurumId);
   for (const t of takilan) {
+    metrikler.abonelikAlarm('fatura');
     log.error(
       { faturaId: t.id, kurumId: t.kurum_id },
       'abonelik_fatura_alarm: fatura deneme sınırında takılıp hataya alındı',
