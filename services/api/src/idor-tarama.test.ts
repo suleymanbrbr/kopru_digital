@@ -1,6 +1,6 @@
+import postgres from 'postgres';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
 
 import { buildService } from './app.js';
 import { loadServiceEnv } from './config.js';

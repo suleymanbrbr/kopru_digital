@@ -177,7 +177,7 @@ describe.skipIf(dbYok())('guvenlik: rol yukseltme', () => {
     const gecen: string[] = [];
     for (const r of kiraciRotalari()) {
       if (
-        !/\/abonelik\//.test(r.url) &&
+        !r.url.includes('/abonelik/') &&
         !(r.method !== 'GET' && /modul-ayarlari|\/finans\/kurumlar\/:kurum_id\/ayarlar/.test(r.url))
       )
         continue;
