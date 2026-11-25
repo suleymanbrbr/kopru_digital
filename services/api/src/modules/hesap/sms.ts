@@ -16,12 +16,23 @@ export interface SmsGonderici {
   gonder(mesaj: SmsMesaji): Promise<void>;
 }
 
-/** Gelistirme: kodu loga yazar. Uretimde kullanilmamalidir. */
+/**
+ * Gelistirme: kodu loga yazar (`dev_telefon`/`dev_kod`; log redaksiyonu `telefon`/`kod` alanlarini maskeler,
+ * bu yuzden gelistirme alanlari ayri adlidir). Uretimde (`uretim = true`) telefon, kod ve metin ASLA loga
+ * yazilmaz: gercek saglayici yoksa gonderim atlanir ve yalniz bu bilgi loglanir.
+ */
 export class LogSmsGonderici implements SmsGonderici {
-  constructor(private readonly log: Pick<FastifyBaseLogger, 'warn'>) {}
+  constructor(
+    private readonly log: Pick<FastifyBaseLogger, 'warn'>,
+    private readonly uretim = false,
+  ) {}
 
   gonder(mesaj: SmsMesaji): Promise<void> {
-    this.log.warn({ telefon: mesaj.telefon, kod: mesaj.kod }, `[DEV SMS] ${mesaj.metin}`);
+    if (this.uretim) {
+      this.log.warn('[SMS] saglayici yapilandirilmadi: sms gonderimi atlandi (icerik loglanmaz)');
+    } else {
+      this.log.warn({ dev_telefon: mesaj.telefon, dev_kod: mesaj.kod }, `[DEV SMS] ${mesaj.metin}`);
+    }
     return Promise.resolve();
   }
 }

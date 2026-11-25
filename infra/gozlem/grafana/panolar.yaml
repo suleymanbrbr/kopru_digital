@@ -1,0 +1,10 @@
+# Grafana provisioning: panolari dosyadan yukler (uretimde /etc/grafana/provisioning/dashboards/).
+apiVersion: 1
+providers:
+  - name: kopru
+    folder: Köprü
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/kopru # infra/gozlem/panolar/*.json buraya kopyalanir
