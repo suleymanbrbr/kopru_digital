@@ -1,0 +1,89 @@
+name: Imajlar
+
+# Konteyner imajlarini derler ve calistirip saglik ucunu dener (ADR 0005). IMAJ ITILMEZ (push yok):
+# kayit defteri secilene kadar yalnizca "derleniyor ve aciliyor mu" denetlenir.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: imajlar-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  imaj:
+    name: imaj (${{ matrix.ad }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { ad: api, dockerfile: services/api/Dockerfile, port: 4000, yol: /health }
+          - { ad: motivasyon, dockerfile: services/motivasyon/Dockerfile, port: 4001, yol: /health }
+          - { ad: bildirim, dockerfile: services/bildirim/Dockerfile, port: 4002, yol: /health }
+          - { ad: medya, dockerfile: services/medya/Dockerfile, port: 4003, yol: /health }
+          - { ad: web, dockerfile: apps/web/Dockerfile, port: 3000, yol: /api/saglik }
+          - { ad: admin, dockerfile: apps/admin/Dockerfile, port: 3001, yol: /api/saglik }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Katman onbellegi (GitHub Actions onbellegi): bagimlilik katmani yalniz pnpm-lock.yaml degisince yenilenir.
+      - name: İmajı derle
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: true
+          tags: kopru/${{ matrix.ad }}:ci
+          cache-from: type=gha,scope=imaj-${{ matrix.ad }}
+          cache-to: type=gha,mode=max,scope=imaj-${{ matrix.ad }}
+
+      - name: İmaj boyutu
+        run: docker image ls kopru/${{ matrix.ad }}:ci --format '{{.Repository}}:{{.Tag}} {{.Size}}'
+
+      # HTTP sureci: DB/NATS olmadan da canlilik ucu (/health) 200 donmeli ve imaj uretim ayariyla acilmali.
+      - name: HTTP sürecini çalıştır ve canlılık ucunu dene
+        run: |
+          docker run -d --name uygulama -p ${{ matrix.port }}:${{ matrix.port }} \
+            -e BETTER_AUTH_SECRET=ci-icin-uretilmis-sir-0123456789abcdef \
+            -e S3_ENDPOINT=http://127.0.0.1:9 -e S3_ACCESS_KEY_ID=ci -e S3_SECRET_ACCESS_KEY=ci \
+            kopru/${{ matrix.ad }}:ci
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:${{ matrix.port }}${{ matrix.yol }}"; then echo; exit 0; fi
+            sleep 1
+          done
+          docker logs uygulama
+          exit 1
+
+      - name: Docker HEALTHCHECK betiği (imaj içinden)
+        run: docker exec uygulama node saglik.mjs
+
+      # Worker: ayni imaj, komutla secilir. DB/NATS yok: outbox relay devre disi, canlilik dosyasi yazilir.
+      - name: Worker sürecini çalıştır (servis imajları)
+        if: ${{ matrix.ad != 'web' && matrix.ad != 'admin' }}
+        run: |
+          docker run -d --name worker \
+            -e BETTER_AUTH_SECRET=ci-icin-uretilmis-sir-0123456789abcdef \
+            -e S3_ENDPOINT=http://127.0.0.1:9 -e S3_ACCESS_KEY_ID=ci -e S3_SECRET_ACCESS_KEY=ci \
+            -e WORKER_SAGLIK_DOSYASI=/tmp/worker-canli \
+            kopru/${{ matrix.ad }}:ci node dist/worker.js
+          for i in $(seq 1 30); do
+            if docker exec worker node saglik.mjs; then echo "worker canli"; exit 0; fi
+            sleep 1
+          done
+          docker logs worker
+          exit 1
+
+      - name: Konteyner günlükleri
+        if: failure()
+        run: |
+          docker logs uygulama || true
+          docker logs worker || true

@@ -19,8 +19,8 @@ Kullanıcı verisi (öğrenci, veli, öğretmen kişisel verileri; KVKK kapsamı
 
 ### Paketleme ve dağıtım
 
-- Her servis (`api`, `motivasyon`, `bildirim`, `medya`) ve her web uygulaması (`web`) bir Docker imajıdır. Node.js 24, çok aşamalı derleme, root olmayan kullanıcı.
-- Dağıtım aracı Kamal'dır. `config/deploy.<servis>.yml` her servis için tanımlıdır. Kamal Proxy (`kamal-proxy`) sağlık denetimi (`/saglik/hazir`) geçene kadar trafiği eski sürümde tutar (sıfır kesinti).
+- Her servis (`api`, `motivasyon`, `bildirim`, `medya`) ve her web uygulaması (`web`, `admin`) bir Docker imajıdır. Node.js 24, çok aşamalı derleme, root olmayan kullanıcı.
+- Dağıtım aracı Kamal'dır. Tek `config/deploy.yml` ortak yapılandırmayı, `config/deploy.staging.yml` ve `config/deploy.production.yml` hedefe özel değerleri (sunucu, kayıt defteri, alan adı) taşır; hangi uygulamanın dağıtılacağı `KOPRU_SERVIS` ile seçilir (her uygulama ayrı bir Kamal service'idir). Kamal Proxy (`kamal-proxy`) sağlık denetimi (`/ready`; web ve admin için `/api/saglik`) geçene kadar trafiği eski sürümde tutar (sıfır kesinti).
 - İmajlar özel (Türkiye'de) bir kayıt defterine itilir. Etiket: `git sha`. Geri alma: `kamal rollback <sha>`.
 - Sırlar: Kamal sırları, ortam değişkeni olarak ve sağlayıcıdan bağımsız bir sır deposundan. Depoda sır tutulmaz.
 - Ortamlar: `staging` ve `production`. `production` en az iki uygulama VM'i çalıştırır, `staging` bir VM.
@@ -56,6 +56,14 @@ Aşağıdaki ölçütlerden **en az ikisi** iki ardışık çeyrekte sağlanırs
 5. Müşteri sözleşmeleri (kurumsal) izole ortam/ağ politikası ister, VM düzeyinde karşılanamaz.
 
 Geçiş yolu: imajlar zaten konteynerdir, sağlık uç noktaları ve ortam değişkeni yapılandırması aynı kalır. Veri katmanı (PostgreSQL, NATS, nesne depolama) küme dışında kalır; yalnızca uygulama katmanı taşınır.
+
+### Değişiklik notu (2026-11, paket D1)
+
+- **Sağlık uçları:** kod korundu: `GET /health` (canlılık, bağımlılık denetlemez) ve `GET /ready` (DB ve NATS). Metindeki `/saglik/hazir` yolu kullanılmaz. Kamal Proxy kapısı `/ready`dir; Docker `HEALTHCHECK` ise `/health` kullanır (DB kesintisinde konteyner yeniden başlatılmasın diye). Web ve admin (Next.js) için `GET /api/saglik`.
+- **Worker canlılığı:** worker HTTP almaz. `WORKER_SAGLIK_DOSYASI` tanımlıysa `runWorker` her 10 saniyede dosyaya dokunur (NATS bağlantısı kopuksa dokunmaz); `HEALTHCHECK` dosyanın son 60 saniyede güncellendiğini denetler (`infra/docker/saglik.mjs`).
+- **Ağ adları:** aynı sanal makinedeki konteynerler birbirine Kamal ağında `network-alias` ile ulaşır (`http://api:4000`); topolojide her makinede tüm roller çalıştığı için yerel çözülür. `TRUST_PROXY` bu ağın alt ağıdır (ADR 0009).
+- **Göç:** `.kamal/hooks/pre-deploy` göçü yeni imajdan, owner rolüyle ve yalnız birincil sunucuda çalıştırır; owner bağlantısı uygulama ortamına girmez.
+- **İki sunucuda TLS:** Kamal, iki sunucuda Let's Encrypt (`proxy.ssl`) desteklemez; production'da TLS sağlayıcı yük dengeleyicide sonlanır (`ssl: false`). Ayrıntı: [docs/isletim/dagitim.md](../isletim/dagitim.md).
 
 ## Sonuçlar
 
