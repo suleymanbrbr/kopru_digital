@@ -38,6 +38,7 @@ infra/*
 !infra/docker
 infra/docker/*
 !infra/docker/saglik.mjs
+!infra/docker/next-baslat.mjs
 
 # Mobil: imaja girmez; yalniz paket manifesti kalir (pnpm kilit dosyasi onu bekler)
 apps/mobile/*

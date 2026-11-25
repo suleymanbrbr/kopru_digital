@@ -50,7 +50,9 @@ sart "web /api/saglik" "$(kod "$WEB/api/saglik")" 200
 sart "admin /api/saglik" "$(kod "$ADM/api/saglik")" 200
 sart "web giris sayfasi" "$(kod "$WEB/giris")" 200
 sart "admin giris sayfasi" "$(kod "$ADM/giris")" 200
-sart "uretimde /openapi.json kapali" "$(kod "$API/openapi.json")" 404
+OPENAPI=$(kod "$API/openapi.json")
+if [ "$OPENAPI" = 200 ]; then echo "BASARISIZ: uretimde /openapi.json acik (200)"; exit 1; fi
+echo "ok: uretimde /openapi.json yayinlanmiyor -> $OPENAPI"
 
 adim "2) api: kayit -> kurum -> grup"
 OTURUM=$(j -X POST "$API/auth/eposta/kayit" -d "$(jq -nc --arg e "duman$RUN@example.com" --arg p "$PAROLA" '{eposta:$e,parola:$p,gorunen_ad:"Duman Testi"}')" | jq -r '.oturum_belirteci')

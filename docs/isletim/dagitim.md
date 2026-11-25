@@ -4,15 +4,15 @@ Karar kaydı: [ADR 0005](../adr/0005-dagitim-docker-kamal.md) (topoloji, sağlay
 
 ## Özet
 
-| Parça                   | Nerede                                                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Altı imaj               | `services/{api,motivasyon,bildirim,medya}/Dockerfile`, `apps/{web,admin}/Dockerfile` (bağlam: repo kökü)        |
-| Kamal yapılandırması    | `config/deploy.yml` (ortak) + `config/deploy.staging.yml` / `config/deploy.production.yml` (hedefe özel)       |
-| Servis seçimi           | `KOPRU_SERVIS=api\|motivasyon\|bildirim\|medya\|web\|admin` (her uygulama ayrı bir Kamal service'i)              |
-| Sırlar                  | `.kamal/secrets-common`, `.kamal/secrets.<hedef>` (git'e girmez; örnek: `.kamal/secrets.example`)              |
-| Göç                     | `.kamal/hooks/pre-deploy` (owner rolü, yeni imajdan)                                                           |
-| Sıralı dağıtım          | `infra/scripts/dagit.sh <hedef> [servis...]`                                                                   |
-| Yerel üretim denemesi   | `infra/docker/compose.prod-yerel.yaml` + `infra/scripts/duman-testi.sh`                                        |
+| Parça                 | Nerede                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| Altı imaj             | `services/{api,motivasyon,bildirim,medya}/Dockerfile`, `apps/{web,admin}/Dockerfile` (bağlam: repo kökü) |
+| Kamal yapılandırması  | `config/deploy.yml` (ortak) + `config/deploy.staging.yml` / `config/deploy.production.yml` (hedefe özel) |
+| Servis seçimi         | `KOPRU_SERVIS=api\|motivasyon\|bildirim\|medya\|web\|admin` (her uygulama ayrı bir Kamal service'i)      |
+| Sırlar                | `.kamal/secrets-common`, `.kamal/secrets.<hedef>` (git'e girmez; örnek: `.kamal/secrets.example`)        |
+| Göç                   | `.kamal/hooks/pre-deploy` (owner rolü, yeni imajdan)                                                     |
+| Sıralı dağıtım        | `infra/scripts/dagit.sh <hedef> [servis...]`                                                             |
+| Yerel üretim denemesi | `infra/docker/compose.prod-yerel.yaml` + `infra/scripts/duman-testi.sh`                                  |
 
 Roller: her servis uygulamasında `web` (HTTP, kamal-proxy önünde) ve `worker` (aynı imaj, `node dist/worker.js`, HTTP yok). `web` ve `admin` yalnız `web` rolü çalıştırır.
 
@@ -30,17 +30,18 @@ Roller: her servis uygulamasında `web` (HTTP, kamal-proxy önünde) ve `worker`
   ```
 
   Diğer yönetim komutları da imajdadır: `node dist/platform-yonetici-ekle-cli.js`, `node dist/olaylari-yeniden-yayimla-cli.js`, `node dist/abonelik-kurumsal-cli.js` (api; `kamal app exec --reuse` ile).
+
 - `HEALTHCHECK` (`infra/docker/saglik.mjs`, kabuk/curl gerekmez): HTTP süreçlerinde `GET /health` (web/admin: `/api/saglik`), worker'da `WORKER_SAGLIK_DOSYASI` dosyasının son 60 saniyede güncellenmiş olması.
 - Build: `docker build -f services/api/Dockerfile -t kopru/api .` (repo kökünden). `.dockerignore` sırları (`.env*`, `.kamal/secrets*`), testleri, dokümanları ve mobil uygulamayı bağlamdan çıkarır.
 
 ## Sağlık uçları
 
-| Uç                 | Anlam                                                      | Kim kullanır                                   |
-| ------------------ | ---------------------------------------------------------- | ---------------------------------------------- |
-| `GET /health`      | Canlılık; bağımlılık denetlemez                            | Docker `HEALTHCHECK`                           |
-| `GET /ready`       | Hazırlık: DB ve NATS (tanımlıysa); 200 ya da 503           | kamal-proxy dağıtım kapısı, yük dengeleyici    |
-| `GET /api/saglik`  | web/admin canlılığı                                        | Docker `HEALTHCHECK`, kamal-proxy              |
-| worker dosyası     | `WORKER_SAGLIK_DOSYASI` (`/tmp/worker-canli`) 10 sn'de bir | Docker `HEALTHCHECK` (worker rolünde)          |
+| Uç                | Anlam                                                      | Kim kullanır                                |
+| ----------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| `GET /health`     | Canlılık; bağımlılık denetlemez                            | Docker `HEALTHCHECK`                        |
+| `GET /ready`      | Hazırlık: DB ve NATS (tanımlıysa); 200 ya da 503           | kamal-proxy dağıtım kapısı, yük dengeleyici |
+| `GET /api/saglik` | web/admin canlılığı                                        | Docker `HEALTHCHECK`, kamal-proxy           |
+| worker dosyası    | `WORKER_SAGLIK_DOSYASI` (`/tmp/worker-canli`) 10 sn'de bir | Docker `HEALTHCHECK` (worker rolünde)       |
 
 kamal-proxy yeni sürümü `/ready` 200 verene kadar trafiğe almaz; eski sürüm sürerken yenisi yoksa dağıtım başarısız olur ve eskisi kalır.
 
@@ -97,45 +98,47 @@ Geri alma yalnız uygulamayı döndürür, **göçü geri almaz**. Bu yüzden g�
 
 ## Sırlar ve ortam değişkenleri
 
-Sır dosyasındaki ad `<SERVIS>_<DEĞİŞKEN>` biçimindedir, konteyner öneksiz görür. **Örnek değer yazılmaz.** "Z" zorunlu, "İ" isteğe bağlı. Tüm servislerde ortak (deploy yapılandırmasındaki düz değerler): `NODE_ENV=production`, `PORT`, `LOG_LEVEL`, `HOST`, `NATS_URL` (Z), `TRUST_PROXY` (Z, Kamal ağı alt ağı; boş bırakılırsa proxy'ye güvenilmez ve hız sınırları ortaklaşır), `AUTH_ENABLED`, `JWKS_URL` (Z, api dışı; `http://api:4000/.well-known/jwks.json`), `JWT_ISSUER` (api'nin `PUBLIC_URL`i ile aynı), `JWT_AUDIENCE`, `CORS_ORIGINS`, `RATE_LIMIT_MAX`, `DATABASE_POOL_MAX`, `OPENAPI_ENABLED` (üretimde varsayılan kapalı), `OTEL_EXPORTER_OTLP_ENDPOINT` (İ; yoksa telemetri kapalı), `WORKER_SAGLIK_DOSYASI` (yalnız worker rolü).
+Sır dosyasındaki ad `<SERVIS>_<DEĞİŞKEN>` biçimindedir, konteyner öneksiz görür. **Örnek değer yazılmaz.** "Z" zorunlu, "İ" isteğe bağlı. Tüm servislerde ortak (deploy yapılandırmasındaki düz değerler): `NODE_ENV=production`, `PORT`, `LOG_LEVEL`, `HOST`, `NATS_URL` (Z), `TRUST_PROXY` (Z, Kamal ağı alt ağı; boş bırakılırsa proxy'ye güvenilmez ve hız sınırları ortaklaşır), `AUTH_ENABLED` (motivasyon, bildirim ve medya için üretimde **zorunlu `true`**; `true` olmadan açılmazlar), `JWKS_URL` (Z, api dışı; `http://api:4000/.well-known/jwks.json`), `JWT_ISSUER` (api'nin `PUBLIC_URL`i ile aynı), `JWT_AUDIENCE`, `CORS_ORIGINS`, `RATE_LIMIT_MAX`, `DATABASE_POOL_MAX`, `OPENAPI_ENABLED` (üretimde varsayılan kapalı), `OTEL_EXPORTER_OTLP_ENDPOINT` (İ; yoksa telemetri kapalı), `WORKER_SAGLIK_DOSYASI` (yalnız worker rolü).
 
-| Servis     | Değişken (sır adı: `<SERVIS>_...`)                  | Tür    | Durum | Not                                                                                      |
-| ---------- | --------------------------------------------------- | ------ | ----- | ---------------------------------------------------------------------------------------- |
-| tümü       | `KAMAL_REGISTRY_PASSWORD`                           | sır    | Z     | Kayıt defteri parolası                                                                   |
-| tümü (göç) | `<SERVIS>_DATABASE_OWNER_URL`                       | sır    | Z     | Yalnız `pre-deploy` hook'u; owner rolüne geçebilen kullanıcı                             |
-| api        | `DATABASE_URL`                                      | sır    | Z     | `api_app` (RLS'e tabi)                                                                   |
-| api        | `DATABASE_SISTEM_URL`                               | sır    | Z     | `api_sistem` (BYPASSRLS; worker, outbox relay)                                           |
-| api        | `BETTER_AUTH_SECRET`                                | sır    | Z     | >= 32 karakter; üretimde varsayılanla açılmaz                                            |
-| api        | `KAYNAK_PAROLA_ANAHTARI`                            | sır    | Z\*   | 32 bayt base64; yoksa ders kaydı parolası uçları 503 (\*kayıt özelliği için)              |
-| api        | `PUBLIC_URL`, `WEB_URL`                             | düz    | Z     | Herkese açık api adresi (JWT iss, Better Auth), web adresi (davet bağlantıları)         |
-| api        | `MEDYA_URL`                                         | düz    | İ     | `http://medya:4003`; yoksa soru ekleri adressiz döner                                    |
-| api        | `EPOSTA_SAGLAYICI`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `EPOSTA_GONDEREN` | düz | Z | Üretimde `smtp`; `log` e-posta göndermez                                                 |
-| api        | `SMTP_USER`, `SMTP_PASS`                            | sır    | İ     | SMTP kimliği                                                                             |
-| api        | `PLATFORM_IP_IZINLI`                                | düz    | Z     | `/platform/*` için IP/CIDR; boşsa üretimde uçlar 403                                     |
-| api        | `ODEME_IYZICO`                                      | düz    | İ     | `kapali` \| `gercek` (`sahte` üretimde reddedilir)                                       |
-| api        | `IYZICO_API_KEY`, `IYZICO_SECRET_KEY`               | sır    | İ     | `gercek` iken zorunlu                                                                    |
-| api        | `IYZICO_BASE_URL`, `IYZICO_PLAN_KODLARI`            | düz    | İ     | Üretim adresi; `{"<plan>:<aylik\|yillik>": "<referans>"}`                                |
-| api        | `REVENUECAT_WEBHOOK_SIRRI`                          | sır    | İ     | Yoksa mağaza webhook'u kapalı (503)                                                      |
-| api        | `GOOGLE_CLIENT_ID/_SECRET`, `APPLE_CLIENT_ID/_SECRET` | düz/sır | İ   | Her ikisi tanımlıysa sağlayıcı açılır                                                    |
-| api        | `EARSIV_SAGLAYICI`, `SMS_SAGLAYICI`                 | düz    | İ     | Şimdilik yalnız `log`                                                                    |
-| motivasyon | `DATABASE_URL`, `DATABASE_SISTEM_URL`               | sır    | Z     | `motivasyon_app`, `motivasyon_sistem`                                                    |
-| motivasyon | `PLATFORM_IP_IZINLI`                                | düz    | İ     | Boşsa üretimde `/platform/*` kapalı                                                      |
-| motivasyon | `HAFTALIK_ARALIK_MS`                                | düz    | İ     | Varsayılan 600000                                                                        |
-| bildirim   | `DATABASE_URL`, `DATABASE_SISTEM_URL`               | sır    | Z     | `bildirim_app`, `bildirim_sistem`                                                        |
-| bildirim   | `PUSH_SAGLAYICI`                                    | düz    | Z     | Üretimde `expo` (`log` push göndermez)                                                   |
-| bildirim   | `EXPO_ERISIM_BELIRTECI`                             | sır    | İ     | Expo "enhanced security"                                                                 |
-| bildirim   | `EXPO_PUSH_URL`, `GONDERIM_ARALIK_MS`, `ZAMANLANMIS_ARALIK_MS` | düz | İ | Varsayılanlar yeterli                                                                    |
-| medya      | `DATABASE_URL`, `DATABASE_SISTEM_URL`               | sır    | Z     | `medya_app`, `medya_sistem`                                                              |
-| medya      | `S3_ENDPOINT`                                       | düz    | Z     | Servis içi S3 adresi (üretimde zorunlu)                                                  |
-| medya      | `S3_GENEL_ENDPOINT`                                 | düz    | Z     | İstemciye verilen presigned adresin ana makinesi (genel erişilebilir olmalı)             |
-| medya      | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`          | sır    | Z     |                                                                                          |
-| medya      | `S3_BUCKET`, `S3_REGION`, `S3_FORCE_PATH_STYLE`     | düz    | Z/İ   | Kova `medya-ozel`; kova ve CORS altyapıdan (`S3_KOVA_YAPILANDIR` üretimde kapalı)        |
-| medya      | `VARSAYILAN_KOTA_BAYT`, `ISLEME_ESZAMANLILIK`, `ISLEME_ARALIK_MS`, `BAKIM_ARALIK_MS` | düz | İ | Varsayılanlar yeterli                                                                    |
-| web        | `API_URL`, `MEDYA_URL`, `BILDIRIM_URL`, `MOTIVASYON_URL` | düz | Z   | Kamal ağı adları (`http://api:4000` ...)                                                 |
-| web        | `WEB_GUVENILEN_PROXY_SAYISI`                        | düz    | Z     | Önündeki güvenilen sıçrama sayısı (yük dengeleyici + kamal-proxy = 2); doğru değilse IP yanlış (ADR 0009) |
-| admin      | `API_URL`, `MOTIVASYON_URL`, `ADMIN_GUVENILEN_PROXY_SAYISI` | düz | Z | Yukarıdakiyle aynı mantık                                                                |
+| Servis     | Değişken (sır adı: `<SERVIS>_...`)                                                   | Tür     | Durum | Not                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------ | ------- | ----- | --------------------------------------------------------------------------------------------------------- |
+| tümü       | `KAMAL_REGISTRY_PASSWORD`                                                            | sır     | Z     | Kayıt defteri parolası                                                                                    |
+| tümü (göç) | `<SERVIS>_DATABASE_OWNER_URL`                                                        | sır     | Z     | Yalnız `pre-deploy` hook'u; owner rolüne geçebilen kullanıcı                                              |
+| api        | `DATABASE_URL`                                                                       | sır     | Z     | `api_app` (RLS'e tabi)                                                                                    |
+| api        | `DATABASE_SISTEM_URL`                                                                | sır     | Z     | `api_sistem` (BYPASSRLS; worker, outbox relay)                                                            |
+| api        | `BETTER_AUTH_SECRET`                                                                 | sır     | Z     | >= 32 karakter; üretimde varsayılanla açılmaz                                                             |
+| api        | `KAYNAK_PAROLA_ANAHTARI`                                                             | sır     | Z\*   | 32 bayt base64; yoksa ders kaydı parolası uçları 503 (\*kayıt özelliği için)                              |
+| api        | `PUBLIC_URL`, `WEB_URL`                                                              | düz     | Z     | Herkese açık api adresi (JWT iss, Better Auth), web adresi (davet bağlantıları)                           |
+| api        | `MEDYA_URL`                                                                          | düz     | İ     | `http://medya:4003`; yoksa soru ekleri adressiz döner                                                     |
+| api        | `EPOSTA_SAGLAYICI`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `EPOSTA_GONDEREN`       | düz     | Z     | Üretimde `smtp`; `log` e-posta göndermez                                                                  |
+| api        | `SMTP_USER`, `SMTP_PASS`                                                             | sır     | İ     | SMTP kimliği                                                                                              |
+| api        | `PLATFORM_IP_IZINLI`                                                                 | düz     | Z     | `/platform/*` için IP/CIDR; boşsa üretimde uçlar 403                                                      |
+| api        | `ODEME_IYZICO`                                                                       | düz     | İ     | `kapali` \| `gercek` (`sahte` üretimde reddedilir)                                                        |
+| api        | `IYZICO_API_KEY`, `IYZICO_SECRET_KEY`                                                | sır     | İ     | `gercek` iken zorunlu                                                                                     |
+| api        | `IYZICO_BASE_URL`, `IYZICO_PLAN_KODLARI`                                             | düz     | İ     | Üretim adresi; `{"<plan>:<aylik\|yillik>": "<referans>"}`                                                 |
+| api        | `REVENUECAT_WEBHOOK_SIRRI`                                                           | sır     | İ     | Yoksa mağaza webhook'u kapalı (503)                                                                       |
+| api        | `GOOGLE_CLIENT_ID/_SECRET`, `APPLE_CLIENT_ID/_SECRET`                                | düz/sır | İ     | Her ikisi tanımlıysa sağlayıcı açılır                                                                     |
+| api        | `EARSIV_SAGLAYICI`, `SMS_SAGLAYICI`                                                  | düz     | İ     | Şimdilik yalnız `log`                                                                                     |
+| motivasyon | `DATABASE_URL`, `DATABASE_SISTEM_URL`                                                | sır     | Z     | `motivasyon_app`, `motivasyon_sistem`                                                                     |
+| motivasyon | `PLATFORM_IP_IZINLI`                                                                 | düz     | İ     | Boşsa üretimde `/platform/*` kapalı                                                                       |
+| motivasyon | `HAFTALIK_ARALIK_MS`                                                                 | düz     | İ     | Varsayılan 600000                                                                                         |
+| bildirim   | `DATABASE_URL`, `DATABASE_SISTEM_URL`                                                | sır     | Z     | `bildirim_app`, `bildirim_sistem`                                                                         |
+| bildirim   | `PUSH_SAGLAYICI`                                                                     | düz     | Z     | Üretimde `expo` (`log` push göndermez)                                                                    |
+| bildirim   | `EXPO_ERISIM_BELIRTECI`                                                              | sır     | İ     | Expo "enhanced security"                                                                                  |
+| bildirim   | `EXPO_PUSH_URL`, `GONDERIM_ARALIK_MS`, `ZAMANLANMIS_ARALIK_MS`                       | düz     | İ     | Varsayılanlar yeterli                                                                                     |
+| medya      | `DATABASE_URL`, `DATABASE_SISTEM_URL`                                                | sır     | Z     | `medya_app`, `medya_sistem`                                                                               |
+| medya      | `S3_ENDPOINT`                                                                        | düz     | Z     | Servis içi S3 adresi (üretimde zorunlu)                                                                   |
+| medya      | `S3_GENEL_ENDPOINT`                                                                  | düz     | Z     | İstemciye verilen presigned adresin ana makinesi (genel erişilebilir olmalı)                              |
+| medya      | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`                                           | sır     | Z     |                                                                                                           |
+| medya      | `S3_BUCKET`, `S3_REGION`, `S3_FORCE_PATH_STYLE`                                      | düz     | Z/İ   | Kova `medya-ozel`; kova ve CORS altyapıdan (`S3_KOVA_YAPILANDIR` üretimde kapalı)                         |
+| medya      | `VARSAYILAN_KOTA_BAYT`, `ISLEME_ESZAMANLILIK`, `ISLEME_ARALIK_MS`, `BAKIM_ARALIK_MS` | düz     | İ     | Varsayılanlar yeterli                                                                                     |
+| web        | `API_URL`, `MEDYA_URL`, `BILDIRIM_URL`, `MOTIVASYON_URL`                             | düz     | Z     | Kamal ağı adları (`http://api:4000` ...)                                                                  |
+| web        | `WEB_CSP_EK_KAYNAKLAR`                                                               | düz     | Z     | S3 uyumlu depolamanın **genel** adresi (CSP connect/img/media; presigned yükleme ve okuma için)           |
+| web        | `WEB_GUVENILEN_PROXY_SAYISI`                                                         | düz     | Z     | Önündeki güvenilen sıçrama sayısı (yük dengeleyici + kamal-proxy = 2); doğru değilse IP yanlış (ADR 0009) |
+| admin      | `WEB_CSP_EK_KAYNAKLAR`                                                               | düz     | Z     | web ile aynı değer (S3 genel adresi)                                                                      |
+| admin      | `API_URL`, `MOTIVASYON_URL`, `ADMIN_GUVENILEN_PROXY_SAYISI`                          | düz     | Z     | Yukarıdakiyle aynı mantık                                                                                 |
 
-Not: web ve admin `NEXT_PUBLIC_*` değişkenlerini derleme zamanında okur; çalışma zamanı sırrı taşımazlar.
+Not: web ve admin `NEXT_PUBLIC_*` değişkenlerini derleme zamanında okur; çalışma zamanı sırrı taşımazlar. **`NEXT_PUBLIC_API_MOCK` üretimde asla tanımlanmaz** (BFF sahte kimliğe düşer): imaj derlemesi `--build-arg NEXT_PUBLIC_API_MOCK=...` ile hata verir, imaj başlatıcısı (`next-baslat.mjs`) ortamda tanımlıysa açılmayı reddeder. Denetim yalnız imajın içindedir; yerel `next start` ve e2e akışı etkilenmez.
 
 ## Ölçekleme notu
 

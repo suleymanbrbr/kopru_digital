@@ -66,11 +66,14 @@
       'MOTIVASYON_URL' => 'http://motivasyon:4001',
       # Istemci -> yuk dengeleyici -> kamal-proxy -> web: iki guvenilen sicrama (ADR 0009). LB yoksa 1.
       'WEB_GUVENILEN_PROXY_SAYISI' => '2',
+      # CSP connect/img/media icin S3 uyumlu depolamanin GENEL adresi (presigned yukleme/okuma)
+      'WEB_CSP_EK_KAYNAKLAR' => '<S3_GENEL_UC_NOKTASI>',
     },
     'admin' => {
       'API_URL' => 'http://api:4000',
       'MOTIVASYON_URL' => 'http://motivasyon:4001',
       'ADMIN_GUVENILEN_PROXY_SAYISI' => '2',
+      'WEB_CSP_EK_KAYNAKLAR' => '<S3_GENEL_UC_NOKTASI>',
     },
   }.fetch(servis)
   # web/admin Next.js uygulamalari servis ortak sozlesmesini (TRUST_PROXY, JWKS...) kullanmaz.

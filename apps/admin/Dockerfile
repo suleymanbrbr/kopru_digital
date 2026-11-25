@@ -24,6 +24,9 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 COPY . .
 # Paylasilan paketler (ui-tokens, i18n, api-client, contracts), sonra uygulamanin kendisi
 RUN pnpm --filter '@kopru/admin^...' run build
+# Sahte API modu uretim imajina girmez: --build-arg NEXT_PUBLIC_API_MOCK=1 derlemeyi durdurur.
+ARG NEXT_PUBLIC_API_MOCK
+RUN test -z "$NEXT_PUBLIC_API_MOCK" || { echo "NEXT_PUBLIC_API_MOCK uretim imajinda kullanilamaz" >&2; exit 1; }
 ENV NEXT_STANDALONE=1 NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @kopru/admin run build
 
@@ -36,8 +39,9 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/admin/.next/standalone ./
 COPY --from=build --chown=node:node /repo/apps/admin/.next/static ./apps/admin/.next/static
-COPY --chown=node:node infra/docker/saglik.mjs ./saglik.mjs
+COPY --chown=node:node infra/docker/saglik.mjs infra/docker/next-baslat.mjs ./
 USER node
 EXPOSE 3001
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 CMD ["node", "saglik.mjs"]
-CMD ["node", "apps/admin/server.js"]
+# next-baslat.mjs: NEXT_PUBLIC_API_MOCK tanimliysa acilmayi reddeder, sonra standalone sunucuyu yukler.
+CMD ["node", "next-baslat.mjs", "apps/admin/server.js"]
