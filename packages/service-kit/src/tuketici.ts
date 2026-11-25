@@ -13,6 +13,7 @@ import {
 } from 'nats';
 
 import { kiraciBaglaminiAyarla, type Database, type Tx } from './db.js';
+import { metrikler } from './metrikler.js';
 import { ensureEventStream } from './outbox.js';
 import { tableRef } from './sql-adi.js';
 
@@ -247,6 +248,8 @@ export async function startConsumer<const TOlaylar extends readonly EventDefinit
       msg.nak(sec(backoffMs, msg.info.deliveryCount, 5_000));
       return;
     }
+    metrikler.dlq(tuketici, neden);
+    metrikler.tuketici(tuketici, 'hata');
     log.warn(
       {
         tuketici,
@@ -321,6 +324,7 @@ export async function startConsumer<const TOlaylar extends readonly EventDefinit
         await isle(tx, olay, baglam);
         return true;
       });
+      metrikler.tuketici(tuketici, yeni ? 'basarili' : 'tekrar');
       if (!yeni) log.info({ tuketici, konu: msg.subject }, 'tekrar teslim edilen olay atlandı');
       msg.ack();
     } catch (err) {
@@ -330,6 +334,7 @@ export async function startConsumer<const TOlaylar extends readonly EventDefinit
         err instanceof YenidenDene
           ? (err.gecikmeMs ?? sec(yenidenDene, teslimSayisi, 5_000))
           : sec(backoffMs, teslimSayisi, 1_000);
+      metrikler.tuketici(tuketici, err instanceof YenidenDene ? 'yeniden_dene' : 'hata');
       log.warn(
         { tuketici, konu: msg.subject, teslimSayisi, gecikme, hata: (err as Error).message },
         err instanceof YenidenDene ? 'olay hazır değil, yeniden denenecek' : 'olay işlenemedi',

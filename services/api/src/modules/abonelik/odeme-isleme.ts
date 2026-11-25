@@ -1,5 +1,5 @@
 import { abonelikOdemeIslendiV1, type Periyot } from '@kopru/contracts';
-import { publishInTx, type Database, type Tx } from '@kopru/service-kit';
+import { metrikler, publishInTx, type Database, type Tx } from '@kopru/service-kit';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -200,6 +200,7 @@ async function faturaOlustur(
     .from(kurumFaturaBilgileri)
     .where(eq(kurumFaturaBilgileri.kurum_id, odeme.kurum_id));
   if (!alici) {
+    metrikler.abonelikAlarm('fatura_bilgisi_yok');
     log.error(
       { kurumId: odeme.kurum_id, odemeId: odeme.id },
       'abonelik_fatura_bilgisi_yok_alarm: ödeme alındı ama fatura bilgisi yok; fatura kesilemedi',
@@ -598,6 +599,7 @@ export async function olayiIsle(
     const deneme = await olayHatasiYaz(db, olay.id, mesaj);
     const nesne = { olayId: olay.id, kaynak: olay.kaynak, tur: olay.tur, deneme, hata: mesaj };
     if (deneme >= OLAY_MAKS_DENEME) {
+      metrikler.abonelikAlarm('olay_isleme');
       log.error(nesne, 'abonelik_olay_isleme_alarm: deneme sınırı aşıldı, elle müdahale gerekli');
     } else {
       log.warn(nesne, 'abonelik_olay_isleme_hatasi: yeniden denenecek');
@@ -641,6 +643,7 @@ export async function olayiIsle(
       },
     );
     if (sonuc.cift && sonuc.kurumId) {
+      metrikler.abonelikAlarm('cift_kanal');
       log.error(
         {
           olayId: olay.id,

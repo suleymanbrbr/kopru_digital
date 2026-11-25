@@ -8,7 +8,7 @@ Türkiye için eğitim operasyon platformu. Müşteriler: solo özel ders hocas�
 
 **Faz 1 rolleri:** sahip, yönetici, öğretmen, öğrenci. **Veli Faz 1'de yok** (veri modelinde var, arayüz Faz 2).
 
-**Faz 1 kapsamı:** hesap ve kurum (OTP/Apple/Google giriş, ilk girişte KVKK onayı, grup/sınıf/kademe, atamalar, davetler, rol/izin, modül aç-kapa), takvim ve yoklama (çevrimdışı), ders sonu geri bildirimi, ders kayıtları ve materyaller (link tabanlı), paket/kredi/tahsilat, müfredat kütüphanesi, ödev, haftalık plan, deneme analizi, soru sor (fotoğraf; metin/fotoğraf/çizim/ses cevap), motivasyon (yol arkadaşı karakter + Rive, XP, seviye, seri, rozet, odak sayacı), bildirimler ve duyurular, öğretmen/öğrenci ana ekranları, yönetici paneli, abonelik (web iyzico, mağaza içi RevenueCat), platform yönetim paneli. Ayrıntı: [ozellik-sartnamesi.md](ozellik-sartnamesi.md).
+**Faz 1 kapsamı:** hesap ve kurum (OTP/Apple/Google giriş, ilk girişte KVKK onayı, grup/sınıf/kademe, atamalar, davetler, rol/izin, modül aç-kapa), takvim ve yoklama (çevrimdışı), ders sonu geri bildirimi, ders kayıtları ve materyaller (link tabanlı), paket/kredi/tahsilat, müfredat kütüphanesi, ödev, haftalık plan, deneme analizi, günlük soru takibi ve konu analizi (konu × zorluk, öğretmene öneri, kaynak kitap tanımı), soru sor (fotoğraf; metin/fotoğraf/çizim/ses cevap), motivasyon (yol arkadaşı karakter + Rive, XP, seviye, seri, rozet, odak sayacı), bildirimler ve duyurular, öğretmen/öğrenci ana ekranları, yönetici paneli, abonelik (web iyzico, mağaza içi RevenueCat), platform yönetim paneli. Ayrıntı: [ozellik-sartnamesi.md](ozellik-sartnamesi.md).
 
 **Kapsam dışı (kararla):** erken uyarı, sınav geri sayımı, veli ödül sözleşmesi, QR yoklama, takvim aboneliği, sınav haftası modu, mezun vitrini.
 
@@ -33,20 +33,20 @@ TypeScript her yerde; Node.js 24 LTS, Fastify 5, Zod 4, OpenAPI; Drizzle + Postg
 
 ## Takvim (9 Kasım 2026 başlangıç, 45 hafta)
 
-| Hafta | Tarih                | Blok                                                                                    |
-| ----- | -------------------- | --------------------------------------------------------------------------------------- |
-| 1–3   | 9–29 Kas 2026        | Keşif ve temel: repo, ADR, wireframe, karakter konsepti, Rive prototipi                 |
-| 4–9   | 30 Kas – 10 Oca 2027 | Platform temeli: service-kit, hesap modülü, NATS+outbox, web/mobil iskelet, CI, staging |
-| 10–14 | 11 Oca – 14 Şub      | Operasyon: takvim, yoklama, finans                                                      |
-| 15–20 | 15 Şub – 28 Mar      | Öğrenme: müfredat, ödev, plan, deneme                                                   |
-| 21–25 | 29 Mar – 2 May       | Soru sor, ders kayıtları, geri bildirim                                                 |
-| 26    | 3 May                | Erken beta (10–15 hoca)                                                                 |
-| 26–31 | 3 May – 13 Haz       | Motivasyon servisi                                                                      |
-| 32–34 | 14 Haz – 4 Tem       | Ana ekranlar, bildirimler, duyurular, yönetici paneli                                   |
-| 35–37 | 5–25 Tem             | Abonelik, platform yönetim paneli                                                       |
-| 38–40 | 26 Tem – 15 Ağu      | Production hazırlığı, pentest, mağaza                                                   |
-| 41–44 | 16 Ağu – 12 Eyl      | Genel beta                                                                              |
-| 45    | 13–19 Eyl 2027       | Lansman                                                                                 |
+| Hafta | Tarih                | Blok                                                                                        |
+| ----- | -------------------- | ------------------------------------------------------------------------------------------- |
+| 1–3   | 9–29 Kas 2026        | Keşif ve temel: repo, ADR, wireframe, karakter konsepti, Rive prototipi                     |
+| 4–9   | 30 Kas – 10 Oca 2027 | Platform temeli: service-kit, hesap modülü, NATS+outbox, web/mobil iskelet, CI, staging     |
+| 10–14 | 11 Oca – 14 Şub      | Operasyon: takvim, yoklama, finans                                                          |
+| 15–20 | 15 Şub – 28 Mar      | Öğrenme: müfredat, ödev, plan, deneme                                                       |
+| 21–25 | 29 Mar – 2 May       | Soru sor, ders kayıtları, geri bildirim                                                     |
+| 26    | 3 May                | Erken beta (10–15 hoca)                                                                     |
+| 26–31 | 3 May – 13 Haz       | Motivasyon servisi                                                                          |
+| 32–34 | 14 Haz – 4 Tem       | Ana ekranlar, bildirimler, duyurular, yönetici paneli                                       |
+| 35–37 | 5–25 Tem             | Abonelik, platform yönetim paneli                                                           |
+| 38–40 | 26 Tem – 15 Ağu      | Production hazırlığı, pentest, mağaza; koçluk: günlük soru takibi ve konu analizi (paralel) |
+| 41–44 | 16 Ağu – 12 Eyl      | Genel beta                                                                                  |
+| 45    | 13–19 Eyl 2027       | Lansman                                                                                     |
 
 ## Kullanıcının tarafındaki açık işler
 

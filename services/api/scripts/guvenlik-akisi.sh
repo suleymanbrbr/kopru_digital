@@ -23,7 +23,7 @@ j() { curl -sS -H 'content-type: application/json' "$@"; }
 adim() { printf '\n== %s\n' "$*"; }
 sart() { if [ "$#" -ne 3 ]; then echo "BASARISIZ: sart 3 arguman ister, $# geldi ($1)"; exit 2; fi; if [ "$2" != "$3" ]; then echo "BASARISIZ: $1 (beklenen $3, gelen $2)"; exit 1; fi; echo "ok: $1 -> $2 (beklenen $3)"; }
 durum() { curl -sS -o /dev/null -w '%{http_code}' "$@"; }
-otp_kodu() { grep '\[DEV SMS\]' "$API_LOG" | grep -F "$1" | tail -1 | jq -r '.kod'; }
+otp_kodu() { grep '\[DEV SMS\]' "$API_LOG" | grep -F "$1" | tail -1 | jq -r '.dev_kod'; }
 giris() { # $1 telefon -> oturum belirteci (OTP IP siniri icin her giris ayri sahte IP basligi gonderme: yerel api'de gerekmez)
   local govde
   govde=$(jq -nc --arg t "$1" '{telefon:$t}')

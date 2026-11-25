@@ -1,4 +1,4 @@
-import type { Database } from '@kopru/service-kit';
+import { metrikler, type Database } from '@kopru/service-kit';
 
 import { faturalariKes } from './fatura-isi.js';
 import { bekleyenOlaylariIsle } from './odeme-isleme.js';
@@ -20,12 +20,16 @@ export async function odemeIsleriniCalistir(
   simdi: Date = new Date(),
 ): Promise<OdemeIsiOzeti> {
   const ozet: OdemeIsiOzeti = { olay: 0, fatura: 0 };
+  const basla = performance.now();
+  let basarili = true;
   try {
     ozet.olay = await bekleyenOlaylariIsle(db, kanallar, log, simdi);
     ozet.fatura = (await faturalariKes(db, kanallar.eArsiv, log, simdi)).denenen;
   } catch (err) {
+    basarili = false;
     log.error({ err: String(err) }, 'abonelik_odeme_isi_hatasi');
   }
+  metrikler.isCalisti('abonelik-odeme', basarili, (performance.now() - basla) / 1000);
   return ozet;
 }
 

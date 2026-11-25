@@ -2,6 +2,7 @@ import {
   NatsIptalDeposu,
   createDb,
   islenmisOlaylariTemizle,
+  metrikler,
   runWorker,
   startTelemetry,
 } from '@kopru/service-kit';
@@ -63,20 +64,23 @@ await runWorker({
       if (calisiyor) return;
       calisiyor = true;
       try {
-        const ozet = await dersSaatlikIs(db, { log });
-        if (ozet.seri.seri > 0 || ozet.seri.hata > 0) log.info(ozet.seri, 'ders serileri uzatıldı');
-        if (ozet.katilimci.ders > 0 || ozet.katilimci.hata > 0) {
-          log.info(ozet.katilimci, 'ders katılımcıları eşitlendi');
-        }
-        if (ozet.silinenYoklamaIstegi > 0) {
-          log.info({ silinen: ozet.silinenYoklamaIstegi }, 'eski yoklama istekleri silindi');
-        }
-        // Ders kaydi/materyal son erisim tarihi gecenleri `suresi_doldu` yapar (idempotent, coklu worker guvenli).
-        const sure = await kaynakSuresiniDoldur(db, { log });
-        if (sure.kaynak > 0 || sure.hata > 0) log.info(sure, 'ders kaynaklarının süresi doldu');
-        // 7 gündür cevaplanmış ve takipsiz sorular kendiliğinden çözülür (olayıyla; idempotent).
-        const soru = await soruOtomatikCoz(db, { log });
-        if (soru.soru > 0 || soru.hata > 0) log.info(soru, 'sorular otomatik çözüldü');
+        await metrikler.isiOlc('ders-saatlik', async () => {
+          const ozet = await dersSaatlikIs(db, { log });
+          if (ozet.seri.seri > 0 || ozet.seri.hata > 0)
+            log.info(ozet.seri, 'ders serileri uzatıldı');
+          if (ozet.katilimci.ders > 0 || ozet.katilimci.hata > 0) {
+            log.info(ozet.katilimci, 'ders katılımcıları eşitlendi');
+          }
+          if (ozet.silinenYoklamaIstegi > 0) {
+            log.info({ silinen: ozet.silinenYoklamaIstegi }, 'eski yoklama istekleri silindi');
+          }
+          // Ders kaydi/materyal son erisim tarihi gecenleri `suresi_doldu` yapar (idempotent, coklu worker guvenli).
+          const sure = await kaynakSuresiniDoldur(db, { log });
+          if (sure.kaynak > 0 || sure.hata > 0) log.info(sure, 'ders kaynaklarının süresi doldu');
+          // 7 gündür cevaplanmış ve takipsiz sorular kendiliğinden çözülür (olayıyla; idempotent).
+          const soru = await soruOtomatikCoz(db, { log });
+          if (soru.soru > 0 || soru.hata > 0) log.info(soru, 'sorular otomatik çözüldü');
+        });
       } catch (err) {
         log.error({ err }, 'ders saatlik işi başarısız');
       } finally {
@@ -88,9 +92,11 @@ await runWorker({
     // Gunluk bakim: 400 gunden eski kota sayaclari ve eski `processed_events` satirlari.
     const gunluk = async () => {
       try {
-        const sayac = await soruKotaSayaclariniTemizle(db);
-        const olay = await islenmisOlaylariTemizle(db);
-        if (sayac > 0 || olay > 0) log.info({ sayac, olay }, 'eski kayıtlar temizlendi');
+        await metrikler.isiOlc('gunluk-bakim', async () => {
+          const sayac = await soruKotaSayaclariniTemizle(db);
+          const olay = await islenmisOlaylariTemizle(db);
+          if (sayac > 0 || olay > 0) log.info({ sayac, olay }, 'eski kayıtlar temizlendi');
+        });
       } catch (err) {
         log.error({ err }, 'günlük temizlik başarısız');
       }
@@ -101,8 +107,10 @@ await runWorker({
     const iptal = new NatsIptalDeposu(() => nats, { log });
     const kvkkIs = async () => {
       try {
-        const o = await kvkkSilmeIsle(db, { log, iptalEt: (sid) => iptal.iptalEt(sid) });
-        if (o.tamamlanan + o.engellenen + o.hata > 0) log.info(o, 'KVKK hesap silme işi');
+        await metrikler.isiOlc('kvkk-silme', async () => {
+          const o = await kvkkSilmeIsle(db, { log, iptalEt: (sid) => iptal.iptalEt(sid) });
+          if (o.tamamlanan + o.engellenen + o.hata > 0) log.info(o, 'KVKK hesap silme işi');
+        });
       } catch (err) {
         log.error({ err }, 'KVKK hesap silme işi başarısız');
       }

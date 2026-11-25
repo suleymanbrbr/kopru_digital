@@ -26,7 +26,7 @@ j() { curl -sS -H 'content-type: application/json' "$@"; }
 adim() { printf '\n== %s\n' "$*"; }
 asql() { docker exec -i kopru-postgres-1 psql -q -t -A -U postgres -d "$API_DB" -v ON_ERROR_STOP=1 -c "$1"; }
 
-son_kod() { grep "DEV SMS" "$API_LOG" | grep -F "\"telefon\":\"$1\"" | tail -1 | jq -r '.kod'; }
+son_kod() { grep "DEV SMS" "$API_LOG" | grep -F "\"dev_telefon\":\"$1\"" | tail -1 | jq -r '.dev_kod'; }
 e164() { printf '+9%s' "$1"; }
 otp_giris() {
   local tel e kod
