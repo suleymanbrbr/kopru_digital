@@ -51,8 +51,8 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
     const sayi = async (tablo: string) =>
       (await owner<{ n: number }[]>`select count(*)::int n from ${owner(`motivasyon.${tablo}`)}`)[0]
         ?.n;
-    expect(await sayi('xp_tavanlari')).toBe(5);
-    expect(await sayi('xp_kurallari')).toBe(12);
+    expect(await sayi('xp_tavanlari')).toBe(6);
+    expect(await sayi('xp_kurallari')).toBe(13);
     expect(await sayi('seviyeler')).toBe(60);
     expect(await sayi('rozet_tanimlari')).toBe(33);
     expect(await sayi('karakter_turleri')).toBe(3);
@@ -60,7 +60,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
     expect(await sayi('beceri_tanimlari')).toBe(5);
     expect(await sayi('brans_beceri_eslemesi')).toBe(16);
     expect(await sayi('kozmetik_tanimlari')).toBe(12);
-    expect(await sayi('motivasyon_ayarlari')).toBe(12);
+    expect(await sayi('motivasyon_ayarlari')).toBe(15);
     expect(await sayi('platform_ayar_surumleri')).toBe(1);
   });
 

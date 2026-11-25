@@ -136,7 +136,8 @@ sart "atanmamis ogretmen baskasinin kitabini degistiremez (403)" "$(durum -X PAT
 
 adim "3) Ogrenci uc zorlukta kayit girer (kolay %90, orta %60 kitap testinden, zor %25 fotografli)"
 kayitGovde() { # $1 zorluk $2 dogru $3 yanlis $4 bos $5 istek_id $6 ek-json
-  jq -nc --arg k "$KONU" --arg z "$1" --argjson d "$2" --argjson y "$3" --argjson b "$4" --arg i "$5" --argjson ek "${6:-{\}}" \
+  local ek="${6:-}"; [ -n "$ek" ] || ek='{}'
+  jq -nc --arg k "$KONU" --arg z "$1" --argjson d "$2" --argjson y "$3" --argjson b "$4" --arg i "$5" --argjson ek "$ek" \
     '{brans_kodu:"biyoloji",konu_id:$k,zorluk:$z,dogru:$d,yanlis:$y,bos:$b,istek_id:$i} + $ek'
 }
 FOTO=$(medya_hazir "$OGR_K" gunluk_soru_fotografi); kopya_bekle "$FOTO"
@@ -203,17 +204,17 @@ sart "duzeltme (12 dogru) 200" "$(durum -X PATCH "$P/gunluk-soru/kayitlar/$KAYIT
 sart "duzeltme sayaci farkla gunceller (72)" "$(for i in $(seq 1 40); do v=$(msql "select deger::int from motivasyon.ogrenci_sayaclari where ogrenci_id = '$OGR_U' and sayac_kodu = 'toplam_cozulen_soru'"); [ "$v" = 72 ] && break; sleep 0.5; done; echo "$v")" 72
 sart "esigin altina (4 soru) duzeltme XP'yi geri alir" "$(durum -X PATCH "$P/gunluk-soru/kayitlar/$KAYIT4" -H "authorization: Bearer $O" -d '{"dogru":3,"yanlis":1}')" 200
 xp_bekle 6
-sart "silme (204)" "$(durum -X DELETE "$P/gunluk-soru/kayitlar/$KAYIT1" -H "authorization: Bearer $O")" 204
+sart "silme (204)" "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE "$P/gunluk-soru/kayitlar/$KAYIT1" -H "authorization: Bearer $O")" 204
 xp_bekle 4
 echo "defter: $(msql "select string_agg(kural_kodu || ' ' || xp || case when ters_cevrilen_id is not null then ' (ters: ' || coalesce(neden, '') || ')' else '' end, ', ' order by created_at, id) from motivasyon.xp_hareketleri where ogrenci_id = '$OGR_U' and kural_kodu = 'gunluk_soru'")"
 sart "ters kayit satirlari: 2 (duzeltme + silme)" "$(msql "select count(*) from motivasyon.xp_hareketleri where ogrenci_id = '$OGR_U' and kural_kodu = 'gunluk_soru' and xp < 0")" 2
 sart "silinen kayit listede yok" "$(j "$P/gunluk-soru/kayitlar" -H "authorization: Bearer $O" | jq -r --arg id "$KAYIT1" '[.kayitlar[] | select(.id == $id)] | length')" 0
 sart "fotograf birakildi olayi (silinen kayit degil: zor kayit duruyor)" "$(sql "select count(*) from ortak.outbox where kurum_id = '$KURUM' and subject = 'evt.ortak.dosya.birakildi.v1'")" 0
-sart "baska ogrenci/ogretmen kaydi silemez (403)" "$(durum -X DELETE "$P/gunluk-soru/kayitlar/$KAYIT3" -H "authorization: Bearer $HOCA")" 403
+sart "baska ogrenci/ogretmen kaydi silemez (403)" "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE "$P/gunluk-soru/kayitlar/$KAYIT3" -H "authorization: Bearer $HOCA")" 403
 
 adim "7) Olaylarda kisisel veri yok"
 sart "gunluk_soru olay sayisi (4 olusturma + 2 duzeltme + 1 silme)" "$(sql "select count(*) from ortak.outbox where kurum_id = '$KURUM' and subject = 'evt.ogrenme.gunluk_soru.kaydedildi.v1'")" 7
-sart "olay yukunde ad/e-posta/telefon/metin yok" "$(sql "select count(*) from ortak.outbox where kurum_id = '$KURUM' and subject = 'evt.ogrenme.gunluk_soru.kaydedildi.v1' and (payload::text ~* '(@|telefon|eposta|gorunen_ad|kaynak_metin|Ogrenci)')")" 0
+sart "olay yukunde ad/e-posta/telefon/metin yok" "$(sql "select count(*) from ortak.outbox where kurum_id = '$KURUM' and subject = 'evt.ogrenme.gunluk_soru.kaydedildi.v1' and (payload::text ~* '(@|telefon|eposta|gorunen_ad|kaynak_metin|Ali Ogrenci|Ayse Hoca)')")" 0
 echo "olay ornegi: $(sql "select payload->'data' from ortak.outbox where kurum_id = '$KURUM' and subject = 'evt.ogrenme.gunluk_soru.kaydedildi.v1' order by created_at limit 1")"
 echo
 echo "TAMAM: gunluk soru akisi gecti (kurum $KURUM)"
