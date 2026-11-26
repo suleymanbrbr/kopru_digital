@@ -37,6 +37,11 @@ export const ortam = {
   /** RevenueCat genel SDK anahtarlari (bos: sahte magaza saglayicisi). */
   revenueCatIos: (process.env.EXPO_PUBLIC_REVENUECAT_IOS as string | undefined) ?? '',
   revenueCatAndroid: (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID as string | undefined) ?? '',
+  /** Yalniz olcum derlemesi: soguk acilis olcum isaretcisinin gonderilecegi adres (bos: kapali). */
+  olcumUrl: (process.env.EXPO_PUBLIC_OLCUM_URL as string | undefined) ?? '',
+  /** Destek sayfasi (kurum sahibi engelinde gosterilir; yer tutucu, bkz. docs/isletim/magaza-listesi.md). */
+  destekUrl:
+    (process.env.EXPO_PUBLIC_DESTEK_URL as string | undefined) ?? 'https://kopru.example/destek',
   /** Gelistirici ekranlari (Bilesenler) yalnizca gelistirme derlemesinde acilir. */
   gelistirici: __DEV__,
 } as const;

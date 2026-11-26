@@ -313,6 +313,62 @@ Bildirim servisi çekirdeğinin (`services/bildirim`) mobil yüzü: push kaydı,
 - **Mock senaryoları:** `EXPO_PUBLIC_MOCK_ABONELIK=deneme_bitiyor,mesaj` (virgüllü): deneme, deneme_bitiyor, ek_sure, askida, iptal, aktif_apple, aktif_google, aktif_iyzico, kurumsal, limit_dolu, salt_okunur, kurum_askida, mesaj.
 - **Gerçek api denemesi:** `apps/mobile/scripts/abonelik-akisi.sh` (kullanıcı + kurum açar, `webhook` ile RevenueCat INITIAL_PURCHASE gönderir; başlığındaki adımlara bakın).
 
+### Hesabım: verilerimi indir ve hesabımı sil (mobil)
+
+App Store 5.1.1(v) ve KVKK m.11 için Profil > "Hesabım ve verilerim" (`src/ekranlar/hesabim/Hesabim.tsx`, rota `/hesabim`). Uçlar ve kurallar: [schema/kvkk-silme.md](schema/kvkk-silme.md) bölüm 6; adaptör `hesap.silme*` / `hesap.verilerimiIndir` (gerçek ve mock).
+
+- **Verilerimi indir:** `GET /v1/hesap/ben/verilerim` JSON'u iOS'ta geçici `.json` dosyası olarak paylaş sayfasına verilir (sayfa kapanınca dosya silinir; `src/hesap/veriDisaAktar.ts`), Android'de `Share` yalnız metin paylaşır, JSON metin olarak gider. `eksik_servisler` doluysa kullanıcıya "bazı bölümler eksik olabilir" uyarısı çıkar.
+- **Hesabımı sil:** durum ucu (`GET .../silme-talebi`) -> engel varsa açıklama + destek bağlantısı (`EXPO_PUBLIC_DESTEK_URL`, yer tutucu) -> yeniden doğrulama (telefon OTP: `kod-gonder`; ya da parola, durum ucu hangisini söylerse) -> onay adımı (30 gün, geri alınır, mağaza aboneliği ayrıca iptal edilmeli) -> `POST`. Bekleyen talep varsa ekran "silinmek üzere" + "Talebi geri al" (`DELETE`) gösterir; Bugün ekranlarında (öğrenci, öğretmen) üstte bilgi şeridi (`SilmeSeridi`) çıkar.
+- **Dikkat:** yanlış kod/parola `401 kod_gecersiz` döner ama oturum düşmemiştir; adaptör bunu `otp_gecersiz`e çevirir ve `401` yenileme/tekrar akışına sokmaz (yoksa kullanıcı çıkışa atılır ve yanlış deneme ikiye katlanır). `DELETE` ve `kod-gonder` gövdesizdir, `content-type` gönderilmez (testli).
+- **Mock:** telefon `…7` ile bitenler kurum sahibi engelini, `…8` ile bitenler OTP + parola (`MOCK_PAROLA`) seçeneğini görür; OTP `123456`.
+- **Gerçek api denemesi:** ayrı veritabanı + NATS ile api'yi ayağa kaldır, `/auth/otp/*` ile kullanıcı aç (`scripts/abonelik-akisi.sh` başlığı), uygulamayı `EXPO_PUBLIC_API_URL` ile derle; engel için kurumda ikinci bir üye (sınıf koduyla katılım) gerekir. Ekran görüntüleri: `apps/mobile/docs/ekranlar/hesabim-*.png`.
+
+### Mağaza derlemesi (EAS, App Store / Google Play)
+
+Dosyalar: `apps/mobile/eas.json` (profiller), `apps/mobile/app.config.ts` (kimlik, izinler, iOS gizlilik bildirimi), beyanlar [isletim/magaza-gizlilik.md](isletim/magaza-gizlilik.md), liste metinleri [isletim/magaza-listesi.md](isletim/magaza-listesi.md).
+
+**Profiller**
+
+| Profil        | Amaç                                              | Dağıtım  | Not                                                          |
+| ------------- | ------------------------------------------------- | -------- | ------------------------------------------------------------ |
+| `development` | Geliştirme istemcisi (simülatör)                  | internal | `EXPO_PUBLIC_API_MOCK=1` yalnız burada                       |
+| `preview`     | Test kullanıcıları (TestFlight dışı ad hoc / APK) | internal | staging api (`EXPO_PUBLIC_API_URL`, yer tutucu), APNs üretim |
+| `production`  | Mağaza                                            | store    | üretim api (yer tutucu), `autoIncrement`, APNs üretim        |
+
+**Sürüm stratejisi:** `version` (kullanıcıya görünen, semver) `app.config.ts`'te elle artırılır; iOS `buildNumber` ve Android `versionCode` EAS tarafından uzaktan (`appVersionSource: remote`) ve production'da `autoIncrement` ile artar. `runtimeVersion` politikası `appVersion`: native bağımlılık/izin/eklenti değişince `version` artırılmalı (OTA güncelleme `expo-updates` ile gelecek; paket **kurulu değil**, ayrı karar).
+
+**Üretim güvenliği (otomatik):** `eas.json` production profilinde `EXPO_PUBLIC_API_MOCK`, `EXPO_PUBLIC_PUSH_SAHTE`, `EXPO_PUBLIC_OLCUM_URL` bulunmaz (jest testi `src/eas.test.ts` bunu denetler). Ayrıca EAS `EAS_BUILD_PROFILE=production` verdiğinde `app.config.ts` > `uretimDenetimi` bu üçünün tanımlı olmasını ve `EXPO_PUBLIC_API_URL`'in `https://` dışında olmasını **derlemeyi durdurarak** reddeder (EAS ortam değişkeni ya da sırrı yanlışlıkla eklense bile).
+
+**Hesaplar gelince yapılacaklar (sıra):**
+
+1. Apple Developer Program (şirket, D-U-N-S) ve Google Play Console hesapları; App Store Connect'te uygulama kaydı (bundle id), Play Console'da uygulama oluşturma.
+2. Kimlik: `APP_BUNDLE_ID` (varsayılan `com.koprudigital.app` yer tutucudur; mağazaya gönderildikten sonra değişmez), `APP_ADI`, `APP_SCHEME` değerlerini kesinleştir (EAS ortam değişkeni ya da `eas.json` `env`).
+3. `eas login` + `cd apps/mobile && eas init` (proje kimliği oluşur) -> `EAS_PROJE_KIMLIGI` (`app.config.ts` `extra.eas.projectId`) ve `EXPO_PUBLIC_EAS_PROJE_ID` olarak ayarla (Expo push belirteci için gerekli).
+4. `eas.json` yer tutucularını doldur: `EXPO_PUBLIC_API_URL` (preview ve production), `submit.production.ios.ascAppId` / `appleTeamId`, Android servis hesabı anahtarı (`google-play-servis-hesabi.json`, **depoya girmez**; EAS sırrı ya da yerel dosya).
+5. Kimlik bilgileri: `eas credentials` (iOS dağıtım sertifikası/profil: EAS yönetsin; Android upload keystore: EAS üretsin ve yedeğini güvenli yerde sakla). Push: APNs anahtarı (`.p8`) ve FCM v1 hizmet hesabı EAS'a yüklenir; `APP_PUSH_MODU=production` zaten profillerde.
+6. RevenueCat: iOS/Android genel SDK anahtarları (`EXPO_PUBLIC_REVENUECAT_IOS` / `_ANDROID`), mağaza ürünleri ve `/planlar` `magaza_urun_kodlari` eşlemesi; ayrıntı yukarıdaki Abonelik bölümünde. RevenueCat'i yurt dışı işleyici olarak KVKK envanterine ekle (magaza-gizlilik.md).
+7. Mağaza içeriği: gizlilik politikası, destek ve hesap silme URL'leri canlıya al; `magaza-listesi.md` yer tutucularını doldur; App Privacy / Data safety formlarını `magaza-gizlilik.md`'ye göre gir; yaş derecelendirmesi anketleri; ekran görüntüleri; inceleme hesapları.
+8. Derleme: `eas build --profile preview --platform all` (cihazlarda dene), sonra `eas build --profile production --platform all` ve `eas submit --profile production`. Android'de ilk gönderim Play Console'da elle (ilk APK/AAB yüklemesi), dahili test kanalı (`track: internal`) önerilir.
+9. Doğrulama: yerelde `EAS_BUILD_PROFILE=production EXPO_PUBLIC_API_URL=https://api.kopru.example npx expo config --type public` temiz çıkmalı; `npx expo prebuild --no-install --clean` sonrası `ios/Kopru/PrivacyInfo.xcprivacy` ve `android/app/src/main/AndroidManifest.xml` (izin listesi) gözle denetlenir.
+
+**Yerel Release derlemesi (simülatör):** `cd apps/mobile && LANG=en_US.UTF-8 CI=1 EXPO_PUBLIC_API_URL=http://localhost:4000 npx expo run:ios --configuration Release --device <udid> --no-bundler` (JS paketi uygulamaya gömülür; Metro yok). Soğuk açılış ölçümü için bkz. aşağıda.
+
+### Soğuk açılış ve oturum anlığı (mobil)
+
+Hedef: soğuk açılışta ilk dolu "Bugün" karesi <= 1 sn. Ölçüm Release derlemesinde `scripts/soguk-acilis-release.sh` ile yapılır (derleme `EXPO_PUBLIC_OLCUM_URL` ile; `olcum.ts` isaretçiyi yerel dinleyiciye gönderir, üretimde yasak). Dev derlemesi için eski `scripts/soguk-acilis-olcumu.sh` (Metro log) kalır.
+
+- **Ölçümler (iPhone 17 simülatörü, Release, `simctl launch`'tan ilk dolu "Bugün" karesine; `simctl launch` komutunun kendi yükü ~0,33 sn dahildir, düşülürse gerçek süre o kadar kısadır; 6-7 deneme ortalaması):**
+
+  | Durum                                      | Önce     | Sonra    | Dağılım (sonra)                                 |
+  | ------------------------------------------ | -------- | -------- | ----------------------------------------------- |
+  | Ağ gecikmesi yok (localhost)               | ~1,47 sn | ~1,35 sn | native+paket ~1,15 sn, JS ~0,19 sn (önce ~0,30) |
+  | ~230 ms/istek (4G benzeri, gecikme vekili) | ~2,05 sn | ~1,34 sn | JS ~0,19 sn (önce ~0,89)                        |
+
+  Düzeltilmiş (simctl yükü düşülmüş) gerçek soğuk açılış: gecikmesiz ~1,0 sn, ağ gecikmeliyken ~1,0 sn (önceden 1,7 sn). **En büyük kalem artık JS değil: native süreç başlangıcı + React Native/Hermes + 9,7 MB paketin yüklenmesi (~0,8 sn, JS'ten önce)**; ağdan bağımsızdır. Sonraki adaylar: `inline requires`/paket küçültme, Skia/Rive/RevenueCat'in tembel yüklenmesi, gerçek cihazda ölçüm (simülatör cihazdan yavaştır). Ağ gecikmesini taklit eden vekil: yerel TCP vekili (api'yi başka porta alıp uygulamanın adresindeki portu vekille dinlemek).
+
+- **Oturum anlığı (`src/oturum/anlik.ts`):** açılışta önce `oturumBilgisi` -> `uyelikSec` -> modül ayarları ağ çağrıları sırayla bekleniyordu. Artık son oturum özeti cihazda tutulur; belirteç (güvenli depoda) ve anlık varsa durum **ağ beklenmeden** `giris` + etkin kurum olarak kurulur ve ilk çizim kalıcı sorgu önbelleğinden yapılır; sunucu doğrulaması arka planda gelir (`tazele`): 401 -> çıkış, ağ hatası -> anlık korunur (çevrimdışı açılış), üyelik kalkmışsa ya da yeni KVKK metni gerekiyorsa etkin kurum kalkar.
+- **Saklanan alanlar (MMKV `kopru.oturum-anligi`, sorgu önbelleğiyle aynı koruma):** kullanıcı `id` ve `adSoyad` (**telefon/e-posta saklanmaz**); üyelikler (`uyelikId`, `kurumId`, `kurumAd`, `kurumTur`, `rol`); KVKK kabul edilen sürüm etiketi; etkin üyelik kimliği, `moduller`, `vurgu`. Belirteç yok. Çıkışta, oturum kapanınca, 401'de ve KVKK onayı bekleyen oturumda **silinir/yazılmaz**.
+
 ### Doğrulama
 
 ```sh
