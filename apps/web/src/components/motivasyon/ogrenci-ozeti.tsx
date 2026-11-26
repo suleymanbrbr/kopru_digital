@@ -3,15 +3,18 @@
 import { t } from '@kopru/i18n';
 import { ArrowLeft, Award, Flame, Puzzle, Star, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
 import { KarakterGorseli } from './ortak';
 import { RadarGrafigi } from './radar-grafigi';
 
 import { BosDurum } from '@/components/bos-durum';
+import { PersonelKonuAnalizi } from '@/components/gunluk-soru/personel-analizi';
 import { HataDurumu } from '@/components/hata-durumu';
 import { tarihYaz } from '@/components/hesap/ortak';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { Sekmeler } from '@/components/ogrenme/ortak';
 import { dugmeStili } from '@/components/ui/button';
 import { Iskelet, Kart } from '@/components/ui/kart';
 import { useKurum } from '@/kurum/baglam';
@@ -27,6 +30,10 @@ export function OgrenciProfili() {
   const kapali = !acikModuller.includes('oyunlastirma');
   const ogrenciler = useOgrenciler(kurumId);
   const ad = ogrenciler.liste.find((o) => o.id === ogrenciId)?.ad;
+  const params = useSearchParams();
+  const [sekme, setSekme] = useState(
+    params.get('sekme') === 'konu-analizi' ? 'konu-analizi' : 'ozet',
+  );
   const geri = (
     <Link
       href={`/${kurumId}/ogrenciler`}
@@ -43,18 +50,34 @@ export function OgrenciProfili() {
         baslik={ad ?? t('motivasyon.ozet.baslik')}
         aciklama={t('motivasyon.ozet.aciklama')}
       />
-      {kapali ? (
-        <Kart>
-          <BosDurum
-            className="py-16"
-            ikon={Puzzle}
-            baslik={t('yerTutucu.modulKapali')}
-            aciklama={t('yerTutucu.modulKapaliAciklama')}
-          />
-        </Kart>
-      ) : (
-        <OzetIcerigi kurumId={kurumId} ogrenciId={ogrenciId} />
-      )}
+      <Sekmeler
+        deger={sekme}
+        degisti={setSekme}
+        etiket={t('motivasyon.ozet.sekmeler')}
+        sekmeler={[
+          {
+            anahtar: 'ozet',
+            etiket: t('motivasyon.ozet.sekmeOzet'),
+            icerik: kapali ? (
+              <Kart>
+                <BosDurum
+                  className="py-16"
+                  ikon={Puzzle}
+                  baslik={t('yerTutucu.modulKapali')}
+                  aciklama={t('yerTutucu.modulKapaliAciklama')}
+                />
+              </Kart>
+            ) : (
+              <OzetIcerigi kurumId={kurumId} ogrenciId={ogrenciId} />
+            ),
+          },
+          {
+            anahtar: 'konu-analizi',
+            etiket: t('gunlukSoru.personel.sekme'),
+            icerik: <PersonelKonuAnalizi ogrenciId={ogrenciId} />,
+          },
+        ]}
+      />
     </>
   );
 }

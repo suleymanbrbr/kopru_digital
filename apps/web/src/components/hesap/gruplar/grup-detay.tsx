@@ -16,6 +16,7 @@ import { GrupUyeleri } from './grup-uyeleri';
 import { GrupSatirBilgisi } from './gruplar-ekrani';
 
 import { BosDurum } from '@/components/bos-durum';
+import { GrupAnalizi } from '@/components/gunluk-soru/grup-analizi';
 import { HataDurumu } from '@/components/hata-durumu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
 import { GrupMateryalleri } from '@/components/kayit/grup-materyalleri';
@@ -148,6 +149,7 @@ export function GrupDetay() {
         {acikModuller.includes('oyunlastirma') ? (
           <GrupMotivasyon kurumId={kurumId} grup={g} />
         ) : null}
+        <GrupAnalizi grup={g} />
       </div>
 
       <GrupFormu
