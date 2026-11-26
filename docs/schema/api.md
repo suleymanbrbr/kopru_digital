@@ -1112,7 +1112,7 @@ Parasal bakiye özeti (türetilmiş). Profil: `KS`. RLS: evet. Sütunlar: `ogren
 
 ## `ogrenme`
 
-Müfredat, ödev, haftalık plan, deneme, "soru sor" ve günlük soru takibi.
+Müfredat, ödev, haftalık plan, deneme, "soru sor", günlük soru takibi ve öğretmen değerlendirmeleri.
 
 ```mermaid
 erDiagram
@@ -1132,6 +1132,7 @@ erDiagram
   soru_ayarlari ||--|| kurum : "ayar"
   kaynak_kitaplar ||--o{ kaynak_kitap_testleri : "test"
   gunluk_soru_kayitlari ||--o{ gunluk_soru_dosyalari : "foto"
+  kaynak_kitaplar ||--o{ kaynak_onerileri : "oneri"
   soru_kota_sayaclari }o--|| sorular : "sayim"
 ```
 
@@ -1741,6 +1742,95 @@ Kısıtlar: `UNIQUE (kurum_id, id)`. İndeksler (analiz sorguları): `(kurum_id,
 **Performans (testle kilitli, `gunluk-soru-performans.test.ts`):** öğrenci başına 30 gün × günde 5 kayıt; 30 günlük konu analizi < 2 sn, 30 kişilik sınıf görünümü < 3 sn (tek SQL toplama, uygulamada döngü yok).
 
 **Olay:** `ogrenme.gunluk_soru.kaydedildi.v1` (oluşturma, düzeltme, silme; aynı işlemde outbox). Yük yalnız kimlik ve sayı (`kayit_id`, `ogrenci_id`, `brans_kodu`, `konu_id`, `zorluk`, `dogru`, `yanlis`, `bos`, `toplam`, `onceki_toplam`, `kayit_surumu`, `silindi`, `gun`). Tüketici `motivasyon.xp` ([motivasyon.md](motivasyon.md)).
+
+### Öğretmen değerlendirmeleri, önerilen kaynaklar ve koçluk görünümü (migration 0023)
+
+Şartname: [ozellik-sartnamesi.md](../urun/ozellik-sartnamesi.md) "Öğretmen değerlendirmeleri, önerilen kaynaklar ve öğrenci koçluk görünümü". Proje sahibi kararları: **ayrı koç rolü yok**; öğrencinin tüm öğretmenleri (ona ders veren ya da atanmış: öğretmen kapsamı = `ogrenciKosulu`, grup kapsamı) birbirinin değerlendirmesini görür; **öğrenciye görünürlük yorum başına, varsayılan kapalı**; veli yok (Faz 2). Ayrı modül kodu açılmadı: yeni izinler çekirdek izinlerdir (`modul: null`).
+
+```mermaid
+erDiagram
+  uyelikler ||--o{ ogretmen_degerlendirmeleri : "ogrenci_id"
+  uyelikler ||--o{ ogretmen_degerlendirmeleri : "yazar_id"
+  uyelikler ||--o{ kaynak_onerileri : "ogrenci_id / oneren_id"
+  kaynak_kitaplar ||--o{ kaynak_onerileri : "kitap"
+  kaynak_kitap_testleri ||--o{ kaynak_onerileri : "test"
+```
+
+#### `ogrenme.ogretmen_degerlendirmeleri`
+
+Profil: `KS`. RLS: evet + **kısıtlayıcı (RESTRICTIVE) öğrenci politikası**. Öğretmenin bir öğrenci hakkında dönemlik (haftalık ya da daha sık) değerlendirmesi. Silinmez, **geri çekilir** (`api_app`ten `DELETE` yetkisi alınmıştır; yalnız KVKK silme işi `api_sistem` ile siler).
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ogrenci_id` | uuid | hayır | | Bileşik FK `hesap.uyelikler` (öğrenci üyeliği) |
+| `yazar_id` | uuid | hayır | | Bileşik FK `hesap.uyelikler` (yazan öğretmen/yönetici). Yazar hesabı silinince üyelik anonimleşir, değerlendirme **kalır** |
+| `donem_baslangic`, `donem_bitis` | date | hayır | | Tek gün olabilir (`bitis >= baslangic`, en çok 31 gün; başlangıç bugünden sonra olamaz) |
+| `brans_kodu` | text | evet | | FK `ortak.bransler`; boş = genel |
+| `calisma_duzeni`, `derse_katilim`, `odev_disiplini`, `anlama_duzeyi` | smallint | evet | | CHECK 1..5; hepsi isteğe bağlı |
+| `yorum` | text | evet | | CHECK ≤ 4000. `CHECK (yorum IS NOT NULL OR en az bir ölçek dolu)` |
+| `ogrenci_gorur` | boolean | hayır | false | Öğrenciye görünürlük (yorum başına, yazar belirler) |
+| `ogrenci_bildirildi_at` | timestamptz | evet | | Öğrenciye ilk görünür olduğunda bildirim olayı yayımlandı; ikinci kez yayımlanmaz |
+| `geri_cekildi_at`, `geri_cekilen_id` | timestamptz, uuid | evet | | Geri çekme (yazar ya da sahip/yönetici). Geri çekilen öğrenciye hiçbir koşulda görünmez, koçluk görünümünde yer almaz |
+
+Kısıtlar: `UNIQUE (kurum_id, id)`. İndeksler: `(kurum_id, ogrenci_id, created_at DESC)` (zaman çizelgesi), `(kurum_id, ogrenci_id, donem_baslangic) WHERE geri_cekildi_at IS NULL` (4 haftalık ortalama), `(kurum_id, yazar_id, donem_baslangic) WHERE geri_cekildi_at IS NULL` (hatırlatma). Sürümlüdür (iyimser kilit).
+
+**Düzenleme penceresi:** yalnız yazar ve oluşturulmasından sonraki **7 gün** (`created_at + 7 gün`); sonrası `409 degerlendirme_duzenlenemez` (yeni kayıt yazılır). Yazar olmayan (sahip/yönetici dahil) düzenlerse `403`. Geri çekilmiş kayıt düzenlenemez (`409 degerlendirme_geri_cekildi`).
+
+**Öğrenci görünürlüğü (üç katman):** (1) uç yalnız `ogrenci_gorur = true AND geri_cekildi_at IS NULL AND ogrenci_id = kendisi` döner ve yanıt şeması `ogrenci_gorur`/`yazar_id`'yi içermez; (2) öğrenci rolünün **hiçbir** başka ucu değerlendirme döndürmez (`kocluk.oku`, `degerlendirme.yaz` yok); (3) veritabanı: `ogrenci_yalniz_gorunen` RESTRICTIVE SELECT politikası, oturumda `app.roller` `ogrenci` içerirse görünür olmayan satırı okutmaz (uygulama hatası olsa bile). Testle kilitli.
+
+#### `ogrenme.kaynak_onerileri`
+
+Profil: `KS`. RLS: evet + kısıtlayıcı öğrenci politikası (öğrenci yalnız kendine önerilenleri okur). Öğretmenin öğrenciye önerdiği kaynak. Silinmez, geri çekilir (`DELETE` `api_app`te yok).
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ogrenci_id`, `oneren_id` | uuid | hayır | | Bileşik FK `hesap.uyelikler` |
+| `tur` | text | hayır | | CHECK `IN ('kaynak_kitap','kaynak_kitap_testi','link','serbest')` |
+| `kaynak_kitap_id` | uuid | evet | | Bileşik FK `kaynak_kitaplar` (kitap ve test önerisinde dolu) |
+| `kaynak_test_id` | uuid | evet | | Bileşik FK `kaynak_kitap_testleri` (yalnız `kaynak_kitap_testi`) |
+| `baglanti_url` | text | evet | | `link` için zorunlu, yalnız `http(s)`, ≤ 2000 |
+| `baslik` | text | evet | | `link` ve `serbest` için zorunlu, 1..200 |
+| `brans_kodu` | text | evet | | FK `ortak.bransler`; kitap/test önerisinde kitabın dersi |
+| `konu_id` | uuid | evet | | Müfredat konusu (FK yok; `bransVeKonuDogrula` ile doğrulanır) |
+| `not_metni` | text | evet | | CHECK ≤ 1000 |
+| `geri_cekildi_at`, `geri_cekilen_id` | timestamptz, uuid | evet | | Geri çekme (öneren ya da sahip/yönetici) |
+
+CHECK'ler tür/alan tutarlılığını zorlar (örn. `serbest` için URL/kitap/test olamaz). İndeksler: `(kurum_id, ogrenci_id, created_at DESC)`, `(kurum_id, oneren_id)`.
+
+**"Başladı mı":** öneri oluşturulduktan sonra (`created_at >=` öneri zamanı) öğrencinin günlük soru kaydında (`gunluk_soru_kayitlari`) o **kitap** (kitabın herhangi bir testi), o **test** ya da (serbest öneri için) aynı metin (büyük/küçük harf ve baştaki/sondaki boşluk gözetilmez, `kaynak_metin`) kullanıldıysa `basladi = true`, `ilk_kullanim_gun`, `son_kullanim_gun`, `kayit_sayisi` dolar. `link` önerisinde başlama ölçülemez: `basladi = null`.
+
+#### Uçlar (`/v1/ogrenme/kurumlar/:kurum_id/...`)
+
+| Yöntem | Yol | İzin | Not |
+| --- | --- | --- | --- |
+| POST | `/ogrenciler/:ogrenci_id/degerlendirmeler` | `degerlendirme.yaz` (grup) | Değerlendirme yaz (kapsam dışı öğrenci 404). `ogrenci_gorur=true` ise öğrenciye `ogrenme.degerlendirme.yayimlandi.v1` |
+| GET | `/ogrenciler/:ogrenci_id/degerlendirmeler` | `degerlendirme.oku` (grup) | Personel: öğrencinin **tüm** öğretmenlerinin değerlendirmeleri (imleç sayfalı; `geri_cekilenler=true` ile geri çekilenler de) |
+| PATCH | `/degerlendirmeler/:id` | `degerlendirme.yaz` | Yalnız yazar, 7 gün; `surum` iyimser kilit. Görünürlük kapalıdan açığa geçince bildirim olayı (bir kez) |
+| POST | `/degerlendirmeler/:id/geri-cek` | `degerlendirme.yaz` | Yazar ya da sahip/yönetici; tekrar çağrı 200 (idempotent) |
+| GET | `/degerlendirmelerim` | `degerlendirme.oku` (kendi) | **Yalnız öğrenci**; yalnız görünür ve geri çekilmemiş olanlar, sadeleştirilmiş şema |
+| POST | `/ogrenciler/:ogrenci_id/kaynak-onerileri` | `kaynak_onerisi.yaz` (grup) | Kaynak öner; öğrenciye `ogrenme.kaynak_onerisi.eklendi.v1` |
+| GET | `/ogrenciler/:ogrenci_id/kaynak-onerileri` | `kaynak_onerisi.oku` (grup) | Personel listesi (başlama durumuyla) |
+| POST | `/kaynak-onerileri/:id/geri-cek` | `kaynak_onerisi.yaz` | Öneren ya da sahip/yönetici; idempotent |
+| GET | `/kaynak-onerilerim` | `kaynak_onerisi.oku` (kendi) | **Yalnız öğrenci**; kendine önerilenler (geri çekilmeyenler) |
+| GET | `/ogrenciler/:ogrenci_id/kocluk` | `kocluk.oku` (grup) | Koçluk görünümü (aşağıda) |
+| GET | `/degerlendirme-hatirlatma` | `degerlendirme.yaz` (grup) | Bugün kartı: bu hafta değerlendirmesi olmayan öğrencilerim |
+
+**İzinler** (`IZIN_SOZLUGU_SURUMU` 11 → 12): `degerlendirme.yaz` (öğretmen `grup`; sahip/yönetici `kurum`), `degerlendirme.oku` (öğretmen `grup`, **öğrenci `kendi`**, sahip/yönetici `kurum`), `kaynak_onerisi.yaz` (öğretmen `grup`; sahip/yönetici `kurum`), `kaynak_onerisi.oku` (öğretmen `grup`, öğrenci `kendi`, sahip/yönetici `kurum`), `kocluk.oku` (öğretmen `grup`; sahip/yönetici `kurum`; **öğrenci yok**). Veli hiçbirinde yok.
+
+**Koçluk görünümü yanıtı (tek istek, tek `withTenant` işlemi, 2 sn kalite çıtası testle kilitli):**
+
+1. `degerlendirmeler`: son değerlendirmeler (en yeni önce, `limit` varsayılan 20, `sonraki_imlec`; sonrası liste ucundan), her biri öğrenciye görünürlük işaretiyle.
+2. `olcek_ortalamalari`: son 4 hafta (Pazartesi başlar, `Europe/Istanbul`; değerlendirmenin `donem_baslangic` haftasına göre); hafta başına `sayi` ve 4 ölçeğin ortalaması (veri yoksa `null`), ayrıca 4 haftanın toplam ortalaması.
+3. `kullanilan_kaynaklar`: günlük kayıtlardan (son 90 gün) kitap bazında `cozulen_test/toplam_test` ilerlemesi ve `son_kullanim_gun`; serbest kaynak metinleri (`kayit_sayisi`, son kullanım); ödevlerden (`odevler.kaynak` dolu olanlar, son 90 gün) kaynak adı ve son kullanım.
+4. `oneriler`: öğretmenlerin önerdiği kaynaklar (geri çekilmeyenler, son 20) ve `basladi` durumu.
+5. `konu_analizi`: son 30 gün; G1 fonksiyonlarıyla (`analizSatirlari`, `konuTablosu`, `onerileriUret`, haftalık özet) ders bazında zayıf konular ve sistem önerileri.
+6. `plan_odev`: bu haftanın planı (görev/tamam sayısı, soru ve dakika hedef/gerçekleşen) ve ödev durumu (açık, geciken, teslim edilen, incelenmeyi bekleyen sayıları).
+
+**Hatırlatma ucu:** kapsamdaki (`kapsamdakiOgrenciler`) etkin öğrencilerden bu hafta (Pazartesi..Pazar) **kendi yazdığı** (sahip/yönetici için: herhangi birinin yazdığı) geri çekilmemiş değerlendirmesi olmayanlar; `son_degerlendirme_gun` ile (en eski/hiç olmayan önce, en çok 100). Bildirim yok; Bugün ekranı kartıdır.
+
+**Olaylar** ([olaylar.md](olaylar.md)): `ogrenme.degerlendirme.yayimlandi.v1` (`degerlendirme_id`, `ogrenci_id`, `yazar_id`; yalnız öğrenciye görünür değerlendirme ilk kez görünür olunca) ve `ogrenme.kaynak_onerisi.eklendi.v1` (`oneri_id`, `ogrenci_id`, `oneren_id`, `tur`). **Yorum metni, öneri notu, kaynak adı ve ad olaya girmez.** Tüketici: `bildirim.uretim` (uygulama içi kutu, push yok; kategori `odev`).
+
+**KVKK:** [kvkk-silme.md](kvkk-silme.md) envanterine girdi: öğrencinin hesabı silinince hakkındaki değerlendirmeler ve kendine önerilen kaynaklar **silinir** (yorum/not serbest metin kişisel veri içerebilir); yazar/öneren öğretmen silinince kayıt kalır, yazar üyeliği anonimleştiği için yazar adı boş döner. "Verilerim" dışa aktarımı: öğrenci yalnız **kendine görünen** değerlendirmeleri ve önerileri alır; öğretmen kendi yazdıklarını alır.
 
 ## `abonelik`
 
