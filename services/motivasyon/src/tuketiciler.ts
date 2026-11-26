@@ -1,4 +1,5 @@
 import {
+  hesapKullaniciSilindiV1,
   dersGeriBildirimVerildiV1,
   dersKaynakIzlendiV1,
   dersYoklamaKaydedildiV1,
@@ -32,6 +33,7 @@ import {
   modulAyariDegisti,
   uyelikDegisti,
 } from './kopya.js';
+import { kullaniciSilindi } from './kvkk.js';
 import {
   denemeIsle,
   geriBildirimIsle,
@@ -49,6 +51,8 @@ export interface TuketiciBagimliliklari {
   nats: Pick<NatsConnection, 'jetstream' | 'jetstreamManager'>;
   /** `motivasyon_app` baglantisi: RLS atlanamaz, `kiraci: 'olaydan'` ile kurum baglami ayarlanir. */
   db: Pick<Database, 'orm'>;
+  /** `motivasyon_sistem` (BYPASSRLS): `hesap.kullanici.silindi` kurumlar arasi temizlik yapar. Verilmezse baslamaz. */
+  sistemDb?: Pick<Database, 'orm'>;
   log: TuketiciBaglami['log'];
   /** Testlerde paylasilan NATS'ta cakismamak icin tuketici adi soneki (uretimde bos). */
   sonek?: string;
@@ -58,8 +62,7 @@ export interface TuketiciBagimliliklari {
 /**
  * Tuketicileri baslatir: `motivasyon.kopya` (hesap kopyalari) ve `motivasyon.xp` (XP kurallari).
  *
- * TODO(motivasyon.kopya): `hesap.kullanici.silindi.v1` sozlesmesi `@kopru/contracts`ta yok (kullanici
- * duzeyinde olay, zarf `kurumId` zorunlu); gelince ayni tuketiciye veri temizligi eklenir.
+ * `motivasyon.kvkk` (yalniz `sistemDb` verilirse): `hesap.kullanici.silindi.v1` KVKK temizligi (kvkk.ts).
  */
 export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuketici[]> {
   const ek = b.sonek ?? '';
@@ -140,5 +143,22 @@ export async function tuketicileriBaslat(b: TuketiciBagimliliklari): Promise<Tuk
       }
     },
   });
-  return [kopya, xp];
+  const tuketiciler = [kopya, xp];
+  if (b.sistemDb) {
+    tuketiciler.push(
+      await startConsumer({
+        nats: b.nats,
+        db: b.sistemDb,
+        log: b.log,
+        kiraci: 'yok',
+        ...(b.baslangic ? { baslangic: b.baslangic } : {}),
+        tuketici: `motivasyon.kvkk${ek}`,
+        olaylar: [hesapKullaniciSilindiV1] as const,
+        isle: async (tx, olay) => {
+          await kullaniciSilindi(tx, olay);
+        },
+      }),
+    );
+  }
+  return tuketiciler;
 }

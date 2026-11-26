@@ -11,3 +11,9 @@ coverage/
 .DS_Store
 *.tsbuildinfo
 .vitest-cache/
+
+# Kamal sirlari (gercek dosyalar; ornek: .kamal/secrets.example)
+.kamal/secrets
+.kamal/secrets-*
+.kamal/secrets.*
+!.kamal/secrets.example

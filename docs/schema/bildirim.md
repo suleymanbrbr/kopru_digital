@@ -113,7 +113,7 @@ Yalnızca olay tüketicisi yazar. RLS: evet (`kurum_id`), `kullanici_kopyalari` 
 
 | Tablo | Kaynak olay | Sütunlar | Neden gerekli |
 | --- | --- | --- | --- |
-| `kullanici_kopyalari` | `hesap.kullanici.degisti.v1` | `kullanici_id` PK, `dil`, `durum`, `son_olay_at`, `son_olay_id` | Dil ve hesap durumu. **İletişim bilgisi (telefon, e-posta, ad) kopyalanmaz.** RLS yok (kullanıcı düzeyi). Silme olayında satır silinir. **Henüz doldurulmaz:** `hesap.kullanici.degisti.v1` sözleşmesi `@kopru/contracts`ta yok; yokken varsayılanlar (`tr`, `aktif`) uygulanır. |
+| `kullanici_kopyalari` | `hesap.kullanici.degisti.v1` | `kullanici_id` PK, `dil`, `durum`, `son_olay_at`, `son_olay_id` | Dil ve hesap durumu. **İletişim bilgisi (telefon, e-posta, ad) kopyalanmaz.** RLS yok (kullanıcı düzeyi). Silme olayında satır `durum='silindi'` işaretine indirgenir (id kalır; geç gelen `degisti` satırı geri getirmez). **Uygulandı:** `bildirim.kullanici` tüketicisi (sistem rolü, `kiraci:'yok'`); kayıt yokken varsayılanlar (`tr`, `aktif`) uygulanır. |
 | `kurum_kopyalari` | `hesap.kurum.degisti.v1`, `abonelik.abonelik.degisti.v1` | `kurum_id` PK, `ad`, `durum`, `saat_dilimi`, `plan_kodu`, `abonelik_durumu`, `sms_aylik_limit`, `son_olay_at`, `son_olay_id`, `abonelik_son_olay_at`, `abonelik_son_olay_id` (abonelik alanları abonelik olayları gelene kadar NULL) | Kurum adı (e-posta), SMS kotası, askıdaki kurumda gönderim durdurma |
 | `uyelik_kopyalari` | `hesap.uyelik.degisti.v1` | `uyelik_id` PK, `kurum_id`, `kullanici_id`, `rol`, `durum`, `kademe_id`, `son_olay_at`, `son_olay_id` | Alıcı çözümü (uyelik -> kullanici) ve rol bazlı hedefleme |
 | `kademe_kopyalari` | `hesap.kademe.degisti.v1` | `kademe_id` PK, `kurum_id`, `ad`, `arsivlendi`, `son_olay_at`, `son_olay_id` | Duyuru hedefi `kademe` |
@@ -122,7 +122,7 @@ Yalnızca olay tüketicisi yazar. RLS: evet (`kurum_id`), `kullanici_kopyalari` 
 | `atama_kopyalari` | `hesap.atama.degisti.v1` | `atama_id` PK, `grup_id`, `ogretmen_id`, `brans_kodu`, `bitis_tarihi`, `son_olay_at`, `son_olay_id` | Öğretmenin duyuru hedefleme yetkisi (yalnızca atandığı gruplar); soru yönlendirme bildirimi |
 | `modul_ayari_kopyalari` | `hesap.modul_ayari.degisti.v1` | PK `(kurum_id, modul_kodu, kapsam, kapsam_id)`, `acik`, `son_olay_at`, `son_olay_id` | `duyuru` modülü kapalıysa duyuru yayını reddedilir |
 
-Kopya ve olay sırası: kopya henüz oluşmamışken gelen bildirim olayı `nak` ile gecikmeli yeniden denenir ([ADR 0002](../adr/0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)). `hesap.kullanici.silindi.v1` gelince `kullanici_kopyalari` satırı, `cihazlar`, `tercihler`, `kullanici_ayarlari` silinir; `bildirimler`/`gonderimler` içindeki alıcı bağlantısı kalır ama `hedef_maske` temizlenir.
+Kopya ve olay sırası: kopya henüz oluşmamışken gelen bildirim olayı `nak` ile gecikmeli yeniden denenir ([ADR 0002](../adr/0002-olay-sozlesmesi-outbox-idempotent-tuketici.md)). `hesap.kullanici.silindi.v1` işlenince `cihazlar`, `tercihler`, `kullanici_ayarlari`, kullanıcının `bildirimler`, `gonderimler`, `zamanlanmis_bildirimler` ve `duyuru_alicilari` satırları silinir (**sapma:** önceki plan alıcı bağlantısını `hedef_maske` temizleyerek bırakıyordu; yasal saklama nedeni olmadığından satırlar silinir), `kullanici_kopyalari` satırı `silindi` işaretine indirgenir. Dışa aktarma: `POST /ic/kvkk/veri`. Bkz. [kvkk-silme.md](kvkk-silme.md).
 
 ## Gelen kutusu
 

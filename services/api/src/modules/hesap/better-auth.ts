@@ -1,4 +1,5 @@
-import type { Database } from '@kopru/service-kit';
+import { KULLANICI_DUZEYI_KURUM_ID, hesapKullaniciDegistiV1 } from '@kopru/contracts';
+import { publishInTx, type Database } from '@kopru/service-kit';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins/bearer';
@@ -147,6 +148,32 @@ export function createBetterAuth({ env, db, sms, eposta, log }: BetterAuthGirdis
     databaseHooks: {
       user: {
         create: {
+          // Yeni kullanici: `hesap.kullanici.degisti.v1` (bildirim kopyasi icin). Olay yazimi basarisiz
+          // olursa kayit/giris bozulmaz; bildirim varsayilanlari (tr, aktif) uygular.
+          after: async (user) => {
+            try {
+              await publishInTx(
+                db.orm,
+                hesapKullaniciDegistiV1.create({
+                  kurumId: KULLANICI_DUZEYI_KURUM_ID,
+                  actor: { tur: 'sistem', id: 'kimlik' },
+                  correlationId: user.id,
+                  data: {
+                    kullanici_id: user.id,
+                    dil: 'tr',
+                    durum: 'aktif',
+                    degisen_alanlar: ['olusturuldu'],
+                  },
+                }),
+                { table: 'ortak.outbox' },
+              );
+            } catch (err) {
+              log.error(
+                { kullanici_id: user.id, hata: err instanceof Error ? err.name : 'bilinmiyor' },
+                'kullanıcı oluşturuldu olayı yazılamadı',
+              );
+            }
+          },
           before: (user) => {
             const eposta = user.email;
             return Promise.resolve({

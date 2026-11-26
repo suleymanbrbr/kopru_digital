@@ -2118,3 +2118,27 @@ Alt listeler `grup_id` ve `ogretmen_id` ile süzülür, en çok 200 satır döne
 - Öğrenci tabanlı göstergelerde grup kırılımı öğrencinin etkin grup üyeliğidir. İlgili modül (`yoklama`, `geri_bildirim`, `odev`, `haftalik_plan`, `soru_sor`) kurum düzeyinde kapalıysa gösterge `null`, alt liste `403 modul_kapali`.
 
 **Performans (1.000 öğrenci, 50 grup, 30 öğretmen, 30 günlük veri; `scripts/rapor-tohum.sql`, `src/rapor-performans.test.ts`, `scripts/panel-akisi.sh`):** donem=30 için uç medyanları 18–86 ms (hesap özet 22, ders özet 29, ogrenme özet 86, ogrenciler 18, devam 32, anladim 24, odev 26, plan 31, soru 21); üç özetin paralel toplamı 84 ms; Excel 165 ms. Gerçek HTTP (curl) hepsi < 150 ms; tarayıcıda panel açılışı (tıkla → tüm göstergeler) 548 ms. Yeni indeks gerekmedi. Not: toplu yüklemeden sonra `ANALYZE` yoksa planlayıcı istatistiksiz kalır ve uçlar 1,5–3 sn'ye çıkar; canlıda autovacuum yapar.
+
+## `hesap` KVKK: hesap silme ve veri dışa aktarma (migration `0020`)
+
+Tasarım, veri envanteri ve akış: [kvkk-silme.md](kvkk-silme.md). Kısaca:
+
+### `hesap.silme_talepleri`
+
+Kullanıcı düzeyi (kurum_id yok), RLS `kullanici_kendi` (`kullanici_id = ortak.aktif_kullanici()`); worker `api_sistem` ile okur/yazar, silinemez.
+
+| Sütun | Tür | Not |
+| --- | --- | --- |
+| `id` | uuid | PK (UUIDv7) |
+| `kullanici_id` | uuid | FK `kullanicilar` |
+| `durum` | text | `beklemede`, `geri_alindi`, `tamamlandi`, `engellendi` |
+| `talep_at`, `planlanan_at` | timestamptz | `planlanan_at = talep_at + 30 gün` |
+| `geri_alindi_at`, `tamamlandi_at` | timestamptz | |
+| `engel_nedeni` | text | `kurum_sahibi_engeli` |
+| `dogrulama_yontemi`, `kaynak` | text | `otp`/`parola`; `web`/`ios`/`android` |
+
+Kısmi benzersiz dizin: `(kullanici_id) WHERE durum='beklemede'`. `rizalar` tetikleyicisi yalnız `ip`/`user_agent` NULL'lanmasına izin verir.
+
+### Uç noktalar
+
+`GET|POST|DELETE /v1/hesap/ben/silme-talebi`, `POST /v1/hesap/ben/silme-talebi/kod-gonder`, `GET /v1/hesap/ben/verilerim`, `PATCH /v1/hesap/ben` (hepsi `rizaMuaf`). Şemalar `packages/contracts/src/hesap/kvkk-api.ts`.

@@ -222,6 +222,24 @@ export const rizalar = hesap.table('rizalar', {
   govde_sha256: bytea('govde_sha256').notNull(),
 });
 
+export const silmeTalepleri = hesap.table('silme_talepleri', {
+  id: uuid('id').primaryKey(),
+  created_at: olusturma(),
+  updated_at: guncelleme(),
+  surum: bigint('surum', { mode: 'number' }).notNull().default(1),
+  kullanici_id: uuid('kullanici_id')
+    .notNull()
+    .references(() => kullanicilar.id),
+  durum: text('durum').notNull().default('beklemede'),
+  talep_at: tstz('talep_at').notNull().defaultNow(),
+  planlanan_at: tstz('planlanan_at').notNull(),
+  geri_alindi_at: tstz('geri_alindi_at'),
+  tamamlandi_at: tstz('tamamlandi_at'),
+  engel_nedeni: text('engel_nedeni'),
+  dogrulama_yontemi: text('dogrulama_yontemi').notNull(),
+  kaynak: text('kaynak').notNull(),
+});
+
 // --- hesap: kurum yapisi -------------------------------------------------------------------
 
 /** Kiraci tablolari icin ortak profil (K / KS). */

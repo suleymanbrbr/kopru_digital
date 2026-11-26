@@ -1467,6 +1467,53 @@ export const tr = {
       bos: 'Etkin oturum yok',
       yuklenemedi: 'Oturumlar yüklenemedi',
     },
+    kvkk: {
+      menu: 'Hesabım ve verilerim',
+      baslik: 'Hesabım ve verilerim',
+      aciklama: 'Kişisel verilerini indir ya da hesabını kalıcı olarak sildir (KVKK).',
+      indirBaslik: 'Verilerimi indir',
+      indirAciklama:
+        'Hesabın, üyeliklerin, ödev, soru, deneme ve yoklama kayıtların, XP ve bildirim bilgilerin tek bir JSON dosyası olarak iner.',
+      indir: 'Verilerimi indir',
+      indiriliyor: 'Hazırlanıyor…',
+      indirildi: 'Verilerin indirildi.',
+      indirEksik: 'Bazı servislerin verisi şu an alınamadı: {servisler}. Biraz sonra yeniden dene.',
+      indirHata: 'Veriler indirilemedi',
+      silBaslik: 'Hesabımı sil',
+      silAciklama:
+        'Hesabın ve kişisel bilgilerin kalıcı olarak silinir. Kurumların eğitim ve ödeme kayıtları, kimliğin kaldırılarak (anonim) yasal süre boyunca saklanır.',
+      silBilgi1: 'Talebinden sonra {gun} gün beklenir; bu sürede istediğin an geri alabilirsin.',
+      silBilgi2: 'Süre dolunca tüm cihazlardaki oturumlar kapanır ve işlem geri alınamaz.',
+      silBilgi3:
+        'Mobil uygulama mağazasından başlattığın bir abonelik varsa onu mağazadan ayrıca iptal etmelisin.',
+      silBilgi4: 'Yalnız kendi hesabın silinir; kurumun öğrencileri ve öğretmenleri etkilenmez.',
+      sil: 'Hesabımı sil…',
+      engelBaslik: 'Hesabın şu an silinemez',
+      engelAciklama:
+        '{kurum} kurumunun tek sahibisin ve kurumda {n} üye daha var. Önce başka bir kişiyi sahip yap ya da kurumun kapatılması için destekle iletişime geç.',
+      bekleyenBaslik: 'Silme talebin alındı',
+      bekleyenAciklama:
+        'Hesabın {tarih} tarihinde silinecek. O zamana kadar talebi geri alabilirsin.',
+      geriAl: 'Talebi geri al',
+      geriAlindi: 'Silme talebin geri alındı. Hesabın olduğu gibi duruyor.',
+      engellendiBaslik: 'Silme talebin durduruldu',
+      engellendiAciklama:
+        'Soğuma süresi içinde kurum sahipliği durumun değişti. Hesabına dokunulmadı; engeli kaldırıp yeniden talep edebilirsin.',
+      pencereBaslik: 'Hesabını silmeyi onayla',
+      pencereAciklama: 'Kimliğini doğrulayarak silme talebini başlat.',
+      yontem: 'Doğrulama yöntemi',
+      yontemOtp: 'Telefonuma SMS kodu',
+      yontemParola: 'Parolam',
+      kodGonder: 'Kod gönder',
+      kodGonderildi: 'Kod telefonuna gönderildi.',
+      kod: 'SMS kodu',
+      parola: 'Parola',
+      talepEt: 'Silme talebini başlat',
+      talepEdildi: 'Silme talebin alındı. {gun} gün içinde geri alabilirsin.',
+      kodHata: 'Doğrulama başarısız. Kodu ya da parolayı kontrol et.',
+      yuklenemedi: 'Hesap bilgileri yüklenemedi',
+      vazgec: 'Vazgeç',
+    },
     sinifKodu: {
       baslik: 'Sınıf koduyla katıl',
       aciklama:

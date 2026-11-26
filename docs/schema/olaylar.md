@@ -29,8 +29,8 @@ Stream'ler: `API`, `MOTIVASYON`, `BILDIRIM`, `MEDYA`. `API` altındaki tüm olay
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
-| `hesap.kullanici.degisti.v1` | - | Kullanıcı oluşturulunca, dil/durum değişince. Özne: `kullanici`. **Telefon, e-posta ve ad olayda taşınmaz** (KVKK); `bildirim` iletişim bilgisini gönderim anında `api`dan alır (`GET /ic/kullanicilar/:id/iletisim`). | `kullanici_id`, `dil`, `durum` | `bildirim` (`kullanici_kopyalari`) |
-| `hesap.kullanici.silindi.v1` | - | KVKK silme/anonimleştirme tamamlanınca. | `kullanici_id`, `uyelik_idleri[]`, `anonimlestirildi_at` | `bildirim`, `motivasyon`, `medya` |
+| `hesap.kullanici.degisti.v1` | - | Kullanıcı oluşturulunca, görünen ad/dil/durum değişince. Özne: `kullanici`. Zarf `kurumId` = nil UUID ([ADR 0010](../adr/0010-kullanici-duzeyi-olaylar-ve-kvkk-silme.md)). **Telefon, e-posta ve ad olayda taşınmaz** (KVKK); yük yalnız değişen alan *adlarını* taşır. **Uygulandı** (`hesap/olaylar.ts`). | `kullanici_id`, `dil`, `durum`, `degisen_alanlar[]` | `bildirim` (`kullanici_kopyalari`) |
+| `hesap.kullanici.silindi.v1` | - | KVKK silme/anonimleştirme tamamlanınca ([kvkk-silme.md](kvkk-silme.md)). Zarf `kurumId` = nil UUID. **Uygulandı.** | `kullanici_id`, `uyelik_idleri[]`, `anonimlestirildi_at` | `bildirim`, `motivasyon`, `medya` |
 | `hesap.kurum.degisti.v1` | K | Kurum oluşturma, ad/tür/saat dilimi/durum değişimi. Özne: `kurum`. | `kurum_id`, `ad`, `tur`, `saat_dilimi`, `durum` (`aktif`,`askida`,`kapali`) | `bildirim`, `motivasyon`, `medya` |
 | `hesap.kademe.degisti.v1` | K | Kademe oluşturma/güncelleme/arşiv. | `kademe_id`, `ad`, `seviye`, `arsivlendi` (bool) | `bildirim` |
 | `hesap.uyelik.degisti.v1` | K | Üyelik oluşunca; rol, durum, kademe, şube değişince; ayrılınca (`durum='ayrildi'`). | `uyelik_id`, `kullanici_id`, `rol`, `durum`, `sube_id`, `kademe_id` | `motivasyon`, `bildirim` |
@@ -113,7 +113,7 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 
 > **Uygulama notu (motivasyon olayları).** Altı olayın Zod tanımları `packages/contracts/src/motivasyon/olaylar.ts` içindedir (`packages/contracts/src/motivasyon/olaylar.test.ts` kişisel veri alanlarını denetler; karakter adı, rozet adı gibi görünen adlar yükte yoktur). `seviye.atladi`, `rozet.kazanildi` ve `karakter.evrildi` `motivasyon.xp` tüketicisinden, ilgili XP/sayaç işlemiyle aynı işlemde outbox'a (`ortak.outbox`) yazılır; çoklu seviye atlayışı tek olaydır (`eski_seviye` → `yeni_seviye`). `seri.*` olaylarını seri paketi yayımlar (sözleşmeleri hazır). `seri.bozuldu.onarim_son_gun` onarılamazsa `null` olabilir.
 >
-> **Kopya sıralaması.** Olay zarfında `ozne_surumu` yoktur; `motivasyon.kopya` eski olayı `(occurredAt, olay id)` ikilisiyle ayıklar (eşit zamanda büyük UUIDv7 kazanır), aynı durumun yeniden yayımı upsert olarak etkisizdir. `hesap.modul_ayari.degisti` `acik: null` ise kopya satırı silinir. `hesap.kullanici.silindi.v1` sözleşmesi henüz olmadığı için `motivasyon.kopya` bu olayı tüketmez.
+> **Kopya sıralaması.** Olay zarfında `ozne_surumu` yoktur; `motivasyon.kopya` eski olayı `(occurredAt, olay id)` ikilisiyle ayıklar (eşit zamanda büyük UUIDv7 kazanır), aynı durumun yeniden yayımı upsert olarak etkisizdir. `hesap.modul_ayari.degisti` `acik: null` ise kopya satırı silinir. `hesap.kullanici.silindi.v1` KVKK temizliği ayrı tüketicide (`motivasyon.kvkk`, sistem rolü) işlenir.
 
 ## `bildirim`
 
@@ -132,11 +132,14 @@ Faz 1'de olay üretmez.
 | Tüketici servis (tüketici adı) | Olaylar |
 | --- | --- |
 | `motivasyon.xp` | `ders.yoklama.kaydedildi`, `ders.geri_bildirim.verildi`, `ders.kaynak.izlendi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.plan_gorevi.guncellendi`, `ogrenme.deneme.girildi`, `ogrenme.soru.sorildi`, `ogrenme.soru.cozuldu`, `ogrenme.gunluk_soru.kaydedildi` |
-| `motivasyon.kopya` | `hesap.kurum.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti`, `hesap.kullanici.silindi` |
-| `bildirim.kopya` | `hesap.kullanici.degisti`, `hesap.kullanici.silindi`, `hesap.kurum.degisti`, `hesap.kademe.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti`, `abonelik.abonelik.degisti` |
+| `motivasyon.kopya` | `hesap.kurum.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti` |
+| `bildirim.kopya` | `hesap.kurum.degisti`, `hesap.kademe.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti`, `abonelik.abonelik.degisti` |
 | `bildirim.uretim` | `ders.*` (4), `finans.*` (3), `ogrenme.odev.yayinlandi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.soru.sorildi`, `ogrenme.soru_mesaji.eklendi`, `ogrenme.mufredat.yayinlandi`, `abonelik.*` (3), `motivasyon.*` (6), `hesap.davet.kabul_edildi` |
 | `medya.baglama` | `ortak.dosya.baglandi`, `ortak.dosya.birakildi` |
-| `medya.saklama` | `ogrenme.soru.cozuldu`, `ogrenme.soru.yeniden_acildi`, `hesap.kullanici.silindi` |
+| `medya.saklama` | `ogrenme.soru.cozuldu`, `ogrenme.soru.yeniden_acildi` |
+| `medya.kvkk` (sistem rolü, `kiraci:'yok'`) | `hesap.kullanici.silindi` |
+| `motivasyon.kvkk` (sistem rolü, `kiraci:'yok'`) | `hesap.kullanici.silindi` |
+| `bildirim.kullanici` (sistem rolü, `kiraci:'yok'`) | `hesap.kullanici.degisti`, `hesap.kullanici.silindi` |
 | `medya.kopya` | `hesap.kurum.degisti`, `abonelik.abonelik.degisti` |
 | `api.medya` | `medya.dosya.hazir`, `medya.dosya.islenemedi`, `medya.dosya.silindi` |
 

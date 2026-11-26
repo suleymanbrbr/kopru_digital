@@ -20900,6 +20900,521 @@
         "tags": [
           "hesap"
         ]
+      },
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dil": {
+                    "enum": [
+                      "tr"
+                    ],
+                    "type": "string"
+                  },
+                  "gorunen_ad": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degisen_alanlar": {
+                      "items": {
+                        "enum": [
+                          "gorunen_ad",
+                          "dil"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "dil": {
+                      "type": "string"
+                    },
+                    "gorunen_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "gorunen_ad",
+                    "dil",
+                    "degisen_alanlar"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Görünen adı / dili güncelle (hesap.kullanici.degisti.v1 yayımlar; olayda ad taşınmaz)",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/ben/silme-talebi": {
+      "delete": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "talep": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "durum": {
+                          "enum": [
+                            "beklemede",
+                            "geri_alindi",
+                            "tamamlandi",
+                            "engellendi"
+                          ],
+                          "type": "string"
+                        },
+                        "geri_alindi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "planlanan_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "talep_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "tamamlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "durum",
+                        "talep_at",
+                        "planlanan_at",
+                        "geri_alindi_at",
+                        "tamamlandi_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "talep"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Bekleyen hesap silme talebini geri al (soğuma süresi içinde)",
+        "tags": [
+          "hesap"
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "dogrulama_yontemleri": {
+                      "items": {
+                        "enum": [
+                          "otp",
+                          "parola"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "engeller": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "diger_uye_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "kurum_ad": {
+                            "type": "string"
+                          },
+                          "kurum_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kurum_id",
+                          "kurum_ad",
+                          "diger_uye_sayisi"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "soguma_gun": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "talep": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "durum": {
+                          "enum": [
+                            "beklemede",
+                            "geri_alindi",
+                            "tamamlandi",
+                            "engellendi"
+                          ],
+                          "type": "string"
+                        },
+                        "geri_alindi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "planlanan_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "talep_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "tamamlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "durum",
+                        "talep_at",
+                        "planlanan_at",
+                        "geri_alindi_at",
+                        "tamamlandi_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "talep",
+                    "soguma_gun",
+                    "engeller",
+                    "dogrulama_yontemleri"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Hesap silme talebi durumu, olası engeller ve kullanılabilir doğrulama yöntemleri",
+        "tags": [
+          "hesap"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dogrulama": {
+                    "oneOf": [
+                      {
+                        "properties": {
+                          "kod": {
+                            "pattern": "^[0-9]{6}$",
+                            "type": "string"
+                          },
+                          "yontem": {
+                            "enum": [
+                              "otp"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "yontem",
+                          "kod"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "properties": {
+                          "parola": {
+                            "maxLength": 128,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "yontem": {
+                            "enum": [
+                              "parola"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "yontem",
+                          "parola"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "kaynak": {
+                    "default": "web",
+                    "enum": [
+                      "web",
+                      "ios",
+                      "android"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "dogrulama"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "talep": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "durum": {
+                          "enum": [
+                            "beklemede",
+                            "geri_alindi",
+                            "tamamlandi",
+                            "engellendi"
+                          ],
+                          "type": "string"
+                        },
+                        "geri_alindi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string"
+                        },
+                        "planlanan_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "talep_at": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "tamamlandi_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "durum",
+                        "talep_at",
+                        "planlanan_at",
+                        "geri_alindi_at",
+                        "tamamlandi_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "talep"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Hesap silme talebi (yeniden doğrulama: OTP ya da parola). 30 gün içinde geri alınabilir, sonra kalıcı anonimleştirme.",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/ben/silme-talebi/kod-gonder": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "gecerlilik_sn": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "gonderildi": {
+                      "enum": [
+                        true
+                      ],
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "gonderildi",
+                    "gecerlilik_sn"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Hesap silme için kendi telefonuna doğrulama kodu (OTP) gönder",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/ben/verilerim": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bolumler": {
+                      "additionalProperties": {
+                        "items": {
+                          "additionalProperties": {},
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "type": "object"
+                    },
+                    "eksik_servisler": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "hesap": {
+                      "additionalProperties": {},
+                      "type": "object"
+                    },
+                    "kullanici_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "olusturuldu_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "servisler": {
+                      "additionalProperties": {
+                        "additionalProperties": {
+                          "items": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "type": "object"
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "olusturuldu_at",
+                    "kullanici_id",
+                    "hesap",
+                    "bolumler",
+                    "servisler",
+                    "eksik_servisler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kişisel verilerimi indir (KVKK m.11): hesap, üyelik, kendi içeriklerim ve diğer servislerin verisi (JSON)",
+        "tags": [
+          "hesap"
+        ]
       }
     },
     "/v1/hesap/davetler/kabul": {

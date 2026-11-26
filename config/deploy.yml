@@ -1,0 +1,108 @@
+<%#
+  Kopru: Kamal 2 ortak yapilandirmasi (ADR 0005). Altı uygulamanin (api, motivasyon, bildirim, medya, web, admin)
+  her biri ayri bir Kamal "service"idir; hangisinin dagitilacagi KOPRU_SERVIS ortam degiskeniyle secilir:
+
+    KOPRU_SERVIS=api kamal deploy -d staging
+    KOPRU_SERVIS=web kamal app logs -d production
+
+  Bu dosya hedeften bagimsiz seyleri (imaj, build, roller, saglik denetimi, ortam degiskeni adlari) tutar.
+  Sunucular, kayit defteri, alan adlari ve hedefe ozel degerler deploy.staging.yml / deploy.production.yml'dedir.
+  Kullanim ve ilk kurulum: docs/isletim/dagitim.md
+%>
+<%
+  servis = ENV.fetch('KOPRU_SERVIS') { raise 'KOPRU_SERVIS gerekli: api | motivasyon | bildirim | medya | web | admin' }
+
+  uygulamalar = {
+    'api'        => { port: 4000, hazir: '/ready',     worker: true },
+    'motivasyon' => { port: 4001, hazir: '/ready',     worker: true },
+    'bildirim'   => { port: 4002, hazir: '/ready',     worker: true },
+    'medya'      => { port: 4003, hazir: '/ready',     worker: true },
+    'web'        => { port: 3000, hazir: '/api/saglik', worker: false },
+    'admin'      => { port: 3001, hazir: '/api/saglik', worker: false },
+  }
+  uyg = uygulamalar.fetch(servis) { raise "Bilinmeyen KOPRU_SERVIS=#{servis}" }
+  dizin = %w[web admin].include?(servis) ? 'apps' : 'services'
+
+  # Gizli ortam degiskenleri: "KONTEYNER_ADI:SIR_ADI". Sir adi .kamal/secrets.<hedef> dosyasinda tanimlidir
+  # (servis oneki, ayni dosyada cakismayi onler); konteyner onekSIZ adi gorur. Aciklama: docs/isletim/dagitim.md
+  gizli = {
+    'api' => %w[DATABASE_URL DATABASE_SISTEM_URL BETTER_AUTH_SECRET KAYNAK_PAROLA_ANAHTARI SMTP_USER SMTP_PASS
+                IYZICO_API_KEY IYZICO_SECRET_KEY REVENUECAT_WEBHOOK_SIRRI GOOGLE_CLIENT_SECRET APPLE_CLIENT_SECRET],
+    'motivasyon' => %w[DATABASE_URL DATABASE_SISTEM_URL],
+    'bildirim' => %w[DATABASE_URL DATABASE_SISTEM_URL EXPO_ERISIM_BELIRTECI],
+    'medya' => %w[DATABASE_URL DATABASE_SISTEM_URL S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY],
+    'web' => [],
+    'admin' => [],
+  }.fetch(servis)
+%>
+service: kopru-<%= servis %>
+image: kopru/<%= servis %>
+
+builder:
+  arch: amd64
+  context: .
+  dockerfile: <%= dizin %>/<%= servis %>/Dockerfile
+
+# Roller: `web` HTTP alir (kamal-proxy onunde); `worker` ayni imajdan, HTTP'siz arka plan sureci (outbox relay,
+# zamanlanmis isler, olay tuketicileri). Her sanal makinede her iki rol de calisir (ADR 0005 topolojisi).
+servers:
+  web:
+    hosts: []   # deploy.<hedef>.yml doldurur
+    options:
+      # Ayni sanal makinedeki diger konteynerler bu adla ulasir (web -> http://api:4000). Kamal agi: "kamal".
+      network-alias: <%= servis %>
+<% if uyg[:worker] %>
+  worker:
+    hosts: []   # deploy.<hedef>.yml doldurur
+    cmd: node dist/worker.js
+    proxy: false
+    env:
+      clear:
+        WORKER_SAGLIK_DOSYASI: /tmp/worker-canli
+<% end %>
+
+proxy:
+  app_port: <%= uyg[:port] %>
+  # Yeni surum bu yol 200 donene kadar trafik almaz (sifir kesinti). Servislerde /ready (DB + NATS denetler),
+  # web/admin'de /api/saglik. Docker HEALTHCHECK ise canlilik (/health) denetler: infra/docker/saglik.mjs.
+  healthcheck:
+    path: <%= uyg[:hazir] %>
+    interval: 3
+    timeout: 5
+  response_timeout: 30
+  buffering:
+    requests: true
+    responses: true
+    max_request_body: 33554432   # 32 MiB; dosya baytlari presigned adresle dogrudan depolamaya gider
+
+# Kamal 2'de proxy kapatma: worker rolu `proxy: false`. SSL (Let's Encrypt) hedef dosyalarinda acilir.
+
+registry:
+  server: <KAYIT_DEFTERI_ADRESI>
+  username: <KAYIT_DEFTERI_KULLANICI>
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+ssh:
+  user: deploy
+
+env:
+<% unless gizli.empty? %>
+  secret:
+<% gizli.each do |ad| %>
+    - <%= ad %>:<%= servis.upcase %>_<%= ad %>
+<% end %>
+<% end %>
+  clear:
+    NODE_ENV: production
+    LOG_LEVEL: info
+    PORT: <%= uyg[:port] %>
+
+aliases:
+  gunluk: app logs -f
+  kabuk: app exec -i --reuse "sh"
+
+# Kullanilmayan surum konteynerleri/imajlari: son 5 surum tutulur (geri alma icin)
+retain_containers: 5
+
+# Goc: .kamal/hooks/pre-deploy (owner rolu, genislet-daralt kurali).
