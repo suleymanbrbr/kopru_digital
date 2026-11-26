@@ -11,6 +11,7 @@ import {
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
 import { cevrimiciKorumaliBildirim } from '../api/cevrimiciBildirim';
+import { cevrimiciKorumaliGunlukSoru } from '../api/cevrimiciGunlukSoru';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliMotivasyon } from '../api/cevrimiciMotivasyon';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
@@ -89,6 +90,7 @@ export function servisleriKur(): Servisler {
     ders: operasyon.ders,
     finans: operasyon.finans,
     ogrenme: cevrimiciKorumaliOgrenme(ham.ogrenme, () => agGozlemcisi.cevrimiciMi()),
+    gunlukSoru: cevrimiciKorumaliGunlukSoru(ham.gunlukSoru, () => agGozlemcisi.cevrimiciMi()),
     kayit: cevrimiciKorumaliKayit(ham.kayit, () => agGozlemcisi.cevrimiciMi()),
     motivasyon: cevrimiciKorumaliMotivasyon(ham.motivasyon, () => agGozlemcisi.cevrimiciMi()),
     bildirim: cevrimiciKorumaliBildirim(ham.bildirim, () => agGozlemcisi.cevrimiciMi()),
@@ -299,8 +301,15 @@ export function servisleriKur(): Servisler {
     yukleme,
     kuyruk,
     soru: () => adaptorler.soru,
-    gonderildi: () => {
-      void queryClient.invalidateQueries({ queryKey: ['soru'] });
+    gunlukSoru: () => adaptorler.gunlukSoru,
+    gonderildi: (g) => {
+      if (g.tur === 'gunluk_soru') {
+        void queryClient.invalidateQueries({ queryKey: ['gunluk'] });
+        // Plan gorevine bagli kayit gorevin gerceklesenini de degistirir.
+        void queryClient.invalidateQueries({ queryKey: ['plan'] });
+      } else {
+        void queryClient.invalidateQueries({ queryKey: ['soru'] });
+      }
       void xp.eylemTamam();
     },
   });

@@ -41,7 +41,7 @@ const OGRENCI_ADLARI: Record<string, string> = Object.fromEntries(
 );
 
 /** Konu agaci tohumu: matematik, fen bilimleri, turkce; bir konu kullanimdan kalkmis. */
-function konuTohumu(): Konu[] {
+export function konuTohumu(): Konu[] {
   const k = (
     id: string,
     bransKodu: string,

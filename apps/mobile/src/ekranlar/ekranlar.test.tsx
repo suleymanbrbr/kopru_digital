@@ -71,6 +71,9 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+/** `useSyncExternalStore` ayni referansi ister: bos gonderim listesi sabittir. */
+const BOS_GONDERIMLER: readonly never[] = [];
+
 interface Ortam {
   servisler: Servisler;
   cevrimici: { deger: boolean };
@@ -133,6 +136,8 @@ function ortamKur(): Ortam {
     }),
     abonelikUyari: abonelikUyariYoneticisi(),
     magaza: sahteMagazaOlustur(),
+    // Ogrenci "Bugun" gunluk soru karti gonderim listesini okur (bu testte gonderim yok).
+    gonderim: { abone: () => () => undefined, liste: () => BOS_GONDERIMLER },
     agGozlemcisi: {
       cevrimiciMi: () => cevrimici.deger,
       abone: () => () => undefined,

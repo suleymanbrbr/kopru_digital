@@ -39,7 +39,7 @@ function adUygunsuz(ad: string): boolean {
   return YASAKLI.some((y) => k.split(/\s+/).includes(y));
 }
 
-type Kural = 'plan' | 'odev' | 'soru' | 'anladim' | 'kayit' | 'geri_bildirim';
+type Kural = 'plan' | 'odev' | 'soru' | 'anladim' | 'kayit' | 'geri_bildirim' | 'gunluk_soru';
 const KURAL_XP: Record<Kural, number> = {
   plan: 5,
   odev: 15,
@@ -47,6 +47,7 @@ const KURAL_XP: Record<Kural, number> = {
   anladim: 5,
   kayit: 5,
   geri_bildirim: 2,
+  gunluk_soru: 2,
 };
 
 const GUN = 86_400_000;

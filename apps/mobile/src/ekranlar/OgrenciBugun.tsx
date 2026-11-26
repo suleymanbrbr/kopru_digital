@@ -31,6 +31,7 @@ import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { DuyuruKarti } from './duyuru/DuyuruKarti';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
+import { GunlukBugunKarti } from './gunluk/GunlukBugunKarti';
 import { SilmeSeridi } from './hesabim/SilmeSeridi';
 import { KayitlarimGirisi } from './KayitlarimGirisi';
 import { BugunMotivasyon } from './motivasyon/BugunMotivasyon';
@@ -138,6 +139,7 @@ export function OgrenciBugun() {
       </View>
       {oyun ? <BugunMotivasyon /> : null}
       <OgrenciEylemleri soru={soru} />
+      <GunlukBugunKarti />
       <DuyuruKarti en={1} />
       <OgrenciBugunOgrenme />
       {takvim ? (

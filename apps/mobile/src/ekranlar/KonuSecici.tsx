@@ -39,6 +39,8 @@ interface Props {
   etiket?: string;
   /** Konu secmeden yalniz ders (brans) secilebilsin mi. */
   yalnizDers?: boolean;
+  /** Panel acilinca on secili brans suzgeci (ornegin formda secilmis ders). */
+  baslangicBrans?: string | null;
 }
 
 function KonuSatiri({
@@ -81,12 +83,18 @@ function KonuSatiri({
  * kapatir (2 dokunus). Kullanimdan kalkan konular yeni secimde sunulmaz; mevcut secim rozetle
  * gosterilir.
  */
-export function KonuSecici({ deger, onDegis, etiket, yalnizDers = true }: Props) {
+export function KonuSecici({
+  deger,
+  onDegis,
+  etiket,
+  yalnizDers = true,
+  baslangicBrans = null,
+}: Props) {
   const { yerelDepo } = useServisler();
   const uyelikId = useAktif()?.uyelik.uyelikId ?? '';
   const q = useKonular();
   const [acik, setAcik] = useState(false);
-  const [filtre, setFiltre] = useState<string | null>(null);
+  const [filtre, setFiltre] = useState<string | null>(baslangicBrans);
   const [arama, setArama] = useState('');
   const [son, setSon] = useState(() => sonKonulariOku(yerelDepo, uyelikId));
   const konular = q.data;

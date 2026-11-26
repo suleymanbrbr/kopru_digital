@@ -38,6 +38,18 @@ const AYRINTI_MESAJLARI: Record<string, MessageKey> = {
   deneme_zaten_var: 'mobil.hata.denemeZatenVar',
   deneme_bolum_gecersiz: 'mobil.hata.denemeBolumGecersiz',
   deneme_onay_durumu_gecersiz: 'mobil.hata.denemeOnayDurumuGecersiz',
+  // Gunluk soru takibi (metinler `gunlukSoru.hata.*`, web ile ortak)
+  kayit_duzenlenemez: 'gunlukSoru.hata.kayit_duzenlenemez',
+  soru_toplami_gecersiz: 'gunlukSoru.hata.soru_toplami_gecersiz',
+  gun_gecersiz: 'gunlukSoru.hata.gun_gecersiz',
+  konu_gecersiz: 'gunlukSoru.hata.konu_gecersiz',
+  brans_gecersiz: 'gunlukSoru.hata.brans_gecersiz',
+  kaynak_testi_gecersiz: 'gunlukSoru.hata.kaynak_testi_gecersiz',
+  plan_gorevi_gecersiz: 'gunlukSoru.hata.plan_gorevi_gecersiz',
+  dosya_zaten_bagli: 'gunlukSoru.hata.dosya_zaten_bagli',
+  dosya_hazir_degil: 'gunlukSoru.hata.dosya_hazir_degil',
+  dosya_gecersiz: 'gunlukSoru.hata.dosya_gecersiz',
+  gorev_hedefi_gecersiz: 'gunlukSoru.hata.gorev_hedefi_gecersiz',
   // Ders kayitlari ve geri bildirim
   kaynak_sorun_zaten_acik: 'mobil.kayit.hata.sorunZatenAcik',
   kaynak_url_gecersiz: 'mobil.kayit.hata.urlGecersiz',
