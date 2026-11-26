@@ -3,7 +3,8 @@
 import { PlanGorevSema, DevretYanitSema, type PlanGorevi } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, Check, Target } from 'lucide-react';
+import { ArrowRight, Check, NotebookPen, Target } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { HaftaGezgini } from './hafta-gezgini';
@@ -19,7 +20,7 @@ import {
   type Bildirim,
 } from '@/components/hesap/ortak';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
-import { Dugme } from '@/components/ui/button';
+import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { Rozet } from '@/components/ui/rozet';
 import { useKurum } from '@/kurum/baglam';
@@ -296,6 +297,21 @@ function GorevSatiri({
               <ArrowRight aria-hidden />
               {t('ogrenme.plan.yarinaTasi')}
             </Dugme>
+          ) : null}
+          {g.hedef_turu === 'soru' ? (
+            <Link
+              href={`/${kurumId}/soru-cozdum?${new URLSearchParams({
+                gorev: g.id,
+                brans: g.brans_kodu,
+                miktar: String(g.hedef_miktar),
+                ...(g.konu_id ? { konu: g.konu_id } : {}),
+              }).toString()}`}
+              aria-label={t('ogrenme.plan.kayitGirEtiket', { brans: bransAdi(g.brans_kodu) })}
+              className={dugmeStili({ gorunum: 'hayalet' })}
+            >
+              <NotebookPen aria-hidden />
+              {t('ogrenme.plan.kayitGir')}
+            </Link>
           ) : null}
         </div>
       ) : null}

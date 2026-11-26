@@ -61,6 +61,8 @@ export function yuzde(deger: number, ust: number): number {
 const XP_OLASI: readonly { servis: string; yontem: string; desen: RegExp }[] = [
   // Plan gorevi gerceklesen miktar
   { servis: 'ogrenme', yontem: 'PUT', desen: /^kurumlar\/[^/]+\/gorevler\/[^/]+\/gerceklesen$/ },
+  // Gunluk soru kaydi (XP; silme ters kayit yazar, kazandirmaz)
+  { servis: 'ogrenme', yontem: 'POST', desen: /^kurumlar\/[^/]+\/gunluk-soru\/kayitlar$/ },
   // Odev teslim
   {
     servis: 'ogrenme',

@@ -30,6 +30,7 @@ describe('navigasyon yapilandirmasi', () => {
       'mufredat',
       'sorular',
       'kayitlar',
+      'kaynak-kitaplar',
       'finans',
     ]);
   });
@@ -55,6 +56,7 @@ describe('navigasyon yapilandirmasi', () => {
       'planlar',
       'denemeler',
       'soru-sor',
+      'gunluk-soru',
       'kayitlarim',
       'karakterim',
       'odak',
@@ -118,7 +120,9 @@ describe('navigasyon yapilandirmasi', () => {
     expect(ogretmen).not.toContain('finans');
     expect(ogretmen).not.toContain('denemeler');
     expect(ogretmen).toContain('ogrenciler');
-    expect(yollar('ogrenci', [])).toEqual(['bugun']);
+    // Gunluk soru takibi cekirdektir (modul kodu yok): modul kapaliyken de gorunur.
+    expect(yollar('ogrenci', [])).toEqual(['bugun', 'gunluk-soru']);
+    expect(yollar('ogretmen', [])).toContain('kaynak-kitaplar');
   });
 
   it('veli icin faz 1 menusu bos kalir', () => {

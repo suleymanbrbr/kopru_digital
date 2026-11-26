@@ -1,7 +1,14 @@
 'use client';
 
 import { t } from '@kopru/i18n';
-import { CalendarPlus, ClipboardPlus, MessageCircleQuestion, Timer, UserPlus } from 'lucide-react';
+import {
+  CalendarPlus,
+  ClipboardPlus,
+  MessageCircleQuestion,
+  NotebookPen,
+  Timer,
+  UserPlus,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { dugmeStili } from '@/components/ui/button';
@@ -70,17 +77,32 @@ const BUYUK =
   'flex min-h-16 items-center gap-3 rounded-buyuk px-4 py-3 text-left transition-colors sm:min-h-20 sm:px-5';
 
 /**
- * Ogrenci Bugun: buyuk "Odaklan" ve "Soru sor" dugmeleri. Odak `oyunlastirma`, soru `soru_sor` modulune baglidir;
- * kapali modulun dugmesi gosterilmez.
+ * Ogrenci Bugun: buyuk "Soru cozdum" (her zaman), "Odaklan" ve "Soru sor" dugmeleri. Odak `oyunlastirma`, soru
+ * `soru_sor` modulune baglidir; kapali modulun dugmesi gosterilmez.
  */
 export function BugunOgrenciDugmeleri() {
   const { uyelik, acikModuller } = useKurum();
   const kok = `/${uyelik.kurumId}`;
   const odak = acikModuller.includes('oyunlastirma');
   const soru = acikModuller.includes('soru_sor');
-  if (!odak && !soru) return null;
   return (
     <div className="grid grid-cols-2 gap-3" data-testid="bugun-buyuk-dugmeler">
+      {/* Gunluk soru takibi cekirdektir (modul kodu yok): her ogrenci gorur. */}
+      <Link
+        href={`${kok}/soru-cozdum`}
+        className={cn(
+          BUYUK,
+          'col-span-2 border border-birincil bg-birincil-yumusak text-metin hover:bg-birincil-yumusak/70',
+        )}
+      >
+        <NotebookPen className="size-6 shrink-0 sm:size-7" aria-hidden />
+        <span className="flex flex-col">
+          <span className="text-lg font-semibold">{t('bugun.soruCozdum')}</span>
+          <span className="hidden text-sm text-metin-ikincil sm:block">
+            {t('bugun.soruCozdumAciklama')}
+          </span>
+        </span>
+      </Link>
       {odak ? (
         <Link
           href={`${kok}/odak`}

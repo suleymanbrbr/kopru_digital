@@ -29,24 +29,14 @@ import {
 import {
   aralikCoz,
   analizSatirlari,
-  bantGirdisi,
-  bosHucre,
-  bosHucreler,
-  hucreEkle,
   konuAdlari,
   konuTablosu,
   onerileriUret,
   sinifTablosu,
-  type AnalizSatiri,
 } from './gunluk-soru-analiz.js';
-import {
-  SINIF_ZORLANAN_EN_AZ_SORU,
-  bantDegisimi,
-  bantTespit,
-  basariOrani,
-  gorevBasligi,
-} from './gunluk-soru-bant.js';
+import { gorevBasligi } from './gunluk-soru-bant.js';
 import { bransVeKonuDogrula } from './gunluk-soru-deposu.js';
+import { haftalikOzetUret } from './gunluk-soru-ozet.js';
 import {
   atananSayisi,
   hedefiDogrula,
@@ -367,64 +357,9 @@ export const gunlukSoruAnalizYollari: ServicePlugin = (app) => {
     async (request) => {
       const y = yetkiAl(request);
       const hafta = haftaBaslangici(request.query.hafta ?? planBugunu());
-      const oncekiHafta = tarihEkle(hafta, -7);
       return withTenant(db, kiraci(y), async (tx) => {
         await ogrenciBul(tx, y, request.params.ogrenci_id, false);
-        const ogrenciId = request.params.ogrenci_id;
-        const [bu, once] = await Promise.all([
-          analizSatirlari(tx, y.kurumId, [ogrenciId], { bas: hafta, bit: tarihEkle(hafta, 6) }),
-          analizSatirlari(tx, y.kurumId, [ogrenciId], {
-            bas: oncekiHafta,
-            bit: tarihEkle(oncekiHafta, 6),
-          }),
-        ]);
-        const bantlar = (satirlar: readonly AnalizSatiri[]) => {
-          const h = bosHucreler();
-          for (const s of satirlar) hucreEkle(h[s.zorluk], s);
-          return bantTespit(bantGirdisi(h));
-        };
-        const toplam = bosHucre();
-        const konular = new Map<
-          string,
-          { brans: string; konu: string; h: ReturnType<typeof bosHucre> }
-        >();
-        for (const s of bu) {
-          hucreEkle(toplam, s);
-          const k = konular.get(`${s.brans_kodu}:${s.konu_id}`) ?? {
-            brans: s.brans_kodu,
-            konu: s.konu_id,
-            h: bosHucre(),
-          };
-          konular.set(`${s.brans_kodu}:${s.konu_id}`, k);
-          hucreEkle(k.h, s);
-        }
-        const zayif = [...konular.values()]
-          .filter((k) => k.h.cozulen >= SINIF_ZORLANAN_EN_AZ_SORU)
-          .sort((a, b) => (a.h.basari ?? 1) - (b.h.basari ?? 1) || b.h.cozulen - a.h.cozulen)
-          .slice(0, 3);
-        const adlar = await konuAdlari(
-          tx,
-          zayif.map((z) => z.konu),
-        );
-        const simdiki = bantlar(bu);
-        const onceki = bantlar(once);
-        return {
-          ogrenci_id: ogrenciId,
-          hafta_baslangic: hafta,
-          cozulen: toplam.cozulen,
-          dogru: toplam.dogru,
-          yanlis: toplam.yanlis,
-          bos: toplam.bos,
-          basari: basariOrani(toplam.dogru, toplam.cozulen),
-          en_zayif_konular: zayif.map((z) => ({
-            brans_kodu: z.brans,
-            konu_id: z.konu,
-            konu_ad: adlar.get(z.konu)?.ad ?? null,
-            cozulen: z.h.cozulen,
-            basari: z.h.basari,
-          })),
-          bant: { onceki, simdiki, degisim: bantDegisimi(onceki, simdiki) },
-        };
+        return haftalikOzetUret(tx, y.kurumId, request.params.ogrenci_id, hafta);
       });
     },
   );

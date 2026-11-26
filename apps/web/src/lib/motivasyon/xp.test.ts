@@ -80,6 +80,10 @@ describe('xpOlasiMi', () => {
     expect(xpOlasiMi('ogrenme', 'PUT', `${k}/gorevler/g1/gerceklesen`)).toBe(true);
     expect(xpOlasiMi('ogrenme', 'POST', `${k}/ogrenci-odevleri/o1/teslim`)).toBe(true);
     expect(xpOlasiMi('ogrenme', 'POST', `${k}/sorular`)).toBe(true);
+    expect(xpOlasiMi('ogrenme', 'POST', `${k}/gunluk-soru/kayitlar`)).toBe(true);
+    // Duzeltme ve silme XP kazandirmaz (silme ters kayit yazar).
+    expect(xpOlasiMi('ogrenme', 'DELETE', `${k}/gunluk-soru/kayitlar/x`)).toBe(false);
+    expect(xpOlasiMi('ogrenme', 'PATCH', `${k}/gunluk-soru/kayitlar/x`)).toBe(false);
     expect(xpOlasiMi('ogrenme', 'POST', `${k}/sorular/s1/anladim`)).toBe(true);
     expect(xpOlasiMi('ders', 'PUT', `${k}/dersler/d1/geri-bildirim`)).toBe(true);
     expect(xpOlasiMi('ders', 'POST', `${k}/kayitlarim/r1/izledim`)).toBe(true);

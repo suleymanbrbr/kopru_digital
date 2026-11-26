@@ -151,6 +151,23 @@ export const ESLEME_SABLONLARI: readonly SablonTanimi[] = [
     push: 'Ödevin incelendi.',
     derinBaglanti: 'kopru://odev/{{odev_id}}',
   }),
+  // --- ogretmen degerlendirmesi ve onerilen kaynak (yalniz kutu, push yok) ---
+  ...cift({
+    kod: 'degerlendirme_yayimlandi',
+    kategori: 'odev',
+    baslik: 'Yeni değerlendirme',
+    push: 'Öğretmeninden yeni bir değerlendirme.',
+    derinBaglanti: 'kopru://degerlendirmelerim',
+    yalnizKutu: true,
+  }),
+  ...cift({
+    kod: 'kaynak_onerisi_eklendi',
+    kategori: 'odev',
+    baslik: 'Yeni kaynak önerisi',
+    push: 'Öğretmenin sana yeni bir kaynak önerdi.',
+    derinBaglanti: 'kopru://kaynak-onerilerim',
+    yalnizKutu: true,
+  }),
   // --- soru ---
   ...cift({
     kod: 'yeni_soru',
