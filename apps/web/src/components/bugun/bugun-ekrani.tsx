@@ -12,6 +12,7 @@ import { BosDurum } from '@/components/bos-durum';
 import { BugunDuyuruKarti } from '@/components/duyuru/bugun-karti';
 import { BugunGeriBildirimKarti } from '@/components/geri-bildirim/bugun-karti';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { BugunDegerlendirmeKarti } from '@/components/kocluk/bugun-karti';
 import { BugunMotivasyonKarti } from '@/components/motivasyon/bugun-karti';
 import {
   BugunBekleyenKarti,
@@ -72,6 +73,7 @@ function PersonelBugun({ yonetim }: { yonetim: boolean }) {
         <BugunSoruKarti />
         <BugunBekleyenKarti />
         <BugunYoklamaKarti />
+        <BugunDegerlendirmeKarti />
         {yonetim ? (
           <div className="md:col-span-2">
             <BolumKarti

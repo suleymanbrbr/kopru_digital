@@ -14,6 +14,7 @@ import { PersonelKonuAnalizi } from '@/components/gunluk-soru/personel-analizi';
 import { HataDurumu } from '@/components/hata-durumu';
 import { tarihYaz } from '@/components/hesap/ortak';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { KoclukSekmesi } from '@/components/kocluk/kocluk-sekmesi';
 import { Sekmeler } from '@/components/ogrenme/ortak';
 import { dugmeStili } from '@/components/ui/button';
 import { Iskelet, Kart } from '@/components/ui/kart';
@@ -31,8 +32,10 @@ export function OgrenciProfili() {
   const ogrenciler = useOgrenciler(kurumId);
   const ad = ogrenciler.liste.find((o) => o.id === ogrenciId)?.ad;
   const params = useSearchParams();
+  // Varsayilan sekme "Koçluk"; Bugun kartindan `?sekme=kocluk&yaz=1` ile gelinirse yazma penceresi acilir.
+  const ilkSekme = params.get('sekme');
   const [sekme, setSekme] = useState(
-    params.get('sekme') === 'konu-analizi' ? 'konu-analizi' : 'ozet',
+    ilkSekme === 'konu-analizi' || ilkSekme === 'ozet' ? ilkSekme : 'kocluk',
   );
   const geri = (
     <Link
@@ -55,6 +58,20 @@ export function OgrenciProfili() {
         degisti={setSekme}
         etiket={t('motivasyon.ozet.sekmeler')}
         sekmeler={[
+          {
+            anahtar: 'kocluk',
+            etiket: t('kocluk.sekme'),
+            icerik: (
+              <KoclukSekmesi
+                ogrenciId={ogrenciId}
+                ogrenciAd={ad ?? ''}
+                yazAcik={params.get('yaz') === '1'}
+                analizeGec={() => {
+                  setSekme('konu-analizi');
+                }}
+              />
+            ),
+          },
           {
             anahtar: 'ozet',
             etiket: t('motivasyon.ozet.sekmeOzet'),

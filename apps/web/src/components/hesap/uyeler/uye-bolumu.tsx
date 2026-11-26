@@ -90,9 +90,20 @@ function UyeIcerigi({ rolu }: { rolu: 'ogrenci' | 'ogretmen' }) {
                         </p>
                       ) : null}
                     </div>
+                    {rolu === 'ogrenci' ? (
+                      <Link
+                        href={`/${kurumId}/ogrenciler/${u.uyelik_id}?sekme=kocluk`}
+                        className={dugmeStili({ gorunum: 'ikincil', boyut: 'sm' })}
+                        aria-label={t('kocluk.baglantiEtiketi', {
+                          ad: u.gorunen_ad ?? t('hesap.uye.adsiz'),
+                        })}
+                      >
+                        {t('kocluk.sekme')}
+                      </Link>
+                    ) : null}
                     {rolu === 'ogrenci' && acikModuller.includes('oyunlastirma') ? (
                       <Link
-                        href={`/${kurumId}/ogrenciler/${u.uyelik_id}`}
+                        href={`/${kurumId}/ogrenciler/${u.uyelik_id}?sekme=ozet`}
                         className={dugmeStili({ gorunum: 'ikincil', boyut: 'sm' })}
                         aria-label={t('motivasyon.ozet.baglantiEtiketi', {
                           ad: u.gorunen_ad ?? t('hesap.uye.adsiz'),
