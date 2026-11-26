@@ -30,6 +30,20 @@ async function kurumVerisi(tx: Tx, kullaniciId: string, uyelikIdleri: string[]) 
       select odev_id, durum, son_teslim_at, teslim_at, gec_teslim, yapilan_soru_sayisi, dogru_sayisi,
              yanlis_sayisi, bos_sayisi, ogrenci_notu, inceleme_sonucu, inceleme_notu, incelendi_at
         from ogrenme.ogrenci_odevleri where ogrenci_id in ${ids} order by created_at`),
+    // Ogrenci yalniz kendisine GORUNUR ve geri cekilmemis degerlendirmeleri alir; ogretmen kendi yazdiklarini.
+    degerlendirmeler: await oku(sql`
+      select ogrenci_id, yazar_id, donem_baslangic, donem_bitis, brans_kodu, calisma_duzeni, derse_katilim,
+             odev_disiplini, anlama_duzeyi, yorum, ogrenci_gorur, geri_cekildi_at, created_at
+        from ogrenme.ogretmen_degerlendirmeleri
+       where yazar_id in ${ids}
+          or (ogrenci_id in ${ids} and ogrenci_gorur and geri_cekildi_at is null)
+       order by created_at`),
+    kaynak_onerileri: await oku(sql`
+      select ogrenci_id, oneren_id, tur, kaynak_kitap_id, kaynak_test_id, baglanti_url, baslik, brans_kodu,
+             konu_id, not_metni, geri_cekildi_at, created_at
+        from ogrenme.kaynak_onerileri
+       where oneren_id in ${ids} or (ogrenci_id in ${ids} and geri_cekildi_at is null)
+       order by created_at`),
     sorular: await oku(sql`
       select id, brans_kodu, durum, created_at, son_hareket_at from ogrenme.sorular
        where ogrenci_id in ${ids} order by created_at`),
