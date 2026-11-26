@@ -117,12 +117,15 @@ describe.skipIf(dbYok())('gunluk soru takibi API', { timeout: 90_000 }, () => {
     matKonu: string;
   }
 
-  /** Konu (global): `kurum_id null`; sistem rolu yazar. */
-  async function konuAc(brans: string, ad: string, ust: string | null = null) {
+  /**
+   * Konu (kurumun kendi konusu): global konu acmak paylasilan test veritabaninda mufredat testlerini bozar.
+   * Sistem rolu yazar.
+   */
+  async function konuAc(kurumId: string, brans: string, ad: string, ust: string | null = null) {
     const id = uuidv7();
     await sistem`
-      insert into ogrenme.konular (id, kurum_id, katalog_kodu, brans_kodu, ust_id, seviye, ad, gecerli_surum_baslangic)
-      values (${id}, null, 'tyt', ${brans}, ${ust}, ${ust ? 'konu' : 'unite'}, ${ad}, 1)`;
+      insert into ogrenme.konular (id, kurum_id, brans_kodu, ust_id, seviye, ad)
+      values (${id}, ${kurumId}, ${brans}, ${ust}, ${ust ? 'konu' : 'unite'}, ${ad})`;
     return id;
   }
 
@@ -131,14 +134,14 @@ describe.skipIf(dbYok())('gunluk soru takibi API', { timeout: 90_000 }, () => {
     const ogrenci = await y.davetliUye(s.k, 'ogrenci');
     await y.gruba(s.k, s.grup.id, [ogrenci.uyelikId]);
     const hoca2 = await y.davetliUye(s.k, 'ogretmen'); // gruba atanmamis baska ogretmen
-    const unite = await konuAc('biyoloji', 'Kalıtım');
+    const unite = await konuAc(s.k.kurumId, 'biyoloji', 'Kalıtım');
     return {
       s,
       ogrenci,
       hoca2,
-      konu: await konuAc('biyoloji', 'Genetik', unite),
-      konu2: await konuAc('biyoloji', 'Hücre'),
-      matKonu: await konuAc('matematik', 'Türev'),
+      konu: await konuAc(s.k.kurumId, 'biyoloji', 'Genetik', unite),
+      konu2: await konuAc(s.k.kurumId, 'biyoloji', 'Hücre'),
+      matKonu: await konuAc(s.k.kurumId, 'matematik', 'Türev'),
     };
   }
 
@@ -942,7 +945,7 @@ describe.skipIf(dbYok())('gunluk soru takibi API', { timeout: 90_000 }, () => {
       await tohum(o, o.konu, 'kolay', 5, 5, 0, 0);
       await tohum(o, o.konu2, 'kolay', 2, 8, 0, 0);
       await tohum(o, o.matKonu, 'kolay', 7, 3, 0, 0, 'matematik');
-      await tohum(o, await konuAc('biyoloji', 'Sinir'), 'kolay', 9, 1, 0, 0);
+      await tohum(o, await konuAc(o.s.k.kurumId, 'biyoloji', 'Sinir'), 'kolay', 9, 1, 0, 0);
       // Gecen hafta: kolay %25 (kolay bantta zorlanma); bu hafta kolay %57 (tek bant, veri az) -> belirsiz
       await sistem`
         insert into ogrenme.gunluk_soru_kayitlari (id, kurum_id, ogrenci_id, gun, brans_kodu, konu_id, zorluk, dogru, yanlis)

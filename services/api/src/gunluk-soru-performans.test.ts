@@ -36,8 +36,8 @@ describe.skipIf(dbYok())('gunluk soru analizi performansi (30 ogrenci x 30 gun x
     for (let i = 0; i < 8; i += 1) {
       const id = uuidv7();
       await sistem`
-        insert into ogrenme.konular (id, kurum_id, katalog_kodu, brans_kodu, seviye, ad, gecerli_surum_baslangic)
-        values (${id}, null, 'tyt', 'biyoloji', 'konu', ${`Konu ${String(i + 1)}`}, 1)`;
+        insert into ogrenme.konular (id, kurum_id, brans_kodu, seviye, ad)
+        values (${id}, ${s.k.kurumId}, 'biyoloji', 'unite', ${`Konu ${String(i + 1)}`})`;
       konular.push(id);
     }
     await sistem`
