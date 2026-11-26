@@ -225,7 +225,9 @@ async function kullaniciyiAnonimlestir(
     )})`;
     // Ogrenci hakkindaki degerlendirmeler ve ogrenciye yapilan oneriler (serbest metin kisisel veri icerebilir)
     // silinir. Yazar/oneren ogretmen silinirse kayit kalir; uyelik anonimlestigi icin yazar adi bos doner.
-    await tx.execute(sql`delete from ogrenme.ogretmen_degerlendirmeleri where ogrenci_id in ${ids}`);
+    await tx.execute(
+      sql`delete from ogrenme.ogretmen_degerlendirmeleri where ogrenci_id in ${ids}`,
+    );
     await tx.execute(sql`delete from ogrenme.kaynak_onerileri where ogrenci_id in ${ids}`);
     // Kullanicinin urettigi / hakkinda yazilan serbest metinler.
     await tx.execute(sql`update ogrenme.soru_mesajlari set metin = ${SILINMIS_METIN}

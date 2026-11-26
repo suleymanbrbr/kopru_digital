@@ -1824,7 +1824,7 @@ CHECK'ler tür/alan tutarlılığını zorlar (örn. `serbest` için URL/kitap/t
 3. `kullanilan_kaynaklar`: günlük kayıtlardan (son 90 gün) kitap bazında `cozulen_test/toplam_test` ilerlemesi ve `son_kullanim_gun`; serbest kaynak metinleri (`kayit_sayisi`, son kullanım); ödevlerden (`odevler.kaynak` dolu olanlar, son 90 gün) kaynak adı ve son kullanım.
 4. `oneriler`: öğretmenlerin önerdiği kaynaklar (geri çekilmeyenler, son 20) ve `basladi` durumu.
 5. `konu_analizi`: son 30 gün; G1 fonksiyonlarıyla (`analizSatirlari`, `konuTablosu`, `onerileriUret`, haftalık özet) ders bazında zayıf konular ve sistem önerileri.
-6. `plan_odev`: bu haftanın planı (görev/tamam sayısı, soru ve dakika hedef/gerçekleşen) ve ödev durumu (açık, geciken, teslim edilen, incelenmeyi bekleyen sayıları).
+6. `plan_odev`: bu haftanın planı (görev/tamam sayısı, soru ve dakika hedef/gerçekleşen) ve ödev durumu (açık = atandı/tekrar istendi, geciken = açık ve son teslimi geçmiş, son 7 günde teslim edilen, incelenmeyi bekleyen sayıları).
 
 **Hatırlatma ucu:** kapsamdaki (`kapsamdakiOgrenciler`) etkin öğrencilerden bu hafta (Pazartesi..Pazar) **kendi yazdığı** (sahip/yönetici için: herhangi birinin yazdığı) geri çekilmemiş değerlendirmesi olmayanlar; `son_degerlendirme_gun` ile (en eski/hiç olmayan önce, en çok 100). Bildirim yok; Bugün ekranı kartıdır.
 

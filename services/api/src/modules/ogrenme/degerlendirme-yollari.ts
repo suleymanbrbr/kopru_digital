@@ -166,12 +166,12 @@ export const degerlendirmeYollari: ServicePlugin = (app) => {
         if (g.donem_baslangic !== undefined || g.donem_bitis !== undefined) {
           donemiDogrula(baslangic, bitis);
         }
-        const brans = g.brans_kodu === undefined ? eski.brans_kodu : g.brans_kodu;
-        if (g.brans_kodu) await bransGecerliOlmali(tx, g.brans_kodu);
         // `null` alani temizler; `??` null'i da "verilmedi" sayacagindan bilerek `undefined` denetlenir.
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         const pick = <T>(yeni: T | undefined, eskiDeger: T): T =>
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
           yeni === undefined ? eskiDeger : yeni;
+        const brans = pick(g.brans_kodu, eski.brans_kodu);
+        if (g.brans_kodu) await bransGecerliOlmali(tx, g.brans_kodu);
         const yeniDeger = {
           calisma_duzeni: pick(g.calisma_duzeni, eski.calisma_duzeni),
           derse_katilim: pick(g.derse_katilim, eski.derse_katilim),
