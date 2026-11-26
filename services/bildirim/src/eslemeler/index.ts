@@ -1,10 +1,12 @@
 import { davetKabulEsleme } from './davet-kabul.js';
+import { degerlendirmeYayimlandiEsleme } from './degerlendirme-yayimlandi.js';
 import { dersDegistiEsleme } from './ders-degisti.js';
 import { dersKaynakEklendiEsleme } from './ders-kaynak-eklendi.js';
 import { dersKaynakSorunEsleme } from './ders-kaynak-sorun.js';
 import { dersYoklamaEsleme } from './ders-yoklama.js';
 import type { Esleme } from './esleme.js';
 import { krediAzaldiEsleme, paketSatildiEsleme, tahsilatAlindiEsleme } from './finans.js';
+import { kaynakOnerisiEklendiEsleme } from './kaynak-onerisi-eklendi.js';
 import { karakterEvrildiEsleme } from './motivasyon-karakter.js';
 import { rozetKazanildiEsleme } from './motivasyon-rozet.js';
 import { seriBozuldiEsleme, seriKilometreTasiEsleme } from './motivasyon-seri.js';
@@ -45,4 +47,6 @@ export const ESLEMELER: readonly Esleme[] = [
   paketSatildiEsleme,
   davetKabulEsleme,
   mufredatYayinlandiEsleme,
+  degerlendirmeYayimlandiEsleme,
+  kaynakOnerisiEklendiEsleme,
 ];

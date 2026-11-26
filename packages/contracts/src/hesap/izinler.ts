@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 11;
+export const IZIN_SOZLUGU_SURUMU = 12;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -79,6 +79,22 @@ export const IZINLER = {
     modul: null,
     aciklama: 'Günlük soru kayıtlarını, konu analizini ve haftalık özeti görme',
   },
+  // Ogretmen degerlendirmeleri ve kocluk gorunumu: cekirdek izinler (docs/schema/api.md). Ogrenci yalniz
+  // kendisine gorunur olanlari okur; `kocluk.oku` personele ozgudur.
+  'degerlendirme.yaz': {
+    modul: null,
+    aciklama: 'Öğrenci hakkında değerlendirme yazma, düzenleme (yazar, 7 gün) ve geri çekme',
+  },
+  'degerlendirme.oku': {
+    modul: null,
+    aciklama: 'Öğrenci değerlendirmelerini görme (öğrenci yalnız kendisine görünür olanları)',
+  },
+  'kaynak_onerisi.yaz': { modul: null, aciklama: 'Öğrenciye kaynak önerme ve geri çekme' },
+  'kaynak_onerisi.oku': {
+    modul: null,
+    aciklama: 'Önerilen kaynakları görme (öğrenci yalnız kendisine önerilenleri)',
+  },
+  'kocluk.oku': { modul: null, aciklama: 'Öğrenci koçluk görünümü ve değerlendirme hatırlatması' },
   'kaynak_kitap.oku': { modul: null, aciklama: 'Kaynak kitap ve test listesini görme' },
   'kaynak_kitap.yaz': { modul: null, aciklama: 'Kaynak kitap ve test tanımlama, düzenleme' },
   'deneme.oku': { modul: 'deneme', aciklama: 'Deneme sonuçlarını görme' },
@@ -156,6 +172,11 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'deneme.oku': 'grup',
     'deneme.yaz': 'grup',
     'gunluk_soru.oku': 'grup',
+    'degerlendirme.yaz': 'grup',
+    'degerlendirme.oku': 'grup',
+    'kaynak_onerisi.yaz': 'grup',
+    'kaynak_onerisi.oku': 'grup',
+    'kocluk.oku': 'grup',
     // Ogretmen kaynak kitabi kendi adina tanimlar; baskasinin kitabini degistiremez (uygulama).
     'kaynak_kitap.oku': 'kurum',
     'kaynak_kitap.yaz': 'grup',
@@ -185,6 +206,9 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'deneme.yaz': 'kendi',
     'gunluk_soru.yaz': 'kendi',
     'gunluk_soru.oku': 'kendi',
+    // Ogrenci yalniz kendisine gorunur degerlendirmeleri ve onerilen kaynaklari okur (sunucuda ayrica suzulur).
+    'degerlendirme.oku': 'kendi',
+    'kaynak_onerisi.oku': 'kendi',
     'kaynak_kitap.oku': 'kurum',
     'soru.sor': 'kendi',
     'oyunlastirma.oku': 'kendi',

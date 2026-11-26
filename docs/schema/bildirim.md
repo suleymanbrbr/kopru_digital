@@ -290,6 +290,8 @@ Kurum başına aylık SMS sayacı. Profil: `K` (UUID `id` yok). PK `(kurum_id, d
 | `ogrenme.odev.teslim_edildi.v1` | Veren öğretmen | `odev` |
 | `ogrenme.odev.incelendi.v1` | Öğrenci | `odev` |
 | `ogrenme.soru.sorildi.v1` | Hedef öğretmenler | `soru` |
+| `ogrenme.degerlendirme.yayimlandi.v1` | Öğrenci | `odev` (kategori ayrı açılmadı): "Öğretmeninden yeni bir değerlendirme", **yalnız kutu** |
+| `ogrenme.kaynak_onerisi.eklendi.v1` | Öğrenci | `odev`: "Öğretmenin sana yeni bir kaynak önerdi", **yalnız kutu** |
 | `ogrenme.soru_mesaji.eklendi.v1` | Karşı taraf | `soru`: cevap/takip |
 | `motivasyon.seviye.atladi.v1`, `rozet.kazanildi.v1`, `karakter.evrildi.v1`, `seri.kilometre_tasi.v1`, `seri.bozuldu.v1`, `seri.risk.v1` | Öğrenci | `oyunlastirma` |
 | `abonelik.abonelik.degisti.v1` | Kurum `sahip` | `abonelik`: deneme bitiyor, ödeme bekliyor, ek süre, askıya alındı |
@@ -318,6 +320,8 @@ Tüketici adları: `bildirim.uretim` (bildirim üreten olaylar), `bildirim.kopya
 | `motivasyon.seviye.atladi`, `rozet.kazanildi`, `karakter.evrildi`, `seri.kilometre_tasi`, `seri.bozuldu` | öğrenci | `seviye_atladi`, `rozet_kazanildi`, `karakter_evrildi`, `seri_kilometre_tasi`, `seri_bozuldu`/`seri_onarilabilir` (`oyunlastirma`) |
 | `finans.kredi.azaldi`, `tahsilat.alindi`, `paket.satildi` | öğrenci | `kredi_azaliyor`, `tahsilat_alindi`, `paket_satildi` (`finans`) |
 | `hesap.davet.kabul_edildi` | `davet_eden_id` | `davet_kabul_edildi` (`sistem`) / `davet_kabul_edildi:{davet_id}` |
+| `ogrenme.degerlendirme.yayimlandi` | öğrenci | `degerlendirme_yayimlandi` (`odev`, **yalnız kutu, push yok**) / `degerlendirme_yayimlandi:{degerlendirme_id}` |
+| `ogrenme.kaynak_onerisi.eklendi` | öğrenci | `kaynak_onerisi_eklendi` (`odev`, **yalnız kutu, push yok**) / `kaynak_onerisi_eklendi:{oneri_id}` |
 | `ogrenme.mufredat.yayinlandi` | kurumun etkin `sahip` ve `yonetici` üyelikleri (`uyelik_kopyalari`; kopya henüz yoksa `YenidenDene`: uyelik olayı başka tüketicide, sıra garantisi yok) | `mufredat_guncellendi` (`duyuru`, **yalnız kutu, push yok**) / `mufredat_guncellendi:{katalog_kodu}:{surum_no}` |
 
 Parçalı olaylarda (`parca_no`) her parça kendi alıcılarını işler; ortak alıcılar (öğretmen) `tekil_anahtar` ile tekillenir. **Alıcı kimlikleri** (`ogrenci_id`, `ogretmen_id`, `veren_id`, `ekleyen_id`, `davet_eden_id`, `alici_idleri`...) hepsi `hesap.uyelikler.id`'dir ([api.md](api.md)); doğrudan `bildirimUret`in `aliciUyelikIdleri`ne verilir. **Finans kararı:** şartname "push metinlerinde ücret, not veya hassas bilgi yer almaz" der; **tutar, yöntem ve makbuz no ne push'ta ne kutuda yazılır** (kutuda yalnız ders sayısı: kalan kredi, paket kredisi). Kişisel/serbest metin (ad, not, ödev başlığı, rozet adı) hiçbir bildirimde yoktur; ayrıntı derin bağlantıdadır (`kopru://ders/{id}`, `odev/{id}`, `soru/{id}`, `kayit/{id}`, `bugun`).
