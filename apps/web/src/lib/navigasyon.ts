@@ -1,8 +1,10 @@
 import type { ModulKodu } from '@kopru/contracts';
 import type { MessageKey } from '@kopru/i18n';
 import {
+  BookMarked,
   BookOpenCheck,
   Building2,
+  ChartColumn,
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
@@ -189,6 +191,16 @@ export const navOgeleri: readonly NavOgesi[] = [
     roller: personel,
     grup: 'calisma',
   },
+  // Kaynak kitap yonetimi (gunluk soru takibi cekirdektir: modul kodu yok)
+  {
+    anahtar: 'kaynak-kitaplar',
+    yol: 'kaynak-kitaplar',
+    baslik: 'nav.kaynakKitaplar',
+    ikon: BookMarked,
+    modul: null,
+    roller: personel,
+    grup: 'calisma',
+  },
   {
     anahtar: 'geri-bildirim',
     yol: 'geri-bildirim',
@@ -265,6 +277,15 @@ export const navOgeleri: readonly NavOgesi[] = [
     roller: ['ogrenci'],
     grup: 'calisma',
     mobilOncelik: 4,
+  },
+  {
+    anahtar: 'gunluk-soru',
+    yol: 'gunluk-soru',
+    baslik: 'nav.gunlukSoru',
+    ikon: ChartColumn,
+    modul: null,
+    roller: ['ogrenci'],
+    grup: 'calisma',
   },
   {
     anahtar: 'kayitlarim',
