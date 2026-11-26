@@ -6,6 +6,7 @@ import { dbYok } from './test/yardimcilar.js';
 import {
   denemeIsle,
   geriBildirimIsle,
+  gunlukSoruIsle,
   kayitIzlendiIsle,
   odevIncelendiIsle,
   odevTeslimIsle,
@@ -292,6 +293,119 @@ describe.skipIf(dbYok())('XP tuketicisi (gercek PostgreSQL, motivasyon_app)', ()
       } finally {
         await o.owner`update motivasyon.motivasyon_ayarlari set deger = '10' where anahtar = 'supheli.plan_gorevi_esik'`;
       }
+    });
+  });
+
+  describe('gunluk soru', () => {
+    it('kayit basina 2 XP, tavan 10; esigin altindaki (<5 soru) kayit XP vermez; sayac farkla artar', async () => {
+      const s = yeniSenaryo();
+      // 5 kayit x 2 XP = tavan 10, altinci kayit tavan nedeniyle XP vermez
+      for (let i = 0; i < 6; i++) {
+        await o.isle(s.kurumId, (tx) =>
+          gunlukSoruIsle(
+            tx,
+            olay.gunlukSoru(s, { at: dk(T0, i * 20), kayitId: uuidv7(), surum: 1 }),
+          ),
+        );
+      }
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, 2, 2, 2, 2]);
+      expect(await tavan(s, 'gunluk_soru')).toBe(10);
+      expect(await sayac(s, 'toplam_cozulen_soru')).toBe(60);
+      const k = yeniSenaryo();
+      await o.isle(k.kurumId, (tx) =>
+        gunlukSoruIsle(
+          tx,
+          olay.gunlukSoru(k, { at: T0, kayitId: uuidv7(), surum: 1, dogru: 2, yanlis: 1 }),
+        ),
+      );
+      expect(await hareketler(k, 'gunluk_soru')).toHaveLength(0);
+      expect(await sayac(k, 'toplam_cozulen_soru')).toBe(3);
+    });
+
+    it('ayni olay tekrar ve eski surum etkisiz; silme ters kayit uretir ve tavani geri verir', async () => {
+      const s = yeniSenaryo();
+      const id = uuidv7();
+      const e = olay.gunlukSoru(s, { at: T0, kayitId: id, surum: 1 });
+      await o.isle(s.kurumId, (tx) => gunlukSoruIsle(tx, e));
+      await o.isle(s.kurumId, (tx) => gunlukSoruIsle(tx, e));
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2]);
+      expect(await sayac(s, 'toplam_cozulen_soru')).toBe(10);
+      await o.isle(s.kurumId, (tx) =>
+        gunlukSoruIsle(
+          tx,
+          olay.gunlukSoru(s, {
+            at: dk(T0, 5),
+            kayitId: id,
+            surum: 2,
+            oncekiToplam: 10,
+            silindi: true,
+          }),
+        ),
+      );
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, -2]);
+      expect(await tavan(s, 'gunluk_soru')).toBe(0);
+      expect(await sayac(s, 'toplam_cozulen_soru')).toBe(0);
+      expect((await durum(s))?.toplam_xp).toBe(0);
+      // eski (surum 1) olay silinmis kaydi geri getirmez
+      await o.isle(s.kurumId, (tx) => gunlukSoruIsle(tx, e));
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, -2]);
+    });
+
+    it('duzeltme: esigin altina inince XP geri alinir, tekrar esige cikinca yeni surumle verilir', async () => {
+      const s = yeniSenaryo();
+      const id = uuidv7();
+      await o.isle(s.kurumId, (tx) =>
+        gunlukSoruIsle(tx, olay.gunlukSoru(s, { at: T0, kayitId: id, surum: 1 })),
+      );
+      await o.isle(s.kurumId, (tx) =>
+        gunlukSoruIsle(
+          tx,
+          olay.gunlukSoru(s, {
+            at: dk(T0, 1),
+            kayitId: id,
+            surum: 2,
+            dogru: 1,
+            yanlis: 1,
+            oncekiToplam: 10,
+          }),
+        ),
+      );
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, -2]);
+      await o.isle(s.kurumId, (tx) =>
+        gunlukSoruIsle(
+          tx,
+          olay.gunlukSoru(s, { at: dk(T0, 2), kayitId: id, surum: 3, oncekiToplam: 2 }),
+        ),
+      );
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, -2, 2]);
+      expect(await sayac(s, 'toplam_cozulen_soru')).toBe(10);
+    });
+
+    it('supheli orunti: 10 dk icinde 150 sorudan fazlasi XP almaz, pencere disinda yeniden alir', async () => {
+      const s = yeniSenaryo();
+      for (let i = 0; i < 4; i++) {
+        await o.isle(s.kurumId, (tx) =>
+          gunlukSoruIsle(
+            tx,
+            olay.gunlukSoru(s, {
+              at: sn(T0, i * 10),
+              kayitId: uuidv7(),
+              surum: 1,
+              dogru: 40,
+              yanlis: 0,
+            }),
+          ),
+        );
+      }
+      // 40+40+40 = 120 <= 150 (ilk uc kayit XP alir); 4. kayit 160 > 150 -> XP yok
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, 2, 2]);
+      await o.isle(s.kurumId, (tx) =>
+        gunlukSoruIsle(
+          tx,
+          olay.gunlukSoru(s, { at: dk(T0, 30), kayitId: uuidv7(), surum: 1, dogru: 40, yanlis: 0 }),
+        ),
+      );
+      expect((await hareketler(s, 'gunluk_soru')).map((h) => h.xp)).toEqual([2, 2, 2, 2]);
     });
   });
 

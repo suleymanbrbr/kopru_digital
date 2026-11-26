@@ -43,7 +43,7 @@ Tohum verisidir, migrasyonla gelir. Profil: `G`.
 
 ### `motivasyon.xp_tavanlari`
 
-Günlük tavan grupları. `kod text PK`, `gunluk_ust_sinir int NOT NULL CHECK (> 0)`, `aciklama text`. Tohum: `genel` 300 (bütün tavana tabi kurallar toplamı), `plan` 40, `odak` 120, `soru` 20, `kayit` 15.
+Günlük tavan grupları. `kod text PK`, `gunluk_ust_sinir int NOT NULL CHECK (> 0)`, `aciklama text`. Tohum: `genel` 300 (bütün tavana tabi kurallar toplamı), `plan` 40, `odak` 120, `soru` 20, `kayit` 15, `gunluk_soru` 10 (migration 0008).
 
 ### `motivasyon.xp_kurallari`
 
@@ -77,6 +77,7 @@ Tohum (ürün şartnamesi):
 | `soru_anladim` | `ogrenme.soru.cozuldu` | 5 | `soru` (20) |
 | `geri_bildirim` | `ders.geri_bildirim.verildi` | 2 | genel |
 | `kayit_izledi` | `ders.kaynak.izlendi` | 5 | `kayit` (15) |
+| `gunluk_soru` | `ogrenme.gunluk_soru.kaydedildi` (kayıt ≥ 5 soru) | 2 / kayıt | `gunluk_soru` (10) |
 | `haftanin_yildizi` | istemci (öğretmen) | 50 + rozet | yok (`genel_tavana_tabi=false`) |
 
 Kısıtlar: `UNIQUE (kod)`. Tek günde bütün tavana tabi kurallardan en çok 300 XP.
@@ -360,6 +361,7 @@ Yalnızca olay tüketicisi yazar. Olay zarfında `ozne_surumu` olmadığından h
 | `ogrenme.deneme.girildi.v1` | `deneme_girisi` + `deneme_net_artisi` XP; `deneme_gecmisi` satırı. |
 | `ogrenme.soru.sorildi.v1` | `soru_sorma` XP. |
 | `ogrenme.soru.cozuldu.v1` | `soru_anladim` XP; `soru_anladim_sayisi` sayacı. |
+| `ogrenme.gunluk_soru.kaydedildi.v1` | `gunluk_soru` XP (kayıt başına 2, kayıt ≥ `gunluk_soru.en_az_soru` (5) soru, günlük tavan 10); düzeltme/silme ters kayıt; `toplam_cozulen_soru` sayacı `toplam - onceki_toplam` farkıyla. |
 | `hesap.*` kopya olayları | Kopya upsert (yukarıdaki tablo). |
 | `hesap.kullanici.silindi.v1` | Veri temizliği. |
 
@@ -385,7 +387,7 @@ Bu bölüm şemadan **bilinçli sapmaları** ve orkestratör/uygulama kararları
 
 Üretici: `services/motivasyon/src/seviye-egrisi.ts` (`pnpm --filter @kopru/motivasyon egri` tabloyu yazdırır); testler tohumun fonksiyonla aynı olduğunu ve hedefleri denetler. Şemadaki `50·(n−1)²` hedefleri tutmuyordu: seviye 5 için 800 XP (haftalık ~393 XP ile ~14 gün), seviye 12 için 6.050 XP (~108 gün), seviye 40 için 76.050 XP (~7 yıl).
 
-**"Düzenli çalışan öğrenci" varsayımları** (`services/motivasyon/src/duzenli-ogrenci.ts`, XP değerleri `xp_kurallari` tohumundan): haftada 3 ders (yoklama 20 + geri bildirim 2), 2 ödev (zamanında teslim 15 + onay 10), 5 gün × 3 plan görevi (5 XP, günlük tavan 40 altında), 5 gün × 30 dk odak (1 XP/dk, tavan 120 altında), 4 gün × (1 soru sorma 3 + 1 "anladım" 5), haftada 2 ders kaydı (5), iki haftada bir deneme (10 + ortalama 2 net artışı × 5). **Haftalık 393 XP, günlük ortalama ~56 XP**; ders gününde ilk gün XP'si 75 (20+2+15+30+8). Günlük 300 genel tavanı bu modelin çok üstündedir.
+**"Düzenli çalışan öğrenci" varsayımları** (`services/motivasyon/src/duzenli-ogrenci.ts`, XP değerleri `xp_kurallari` tohumundan): haftada 3 ders (yoklama 20 + geri bildirim 2), 2 ödev (zamanında teslim 15 + onay 10), 5 gün × 3 plan görevi (5 XP, günlük tavan 40 altında), 5 gün × 30 dk odak (1 XP/dk, tavan 120 altında), 4 gün × (1 soru sorma 3 + 1 "anladım" 5), haftada 2 ders kaydı (5), iki haftada bir deneme (10 + ortalama 2 net artışı × 5). **Haftalık 393 XP, günlük ortalama ~56 XP**; ders gününde ilk gün XP'si 75 (20+2+15+30+8). **Günlük soru takibi eklenince (migration 0008, güncel model):** 5 gün × 3 günlük soru kaydı (her biri en az 5 soru, 2 XP, günlük tavan 10 altında → 6 XP/gün) eklenir: **haftalık 423 XP, günlük ortalama ~60 XP**, ilk gün XP'si 81 (75 + 6). Haftalık artış %7,6'dır (platform uyarı eşiği %10'un altında); seviye hedef günleri %25 sınırı içinde kalır (seviye eğrisi değişmedi). Günlük 300 genel tavanı bu modelin çok üstündedir.
 
 | Hedef               | Seviye | Toplam XP | Düzenli öğrencide gün     | Şartname hedefi          |
 | ------------------- | ------ | --------- | ------------------------- | ------------------------ |
@@ -431,6 +433,7 @@ Ek sayaçlar: `toplam_yoklama` (rozeti yok; yoklama etkin duruma göre artar/aza
 - **Tavan**: öğrenci başına `pg_advisory_xact_lock`; kuralın grup tavanı ve (tabiyse) `genel`; `verilecek = min(ham, kalanlar)`; kırpılmışsa `kismi=true`; 0 ise satır yok. Ters kayıt orijinal günün sayaçlarından (en az 0) düşer.
 - **Net artışı**: `floor(artış × 5)` (numeric, SQL'de), deneme başına en çok 50; önceki en son 3 deneme (aynı `kural_kodu`, `sinav_tarihi` ≤ bu denemenin tarihi) ortalaması, yoksa artış 0. Düşüşte 0.
 - **Geç teslim**: `floor(15 × 0,50) = 7`. Yeniden teslimde (bayrak ya da ikinci kez) XP ve sayaç yok.
+- **Şüpheli örüntü (günlük soru)**: aynı öğrencinin `motivasyon_ayarlari['supheli.gunluk_soru_pencere_sn']` (600) saniye içindeki etkin kayıtlarının toplam sorusu (`xp_ozne_durumlari.miktar`, bu kayıt dahil) `['supheli.gunluk_soru_esik']` (150) değerinden **fazlaysa** yeni/düzeltilen kayıt XP almaz (sayaç yine artar). Ayarlanabilir. Kayıt `xp_ozne_durumlari` öznesidir (`kayit_surumu` ile eski olay atılır): kazanımdan çıkınca (silme ya da soru sayısının eşiğin altına düşmesi) `gunluk_soru_silindi`/`gunluk_soru_degisti` nedenli ters kayıt yazılır, tekrar eşiğe çıkınca yeni özne sürümüyle verilir. `ogrenci_gunluk_aktivite`/seri etkilenmez (seri koşulları ayrı pakettedir).
 - **Şüpheli örüntü**: aynı öğrencinin `motivasyon_ayarlari['supheli.plan_gorevi_pencere_sn']` (60) saniye içinde `['supheli.plan_gorevi_esik']` (10) değerinden **fazla** plan görevini tamamlaması: o tamamlama XP almaz (aktivite sayacı artar). Ayarlanabilir.
 - **Seviye**: `seviye = max(seviye, hedef)`; ters kayıt seviyeyi/aşamayı düşürmez; çoklu seviye atlayışı tek olay (`eski_seviye` → `yeni_seviye`). Karakter varsa aşama yükselince `karakter.evrildi`; seviye/rozet sonrası kozmetikler açılır.
 - **Rozet**: sayaç eşiği geçilince `ogrenci_rozetleri` + `motivasyon.rozet.kazanildi.v1` (tek kez).

@@ -142,6 +142,8 @@ describe.skipIf(dbYok())('guvenlik: rol yukseltme', () => {
     /\/yazilar/,
     /\/gorevler\/:[a-z_]+\/devret$/,
     /^DELETE .*\/denemeler\/:[a-z_]+$/,
+    // Gunluk soru kaydi: ogrenci kendi kaydini girer, ayni gun duzeltir/siler (sahiplik uc icinde denetlenir).
+    /^(POST|PATCH|DELETE) .*\/gunluk-soru\/kayitlar(\/:[a-z_]+)?$/,
   ];
 
   it('ogrenci belirteci: personel/yonetim yazma uclarinin hicbirine gecemez', async () => {

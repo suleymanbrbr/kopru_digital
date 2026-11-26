@@ -183,7 +183,7 @@ describe.skipIf(dbYok())('motivasyon veritabani: roller, sema ve RLS (motivasyon
     const oku = await withTenant(o.app, { kurumId: kurumA }, (tx) =>
       tx.execute<{ n: number }>(sql`select count(*)::int n from motivasyon.xp_kurallari`),
     );
-    expect(oku[0]?.n).toBe(12);
+    expect(oku[0]?.n).toBe(13);
     for (const s of [
       sql`update motivasyon.xp_kurallari set xp = 99`,
       sql`delete from motivasyon.rozet_tanimlari`,

@@ -74,6 +74,11 @@ export const MEDYA_TUR_KURALLARI = {
     izinli_mime: MEDYA_GORSEL_MIME,
     azami_boyut_bayt: 10 * MB,
   },
+  gunluk_soru_fotografi: {
+    roller: ['ogrenci'],
+    izinli_mime: MEDYA_GORSEL_MIME,
+    azami_boyut_bayt: 10 * MB,
+  },
   kurum_logosu: {
     roller: ['sahip', 'yonetici'],
     izinli_mime: MEDYA_GORSEL_MIME,

@@ -3,6 +3,7 @@ import {
   dersKaynakIzlendiV1,
   dersYoklamaKaydedildiV1,
   ogrenmeDenemeGirildiV1,
+  ogrenmeGunlukSoruKaydedildiV1,
   ogrenmeOdevIncelendiV1,
   ogrenmeOdevTeslimEdildiV1,
   ogrenmePlanGoreviGuncellendiV1,
@@ -177,6 +178,42 @@ export const olay = {
         toplam_net: o.net,
       },
     }),
+  gunlukSoru: (
+    s: Senaryo,
+    o: {
+      at: Date;
+      kayitId: string;
+      surum: number;
+      dogru?: number;
+      yanlis?: number;
+      bos?: number;
+      oncekiToplam?: number;
+      silindi?: boolean;
+    },
+  ) => {
+    const silindi = o.silindi ?? false;
+    const dogru = silindi ? 0 : (o.dogru ?? 8);
+    const yanlis = silindi ? 0 : (o.yanlis ?? 2);
+    const bos = silindi ? 0 : (o.bos ?? 0);
+    return ogrenmeGunlukSoruKaydedildiV1.create({
+      ...zarf(s, o.at),
+      data: {
+        kayit_id: o.kayitId,
+        ogrenci_id: s.ogrenciId,
+        brans_kodu: 'kimya',
+        konu_id: uuidv7(),
+        zorluk: 'orta',
+        dogru,
+        yanlis,
+        bos,
+        toplam: dogru + yanlis + bos,
+        onceki_toplam: o.oncekiToplam ?? 0,
+        kayit_surumu: o.surum,
+        silindi,
+        gun: '2026-11-10',
+      },
+    });
+  },
   soruSorildi: (s: Senaryo, at: Date) =>
     ogrenmeSoruSorildiV1.create({
       ...zarf(s, at),

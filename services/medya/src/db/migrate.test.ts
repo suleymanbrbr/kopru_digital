@@ -30,7 +30,12 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
 
   it('bos veritabaninda uygulanir, ikinci calistirma bir sey yapmaz', async () => {
     const ilk = await migrate({ url: ownerUrl });
-    expect(ilk).toEqual(['0001_temel.sql', '0002_medya.sql', '0003_saklama_olay_at.sql']);
+    expect(ilk).toEqual([
+      '0001_temel.sql',
+      '0002_medya.sql',
+      '0003_saklama_olay_at.sql',
+      '0004_gunluk_soru_fotografi.sql',
+    ]);
     expect(await migrate({ url: ownerUrl })).toEqual([]);
     owner = postgres(ownerUrl, { max: 2, onnotice: () => undefined });
   });
@@ -41,7 +46,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
        where table_schema = 'ortak' and table_name in ('outbox', 'processed_events')`;
     expect(t[0]?.n).toBe(2);
     const p = await owner<{ n: number }[]>`select count(*)::int n from medya.saklama_politikalari`;
-    expect(p[0]?.n).toBe(9);
+    expect(p[0]?.n).toBe(10);
   });
 
   it('degistirilmis migration reddedilir', async () => {

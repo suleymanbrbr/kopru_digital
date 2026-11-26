@@ -18,7 +18,7 @@ Bir olayın yükü değiştiğinde bu doküman aynı PR'da güncellenir.
 
 | Üretici | Olaylar |
 | --- | --- |
-| `api` | `hesap.*` (10), `ders.*` (6), `finans.*` (3), `ogrenme.*` (9), `abonelik.*` (3), `ortak.*` (2) |
+| `api` | `hesap.*` (10), `ders.*` (6), `finans.*` (3), `ogrenme.*` (10), `abonelik.*` (3), `ortak.*` (2) |
 | `motivasyon` | 6 |
 | `bildirim` | 0 |
 | `medya` | 3 |
@@ -78,6 +78,7 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 | `ogrenme.soru.sorildi.v1` | K | Soru oluşturulunca. | `soru_id`, `ogrenci_id`, `brans_kodu`, `yonlendirme`, `atanan_ogretmen_id`, `masa_id`, `hedef_ogretmen_idleri[]` | `bildirim`, `motivasyon` |
 | `ogrenme.soru_mesaji.eklendi.v1` | K | Cevap veya takip sorusu eklenince (alıcı: cevapta öğrenci; takipte masada üstlenen varsa yalnız o, yoksa hedef öğretmenler). Metin ve başlık yükte yoktur. Özne: `soru`. | `soru_id`, `mesaj_id`, `tur` (`cevap`,`takip`), `yazar_id`, `ogrenci_id`, `alici_idleri[]` | `bildirim` |
 | `ogrenme.soru.cozuldu.v1` | K | Soru `cozuldu` olunca (öğrenci "anladım" ya da 7 gün sonra otomatik, aktör `sistem`). | `soru_id`, `ogrenci_id`, `brans_kodu`, `cozuldu_at`, `dosya_idleri[]` (soru ve cevap fotoğraf/çizim dosyaları), `silinecek_at` (= `cozuldu_at` + kurumun `foto_saklama_gun` süresi, varsayılan 30 gün) | `medya`, `motivasyon` (`soru_anladim` XP) |
+| `ogrenme.gunluk_soru.kaydedildi.v1` | K | Öğrenci günlük soru kaydı oluşturunca, aynı gün düzeltince ya da silince (aynı işlemde outbox). Silmede `silindi=true`, `toplam=0`. Kaynak adı, kitap/test adı, not ve fotoğraf yük dışıdır; ad, telefon, e-posta yoktur. | `kayit_id`, `ogrenci_id`, `brans_kodu`, `konu_id`, `zorluk` (`kolay`,`orta`,`zor`), `dogru`, `yanlis`, `bos`, `toplam`, `onceki_toplam`, `kayit_surumu`, `silindi`, `gun` | `motivasyon` (`gunluk_soru` XP) |
 | `ogrenme.soru.yeniden_acildi.v1` | K | Çözülmüş soru takip sorusuyla yeniden açılınca. | `soru_id`, `ogrenci_id`, `dosya_idleri[]` | `medya` |
 
 ## `api` / abonelik
@@ -94,7 +95,7 @@ Finans olaylarında ad, telefon, e-posta, ödeyen kişi ve serbest metin yoktur;
 
 | Olay | Kurum | Ne zaman yayımlanır | Yük (`veri`) | Tüketiciler |
 | --- | --- | --- | --- | --- |
-| `ortak.dosya.baglandi.v1` | K | `api` bir medya dosyasını iş kaydına bağlayınca (ödev eki/teslimi, soru, soru mesajı eki, kurum logosu, avatar, fatura pdf). | `dosya_id`, `bagli_tur` (`odev_eki`,`odev_teslimi`,`soru`,`soru_mesaji`,`kurum`,`kullanici`,`fatura`), `bagli_id` | `medya` |
+| `ortak.dosya.baglandi.v1` | K | `api` bir medya dosyasını iş kaydına bağlayınca (ödev eki/teslimi, soru, soru mesajı eki, kurum logosu, avatar, fatura pdf). | `dosya_id`, `bagli_tur` (`odev_eki`,`odev_teslimi`,`soru`,`soru_mesaji`,`gunluk_soru_kaydi`,`kurum`,`kullanici`,`fatura`), `bagli_id` | `medya` |
 | `ortak.dosya.birakildi.v1` | K | Bağlı dosya kayıttan ayrılınca (teslimden dosya çıkarma, avatar değişimi). | `dosya_id`, `bagli_tur`, `bagli_id`, `hemen_sil` (bool) | `medya` |
 
 > **Uygulama notu (dosya olayları).** Beş dosya olayının Zod tanımları `packages/contracts/src/ortak/dosya.ts` (`ortak.dosya.*`) ve `packages/contracts/src/medya/olaylar.ts` (`medya.dosya.*`) içindedir. Dosya `tur` ve `bagli_tur` listeleri tek kaynaktır (`MEDYA_DOSYA_TURLERI`, `MEDYA_BAGLI_TURLERI`; [medya.md](medya.md) ile aynı); `medya.dosya.hazir` yükü `ortak.medya_dosya_kopyalari` sütunlarını besler (`sahip_uyelik_id` dahil). `medya.dosya.islenemedi.hata_kodu` ve `medya.dosya.silindi.silme_nedeni` medya.md'deki listelerle sınırlı bir enum'dur. Yüklerde depolama anahtarı, dosya adı, özet (`sha256`) ve kişisel veri yoktur; `packages/contracts/src/ortak/dosya.test.ts` yasak alanları denetler.
@@ -130,7 +131,7 @@ Faz 1'de olay üretmez.
 
 | Tüketici servis (tüketici adı) | Olaylar |
 | --- | --- |
-| `motivasyon.xp` | `ders.yoklama.kaydedildi`, `ders.geri_bildirim.verildi`, `ders.kaynak.izlendi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.plan_gorevi.guncellendi`, `ogrenme.deneme.girildi`, `ogrenme.soru.sorildi`, `ogrenme.soru.cozuldu` |
+| `motivasyon.xp` | `ders.yoklama.kaydedildi`, `ders.geri_bildirim.verildi`, `ders.kaynak.izlendi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.plan_gorevi.guncellendi`, `ogrenme.deneme.girildi`, `ogrenme.soru.sorildi`, `ogrenme.soru.cozuldu`, `ogrenme.gunluk_soru.kaydedildi` |
 | `motivasyon.kopya` | `hesap.kurum.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti` |
 | `bildirim.kopya` | `hesap.kurum.degisti`, `hesap.kademe.degisti`, `hesap.uyelik.degisti`, `hesap.grup.degisti`, `hesap.grup_uyesi.degisti`, `hesap.atama.degisti`, `hesap.modul_ayari.degisti`, `abonelik.abonelik.degisti` |
 | `bildirim.uretim` | `ders.*` (4), `finans.*` (3), `ogrenme.odev.yayinlandi`, `ogrenme.odev.teslim_edildi`, `ogrenme.odev.incelendi`, `ogrenme.soru.sorildi`, `ogrenme.soru_mesaji.eklendi`, `ogrenme.mufredat.yayinlandi`, `abonelik.*` (3), `motivasyon.*` (6), `hesap.davet.kabul_edildi` |

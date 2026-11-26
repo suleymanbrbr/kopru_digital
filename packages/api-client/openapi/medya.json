@@ -246,6 +246,7 @@
                       "soru_ses",
                       "odev_eki",
                       "odev_teslim_fotografi",
+                      "gunluk_soru_fotografi",
                       "kurum_logosu",
                       "avatar",
                       "fatura_pdf"
@@ -308,6 +309,7 @@
                             "soru_ses",
                             "odev_eki",
                             "odev_teslim_fotografi",
+                            "gunluk_soru_fotografi",
                             "kurum_logosu",
                             "avatar",
                             "fatura_pdf"
@@ -410,6 +412,7 @@
                             "soru_ses",
                             "odev_eki",
                             "odev_teslim_fotografi",
+                            "gunluk_soru_fotografi",
                             "kurum_logosu",
                             "avatar",
                             "fatura_pdf"
@@ -587,6 +590,7 @@
                         "soru_ses",
                         "odev_eki",
                         "odev_teslim_fotografi",
+                        "gunluk_soru_fotografi",
                         "kurum_logosu",
                         "avatar",
                         "fatura_pdf"
@@ -734,6 +738,7 @@
                         "soru_ses",
                         "odev_eki",
                         "odev_teslim_fotografi",
+                        "gunluk_soru_fotografi",
                         "kurum_logosu",
                         "avatar",
                         "fatura_pdf"

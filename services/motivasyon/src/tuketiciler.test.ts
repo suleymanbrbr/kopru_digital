@@ -111,9 +111,13 @@ describe.skipIf(natsYok())('olay tuketicileri (gercek PostgreSQL + NATS)', () =>
     });
     await yayinla(uyelik);
     await bekle(async () => (await islenen(uyelik.id, 'motivasyon.kopya')) === 1);
-    const [k] = await o.sistem<{ saat_dilimi: string }[]>`
-      select saat_dilimi from motivasyon.kurum_kopyalari where kurum_id = ${s.kurumId}`;
-    expect(k?.saat_dilimi).toBe('Asia/Tokyo');
+    // Kurum ve uyelik olaylari ayri tuketici akislarinda islenebilir: kurum satiri gelene kadar bekle.
+    const k = await bekle(async () => {
+      const [satir] = await o.sistem<{ saat_dilimi: string }[]>`
+        select saat_dilimi from motivasyon.kurum_kopyalari where kurum_id = ${s.kurumId}`;
+      return satir;
+    });
+    expect(k.saat_dilimi).toBe('Asia/Tokyo');
 
     // 20:00Z = 05:00 JST: ayni gun; ayni olay iki kez yayimlanir (at-least-once)
     const yoklama = olay.yoklama(s, {

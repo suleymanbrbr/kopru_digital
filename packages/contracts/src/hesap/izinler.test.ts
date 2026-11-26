@@ -19,9 +19,10 @@ describe('izin sozlugu', () => {
     }
   });
 
-  it('sahip plan.gerceklesen.yaz haric tum izinlere kurum kapsaminda sahiptir; yonetici rol.yonet ve kurum.kapat de haric', () => {
+  it('sahip ogrenciye ozgu yazma izinleri haric tum izinlere kurum kapsaminda sahiptir; yonetici rol.yonet ve kurum.kapat de haric', () => {
+    const ogrenciyeOzgu = new Set(['plan.gerceklesen.yaz', 'gunluk_soru.yaz']);
     expect(
-      IZIN_KODLARI.filter((k) => k !== 'plan.gerceklesen.yaz').every(
+      IZIN_KODLARI.filter((k) => !ogrenciyeOzgu.has(k)).every(
         (k) => izinKapsami('sahip', k) === 'kurum',
       ),
     ).toBe(true);
@@ -44,7 +45,7 @@ describe('izin sozlugu', () => {
   });
 
   it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
-    expect(IZIN_SOZLUGU_SURUMU).toBe(10);
+    expect(IZIN_SOZLUGU_SURUMU).toBe(11);
     expect(izinKapsami('sahip', 'rapor.oku')).toBe('kurum');
     expect(izinKapsami('yonetici', 'rapor.oku')).toBe('kurum');
     expect(izinKapsami('ogretmen', 'rapor.oku')).toBe('grup');
