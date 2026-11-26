@@ -3,6 +3,9 @@ import { denemeAnalizYollari } from './deneme-analiz-yollari.js';
 import { denemeExcelYollari } from './deneme-excel-yollari.js';
 import { denemeKuralYollari } from './deneme-kural-yollari.js';
 import { denemeYollari } from './deneme-yollari.js';
+import { gunlukSoruAnalizYollari } from './gunluk-soru-analiz-yollari.js';
+import { gunlukSoruYollari } from './gunluk-soru-yollari.js';
+import { kaynakKitapYollari } from './kaynak-kitap-yollari.js';
 import { mufredatPlatformYollari } from './mufredat-platform-yollari.js';
 import { mufredatYollari } from './mufredat-yollari.js';
 import { odevOgrenciYollari } from './odev-ogrenci-yollari.js';
@@ -21,7 +24,8 @@ import { soruYonetimYollari } from './soru-yonetim-yollari.js';
 /**
  * ogrenme modulu (`ogrenme` PostgreSQL semasi): mufredat kutuphanesi ve odev (hedefleme, fan-out,
  * teslim, inceleme, sablon), haftalik plan (plan, gorev, sablon, ogrenci gunluk giris, devretme) ve
- * deneme analizi ve soru sor (soru, cevap, masa, kota, bildirim, olcum). Rotalar `app.kimlik` (hesap modulu) hazirsa
+ * deneme analizi, soru sor (soru, cevap, masa, kota, bildirim, olcum) ve gunluk soru takibi (kaynak kitap,
+ * gunluk kayit, konu analizi, zorluk bandi ve oneriler, haftalik ozet, gorev ver). Rotalar `app.kimlik` (hesap modulu) hazirsa
  * kaydolur.
  */
 export const ogrenmeModule = defineModule(
@@ -45,6 +49,9 @@ export const ogrenmeModule = defineModule(
       await app.register(raporYollari);
       await app.register(raporExcelYollari);
       await app.register(soruYonetimYollari);
+      await app.register(kaynakKitapYollari);
+      await app.register(gunlukSoruYollari);
+      await app.register(gunlukSoruAnalizYollari);
     }
   },
   {

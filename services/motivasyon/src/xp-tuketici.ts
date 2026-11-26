@@ -3,6 +3,7 @@ import {
   type dersKaynakIzlendiV1,
   type dersYoklamaKaydedildiV1,
   type ogrenmeDenemeGirildiV1,
+  type ogrenmeGunlukSoruKaydedildiV1,
   type ogrenmeOdevIncelendiV1,
   type ogrenmeOdevTeslimEdildiV1,
   type ogrenmePlanGoreviGuncellendiV1,
@@ -311,4 +312,71 @@ export async function soruCozulduIsle(
   await seriDegerlendir(tx, b);
   await sayacArtir(tx, b, 'toplam_anladim', 1);
   await rozetleriDegerlendir(tx, b, ['toplam_anladim']);
+}
+
+// --- Gunluk soru -----------------------------------------------------------------------------
+
+/**
+ * `ogrenme.gunluk_soru.kaydedildi.v1` (olusturma, ayni gun duzeltme, silme). Kural `gunluk_soru`: kayit basina
+ * sabit XP (gunluk tavan 10), kayit en az `gunluk_soru.en_az_soru` (5) soru ise. Kayit surumlu bir oznedir
+ * (`xp_ozne_durumlari`): eski/tekrar olay atilir; kazanimdan cikinca (silme, soru sayisinin esigin altina
+ * dusurulmesi) XP ters kayitla geri alinir, tekrar kazanima girince yeni surumle verilir. Supheli orunti: ayni
+ * ogrencinin `supheli.gunluk_soru_pencere_sn` (600) icindeki toplam sorusu `supheli.gunluk_soru_esik` (150)
+ * degerinden FAZLA ise yeni kayit XP almaz. `toplam_cozulen_soru` rozet sayaci XP tavanindan bagimsiz,
+ * `toplam - onceki_toplam` farkiyla guncellenir.
+ */
+export async function gunlukSoruIsle(
+  tx: Islem,
+  olay: ReturnType<typeof ogrenmeGunlukSoruKaydedildiV1.parse>,
+): Promise<void> {
+  const d = olay.data;
+  const h = await hazirla(tx, olay, d.ogrenci_id);
+  if (!h?.aktif) return;
+  const { b } = h;
+  const kural = await kuralZorunlu(tx, 'gunluk_soru');
+  const onceki = await ozneDurumuOku(tx, b, kural.kod, d.kayit_id);
+  if (onceki && d.kayit_surumu <= onceki.surum) return; // eski/tekrar olay
+  const etkinOnce = onceki?.etkin ?? false;
+
+  const enAz = await ayarOku<number>(tx, 'gunluk_soru.en_az_soru', 5);
+  let vermeli = kural.aktif && !d.silindi && d.toplam >= enAz;
+  if (vermeli) {
+    const pencere = await ayarOku<number>(tx, 'supheli.gunluk_soru_pencere_sn', 600);
+    const esik = await ayarOku<number>(tx, 'supheli.gunluk_soru_esik', 150);
+    const [say] = await tx.execute<{ n: number }>(sql`
+      select coalesce(sum(miktar), 0)::int as n from motivasyon.xp_ozne_durumlari
+       where ogrenci_id = ${b.ogrenciId} and kural_kodu = ${kural.kod} and etkin and ozne_id <> ${d.kayit_id}
+         and etkin_at > ${b.olusmaAt}::timestamptz - make_interval(secs => ${pencere})
+         and etkin_at <= ${b.olusmaAt}::timestamptz`);
+    if ((say?.n ?? 0) + d.toplam > esik) vermeli = false;
+  }
+
+  await ozneDurumuYaz(tx, b, kural.kod, d.kayit_id, {
+    surum: d.kayit_surumu,
+    etkin: vermeli,
+    etkinOnce,
+  });
+  await tx.execute(sql`
+    update motivasyon.xp_ozne_durumlari set miktar = ${vermeli ? d.toplam : 0}
+     where ogrenci_id = ${b.ogrenciId} and kural_kodu = ${kural.kod} and ozne_id = ${d.kayit_id}`);
+
+  const ozne = { id: d.kayit_id, surum: d.kayit_surumu };
+  if (vermeli && !etkinOnce) {
+    await xpKazan(tx, b, { kural, ozne, bransKodu: d.brans_kodu });
+  } else if (!vermeli && etkinOnce) {
+    const kazanim = await aktifKazanim(tx, b, kural.kod, d.kayit_id);
+    if (kazanim) {
+      await xpTersCevir(
+        tx,
+        b,
+        kural,
+        kazanim,
+        ozne,
+        d.silindi ? 'gunluk_soru_silindi' : 'gunluk_soru_degisti',
+      );
+    }
+  }
+  const fark = d.toplam - d.onceki_toplam;
+  if (fark !== 0) await sayacArtir(tx, b, 'toplam_cozulen_soru', fark);
+  if (fark > 0) await rozetleriDegerlendir(tx, b, ['toplam_cozulen_soru']);
 }

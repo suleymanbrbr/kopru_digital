@@ -89,7 +89,14 @@ describe.skipIf(dbYok())('okuma uclari (kullanici JWT, motivasyon_app)', () => {
     expect(d.bugun.gun).toBe('2026-11-10');
     expect(d.bugun.xp).toBe(35);
     expect(d.bugun.tavanlar[0]).toEqual({ kod: 'genel', kullanilan: 35, ust_sinir: 300 });
-    expect(d.bugun.tavanlar.map((t) => t.kod)).toEqual(['genel', 'kayit', 'odak', 'plan', 'soru']);
+    expect(d.bugun.tavanlar.map((t) => t.kod)).toEqual([
+      'genel',
+      'gunluk_soru',
+      'kayit',
+      'odak',
+      'plan',
+      'soru',
+    ]);
     expect(d.beceriler.map((b) => [b.kod, b.puan])).toEqual([
       ['sayisal', 20],
       ['sozel', 15],

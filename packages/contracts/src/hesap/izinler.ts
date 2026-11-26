@@ -8,7 +8,7 @@ import type { ModulKodu } from './moduller.js';
  *  - servisler izin kararini bu sabitten verir (veritabani sorgusu yapmaz).
  * Degisiklik `IZIN_SOZLUGU_SURUMU` (JWT `pv` claim'i) degerini artirir.
  */
-export const IZIN_SOZLUGU_SURUMU = 10;
+export const IZIN_SOZLUGU_SURUMU = 11;
 
 export const ROLLER = ['sahip', 'yonetici', 'ogretmen', 'ogrenci', 'veli'] as const;
 export const RolSema = z.enum(ROLLER);
@@ -70,6 +70,17 @@ export const IZINLER = {
     modul: 'haftalik_plan',
     aciklama: 'Plan görevinin gerçekleşen miktarını girme ve görevi devretme (yalnız öğrenci)',
   },
+  // Gunluk soru takibi (kocluk): ayri modul kodu yoktur, cekirdek izinlerdir (docs/schema/api.md).
+  'gunluk_soru.yaz': {
+    modul: null,
+    aciklama: 'Günlük soru kaydı girme, aynı gün düzeltme ve silme (yalnız öğrenci)',
+  },
+  'gunluk_soru.oku': {
+    modul: null,
+    aciklama: 'Günlük soru kayıtlarını, konu analizini ve haftalık özeti görme',
+  },
+  'kaynak_kitap.oku': { modul: null, aciklama: 'Kaynak kitap ve test listesini görme' },
+  'kaynak_kitap.yaz': { modul: null, aciklama: 'Kaynak kitap ve test tanımlama, düzenleme' },
   'deneme.oku': { modul: 'deneme', aciklama: 'Deneme sonuçlarını görme' },
   'deneme.yaz': { modul: 'deneme', aciklama: 'Deneme sonucu girme' },
   'soru.sor': { modul: 'soru_sor', aciklama: 'Soru sorma' },
@@ -106,11 +117,12 @@ const hepsi = (kapsam: Kapsam, haric: IzinKodu[] = []): Esleme =>
  */
 export const ROL_IZINLERI: Record<Rol, Esleme> = {
   // Gerceklesen yalniz ogrencinin kendi girisidir: sahip/yonetici de yazamaz.
-  sahip: hepsi('kurum', ['plan.gerceklesen.yaz']),
+  sahip: hepsi('kurum', ['plan.gerceklesen.yaz', 'gunluk_soru.yaz']),
   yonetici: hepsi('kurum', [
     'rol.yonet',
     'kurum.kapat',
     'plan.gerceklesen.yaz',
+    'gunluk_soru.yaz',
     'abonelik.oku',
     'abonelik.yonet',
   ]),
@@ -143,6 +155,10 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'plan.gorev.yaz': 'grup',
     'deneme.oku': 'grup',
     'deneme.yaz': 'grup',
+    'gunluk_soru.oku': 'grup',
+    // Ogretmen kaynak kitabi kendi adina tanimlar; baskasinin kitabini degistiremez (uygulama).
+    'kaynak_kitap.oku': 'kurum',
+    'kaynak_kitap.yaz': 'grup',
     'soru.cevapla': 'grup',
     // Ogretmen atandigi gruplardaki ogrencinin motivasyon ozetini (seviye, beceriler, seri) gorur.
     'oyunlastirma.oku': 'grup',
@@ -167,6 +183,9 @@ export const ROL_IZINLERI: Record<Rol, Esleme> = {
     'plan.gerceklesen.yaz': 'kendi',
     'deneme.oku': 'kendi',
     'deneme.yaz': 'kendi',
+    'gunluk_soru.yaz': 'kendi',
+    'gunluk_soru.oku': 'kendi',
+    'kaynak_kitap.oku': 'kurum',
     'soru.sor': 'kendi',
     'oyunlastirma.oku': 'kendi',
     'duyuru.oku': 'kurum',

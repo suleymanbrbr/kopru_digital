@@ -1112,7 +1112,7 @@ Parasal bakiye özeti (türetilmiş). Profil: `KS`. RLS: evet. Sütunlar: `ogren
 
 ## `ogrenme`
 
-Müfredat, ödev, haftalık plan, deneme ve "soru sor".
+Müfredat, ödev, haftalık plan, deneme, "soru sor" ve günlük soru takibi.
 
 ```mermaid
 erDiagram
@@ -1130,6 +1130,8 @@ erDiagram
   soru_mesajlari ||--o{ soru_mesaj_ekleri : "ek"
   sorular ||--o{ soru_dosyalari : "foto"
   soru_ayarlari ||--|| kurum : "ayar"
+  kaynak_kitaplar ||--o{ kaynak_kitap_testleri : "test"
+  gunluk_soru_kayitlari ||--o{ gunluk_soru_dosyalari : "foto"
   soru_kota_sayaclari }o--|| sorular : "sayim"
 ```
 
@@ -1648,6 +1650,97 @@ Yol öneki `/v1/ogrenme/kurumlar/:kurum_id`. `soru_sor` modülü kapalıyken (ku
 Artırım: `INSERT ... VALUES (..., 1) ON CONFLICT (ogrenci_id, donem_turu, donem) DO UPDATE SET kullanilan = soru_kota_sayaclari.kullanilan + 1 WHERE soru_kota_sayaclari.kullanilan < :limit RETURNING kullanilan`. Dönen satır yoksa `429 kota_asildi` (soru yazılmaz). Gün ve ay sayaçları aynı işlemde artırılır; biri aşılırsa işlem geri alınır. Soru oluşturma ile sayaç aynı `tx`tedir. Sorunun sonradan silinmesi/kapanması sayacı azaltmaz. Takip soruları kotaya girmez, `soru_basina_takip_limiti` ile sınırlıdır. Eski dönemler 400 gün sonra silinir. Olaylar: yok.
 
 **Fotoğraf ömrü.** `ogrenme.soru.cozuldu.v1` yükü `dosya_idleri` ve `silinecek_at` taşır; `medya` servisi dosyaların `silinecek_at` değerini ayarlar ve süre dolunca siler. Metin ve ileti dizisi kalır. Yeniden açma `silinecek_at`'i temizler (`soru.yeniden_acildi`).
+
+### Günlük soru takibi ve konu analizi (migration 0022)
+
+Koçluğun günlük takibi: öğrenci her gün hangi dersin hangi konusundan, hangi zorlukta kaç soru çözdüğünü ve kaçını yanlış yaptığını girer; öğretmen konu × zorluk tablosunda eksik konuyu ve zorlandığı zorluk bandını görür. Şartname: [ozellik-sartnamesi.md](../urun/ozellik-sartnamesi.md) "Günlük soru takibi ve konu analizi". **Veli tarafı yoktur** (Faz 2). Ayrı modül kodu açılmadı: izinler çekirdek izinlerdir (`modul: null`), kurum bu özelliği kapatamaz; modül gerekirse `MODUL_KODLARI` + `hesap.modul_ayarlari` CHECK + abonelik planı + i18n birlikte genişler (karar bekliyor).
+
+```mermaid
+erDiagram
+  kaynak_kitaplar ||--o{ kaynak_kitap_testleri : "test"
+  kaynak_kitap_testleri ||--o{ gunluk_soru_kayitlari : "kaynak"
+  gunluk_soru_kayitlari ||--o{ gunluk_soru_dosyalari : "foto"
+  gunluk_soru_kayitlari }o--o| plan_gorevleri : "gorev baglantisi"
+```
+
+#### `ogrenme.kaynak_kitaplar`
+
+Profil: `KS`. RLS: evet. Kurum ya da öğretmen tanımı küçük kaynak kitap listesi; kitabın içeriği/PDF'i yüklenmez (telif).
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ad` | text | hayır | | CHECK 1..200 |
+| `yayinevi` | text | evet | | CHECK ≤ 200 |
+| `brans_kodu` | text | hayır | | FK `ortak.bransler` |
+| `kademe_id` | uuid | evet | | Bileşik FK `hesap.kademeler`; boş = tüm kademeler |
+| `sahip_uyelik_id` | uuid | evet | | Tanımlayan öğretmen üyeliği; boş = kurum tanımı (sahip/yönetici) |
+| `aktif` | boolean | hayır | true | Silinmez, pasifleştirilir (eski kayıtlar bağlı kalır) |
+
+Yetki: `kaynak_kitap.yaz`: sahip/yönetici tüm kitapları, öğretmen yalnız kendi tanımladığını değiştirir (başkasınınki 403); `kaynak_kitap.oku`: herkes (öğrenci yalnız aktifleri). İndeks: `(kurum_id, brans_kodu, aktif)`. Sürümlüdür. Olaylar: yok.
+
+#### `ogrenme.kaynak_kitap_testleri`
+
+Kitabın test/bölüm listesi. Profil: `KS` (sürümsüz). RLS: evet. Sütunlar: `kitap_id` (bileşik FK), `sira int` (CHECK ≥ 1), `ad text` (1..200), `soru_sayisi int` (CHECK 1..500), `konu_id uuid NULL` (müfredat konusu; FK yok, müfredat global). `UNIQUE (kitap_id, sira)`, `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, kitap_id, sira)`. Bir günlük kayıtta kullanılan test silinemez (409 `kaynak_testi_kullanimda`); yalnız ad/soru sayısı güncellenir. Olaylar: yok.
+
+#### `ogrenme.gunluk_soru_kayitlari`
+
+Öğrencinin "Soru çözdüm" kaydı (kullanıcı girdisi: aynı gün düzeltilebilir ve silinebilir). Profil: `KS`. RLS: evet. `DELETE` yetkisi `api_app`te vardır (aynı gün silme gerçek silmedir; ters XP olayı yayımlanır).
+
+| Sütun | Tip | Null | Varsayılan | Not |
+| --- | --- | --- | --- | --- |
+| `ogrenci_id` | uuid | hayır | | Bileşik FK `hesap.uyelikler` (öğrenci üyeliği) |
+| `gun` | date | hayır | | Çözülen gün (Europe/Istanbul); bugünden en çok 6 gün geriye |
+| `brans_kodu` | text | hayır | | FK `ortak.bransler` |
+| `konu_id` | uuid | hayır | | Müfredat konusu (FK yok); kurum konusu başka kurumun olamaz (uygulama doğrular) |
+| `zorluk` | text | hayır | | CHECK `IN ('kolay','orta','zor')` |
+| `kaynak_test_id` | uuid | evet | | Bileşik FK `kaynak_kitap_testleri` |
+| `kaynak_metin` | text | evet | | Serbest kaynak, ≤ 200. `CHECK (kaynak_test_id IS NULL OR kaynak_metin IS NULL)` |
+| `dogru`, `yanlis`, `bos` | int | hayır | 0 | CHECK ≥ 0 |
+| `toplam` | int | hayır | | `GENERATED ALWAYS AS (dogru + yanlis + bos) STORED`; `CHECK (toplam BETWEEN 1 AND 500)` |
+| `plan_gorev_id` | uuid | evet | | Bileşik FK `plan_gorevleri` |
+| `istek_id` | uuid | evet | | İstemci üretir; çevrimdışı tekrar gönderimde aynı kayıt (`UNIQUE (kurum_id, ogrenci_id, istek_id) WHERE istek_id IS NOT NULL`) |
+
+Kısıtlar: `UNIQUE (kurum_id, id)`. İndeksler (analiz sorguları): `(kurum_id, ogrenci_id, brans_kodu, gun) INCLUDE (konu_id, zorluk, dogru, yanlis, bos)` (konu × zorluk toplamı için dizin-yalnız tarama), `(kurum_id, brans_kodu, gun) INCLUDE (ogrenci_id, konu_id, zorluk, dogru, yanlis, bos)` (grup görünümü), `(kurum_id, ogrenci_id, created_at DESC)` (kendi liste ve "son kullanılanlar"), `(kurum_id, plan_gorev_id) WHERE plan_gorev_id IS NOT NULL`. Sürümlüdür (`surum`: olay sırası ve iyimser kilit).
+
+**Düzeltme/silme penceresi:** kaydın **oluşturulduğu takvim günü** (Europe/Istanbul) içinde. Gün bitince `409 kayit_duzenlenemez`. Düzeltme `brans/konu/zorluk/kaynak/D-Y-B/plan görevi/fotoğraf` alanlarını değiştirir; öğrenci yalnız kendi kaydını (başkasınınki 404).
+
+**Plan görevi bağlantısı:** `plan_gorev_id` verilirse görev, öğrencinin kendi planındaki (yayında) bir `soru` görevi olmalı (aksi 422 `plan_gorevi_gecersiz`); görevin `gerceklesen_miktar`ı, o göreve bağlı kayıtların `toplam` toplamına eşitlenir (kayıt eklenince/düzeltilince/silinince yeniden hesaplanır; durum `durumHesapla` ile, `ogrenme.plan_gorevi.guncellendi.v1` mevcut kuralla yayımlanır).
+
+**Fotoğraf:** en çok 5; `ortak.medya_dosya_kopyalari` (tür `gunluk_soru_fotografi`, sahibi öğrenci, `hazir`, başka kayda bağlı değil) soru-sor'daki `dosyalariDogrula` ile doğrulanır ve kilitlenir; bağlama `ortak.dosya.baglandi.v1` (`bagli_tur = 'gunluk_soru_kaydi'`), çıkarma/silme `ortak.dosya.birakildi.v1` (`hemen_sil=true`; kayıt silinince dosya da silinir). Medya migration 0004: yeni dosya türü `gunluk_soru_fotografi` (10 MB, görsel, saklama 365 gün) ve yeni bağlı tür.
+
+**Kapsam:** öğrenci kendi kayıtlarını (`gunluk_soru.yaz`/`oku`, `kendi`), öğretmen atandığı gruplardaki öğrencileri (`gunluk_soru.oku`, `grup`), sahip/yönetici kurumu görür. Kapsam dışı öğrenci 404 (plan ile aynı `ogrenciKosulu`).
+
+#### `ogrenme.gunluk_soru_dosyalari`
+
+`kayit_id` (bileşik FK), `medya_dosya_id uuid` (UNIQUE), `sira smallint` (0..4), `UNIQUE (kayit_id, sira)`. Profil: `KS` (sürümsüz). RLS: evet. İndeks: `(kurum_id, kayit_id)`.
+
+#### Günlük soru uçları ve kararlar (`/v1/ogrenme/kurumlar/:kurum_id/...`)
+
+| Yöntem | Yol | İzin | Not |
+| --- | --- | --- | --- |
+| POST | `/gunluk-soru/kayitlar` | `gunluk_soru.yaz` | Kayıt oluştur; `istek_id` tekrarında 200 ve aynı kayıt |
+| PATCH | `/gunluk-soru/kayitlar/:id` | `gunluk_soru.yaz` | Aynı gün düzelt (`surum` iyimser kilit) |
+| DELETE | `/gunluk-soru/kayitlar/:id` | `gunluk_soru.yaz` | Aynı gün sil (204) |
+| GET | `/gunluk-soru/kayitlar` | `gunluk_soru.oku` (kendi) | Kendi kayıtları (`gun` ya da `bas`/`bit`, `brans_kodu`, imleç) |
+| GET | `/gunluk-soru/son-kullanilanlar` | `gunluk_soru.oku` (kendi) | Ders → konu → kaynak (son 60 gün, en çok 5 ders × 5 konu × 5 kaynak) |
+| POST/GET/PATCH | `/kaynak-kitaplar`, `/kaynak-kitaplar/:id` | `kaynak_kitap.yaz` / `.oku` | Kitap + test listesi; `PATCH` aktif/ad |
+| POST/PATCH/DELETE | `/kaynak-kitaplar/:id/testler[/:test_id]` | `kaynak_kitap.yaz` | Test ekle (toplu), güncelle, sil (kullanımdaysa 409) |
+| GET | `/gunluk-soru/analiz` | `gunluk_soru.oku` (kendi) | Öğrencinin kendi analizi (**öneri yok**) |
+| GET | `/ogrenciler/:ogrenci_id/gunluk-soru/analiz` | `gunluk_soru.oku` (grup) | Öğretmen/yönetici: aynı tablo + `oneriler` |
+| GET | `/gunluk-soru/analiz/hucre`, `/ogrenciler/:ogrenci_id/gunluk-soru/analiz/hucre` | aynı | Hücre ayrıntısı: kayıtlar + fotoğraf okuma adresleri (medya iç ucu, soru-sor ile aynı yöntem) |
+| GET | `/gunluk-soru/sinif-analizi` | `gunluk_soru.oku` (grup) | Grup/sınıf: konu bazında toplam, zorlanan öğrenci sayısı, en çok zorlanılan 5 konu |
+| GET | `/ogrenciler/:ogrenci_id/gunluk-soru/haftalik-ozet` | `gunluk_soru.oku` (grup) | Çözülen, en zayıf 3 konu, bant değişimi |
+| POST | `/ogrenciler/:ogrenci_id/gunluk-soru/gorev-ver` | `plan.gorev.yaz` (+ ödev için `odev.ver`) | Öneriden haftalık plana görev (`plan_gorevi`) ya da tek öğrencilik ödev (`odev`); mevcut `planiAcYadaGetir`/`gorevleriEkle` ve ödev yayın fonksiyonları kullanılır |
+
+**Analiz kaynakları (tek tablo, "çözülen = D + Y + B"):** (1) `gunluk_soru_kayitlari` (zorluk bilgili); (2) teslim edilmiş `ogrenci_odevleri` (`odevler.konu_id` dolu, `yapilan_soru_sayisi` > 0; zorluk `belirtilmemis`; doğru sayısı girilmemişse başarıya girmez, yalnız "çözülen" olur); (3) plan görevi gerçekleşenleri **ayrı satır olarak alınmaz**: `plan_gorevleri` D/Y/B tutmaz ve plana bağlı günlük kayıt zaten (1)'dedir (çifte sayım olurdu). Başarı = `dogru / cozulen` (yalnız D/Y/B bilinen satırlar üzerinden; D/Y/B'siz ödev teslimi başarıya ve bant tespitine girmez).
+
+**Dönem:** `donem=7|30|donem` (`donem` = 120 gün, okul yarıyılı) ya da `bas`/`bit` (en çok 366 gün); bitiş varsayılan bugün (Europe/Istanbul).
+
+**Zorluk bandı tespiti ve öneriler:** `services/api/src/modules/ogrenme/gunluk-soru-bant.ts` (saf fonksiyonlar, eşikler tek yerde): bant başına en az 10 soru, yoksa "veri az"; ilk **belirgin düşüş** bandı: bir önceki yeterli banda göre ≥ 20 puan düşüş ve başarı < %70, ya da kolay/orta bantta mutlak başarı < %50; "görev öner" 20 soru; "birebir ders gerekebilir": son 14 günde zor bantta ≥ 10 soru, başarı < %30 ve (iki hafta karşılaştırılabiliyorsa) son hafta önceki haftadan en az 10 puan iyi değil. Öneriler yalnız personel yanıtındadır; hiçbiri öğrenciye otomatik gitmez.
+
+**Performans (testle kilitli, `gunluk-soru-performans.test.ts`):** öğrenci başına 30 gün × günde 5 kayıt; 30 günlük konu analizi < 2 sn, 30 kişilik sınıf görünümü < 3 sn (tek SQL toplama, uygulamada döngü yok).
+
+**Olay:** `ogrenme.gunluk_soru.kaydedildi.v1` (oluşturma, düzeltme, silme; aynı işlemde outbox). Yük yalnız kimlik ve sayı (`kayit_id`, `ogrenci_id`, `brans_kodu`, `konu_id`, `zorluk`, `dogru`, `yanlis`, `bos`, `toplam`, `onceki_toplam`, `kayit_surumu`, `silindi`, `gun`). Tüketici `motivasyon.xp` ([motivasyon.md](motivasyon.md)).
 
 ## `abonelik`
 

@@ -278,6 +278,8 @@ export function kuralDegerleri(d: PlatformAyarDegerleri): KuralDegerleri {
     soruSorma: xp('soru_sorma'),
     soruAnladim: xp('soru_anladim'),
     soruTavan: tavan('soru'),
+    gunlukSoru: xp('gunluk_soru'),
+    gunlukSoruTavan: tavan('gunluk_soru'),
     kayit: xp('kayit_izledi'),
     kayitTavan: tavan('kayit'),
     denemeGirisi: xp('deneme_girisi'),
@@ -357,7 +359,7 @@ export function uyarilariHesapla(
   return u;
 }
 
-/** Tohum degerleri (migration 0002 ile ayni); uyari karsilastirmasinin referansi. */
+/** Tohum degerleri (migration 0002 + 0008 ile ayni); uyari karsilastirmasinin referansi. */
 export const TOHUM_DEGERLER: PlatformAyarDegerleri = {
   kurallar: {
     yoklama_geldi: { xp: 20, olay_basi_ust_sinir: null, gec_carpani: 1, aktif: true },
@@ -371,9 +373,10 @@ export const TOHUM_DEGERLER: PlatformAyarDegerleri = {
     soru_anladim: { xp: 5, olay_basi_ust_sinir: null, gec_carpani: 1, aktif: true },
     geri_bildirim: { xp: 2, olay_basi_ust_sinir: null, gec_carpani: 1, aktif: true },
     kayit_izledi: { xp: 5, olay_basi_ust_sinir: null, gec_carpani: 1, aktif: true },
+    gunluk_soru: { xp: 2, olay_basi_ust_sinir: null, gec_carpani: 1, aktif: true },
     haftanin_yildizi: { xp: 50, olay_basi_ust_sinir: null, gec_carpani: 1, aktif: true },
   },
-  tavanlar: { genel: 300, plan: 40, odak: 120, soru: 20, kayit: 15 },
+  tavanlar: { genel: 300, plan: 40, odak: 120, soru: 20, kayit: 15, gunluk_soru: 10 },
 };
 
 async function seviyeEsikleri(tx: Orm): Promise<Map<number, number>> {

@@ -2763,6 +2763,37 @@ export const tr = {
       },
     },
   },
+  // --- Gunluk soru takibi ve konu analizi (web ve mobil; API hata kodlari ve oneri metinleri) ---
+  gunlukSoru: {
+    zorluk: { kolay: 'Kolay', orta: 'Orta', zor: 'Zor', belirtilmemis: 'Belirtilmemiş' },
+    bant: {
+      veriAz: 'Veri az',
+      tespitYok: 'Belirgin sorun yok',
+      zorlaniyor: '{bant} seviyede zorlanıyor',
+    },
+    oneri: {
+      gorevOner: '{konu}: {zorluk} seviyeden {sayi} soruluk görev öner',
+      birebirDers: '{konu}: birebir ders gerekebilir (zor seviyede %{basari} başarı, düzelmiyor)',
+    },
+    degisim: { iyilesti: 'İyileşti', ayni: 'Aynı', kotulesti: 'Kötüleşti', belirsiz: 'Belirsiz' },
+    hata: {
+      kayit_duzenlenemez: 'Kayıt yalnızca girildiği gün içinde düzeltilebilir ya da silinebilir.',
+      soru_toplami_gecersiz: 'Toplam soru sayısı 1 ile 500 arasında olmalı.',
+      gun_gecersiz: 'Gün bugünden en çok 6 gün öncesine kadar olabilir, gelecek olamaz.',
+      konu_gecersiz: 'Konu bulunamadı ya da seçtiğin derse ait değil.',
+      brans_gecersiz: 'Ders geçersiz.',
+      kaynak_testi_gecersiz: 'Kaynak testi bulunamadı ya da bu dersin kitabı değil.',
+      plan_gorevi_gecersiz: 'Plan görevi bulunamadı, soru görevi değil ya da sana ait değil.',
+      istek_cakismasi: 'Bu kayıt zaten gönderilmiş.',
+      kaynak_testi_kullanimda: 'Bu test günlük kayıtlarda kullanıldığı için silinemez.',
+      surum_cakismasi: 'Kayıt bu arada değişti. Yenileyip tekrar dene.',
+      dosya_zaten_bagli: 'Fotoğraf zaten başka bir kayda bağlı. Yeniden yükle.',
+      dosya_hazir_degil: 'Fotoğraf henüz hazır değil. Birazdan tekrar dene.',
+      dosya_gecersiz: 'Fotoğraf bu kayıt için kullanılamıyor.',
+      gorev_hedefi_gecersiz: 'Görev bu öğrenci için verilemiyor.',
+      plan_kilitli: 'Bu haftanın planı kilitlendi; görev eklenemez.',
+    },
+  },
   // --- Soru sor (apps/web) ---
   soruSor: {
     sayfa: {

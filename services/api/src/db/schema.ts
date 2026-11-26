@@ -507,5 +507,6 @@ export * from './schema-finans.js';
 export * from './schema-kaynak.js';
 export * from './schema-mufredat.js';
 export * from './schema-odev.js';
+export * from './schema-gunluk-soru.js';
 export * from './schema-plan.js';
 export * from './schema-soru.js';
