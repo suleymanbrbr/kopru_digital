@@ -9,6 +9,7 @@ import {
   type UyelikBaglami,
 } from '../api/tipler';
 import { depoOlustur } from '../lib/store';
+import type { AnlikDeposu, OturumAnligi } from './anlik';
 
 export interface AktifBaglam {
   uyelik: Uyelik & { rol: MobilRol };
@@ -47,6 +48,11 @@ export interface OturumYoneticisiBagimliliklari {
    * cihaz kaydinin silinmesi). Hata cikisi engellemez.
    */
   cikisOncesi?: () => Promise<void>;
+  /**
+   * Oturum anligi deposu (bkz. `anlik.ts`): varsa soguk acilista ilk durum ag beklenmeden anliktan
+   * kurulur ve sunucu dogrulamasi arka planda yapilir.
+   */
+  anlik?: AnlikDeposu;
 }
 
 /**
@@ -58,9 +64,94 @@ export function oturumYoneticisiOlustur({
   temizle,
   kullaniciCikisi,
   cikisOncesi,
+  anlik,
 }: OturumYoneticisiBagimliliklari) {
   const depo = depoOlustur<OturumDurumu>({ asama: 'baslatiliyor' });
   const { auth } = adaptorler;
+
+  /** Durum degisince anligi esler: yalniz KVKK onayli `giris` yazilir; digerlerinde silinir. */
+  if (anlik) {
+    depo.abone(() => {
+      const d = depo.al();
+      if (d.asama === 'baslatiliyor') return;
+      if (d.asama === 'giris' && kvkkOnayliMi(d.kvkk)) {
+        anlik.yaz({
+          kullanici: { id: d.kullanici.id, adSoyad: d.kullanici.adSoyad },
+          uyelikler: d.uyelikler,
+          kvkkSurum: d.kvkk.guncelSurum,
+          aktif: d.aktif
+            ? {
+                uyelikId: d.aktif.uyelik.uyelikId,
+                moduller: d.aktif.moduller,
+                vurgu: d.aktif.vurgu,
+              }
+            : null,
+        });
+      } else {
+        anlik.sil();
+      }
+    });
+  }
+
+  /** Anliktan ilk durum: ag yok. `aktif` yoksa kurum secimine gider. */
+  function anliktanKur(a: OturumAnligi): void {
+    const aktifUyelik = a.aktif ? a.uyelikler.find((u) => u.uyelikId === a.aktif?.uyelikId) : null;
+    if (a.aktif && aktifUyelik) {
+      auth.etkinBaglamiAyarla({ kurumId: aktifUyelik.kurumId, uyelikId: aktifUyelik.uyelikId });
+    }
+    depo.ayarla(() => ({
+      asama: 'giris',
+      kullanici: { id: a.kullanici.id, adSoyad: a.kullanici.adSoyad, telefon: '' },
+      uyelikler: a.uyelikler,
+      kvkk: { guncelSurum: a.kvkkSurum, kabulEdilenSurum: a.kvkkSurum, metinler: [] },
+      aktif:
+        a.aktif && aktifUyelik
+          ? { uyelik: aktifUyelik, moduller: a.aktif.moduller, vurgu: a.aktif.vurgu }
+          : null,
+    }));
+  }
+
+  let tazeleme: Promise<void> = Promise.resolve();
+
+  /** Anliktan acilista sunucu dogrulamasi (arka plan): durumu sunucuyla esler. */
+  async function tazele(): Promise<void> {
+    try {
+      const bilgi = await auth.oturumBilgisi();
+      const d = depo.al();
+      if (d.asama !== 'giris') return;
+      const uyelikler = bilgi.uyelikler.filter(mobilUyelikMi);
+      depo.ayarla({ kullanici: bilgi.kullanici, uyelikler, kvkk: bilgi.kvkk });
+      const onceki = d.aktif;
+      if (!onceki) return;
+      // Yeni KVKK metni ya da kalkmis uyelik: etkin baglam birakilir (kurum secimi/KVKK ekrani).
+      if (
+        !kvkkOnayliMi(bilgi.kvkk) ||
+        !uyelikler.some((u) => u.uyelikId === onceki.uyelik.uyelikId)
+      ) {
+        depo.ayarla({ aktif: null });
+        return;
+      }
+      const b = await auth.uyelikSec(onceki.uyelik.uyelikId);
+      if (!mobilUyelikMi(b.uyelik) || depo.al().asama !== 'giris') return;
+      depo.ayarla({ aktif: { uyelik: b.uyelik, moduller: b.moduller, vurgu: b.vurgu } });
+    } catch (e) {
+      if (apiHatasiMi(e) && e.kod === 'yetkisiz') {
+        temizle?.();
+        depo.ayarla(() => ({ asama: 'cikis' }));
+      } else if (apiHatasiMi(e) && e.kod === 'riza_gerekli') {
+        depo.ayarla((onceki) =>
+          onceki.asama === 'giris'
+            ? {
+                ...onceki,
+                kvkk: { ...onceki.kvkk, kabulEdilenSurum: null, metinler: [] },
+                aktif: null,
+              }
+            : onceki,
+        );
+      }
+      // Ag/sunucu hatasi: anlik durum korunur (cevrimdisi acilis); sorgular kendi hatasini gosterir.
+    }
+  }
 
   async function yukle(): Promise<void> {
     const bilgi = await auth.oturumBilgisi();
@@ -77,12 +168,24 @@ export function oturumYoneticisiOlustur({
     depo,
     /** Acilista kayitli oturumu geri yukler. */
     async baslat() {
+      // Hizli yol: anlik + cihazda belirtec varsa agi beklemeden ac, dogrulamayi arka planda yap.
+      const a = anlik?.oku() ?? null;
+      if (a) {
+        if (await auth.oturumVarMi().catch(() => false)) {
+          anliktanKur(a);
+          tazeleme = tazele();
+          return;
+        }
+        anlik?.sil();
+      }
       try {
         await yukle();
       } catch {
         depo.ayarla(() => ({ asama: 'cikis' }));
       }
     },
+    /** Anliktan acilista arka plan dogrulamasinin bitmesini bekler (testler icin). */
+    tazeleBitti: () => tazeleme,
     /** OTP dogrulandiktan sonra cagrilir. */
     async girisTamamlandi() {
       await yukle();

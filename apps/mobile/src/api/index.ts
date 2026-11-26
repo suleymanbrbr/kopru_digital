@@ -18,6 +18,8 @@ function baglanmamisAdaptorler(): Adaptorler {
       oturumBilgisi: hata,
       kvkkMetinleri: hata,
       kvkkKabulEt: hata,
+      oturumVarMi: () => Promise.resolve(false),
+      etkinBaglamiAyarla: () => undefined,
       uyelikSec: hata,
       cikis: () => Promise.resolve(),
     },
@@ -156,6 +158,11 @@ function baglanmamisAdaptorler(): Adaptorler {
       oturumlar: hata,
       oturumSonlandir: hata,
       oturumlariKapat: hata,
+      silmeDurumu: hata,
+      silmeKoduGonder: hata,
+      silmeTalebiAc: hata,
+      silmeTalebiGeriAl: hata,
+      verilerimiIndir: hata,
     },
   };
 }

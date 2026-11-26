@@ -29,6 +29,7 @@ import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { DuyuruKarti } from './duyuru/DuyuruKarti';
+import { SilmeSeridi } from './hesabim/SilmeSeridi';
 import { OgretmenOgrenmeKartlari } from './OgretmenOgrenmeKartlari';
 
 /**
@@ -144,7 +145,15 @@ export function OgretmenBugun() {
   const dersler = [...(bugun.data ?? [])].sort((a, b) => a.baslangic.localeCompare(b.baslangic));
 
   return (
-    <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
+    <Ekran
+      ust={
+        <>
+          <CevrimdisiSerit />
+          <SilmeSeridi />
+        </>
+      }
+      kenarlar={['top', 'left', 'right']}
+    >
       <View className="flex-row items-center gap-2">
         <View className="flex-1">
           <Metin varyant="baslik" accessibilityRole="header">

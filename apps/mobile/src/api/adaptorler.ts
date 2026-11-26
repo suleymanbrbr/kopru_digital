@@ -15,8 +15,12 @@ import type {
   OturumBilgisi,
   OturumKaydi,
   RizaMetni,
+  SilmeDogrulama,
+  SilmeDurumu,
+  SilmeTalebi,
   SinifBekleyenleri,
   UyelikBaglami,
+  VeriDosyasi,
 } from './tipler';
 
 /**
@@ -36,6 +40,13 @@ export interface AuthAdapter {
   /** Etkin uyelik/kurum secimi (yeni erisim belirteci alir). */
   uyelikSec: (uyelikId: string) => Promise<UyelikBaglami>;
   cikis: () => Promise<void>;
+  /** Cihazda kayitli oturum (belirtec) var mi? Ag istegi yapmaz; soguk acilista anlik karari icin. */
+  oturumVarMi: () => Promise<boolean>;
+  /**
+   * Oturum anligindan geri yuklenen etkin kurum/uyelik baglamini adaptore bildirir (ag istegi yok):
+   * sonraki istekler ve belirtec yenilemesi bu kapsamla yapilir. `null`: baglam yok.
+   */
+  etkinBaglamiAyarla: (baglam: { kurumId: string; uyelikId: string } | null) => void;
 }
 
 /** Ekranlarin veri adaptoru (okuma). */
@@ -77,6 +88,17 @@ export interface HesapAdapter {
   oturumlariKapat: (
     mevcutHaric: boolean,
   ) => Promise<{ kapatilan: number; kendiOturumuKapandi: boolean }>;
+
+  /** Hesap silme durumu: bekleyen talep, engeller, dogrulama yontemleri (KVKK, App Store 5.1.1(v)). */
+  silmeDurumu: () => Promise<SilmeDurumu>;
+  /** Kendi telefonuna silme dogrulama kodu (OTP) yollar. */
+  silmeKoduGonder: () => Promise<{ gecerlilikSn: number }>;
+  /** Yeniden dogrulamayla silme talebi acar (30 gun sonra kalici). Yanlis kod `otp_gecersiz`. */
+  silmeTalebiAc: (dogrulama: SilmeDogrulama) => Promise<SilmeTalebi>;
+  /** Bekleyen talebi geri alir. */
+  silmeTalebiGeriAl: () => Promise<SilmeTalebi>;
+  /** Kisisel verilerimi JSON olarak indirir (KVKK m.11). */
+  verilerimiIndir: () => Promise<VeriDosyasi>;
 }
 
 export interface Adaptorler {

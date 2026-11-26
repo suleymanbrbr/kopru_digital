@@ -1,0 +1,44 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true },
+      "env": {
+        "EXPO_PUBLIC_API_MOCK": "1"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging-api.kopru.example",
+        "APP_PUSH_MODU": "production"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.kopru.example",
+        "APP_PUSH_MODU": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "YER_TUTUCU_APP_STORE_CONNECT_UYGULAMA_KIMLIGI",
+        "appleTeamId": "YER_TUTUCU_TAKIM_KIMLIGI"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-servis-hesabi.json",
+        "track": "internal"
+      }
+    }
+  }
+}

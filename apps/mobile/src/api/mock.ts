@@ -20,6 +20,7 @@ import {
   type MobilRol,
   type OturumBilgisi,
   type OturumKaydi,
+  type SilmeTalebi,
   type SinifGrubu,
   type RizaMetni,
   type Rol,
@@ -70,6 +71,8 @@ const KVKK_METINLERI: RizaMetni[] = [
   },
 ];
 export const MOCK_OTP = '123456';
+/** Mock'ta parolasi olan hesap (telefonu `8` ile biten) icin silme dogrulama parolasi. */
+export const MOCK_PAROLA = 'mock-parola-1';
 
 const kurumlar = {
   a: { id: 'kurum-a', ad: 'Köprü Dershanesi', vurgu: null },
@@ -202,6 +205,7 @@ export function mockAdaptorler(
   const istekler: KatilimIstegi[] = [];
   let sayac = 0;
   let oturumlar: OturumKaydi[] = [];
+  let silmeTalebi: SilmeTalebi | null = null;
   let aktifUyelikId: string | null = null;
 
   function tumUyelikler(tel: string): Uyelik[] {
@@ -377,12 +381,19 @@ export function mockAdaptorler(
         const k = uyelik.kurumId === 'kurum-b' ? 'b' : 'a';
         return { uyelik, moduller: moduller(uyelik.rol, k), vurgu: kurumlar[k].vurgu };
       },
+      async oturumVarMi() {
+        return (await depo.oku()) !== null;
+      },
+      etkinBaglamiAyarla(baglam) {
+        aktifUyelikId = baglam?.uyelikId ?? null;
+      },
       async cikis() {
         await bekle(100);
         await depo.sil();
         telefon = null;
         ekUyelikler.length = 0;
         oturumlar = [];
+        silmeTalebi = null;
       },
     },
     hesap: {
@@ -520,6 +531,82 @@ export function mockAdaptorler(
         oturumlar = mevcutHaric ? oturumlar.filter((o) => o.buOturum) : [];
         if (!mevcutHaric) await depo.sil();
         return { kapatilan: once - oturumlar.length, kendiOturumuKapandi: !mevcutHaric };
+      },
+
+      /**
+       * Mock silme akisi: telefonu `…7` ile biten kullanici kurum sahibi engeli gorur; `…8` ile
+       * biten kullanicinin parolasi vardir (`MOCK_PAROLA`); digerleri yalniz OTP (`MOCK_OTP`).
+       */
+      async silmeDurumu() {
+        await bekle(gecikmeMs / 2);
+        await oturumGerekli();
+        const tel = telefon ?? '5550000001';
+        return {
+          talep: silmeTalebi ? { ...silmeTalebi } : null,
+          sogumaGun: 30,
+          engeller: tel.endsWith('7')
+            ? [{ kurumId: kurumlar.a.id, kurumAd: kurumlar.a.ad, digerUyeSayisi: 12 }]
+            : [],
+          dogrulamaYontemleri: tel.endsWith('8') ? ['otp', 'parola'] : ['otp'],
+        };
+      },
+      async silmeKoduGonder() {
+        await bekle(gecikmeMs);
+        await oturumGerekli();
+        return { gecerlilikSn: 300 };
+      },
+      async silmeTalebiAc(dogrulama) {
+        await bekle(gecikmeMs);
+        await oturumGerekli();
+        const tel = telefon ?? '5550000001';
+        if (tel.endsWith('7')) {
+          throw new ApiHata('cakisma', undefined, { durum: 409, ayrinti: 'kurum_sahibi_engeli' });
+        }
+        if (silmeTalebi?.durum === 'beklemede') {
+          throw new ApiHata('cakisma', undefined, { durum: 409, ayrinti: 'silme_talebi_var' });
+        }
+        const gecerli =
+          dogrulama.yontem === 'otp'
+            ? dogrulama.kod === MOCK_OTP
+            : dogrulama.parola === MOCK_PAROLA;
+        if (!gecerli) throw new ApiHata('otp_gecersiz', undefined, { durum: 401 });
+        const simdi = Date.now();
+        silmeTalebi = {
+          id: `silme-${++sayac}`,
+          durum: 'beklemede',
+          talep: new Date(simdi).toISOString(),
+          planlanan: new Date(simdi + 30 * 24 * 3600_000).toISOString(),
+        };
+        return { ...silmeTalebi };
+      },
+      async silmeTalebiGeriAl() {
+        await bekle(gecikmeMs);
+        await oturumGerekli();
+        if (silmeTalebi?.durum !== 'beklemede') {
+          throw new ApiHata('bulunamadi', undefined, { durum: 404 });
+        }
+        silmeTalebi = { ...silmeTalebi, durum: 'geri_alindi' };
+        return { ...silmeTalebi };
+      },
+      async verilerimiIndir() {
+        await bekle(gecikmeMs);
+        await oturumGerekli();
+        const tel = telefon ?? '5550000001';
+        const icerik = {
+          kullanici_id: `kullanici-${tel}`,
+          olusturuldu_at: new Date().toISOString(),
+          hesap: { gorunen_ad: 'Deniz Yılmaz', telefon_e164: `+90${tel}`, dil: 'tr' },
+          bolumler: {
+            uyelikler: tumUyelikler(tel).map((u) => ({ kurum_id: u.kurumId, rol: u.rol })),
+          },
+          servisler: {},
+          eksik_servisler: [],
+        };
+        return {
+          dosyaAdi: `kopru-verilerim-${new Date().toISOString().slice(0, 10)}.json`,
+          icerik: JSON.stringify(icerik, null, 2),
+          eksikServisler: [],
+        };
       },
     },
     veri: {
