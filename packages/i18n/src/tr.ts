@@ -3933,7 +3933,7 @@ export const tr = {
     },
     ozet: {
       baslik: 'Öğrenci',
-      aciklama: 'Öğrencinin motivasyon özeti',
+      aciklama: 'Koçluk, konu analizi ve motivasyon özeti',
       sekmeler: 'Öğrenci kartı bölümleri',
       sekmeOzet: 'Özet',
       geri: 'Öğrencilere dön',
