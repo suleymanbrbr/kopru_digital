@@ -86,13 +86,15 @@ export function HucreAyrintisi({ sorgu, konuId, konuAd, zorluk, ogrenciId, kapat
                     key={d.medyaDosyaId}
                     source={gorselKaynagi(d.adres)}
                     accessibilityLabel={t('mobil.gunluk.analiz.fotoEtiketi', { n: i + 1 })}
-                    className="h-24 w-24 rounded-orta bg-yuzeyIkincil"
+                    className="rounded-orta bg-yuzeyIkincil"
+                    style={{ width: 96, height: 96 }}
                     resizeMode="cover"
                   />
                 ) : (
                   <View
                     key={d.medyaDosyaId}
-                    className="h-24 w-24 items-center justify-center rounded-orta bg-yuzeyIkincil"
+                    className="items-center justify-center rounded-orta bg-yuzeyIkincil"
+                    style={{ width: 96, height: 96 }}
                   >
                     <Ikon ad="image-outline" boyut={24} />
                   </View>

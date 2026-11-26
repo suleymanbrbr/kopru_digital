@@ -33,7 +33,7 @@ export function SayiGirisi({ tur, deger, onDegis }: Props) {
     'h-14 w-14 items-center justify-center rounded-buyuk bg-yuzeyIkincil active:opacity-70';
   return (
     <View className="flex-row items-center gap-3" testID={`sayi-${tur}`}>
-      <View className="min-w-20 flex-1 flex-row items-center gap-2">
+      <View className="flex-1 flex-row items-center gap-2" style={{ minWidth: 80 }}>
         <Ikon ad={IKON[tur]} boyut={24} renk={renk} />
         <Metin varyant="altBaslik" className="flex-shrink">
           {ad}
@@ -64,8 +64,14 @@ export function SayiGirisi({ tur, deger, onDegis }: Props) {
         maxLength={3}
         selectTextOnFocus
         maxFontSizeMultiplier={1.3}
-        className="h-14 w-20 rounded-orta border border-kenar bg-yuzey text-center font-kalin text-2xl text-metin"
-        style={{ color: renkler.metin }}
+        className="rounded-orta border border-kenar bg-yuzey text-center font-kalin text-2xl text-metin"
+        style={{
+          color: renkler.metin,
+          width: 84,
+          height: 56,
+          paddingVertical: 0,
+          textAlignVertical: 'center',
+        }}
       />
       <Pressable
         accessibilityRole="button"

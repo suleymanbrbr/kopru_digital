@@ -4145,6 +4145,8 @@ export const tr = {
         kaynakMetniIpucu: 'Örnek: okul fasikülü',
         kitapYok: 'Bu ders için tanımlı kaynak kitap yok. Serbest yazabilirsin.',
         kitapDegistir: 'Kitabı değiştir',
+        testDegistir: 'Değiştir',
+        testDegistirEtiketi: '{kaynak}. Kaynağı değiştirmek için dokun',
         testEtiketi: '{test}, {soru} soru',
         testCozuldu: '{soru} soru · çözüldü',
         testSoru: '{soru} soru',

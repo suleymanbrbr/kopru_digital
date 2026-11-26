@@ -80,7 +80,8 @@ function HucreDugmesi({ zorluk, hucre, secili, zorlaniyor, onAc, testID }: Hucre
       disabled={bos}
       testID={testID}
       onPress={onAc}
-      className={`min-h-dokunma min-w-24 flex-1 gap-1 rounded-orta border px-2 py-2 active:opacity-80 ${SINIF[sinif].kutu} ${
+      style={{ minWidth: 96 }}
+      className={`min-h-dokunma flex-1 gap-1 rounded-orta border px-2 py-2 active:opacity-80 ${SINIF[sinif].kutu} ${
         secili ? 'border-2' : ''
       } ${zorlaniyor ? 'border-2 border-hata' : ''}`}
     >
@@ -128,7 +129,7 @@ export function KonuSatiri({ konu, acik, onAc }: Props) {
       testID={`konu-satiri-${konu.konuId}`}
     >
       <View
-        className="gap-0.5"
+        className="gap-1"
         accessible
         accessibilityRole="header"
         accessibilityLabel={konuEtiketi(konu)}

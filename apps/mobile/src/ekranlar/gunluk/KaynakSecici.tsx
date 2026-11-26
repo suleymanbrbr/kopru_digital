@@ -46,6 +46,8 @@ export function KaynakSecici({ bransKodu, deger, onDegis, sonlar }: Props) {
     deger.tur === 'test' ? deger.kitapId : null,
   );
   const [kitapListesiAcik, setKitapListesiAcik] = useState(deger.tur !== 'test');
+  // Test secildiyse liste kapanir (D/Y/B alani kaydirmadan gorunsun); "Degistir" yeniden acar.
+  const [testAcik, setTestAcik] = useState(deger.tur !== 'test');
   const kitaplar = useKaynakKitaplar(bransKodu ?? undefined, undefined, mod === 'test');
   const detay = useKaynakKitap(mod === 'test' ? kitapId : null);
 
@@ -74,7 +76,7 @@ export function KaynakSecici({ bransKodu, deger, onDegis, sonlar }: Props) {
         onDegis={modDegis}
       />
 
-      {sonSecimleri.length > 0 ? (
+      {sonSecimleri.length > 0 && !(deger.tur === 'test' && !testAcik) ? (
         <View className="gap-2" testID="son-kaynaklar">
           <Metin varyant="kucuk">{t('mobil.gunluk.form.sonKaynaklar')}</Metin>
           <View className="flex-row flex-wrap gap-2">
@@ -92,6 +94,7 @@ export function KaynakSecici({ bransKodu, deger, onDegis, sonlar }: Props) {
                     if (s.tur === 'test') {
                       setKitapId(s.kitapId);
                       setKitapListesiAcik(false);
+                      setTestAcik(false);
                     }
                     onDegis(s);
                   }}
@@ -116,97 +119,121 @@ export function KaynakSecici({ bransKodu, deger, onDegis, sonlar }: Props) {
       ) : null}
 
       {mod === 'test' ? (
-        <View className="gap-2" testID="kitap-secimi">
-          {kitaplar.isPending ? <Yukleniyor /> : null}
-          {kitaplar.isError && !kitaplar.data ? (
-            <HataDurumu mesaj={hataMesaji(kitaplar.error)} tekrar={() => void kitaplar.refetch()} />
-          ) : null}
-          {kitaplar.data?.length === 0 ? (
-            <BosDurum ikon="book-outline" mesaj={t('mobil.gunluk.form.kitapYok')} />
-          ) : null}
-          {kitapListesiAcik
-            ? kitaplar.data?.map((k) => (
-                <Pressable
-                  key={k.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${k.ad}${k.yayinevi ? `, ${k.yayinevi}` : ''}`}
-                  testID={`kitap-${k.id}`}
-                  onPress={() => {
-                    setKitapId(k.id);
-                    setKitapListesiAcik(false);
-                  }}
-                  className="min-h-dokunma flex-row items-center gap-2 rounded-orta border border-kenar bg-yuzey px-4 py-2 active:opacity-80"
-                >
-                  <Ikon ad="book-outline" boyut={20} />
-                  <View className="flex-1">
-                    <Metin varyant="etiket">{k.ad}</Metin>
-                    {k.yayinevi ? <Metin varyant="kucuk">{k.yayinevi}</Metin> : null}
-                  </View>
-                </Pressable>
-              ))
-            : null}
-          {!kitapListesiAcik && kitapId ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('mobil.gunluk.form.kitapDegistir')}
-              onPress={() => {
-                setKitapListesiAcik(true);
-              }}
-              className="min-h-dokunma flex-row items-center gap-2 active:opacity-80"
-            >
-              <Ikon ad="swap-horizontal" boyut={18} />
-              <Metin varyant="etiket" className="flex-1">
-                {detay.data?.ad ?? (deger.tur === 'test' ? deger.kitapAd : t('ortak.yukleniyor'))}
-              </Metin>
-              <Metin varyant="kucuk">{t('mobil.gunluk.form.kitapDegistir')}</Metin>
-            </Pressable>
-          ) : null}
-          {!kitapListesiAcik && detay.isError && !detay.data ? (
-            <HataDurumu mesaj={hataMesaji(detay.error)} tekrar={() => void detay.refetch()} />
-          ) : null}
-          {!kitapListesiAcik && detay.data ? (
-            <View className="gap-2" testID="test-listesi">
-              {detay.data.testler.map((x) => {
-                const secili = deger.tur === 'test' && deger.testId === x.id;
-                return (
+        deger.tur === 'test' && !testAcik ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('mobil.gunluk.form.testDegistirEtiketi', {
+              kaynak: kaynakAdi(deger) ?? '',
+            })}
+            testID="secili-test"
+            onPress={() => {
+              setTestAcik(true);
+            }}
+            className="min-h-dokunma flex-row items-center gap-2 rounded-orta border border-birincil bg-yuzeyIkincil px-4 py-2 active:opacity-80"
+          >
+            <Ikon ad="checkmark" boyut={18} />
+            <Metin varyant="etiket" className="flex-1">
+              {kaynakAdi(deger)}
+            </Metin>
+            <Metin varyant="kucuk">{t('mobil.gunluk.form.testDegistir')}</Metin>
+          </Pressable>
+        ) : (
+          <View className="gap-2" testID="kitap-secimi">
+            {kitaplar.isPending ? <Yukleniyor /> : null}
+            {kitaplar.isError && !kitaplar.data ? (
+              <HataDurumu
+                mesaj={hataMesaji(kitaplar.error)}
+                tekrar={() => void kitaplar.refetch()}
+              />
+            ) : null}
+            {kitaplar.data?.length === 0 ? (
+              <BosDurum ikon="book-outline" mesaj={t('mobil.gunluk.form.kitapYok')} />
+            ) : null}
+            {kitapListesiAcik
+              ? kitaplar.data?.map((k) => (
                   <Pressable
-                    key={x.id}
-                    accessibilityRole="radio"
-                    accessibilityLabel={t('mobil.gunluk.form.testEtiketi', {
-                      test: x.ad,
-                      soru: x.soruSayisi,
-                    })}
-                    accessibilityState={{ selected: secili, checked: secili }}
-                    testID={`test-${x.id}`}
+                    key={k.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${k.ad}${k.yayinevi ? `, ${k.yayinevi}` : ''}`}
+                    testID={`kitap-${k.id}`}
                     onPress={() => {
-                      const kitap = detay.data;
-                      onDegis({
-                        tur: 'test',
-                        kitapId: kitap.id,
-                        kitapAd: kitap.ad,
-                        testId: x.id,
-                        testAd: x.ad,
-                      });
+                      setKitapId(k.id);
+                      setKitapListesiAcik(false);
                     }}
-                    className={`min-h-dokunma flex-row items-center gap-2 rounded-orta border px-4 py-2 active:opacity-80 ${
-                      secili ? 'border-birincil bg-yuzeyIkincil' : 'border-kenar bg-yuzey'
-                    }`}
+                    className="min-h-dokunma flex-row items-center gap-2 rounded-orta border border-kenar bg-yuzey px-4 py-2 active:opacity-80"
                   >
-                    {secili ? <Ikon ad="checkmark" boyut={18} /> : null}
-                    <Metin varyant="etiket" className="flex-1">
-                      {x.ad}
-                    </Metin>
-                    <Metin varyant="kucuk">
-                      {x.cozulduGun
-                        ? t('mobil.gunluk.form.testCozuldu', { soru: x.soruSayisi })
-                        : t('mobil.gunluk.form.testSoru', { soru: x.soruSayisi })}
-                    </Metin>
+                    <Ikon ad="book-outline" boyut={20} />
+                    <View className="flex-1">
+                      <Metin varyant="etiket">{k.ad}</Metin>
+                      {k.yayinevi ? <Metin varyant="kucuk">{k.yayinevi}</Metin> : null}
+                    </View>
                   </Pressable>
-                );
-              })}
-            </View>
-          ) : null}
-        </View>
+                ))
+              : null}
+            {!kitapListesiAcik && kitapId ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('mobil.gunluk.form.kitapDegistir')}
+                onPress={() => {
+                  setKitapListesiAcik(true);
+                }}
+                className="min-h-dokunma flex-row items-center gap-2 active:opacity-80"
+              >
+                <Ikon ad="swap-horizontal" boyut={18} />
+                <Metin varyant="etiket" className="flex-1">
+                  {detay.data?.ad ?? (deger.tur === 'test' ? deger.kitapAd : t('ortak.yukleniyor'))}
+                </Metin>
+                <Metin varyant="kucuk">{t('mobil.gunluk.form.kitapDegistir')}</Metin>
+              </Pressable>
+            ) : null}
+            {!kitapListesiAcik && detay.isError && !detay.data ? (
+              <HataDurumu mesaj={hataMesaji(detay.error)} tekrar={() => void detay.refetch()} />
+            ) : null}
+            {!kitapListesiAcik && detay.data ? (
+              <View className="gap-2" testID="test-listesi">
+                {detay.data.testler.map((x) => {
+                  const secili = deger.tur === 'test' && deger.testId === x.id;
+                  return (
+                    <Pressable
+                      key={x.id}
+                      accessibilityRole="radio"
+                      accessibilityLabel={t('mobil.gunluk.form.testEtiketi', {
+                        test: x.ad,
+                        soru: x.soruSayisi,
+                      })}
+                      accessibilityState={{ selected: secili, checked: secili }}
+                      testID={`test-${x.id}`}
+                      onPress={() => {
+                        const kitap = detay.data;
+                        setTestAcik(false);
+                        onDegis({
+                          tur: 'test',
+                          kitapId: kitap.id,
+                          kitapAd: kitap.ad,
+                          testId: x.id,
+                          testAd: x.ad,
+                        });
+                      }}
+                      className={`min-h-dokunma flex-row items-center gap-2 rounded-orta border px-4 py-2 active:opacity-80 ${
+                        secili ? 'border-birincil bg-yuzeyIkincil' : 'border-kenar bg-yuzey'
+                      }`}
+                    >
+                      {secili ? <Ikon ad="checkmark" boyut={18} /> : null}
+                      <Metin varyant="etiket" className="flex-1">
+                        {x.ad}
+                      </Metin>
+                      <Metin varyant="kucuk">
+                        {x.cozulduGun
+                          ? t('mobil.gunluk.form.testCozuldu', { soru: x.soruSayisi })
+                          : t('mobil.gunluk.form.testSoru', { soru: x.soruSayisi })}
+                      </Metin>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
+          </View>
+        )
       ) : null}
     </View>
   );

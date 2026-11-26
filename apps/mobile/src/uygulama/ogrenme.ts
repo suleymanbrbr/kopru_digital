@@ -21,7 +21,8 @@ export function useKonular(etkin = true) {
     queryKey: ['konular', uyelikId],
     queryFn: () => adaptorler.ogrenme.konular(),
     enabled: !!uyelikId && etkin,
-    staleTime: 60 * 60_000,
+    // Bos katalog saatlerce onbellekte kalmaz: konu sonradan tanimlanirsa bir sonraki acilista gelir.
+    staleTime: (q) => (q.state.data && q.state.data.length > 0 ? 60 * 60_000 : 0),
   });
 }
 

@@ -385,14 +385,7 @@ export function GunlukSoruFormu({
         ) : null}
       </View>
 
-      <KaynakSecici
-        key={`kaynak-${secim.bransKodu ?? ''}`}
-        bransKodu={secim.bransKodu}
-        deger={kaynak}
-        onDegis={setKaynak}
-        sonlar={dersSon?.kaynaklar ?? []}
-      />
-
+      {/* Sayilar kaynaktan once: 15 sn citasi icin D/Y/B kaydirmadan gorunur (kaynak hatirlanir). */}
       <Kart className="gap-4" testID="gunluk-sayilar">
         <SayiGirisi tur="dogru" deger={dogru} onDegis={setDogru} />
         <SayiGirisi tur="yanlis" deger={yanlis} onDegis={setYanlis} />
@@ -417,6 +410,14 @@ export function GunlukSoruFormu({
         ) : null}
       </Kart>
 
+      <KaynakSecici
+        key={`kaynak-${secim.bransKodu ?? ''}`}
+        bransKodu={secim.bransKodu}
+        deger={kaynak}
+        onDegis={setKaynak}
+        sonlar={dersSon?.kaynaklar ?? []}
+      />
+
       {!duzelt ? (
         <View className="gap-2" testID="gunluk-foto">
           <Metin varyant="etiket" accessibilityRole="header">
@@ -433,7 +434,8 @@ export function GunlukSoruFormu({
                   <Image
                     source={{ uri: f.uri }}
                     accessibilityLabel={t('mobil.gunluk.form.fotoEtiketi', { n: i + 1 })}
-                    className="h-24 w-24 rounded-orta bg-yuzeyIkincil"
+                    className="rounded-orta bg-yuzeyIkincil"
+                    style={{ width: 96, height: 96 }}
                   />
                   <Dugme
                     varyant="ikincil"
@@ -446,7 +448,10 @@ export function GunlukSoruFormu({
                 </View>
               ))}
               {hazirlaniyor > 0 ? (
-                <View className="h-24 w-24 items-center justify-center rounded-orta bg-yuzeyIkincil">
+                <View
+                  className="items-center justify-center rounded-orta bg-yuzeyIkincil"
+                  style={{ width: 96, height: 96 }}
+                >
                   <ActivityIndicator />
                 </View>
               ) : null}
