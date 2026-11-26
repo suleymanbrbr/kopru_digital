@@ -35,6 +35,7 @@ import { OfflineKuyruk, YOKLAMA_KUYRUGU } from '../offline/kuyruk';
 import { gerceklesenKuyrugaAl, planIsleyicisiKaydet } from '../offline/plan';
 import { yoklamaIsleyicisiKaydet } from '../offline/yoklama';
 import { ortam } from '../ortam';
+import { anlikDeposu } from '../oturum/anlik';
 import { oturumYoneticisiOlustur, type OturumYoneticisi } from '../oturum/yonetici';
 import { GonderimYoneticisi } from '../yukleme/gonderim';
 import { YuklemeKuyrugu } from '../yukleme/kuyruk';
@@ -135,6 +136,7 @@ export function servisleriKur(): Servisler {
 
   const oturum = oturumYoneticisiOlustur({
     adaptorler,
+    anlik: anlikDeposu(kv),
     cikisOncesi: () => bildirimRef.current?.cikis() ?? Promise.resolve(),
     temizle: () => {
       queryClient.clear();

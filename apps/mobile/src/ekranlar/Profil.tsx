@@ -40,7 +40,8 @@ function Satir({
     | 'key-outline'
     | 'notifications-outline'
     | 'megaphone-outline'
-    | 'card-outline';
+    | 'card-outline'
+    | 'person-circle-outline';
 }) {
   return (
     <Pressable
@@ -146,6 +147,13 @@ export function Profil() {
           etiket={t('mobil.profil.oturumlarim')}
           onPress={() => {
             router.push('/oturumlar');
+          }}
+        />
+        <Satir
+          ikon="person-circle-outline"
+          etiket={t('mobil.profil.hesabim')}
+          onPress={() => {
+            router.push('/hesabim');
           }}
         />
         {ortam.gelistirici ? (

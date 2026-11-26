@@ -21,6 +21,8 @@ import {
   type OturumKaydi,
   type RizaMetni,
   type Rol,
+  type SilmeDurumu,
+  type SilmeTalebi,
   type Uyelik,
   type UyelikBaglami,
 } from './tipler';
@@ -93,6 +95,17 @@ function katilimIstegiCevir(i: ApiKatilimIstegi): KatilimIstegi {
     durum: i.durum,
     olusturma: i.created_at,
   };
+}
+
+interface ApiSilmeTalebi {
+  id: string;
+  durum: SilmeTalebi['durum'];
+  planlanan_at: string;
+  talep_at: string;
+}
+
+function silmeTalebiCevir(t: ApiSilmeTalebi): SilmeTalebi {
+  return { id: t.id, durum: t.durum, planlanan: t.planlanan_at, talep: t.talep_at };
 }
 
 interface ApiKatilimKodu {
@@ -207,6 +220,15 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     }
   };
 
+  async function kodGecersizMi(yanit: Response): Promise<boolean> {
+    try {
+      const govde: unknown = await yanit.clone().json();
+      return hataGovdesiMi(govde) && govde.error.code === 'kod_gecersiz';
+    } catch {
+      return false;
+    }
+  }
+
   /** 401'de bir kez yenileyip ayni istegi tekrarlar (govde `clone` ile korunur). */
   const yenilemeliFetch: typeof globalThis.fetch = async (girdi, init) => {
     if (!(girdi instanceof Request)) return aglaFetch(girdi, init);
@@ -214,6 +236,9 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     const kullanilan = girdi.headers.get('Authorization')?.replace(/^Bearer /, '') ?? null;
     const yanit = await aglaFetch(girdi, init);
     if (yanit.status !== 401) return yanit;
+    // Yeniden dogrulama (hesap silme) yanlis kod/parolada da 401 `kod_gecersiz` doner: oturum
+    // gecerlidir, belirtec yenilemek ve istegi tekrarlamak yanlis denemeyi ikiye katlar.
+    if (await kodGecersizMi(yanit)) return yanit;
     const yeni = await yenile(kullanilan);
     kopya.headers.set('Authorization', `Bearer ${yeni}`);
     return aglaFetch(kopya, init);
@@ -438,6 +463,14 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         return { uyelik, moduller, vurgu: null };
       },
 
+      async oturumVarMi() {
+        return (await depo.oku()) !== null;
+      },
+
+      etkinBaglamiAyarla(baglam) {
+        aktif = baglam;
+      },
+
       async cikis() {
         try {
           const b = await depo.oku();
@@ -594,6 +627,55 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         );
         if (!mevcutHaric) await yerelOturumuKapat();
         return { kapatilan: d.kapatilan, kendiOturumuKapandi: !mevcutHaric };
+      },
+
+      async silmeDurumu() {
+        const d = veriAl(await yetkili.GET('/v1/hesap/ben/silme-talebi'));
+        return {
+          talep: d.talep ? silmeTalebiCevir(d.talep) : null,
+          sogumaGun: d.soguma_gun,
+          engeller: d.engeller.map((e) => ({
+            kurumId: e.kurum_id,
+            kurumAd: e.kurum_ad,
+            digerUyeSayisi: e.diger_uye_sayisi,
+          })),
+          dogrulamaYontemleri: d.dogrulama_yontemleri,
+        } satisfies SilmeDurumu;
+      },
+      async silmeKoduGonder() {
+        const d = otpAl(await yetkili.POST('/v1/hesap/ben/silme-talebi/kod-gonder', {}));
+        return { gecerlilikSn: d.gecerlilik_sn };
+      },
+      async silmeTalebiAc(dogrulama) {
+        const sonuc = await yetkili.POST('/v1/hesap/ben/silme-talebi', {
+          body: { dogrulama, kaynak },
+        });
+        // Yanlis kod/parola 401 `kod_gecersiz` doner; ama oturum dusmus DEGILDIR: `yetkisiz`a
+        // cevrilirse uygulama kullaniciyi cikisa yollar.
+        const govde: unknown = (sonuc as { error?: unknown }).error;
+        if (sonuc.response.status === 401 && hataGovdesiMi(govde)) {
+          if (govde.error.code === 'kod_gecersiz') {
+            throw new ApiHata('otp_gecersiz', govde.error.message, {
+              durum: 401,
+              ayrinti: 'kod_gecersiz',
+            });
+          }
+        }
+        return silmeTalebiCevir(otpAl(sonuc).talep);
+      },
+      async silmeTalebiGeriAl() {
+        // Govdesiz DELETE: `content-type` gonderilmez (acik bos govde de verilmez).
+        const d = veriAl(await yetkili.DELETE('/v1/hesap/ben/silme-talebi'));
+        return silmeTalebiCevir(d.talep);
+      },
+      async verilerimiIndir() {
+        const d = veriAl(await yetkili.GET('/v1/hesap/ben/verilerim'));
+        const gun = new Date(simdi()).toISOString().slice(0, 10);
+        return {
+          dosyaAdi: `kopru-verilerim-${gun}.json`,
+          icerik: JSON.stringify(d, null, 2),
+          eksikServisler: d.eksik_servisler,
+        };
       },
     },
 

@@ -25,5 +25,10 @@ export function cevrimiciKorumali(hesap: HesapAdapter, cevrimiciMi: () => boolea
     oturumlar: kor(hesap.oturumlar),
     oturumSonlandir: kor(hesap.oturumSonlandir),
     oturumlariKapat: kor(hesap.oturumlariKapat),
+    silmeDurumu: kor(hesap.silmeDurumu),
+    silmeKoduGonder: kor(hesap.silmeKoduGonder),
+    silmeTalebiAc: kor(hesap.silmeTalebiAc),
+    silmeTalebiGeriAl: kor(hesap.silmeTalebiGeriAl),
+    verilerimiIndir: kor(hesap.verilerimiIndir),
   };
 }
