@@ -10,7 +10,12 @@ import {
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { degerlendirmeMock, degerlendirmeMockSifirla } from './degerlendirme-mock';
-import { gunlukSoruMockSifirla } from './gunluk-soru-mock';
+import {
+  gunlukSoruMock,
+  gunlukSoruMockSifirla,
+  koclukBasladiMi,
+  koclukKitaplari,
+} from './gunluk-soru-mock';
 import { gunlukSoruKoprusu, ogrenmeMockSifirla } from './ogrenme-mock';
 import type { MockYanit } from './vekil';
 
@@ -294,5 +299,44 @@ describe('hatirlatma', () => {
       cagir(OGRETMEN, 'GET', 'degerlendirme-hatirlatma').govde,
     );
     expect(son.eksik_sayisi).toBe(8);
+  });
+});
+
+describe('basladi durumu', () => {
+  it('oneriden sonra o kitabin testiyle kayit girilince basladi olur; once girilen sayilmaz', () => {
+    const ben = caglar(OGRENCI);
+    const kitap = koclukKitaplari(OGRENCI).find((k) => k.ad === 'Seçme Matematik Fasikülleri');
+    expect(kitap).toBeTruthy();
+    const konu = gunlukSoruKoprusu(OGRENCI).konular.find((k) => k.brans_kodu === 'matematik');
+    const gecmis = new Date(Date.now() - 3_600_000).toISOString();
+    const gelecek = new Date(Date.now() + 3_600_000).toISOString();
+    const olc = { kitapId: kitap?.id ?? '', sonra: gecmis };
+    expect(koclukBasladiMi(OGRENCI, ben, olc).basladi).toBe(false);
+    const yanit = gunlukSoruMock({
+      yontem: 'POST',
+      yol: `kurumlar/${OGRENCI}/gunluk-soru/kayitlar`,
+      sorgu: new URLSearchParams(),
+      govde: {
+        brans_kodu: 'matematik',
+        konu_id: konu?.id,
+        zorluk: 'orta',
+        kaynak_test_id: kitap?.testler[0]?.id,
+        dogru: 5,
+        yanlis: 3,
+        bos: 2,
+        istek_id: crypto.randomUUID(),
+      },
+      basliklar: {},
+      kaynak: 'http://localhost',
+    });
+    expect(yanit?.durum).toBe(201);
+    const sonuc = koclukBasladiMi(OGRENCI, ben, olc);
+    expect(sonuc).toMatchObject({ basladi: true, kayit_sayisi: 1 });
+    expect(koclukBasladiMi(OGRENCI, ben, { ...olc, sonra: gelecek }).basladi).toBe(false);
+    // Baska kitabin testi bu oneriyi baslatmaz.
+    const baska = koclukKitaplari(OGRENCI).find((k) => k.id !== kitap?.id);
+    expect(
+      koclukBasladiMi(OGRENCI, ben, { kitapId: baska?.id ?? '', sonra: gecmis }).kayit_sayisi,
+    ).toBe(0);
   });
 });

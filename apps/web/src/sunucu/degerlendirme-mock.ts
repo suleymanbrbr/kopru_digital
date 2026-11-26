@@ -186,7 +186,7 @@ function kur(kurumId: string): Depo {
   deg(burcu, 2, 15, [3, 4, 3, 3], 'Hafta boyunca istikrarlı çalıştı.', false);
   deg(hasan, 3, 22, [2, 3, 2, 2], null, false);
 
-  const matKitap = koclukKitaplari(kurumId).find((x) => x.brans_kodu === 'matematik');
+  const matKitap = koclukKitaplari(kurumId).find((x) => x.ad === 'Seçme Matematik Fasikülleri');
   const rasyonel = k.konular.find((x) => x.ad === 'Rasyonel sayılar');
   const oneri = (
     o: Partial<Oneri> & Pick<Oneri, 'tur' | 'oneren_id' | 'oneren_ad'>,

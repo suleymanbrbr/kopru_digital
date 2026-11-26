@@ -135,6 +135,11 @@ function kur(kurumId: string): Depo {
     ['Test 2', 25],
     ['Test 3', 20],
   ]);
+  // Yalniz koçluk onerisi senaryosu icin: baska hicbir akis bu kitabi kullanmaz ("basladi" durumu izole kalir).
+  kitapYap('Seçme Matematik Fasikülleri', 'Deneme Yayınları', 'matematik', [
+    ['Test 1', 10],
+    ['Test 2', 10],
+  ]);
   kitapYap('Fen Bilimleri Konu Testleri', 'Deneme Yayınları', 'fen_bilimleri', [
     ['Test 1', 15],
     ['Test 2', 15],
