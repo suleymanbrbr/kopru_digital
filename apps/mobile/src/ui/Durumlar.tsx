@@ -19,7 +19,15 @@ export function Yukleniyor({ etiket = t('ortak.yukleniyor') }: { etiket?: string
 interface BosProps {
   mesaj: string;
   baslik?: string;
-  ikon?: 'sparkles' | 'calendar-outline' | 'chatbubbles-outline' | 'checkmark-circle-outline';
+  ikon?:
+    | 'sparkles'
+    | 'calendar-outline'
+    | 'chatbubbles-outline'
+    | 'checkmark-circle-outline'
+    | 'create-outline'
+    | 'document-outline'
+    | 'book-outline'
+    | 'stats-chart-outline';
 }
 
 /** Bos durum: yargilayici olmayan, yol gosteren kisa metin. */

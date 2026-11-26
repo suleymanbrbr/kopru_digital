@@ -1,3 +1,4 @@
+import type { GunlukSoruAdapter, Zorluk } from '../api/gunlukSoruTipleri';
 import type { MedyaTuru } from '../api/medyaTipleri';
 import type {
   CevapGirdisi,
@@ -14,7 +15,7 @@ import type { YuklemeKuyrugu } from './kuyruk';
 
 export const GONDERIM_TURU = 'soru.gonder';
 
-export type GonderimTuru = 'soru' | 'cevap' | 'takip';
+export type GonderimTuru = 'soru' | 'cevap' | 'takip' | 'gunluk_soru';
 export type GonderimDurumu = 'yukleniyor' | 'gonderiliyor' | 'gonderildi' | 'hata';
 
 /** Dosya referanslari yerel ADLARLA verilir (`dosyalar` eslemesi); gonderimde dosya kimliklerine cevrilir. */
@@ -40,6 +41,24 @@ export type GonderimGovdesi =
       isaretler?: { dosya: string; kaynak: string; cizimVerisi?: unknown }[];
     }
   | {
+      /**
+       * Gunluk soru kaydi. `gun` GIRIS gunudur (cevrimdisi girilen kayit gec gonderilse de gununde
+       * kalir); `fotograflar` yerel adlardir ve gonderimde dosya kimliklerine cevrilir.
+       */
+      tur: 'gunluk_soru';
+      gun: string;
+      bransKodu: string;
+      konuId: string;
+      zorluk: Zorluk;
+      kaynakTestId?: string;
+      kaynakMetin?: string;
+      dogru: number;
+      yanlis: number;
+      bos: number;
+      planGorevId?: string;
+      fotograflar: string[];
+    }
+  | {
       tur: 'cevap';
       soruId: string;
       metin?: string;
@@ -54,6 +73,8 @@ export type GonderimGovdesi =
     };
 
 export interface GonderimSonucu {
+  /** Gunluk soru icin olusan kaydin kimligi (`soruId` bos). */
+  gunlukKayitId?: string;
   soruId: string;
   /** Yalniz soru: tahmini ilk cevap suresi ve kalan kota. */
   tahmin?: SoruTahmini;
@@ -99,6 +120,8 @@ export interface GonderimSecenekleri {
   yukleme: YuklemeKuyrugu;
   kuyruk: OfflineKuyruk;
   soru: () => SoruAdapter;
+  /** Gunluk soru kaydi gonderimi icin (yoksa bu tur gonderilemez). */
+  gunlukSoru?: () => GunlukSoruAdapter;
   /** Gonderim sonuclaninca sorgu onbellegini tazelemek icin. */
   gonderildi?: (g: Gonderim) => void;
   simdi?: () => number;
@@ -320,6 +343,26 @@ export class GonderimYoneticisi {
   private async gonder(g: Gonderim): Promise<GonderimSonucu> {
     const soru = this.sec.soru();
     const b = g.govde;
+    if (b.tur === 'gunluk_soru') {
+      const gunluk = this.sec.gunlukSoru?.();
+      if (!gunluk) throw new ApiHata('yapilandirma');
+      const { kayit } = await gunluk.kayitOlustur({
+        gun: b.gun,
+        bransKodu: b.bransKodu,
+        konuId: b.konuId,
+        zorluk: b.zorluk,
+        ...(b.kaynakTestId ? { kaynakTestId: b.kaynakTestId } : {}),
+        ...(b.kaynakMetin ? { kaynakMetin: b.kaynakMetin } : {}),
+        dogru: b.dogru,
+        yanlis: b.yanlis,
+        bos: b.bos,
+        ...(b.planGorevId ? { planGorevId: b.planGorevId } : {}),
+        dosyaIdleri: b.fotograflar.map((ad) => this.dosyaKimligi(g, ad)),
+        // Ayni `istek_id` her denemede: kayit ikinci kez acilmaz (cevrimdisi tekrar guvenli).
+        istekId: g.istekId,
+      });
+      return { soruId: '', gunlukKayitId: kayit.id };
+    }
     if (b.tur === 'soru') {
       const s = await soru.soruSor({
         bransKodu: b.bransKodu,

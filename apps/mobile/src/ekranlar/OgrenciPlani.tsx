@@ -1,5 +1,6 @@
 import { t } from '@kopru/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -76,6 +77,7 @@ export function GorevKarti({
   bekliyor: boolean;
 }) {
   const qc = useQueryClient();
+  const router = useRouter();
   const { adaptorler, kuyruk } = useServisler();
   const uyelikId = useAktif()?.uyelik.uyelikId;
   const [acik, setAcik] = useState(false);
@@ -167,6 +169,24 @@ export function GorevKarti({
 
       {acik ? (
         <View className="gap-3 border-t border-kenar pt-3">
+          {gorev.hedefTuru === 'soru' ? (
+            <Dugme
+              etiket={t('mobil.gunluk.gorev.kayitGir')}
+              accessibilityHint={t('mobil.gunluk.gorev.kayitGirIpucu')}
+              testID={`gorev-kayit-gir-${gorev.id}`}
+              onPress={() => {
+                router.push({
+                  pathname: '/gunluk-soru-yeni',
+                  params: {
+                    planGorevId: gorev.id,
+                    bransKodu: gorev.bransKodu,
+                    ...(gorev.konuId ? { konuId: gorev.konuId } : {}),
+                    hedef: String(gorev.hedefMiktar),
+                  },
+                });
+              }}
+            />
+          ) : null}
           <MetinGirdisi
             etiket={
               gorev.hedefTuru === 'soru'

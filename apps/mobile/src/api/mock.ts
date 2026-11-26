@@ -6,6 +6,7 @@ import {
   type MockAbonelikSenaryosu,
 } from './mockAbonelik';
 import { mockBildirim } from './mockBildirim';
+import { mockGunlukSoru } from './mockGunlukSoru';
 import { mockKayit } from './mockKayit';
 import { mockMedya } from './mockMedya';
 import { mockMotivasyon } from './mockMotivasyon';
@@ -274,6 +275,7 @@ export function mockAdaptorler(
   };
   const operasyon = mockOperasyon(operasyonSecenekleri);
   const ogrenme = mockOgrenme(operasyonSecenekleri);
+  const gunlukSoru = mockGunlukSoru(operasyonSecenekleri, ogrenme);
   const kayit = mockKayit(operasyonSecenekleri, operasyon.okuma);
   const soru = mockSoru(operasyonSecenekleri);
   const medya = mockMedya({ gecikmeMs: Math.min(gecikmeMs, 200), isle: 300 });
@@ -303,6 +305,11 @@ export function mockAdaptorler(
       motivasyon.odul('odev');
     },
   });
+  const gunlukSoruXp = xpKancali(gunlukSoru, {
+    kayitOlustur: (r) => {
+      if ((r as { yeni?: boolean }).yeni) motivasyon.odul('gunluk_soru');
+    },
+  });
   const kayitXp = xpKancali(kayit, {
     izledim: () => {
       motivasyon.odul('kayit');
@@ -325,6 +332,7 @@ export function mockAdaptorler(
     ders: operasyon.ders,
     finans: operasyon.finans,
     ogrenme: ogrenmeXp,
+    gunlukSoru: gunlukSoruXp,
     kayit: kayitXp,
     soru: soruXp,
     medya,

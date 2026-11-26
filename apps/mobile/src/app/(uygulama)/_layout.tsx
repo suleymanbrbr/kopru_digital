@@ -89,6 +89,16 @@ export default function UygulamaDuzeni() {
           options={{ title: t('mobil.ogrenme.deneme.onayKuyrugu') }}
         />
         <Stack.Screen name="soru-yeni" options={{ title: t('mobil.soru.ogrenci.yeniBaslik') }} />
+        <Stack.Screen name="gunluk-soru-yeni" options={{ title: t('mobil.gunluk.form.baslik') }} />
+        <Stack.Screen
+          name="gunluk-kayitlarim"
+          options={{ title: t('mobil.gunluk.kayit.baslik') }}
+        />
+        <Stack.Screen
+          name="konu-analizi"
+          options={{ title: t('mobil.gunluk.analiz.ekranBaslik') }}
+        />
+        <Stack.Screen name="kaynak-kitaplar" options={{ title: t('mobil.gunluk.kitap.baslik') }} />
         <Stack.Screen name="sorularim" options={{ title: t('mobil.soru.ogrenci.sorularim') }} />
         <Stack.Screen name="soru/[id]" options={{ title: t('mobil.soru.detay.baslik') }} />
         <Stack.Screen name="soru-cevap/[id]" options={{ title: t('mobil.soru.cevap.baslik') }} />

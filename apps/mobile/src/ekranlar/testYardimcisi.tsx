@@ -12,6 +12,7 @@ import type { ReactElement } from 'react';
 import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 
 import { abonelikUyariYoneticisi } from '../abonelik/uyari';
+import { cevrimiciKorumaliGunlukSoru } from '../api/cevrimiciGunlukSoru';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
 import { mockAbonelikKontrolu, mockAdaptorler } from '../api/mock';
@@ -72,6 +73,7 @@ export function ortamKur(): Ortam {
   const cevrimici = { deger: true };
   // Uretimdeki gibi: cevrimdisiyken ogrenme istekleri gonderilmez (gerceklesen kuyrugu haric).
   adaptorler.ogrenme = cevrimiciKorumaliOgrenme(adaptorler.ogrenme, () => cevrimici.deger);
+  adaptorler.gunlukSoru = cevrimiciKorumaliGunlukSoru(adaptorler.gunlukSoru, () => cevrimici.deger);
   adaptorler.kayit = cevrimiciKorumaliKayit(adaptorler.kayit, () => cevrimici.deger);
   const geriBildirimDeposu = new GeriBildirimDeposu(bellekKv());
   const kuyruk = new OfflineKuyruk({
@@ -119,10 +121,13 @@ export function ortamKur(): Ortam {
     yukleme,
     kuyruk,
     soru: () => adaptorler.soru,
+    gunlukSoru: () => adaptorler.gunlukSoru,
     bekle: () => Promise.resolve(),
     hazirDeneme: { sayi: 2, araMs: 0 },
-    gonderildi: () => {
-      void queryClient.invalidateQueries({ queryKey: ['soru'] });
+    gonderildi: (g) => {
+      void queryClient.invalidateQueries({
+        queryKey: [g.tur === 'gunluk_soru' ? 'gunluk' : 'soru'],
+      });
     },
   });
   const queryClient = new QueryClient({

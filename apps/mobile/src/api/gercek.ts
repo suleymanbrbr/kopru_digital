@@ -5,6 +5,7 @@ import type { Belirtecler, BelirtecDeposu } from '../depo/belirtecDeposu';
 import type { Adaptorler } from './adaptorler';
 import { abonelikAdaptoru } from './gercekAbonelik';
 import { bildirimAdaptoru } from './gercekBildirim';
+import { gunlukSoruAdaptoru } from './gercekGunlukSoru';
 import { kayitAdaptoru } from './gercekKayit';
 import { medyaAdaptoru } from './gercekMedya';
 import { motivasyonAdaptoru } from './gercekMotivasyon';
@@ -344,6 +345,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
 
   const operasyon = operasyonAdaptorleri({ yetkili, etkinKurum, veriAl });
   const ogrenme = ogrenmeAdaptoru({ yetkili, etkinKurum, veriAl });
+  const gunlukSoru = gunlukSoruAdaptoru({ yetkili, etkinKurum, veriAl });
   const kayit = kayitAdaptoru({ yetkili, etkinKurum, veriAl });
   const soru = soruAdaptoru({ yetkili, etkinKurum, veriAl });
   const medya = medyaAdaptoru({ medya: medyaIstemcisi, veriAl });
@@ -360,6 +362,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   return {
     ...operasyon,
     ogrenme,
+    gunlukSoru,
     kayit,
     soru,
     medya,
