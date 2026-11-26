@@ -278,124 +278,88 @@ const SAYFA = 50;
 /** Gunluk soru, kaynak kitap, analiz ve "gorev ver" uclarini adaptor modeline ceviren gercek uygulama. */
 export function gunlukSoruAdaptoru(b: OperasyonBagimliligi): GunlukSoruAdapter {
   const { yetkili, veriAl } = b;
-  const kok = '/v1/ogrenme/kurumlar/{kurum_id}';
 
   return {
     async kayitOlustur(g) {
-      const sonuc = await yetkili.POST(
-        `${kok}/gunluk-soru/kayitlar` as never,
-        {
-          params: { path: { kurum_id: b.etkinKurum() } },
-          body: {
-            ...(g.gun ? { gun: g.gun } : {}),
-            brans_kodu: g.bransKodu,
-            konu_id: g.konuId,
-            zorluk: g.zorluk,
-            ...(g.kaynakTestId ? { kaynak_test_id: g.kaynakTestId } : {}),
-            ...(g.kaynakMetin ? { kaynak_metin: g.kaynakMetin } : {}),
-            dogru: g.dogru,
-            yanlis: g.yanlis,
-            bos: g.bos,
-            ...(g.planGorevId ? { plan_gorev_id: g.planGorevId } : {}),
-            dosya_idleri: g.dosyaIdleri,
-            istek_id: g.istekId,
-          },
-        } as never,
-      );
-      const kayit = veriAl(sonuc as { data?: ApiKayit; error?: unknown; response: Response });
-      return {
-        kayit: kayitCevir(kayit),
-        yeni: (sonuc as { response: Response }).response.status === 201,
-      };
+      const sonuc = await yetkili.POST('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/kayitlar', {
+        params: { path: { kurum_id: b.etkinKurum() } },
+        body: {
+          ...(g.gun ? { gun: g.gun } : {}),
+          brans_kodu: g.bransKodu,
+          konu_id: g.konuId,
+          zorluk: g.zorluk,
+          ...(g.kaynakTestId ? { kaynak_test_id: g.kaynakTestId } : {}),
+          ...(g.kaynakMetin ? { kaynak_metin: g.kaynakMetin } : {}),
+          dogru: g.dogru,
+          yanlis: g.yanlis,
+          bos: g.bos,
+          ...(g.planGorevId ? { plan_gorev_id: g.planGorevId } : {}),
+          dosya_idleri: g.dosyaIdleri,
+          istek_id: g.istekId,
+        },
+      });
+      const kayit = veriAl(sonuc);
+      // 201: yeni kayit; 200: ayni `istek_id` ile daha once acilmis kayit (cevrimdisi tekrar guvenli).
+      return { kayit: kayitCevir(kayit), yeni: sonuc.response.status === 201 };
     },
 
     async kayitDuzelt(id, g) {
       const d = veriAl(
-        (await yetkili.PATCH(
-          `${kok}/gunluk-soru/kayitlar/{id}` as never,
-          {
-            params: { path: { kurum_id: b.etkinKurum(), id } },
-            body: {
-              ...(g.bransKodu !== undefined ? { brans_kodu: g.bransKodu } : {}),
-              ...(g.konuId !== undefined ? { konu_id: g.konuId } : {}),
-              ...(g.zorluk !== undefined ? { zorluk: g.zorluk } : {}),
-              ...(g.kaynakTestId !== undefined ? { kaynak_test_id: g.kaynakTestId } : {}),
-              ...(g.kaynakMetin !== undefined ? { kaynak_metin: g.kaynakMetin } : {}),
-              ...(g.dogru !== undefined ? { dogru: g.dogru } : {}),
-              ...(g.yanlis !== undefined ? { yanlis: g.yanlis } : {}),
-              ...(g.bos !== undefined ? { bos: g.bos } : {}),
-              ...(g.planGorevId !== undefined ? { plan_gorev_id: g.planGorevId } : {}),
-              ...(g.dosyaIdleri !== undefined ? { dosya_idleri: g.dosyaIdleri } : {}),
-              ...(g.surum !== undefined ? { surum: g.surum } : {}),
-            },
-          } as never,
-        )) as { data?: ApiKayit; error?: unknown; response: Response },
+        await yetkili.PATCH('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/kayitlar/{id}', {
+          params: { path: { kurum_id: b.etkinKurum(), id } },
+          body: {
+            ...(g.bransKodu !== undefined ? { brans_kodu: g.bransKodu } : {}),
+            ...(g.konuId !== undefined ? { konu_id: g.konuId } : {}),
+            ...(g.zorluk !== undefined ? { zorluk: g.zorluk } : {}),
+            ...(g.kaynakTestId !== undefined ? { kaynak_test_id: g.kaynakTestId } : {}),
+            ...(g.kaynakMetin !== undefined ? { kaynak_metin: g.kaynakMetin } : {}),
+            ...(g.dogru !== undefined ? { dogru: g.dogru } : {}),
+            ...(g.yanlis !== undefined ? { yanlis: g.yanlis } : {}),
+            ...(g.bos !== undefined ? { bos: g.bos } : {}),
+            ...(g.planGorevId !== undefined ? { plan_gorev_id: g.planGorevId } : {}),
+            ...(g.dosyaIdleri !== undefined ? { dosya_idleri: g.dosyaIdleri } : {}),
+            ...(g.surum !== undefined ? { surum: g.surum } : {}),
+          },
+        }),
       );
       return kayitCevir(d);
     },
 
     async kayitSil(id) {
-      const s = (await yetkili.DELETE(
-        `${kok}/gunluk-soru/kayitlar/{id}` as never,
-        {
-          params: { path: { kurum_id: b.etkinKurum(), id } },
-        } as never,
-      )) as { data?: unknown; error?: unknown; response: Response };
+      const s = await yetkili.DELETE('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/kayitlar/{id}', {
+        params: { path: { kurum_id: b.etkinKurum(), id } },
+      });
       // 204: govde yok; `veriAl` `data === undefined` ile hata sayar, bu yuzden durumdan karar verilir.
       if (s.response.status !== 204) veriAl({ error: s.error, response: s.response });
     },
 
     async kayitlarim(s, imlec) {
       const d = veriAl(
-        (await yetkili.GET(
-          `${kok}/gunluk-soru/kayitlar` as never,
-          {
-            params: {
-              path: { kurum_id: b.etkinKurum() },
-              query: {
-                limit: SAYFA,
-                ...(s.gun ? { gun: s.gun } : {}),
-                ...(s.bas ? { bas: s.bas } : {}),
-                ...(s.bit ? { bit: s.bit } : {}),
-                ...(s.bransKodu ? { brans_kodu: s.bransKodu } : {}),
-                ...(imlec ? { imlec } : {}),
-              },
+        await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/kayitlar', {
+          params: {
+            path: { kurum_id: b.etkinKurum() },
+            query: {
+              limit: SAYFA,
+              ...(s.gun ? { gun: s.gun } : {}),
+              ...(s.bas ? { bas: s.bas } : {}),
+              ...(s.bit ? { bit: s.bit } : {}),
+              ...(s.bransKodu ? { brans_kodu: s.bransKodu } : {}),
+              ...(imlec ? { imlec } : {}),
             },
-          } as never,
-        )) as {
-          data?: { kayitlar: ApiKayit[]; sonraki_imlec: string | null };
-          error?: unknown;
-          response: Response;
-        },
+          },
+        }),
       );
-      return { kayitlar: d.kayitlar.map(kayitCevir), sonrakiImlec: d.sonraki_imlec };
+      return {
+        kayitlar: (d.kayitlar as unknown as ApiKayit[]).map(kayitCevir),
+        sonrakiImlec: d.sonraki_imlec,
+      };
     },
 
     async sonKullanilanlar(): Promise<SonKullanilanlar> {
       const d = veriAl(
-        (await yetkili.GET(
-          `${kok}/gunluk-soru/son-kullanilanlar` as never,
-          {
-            params: { path: { kurum_id: b.etkinKurum() } },
-          } as never,
-        )) as {
-          data?: {
-            dersler: {
-              brans_kodu: string;
-              son_kullanildi_at: string;
-              konular: { konu_id: string; konu_ad: string | null; son_zorluk: Zorluk }[];
-              kaynaklar: {
-                kaynak_test_id: string | null;
-                kaynak_kitap_id: string | null;
-                kitap_ad: string | null;
-                test_ad: string | null;
-                kaynak_metin: string | null;
-              }[];
-            }[];
-          };
-          error?: unknown;
-          response: Response;
-        },
+        await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/son-kullanilanlar', {
+          params: { path: { kurum_id: b.etkinKurum() } },
+        }),
       );
       return {
         dersler: d.dersler.map((x) => ({
@@ -419,114 +383,85 @@ export function gunlukSoruAdaptoru(b: OperasyonBagimliligi): GunlukSoruAdapter {
 
     async kaynakKitaplar(s = {}) {
       const d = veriAl(
-        (await yetkili.GET(
-          `${kok}/kaynak-kitaplar` as never,
-          {
-            params: {
-              path: { kurum_id: b.etkinKurum() },
-              query: {
-                ...(s.bransKodu ? { brans_kodu: s.bransKodu } : {}),
-                ...(s.ogrenciId ? { ogrenci_id: s.ogrenciId } : {}),
-                ...(s.pasifler ? { pasifler: 'true' } : {}),
-              },
+        await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/kaynak-kitaplar', {
+          params: {
+            path: { kurum_id: b.etkinKurum() },
+            query: {
+              ...(s.bransKodu ? { brans_kodu: s.bransKodu } : {}),
+              ...(s.ogrenciId ? { ogrenci_id: s.ogrenciId } : {}),
+              ...(s.pasifler ? { pasifler: true } : {}),
             },
-          } as never,
-        )) as { data?: { kitaplar: ApiKitap[] }; error?: unknown; response: Response },
+          },
+        }),
       );
-      return d.kitaplar.map(kitapCevir);
+      return (d.kitaplar as unknown as ApiKitap[]).map(kitapCevir);
     },
 
     async kaynakKitap(id, ogrenciId): Promise<KaynakKitapDetayi> {
       const d = veriAl(
-        (await yetkili.GET(
-          `${kok}/kaynak-kitaplar/{id}` as never,
-          {
-            params: {
-              path: { kurum_id: b.etkinKurum(), id },
-              query: ogrenciId ? { ogrenci_id: ogrenciId } : {},
-            },
-          } as never,
-        )) as {
-          data?: ApiKitap & { testler: ApiTest[] };
-          error?: unknown;
-          response: Response;
-        },
+        await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/kaynak-kitaplar/{id}', {
+          params: {
+            path: { kurum_id: b.etkinKurum(), id },
+            query: ogrenciId ? { ogrenci_id: ogrenciId } : {},
+          },
+        }),
       );
-      return { ...kitapCevir(d), testler: d.testler.map(testCevir) };
+      const kitap = d as unknown as ApiKitap & { testler: ApiTest[] };
+      return { ...kitapCevir(kitap), testler: kitap.testler.map(testCevir) };
     },
 
     async analiz(s, ogrenciId) {
-      const yol = ogrenciId
-        ? `${kok}/ogrenciler/{ogrenci_id}/gunluk-soru/analiz`
-        : `${kok}/gunluk-soru/analiz`;
-      const d = veriAl(
-        (await yetkili.GET(
-          yol as never,
-          {
-            params: {
-              path: { kurum_id: b.etkinKurum(), ...(ogrenciId ? { ogrenci_id: ogrenciId } : {}) },
-              query: { brans_kodu: s.bransKodu, donem: s.donem },
-            },
-          } as never,
-        )) as { data?: ApiAnaliz; error?: unknown; response: Response },
-      );
+      const kurum_id = b.etkinKurum();
+      const query = { brans_kodu: s.bransKodu, donem: s.donem };
+      const d = ogrenciId
+        ? veriAl(
+            await yetkili.GET(
+              '/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/gunluk-soru/analiz',
+              { params: { path: { kurum_id, ogrenci_id: ogrenciId }, query } },
+            ),
+          )
+        : veriAl(
+            await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/analiz', {
+              params: { path: { kurum_id }, query },
+            }),
+          );
       return analizCevir(d);
     },
 
     async hucre(s, ogrenciId) {
-      const yol = ogrenciId
-        ? `${kok}/ogrenciler/{ogrenci_id}/gunluk-soru/analiz/hucre`
-        : `${kok}/gunluk-soru/analiz/hucre`;
-      const d = veriAl(
-        (await yetkili.GET(
-          yol as never,
-          {
-            params: {
-              path: { kurum_id: b.etkinKurum(), ...(ogrenciId ? { ogrenci_id: ogrenciId } : {}) },
-              query: {
-                brans_kodu: s.bransKodu,
-                konu_id: s.konuId,
-                donem: s.donem,
-                ...(s.zorluk ? { zorluk: s.zorluk } : {}),
-              },
-            },
-          } as never,
-        )) as { data?: ApiHucreDetayi; error?: unknown; response: Response },
-      );
+      const kurum_id = b.etkinKurum();
+      const query = {
+        brans_kodu: s.bransKodu,
+        konu_id: s.konuId,
+        donem: s.donem,
+        ...(s.zorluk ? { zorluk: s.zorluk } : {}),
+      };
+      const d = ogrenciId
+        ? veriAl(
+            await yetkili.GET(
+              '/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/gunluk-soru/analiz/hucre',
+              { params: { path: { kurum_id, ogrenci_id: ogrenciId }, query } },
+            ),
+          )
+        : veriAl(
+            await yetkili.GET('/v1/ogrenme/kurumlar/{kurum_id}/gunluk-soru/analiz/hucre', {
+              params: { path: { kurum_id }, query },
+            }),
+          );
       return hucreDetayCevir(d);
     },
 
     async haftalikOzet(ogrenciId, hafta) {
       const d = veriAl(
-        (await yetkili.GET(
-          `${kok}/ogrenciler/{ogrenci_id}/gunluk-soru/haftalik-ozet` as never,
+        await yetkili.GET(
+          '/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/gunluk-soru/haftalik-ozet',
           {
             params: {
               path: { kurum_id: b.etkinKurum(), ogrenci_id: ogrenciId },
               query: hafta ? { hafta } : {},
             },
-          } as never,
-        )) as {
-          data?: {
-            ogrenci_id: string;
-            hafta_baslangic: string;
-            cozulen: number;
-            dogru: number;
-            yanlis: number;
-            bos: number;
-            basari: number | null;
-            en_zayif_konular: {
-              brans_kodu: string;
-              konu_id: string;
-              konu_ad: string | null;
-              cozulen: number;
-              basari: number | null;
-            }[];
-            bant: { onceki: ApiBant; simdiki: ApiBant; degisim: HaftalikOzetDegisim };
-          };
-          error?: unknown;
-          response: Response;
-        },
+          },
+        ),
       );
       return {
         ogrenciId: d.ogrenci_id,
@@ -553,8 +488,8 @@ export function gunlukSoruAdaptoru(b: OperasyonBagimliligi): GunlukSoruAdapter {
 
     async gorevVer(ogrenciId, g) {
       const d = veriAl(
-        (await yetkili.POST(
-          `${kok}/ogrenciler/{ogrenci_id}/gunluk-soru/gorev-ver` as never,
+        await yetkili.POST(
+          '/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/gunluk-soru/gorev-ver',
           {
             params: { path: { kurum_id: b.etkinKurum(), ogrenci_id: ogrenciId } },
             body: {
@@ -565,21 +500,8 @@ export function gunlukSoruAdaptoru(b: OperasyonBagimliligi): GunlukSoruAdapter {
               soru_sayisi: g.soruSayisi,
               ...(g.gun ? { gun: g.gun } : {}),
             },
-          } as never,
-        )) as {
-          data?:
-            | {
-                tur: 'plan_gorevi';
-                plan_id: string;
-                gorev_id: string;
-                hafta_baslangic: string;
-                gun: string;
-                plan_durum: 'taslak' | 'yayinda';
-              }
-            | { tur: 'odev'; odev_id: string; son_teslim_at: string };
-          error?: unknown;
-          response: Response;
-        },
+          },
+        ),
       );
       if (d.tur === 'plan_gorevi') {
         return {
@@ -595,5 +517,3 @@ export function gunlukSoruAdaptoru(b: OperasyonBagimliligi): GunlukSoruAdapter {
     },
   };
 }
-
-type HaftalikOzetDegisim = 'iyilesti' | 'ayni' | 'kotulesti' | 'belirsiz';
