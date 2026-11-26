@@ -149,9 +149,23 @@ const soruKodlari = new Set([
   'masa_var',
 ]);
 
+/** Gunluk soru takibi: bu koda ozgu mesajlar `gunlukSoru.hata.*` altindadir. */
+const gunlukSoruKodlari = new Set([
+  'kayit_duzenlenemez',
+  'soru_toplami_gecersiz',
+  'gun_gecersiz',
+  'kaynak_testi_gecersiz',
+  'plan_gorevi_gecersiz',
+  'kaynak_testi_kullanimda',
+  'gorev_hedefi_gecersiz',
+]);
+
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
   if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
+  if (hata instanceof UygulamaHatasi && gunlukSoruKodlari.has(hata.kod)) {
+    return t(`gunlukSoru.hata.${hata.kod}` as MessageKey);
+  }
   if (hata instanceof UygulamaHatasi && operasyonKodlari.has(hata.kod)) {
     return t(`operasyon.hata.${hata.kod}` as MessageKey);
   }

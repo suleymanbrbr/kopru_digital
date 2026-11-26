@@ -42,6 +42,21 @@ describe('ogrenme izinli yollar', () => {
       ['deneme-kurallari'],
       ['deneme-ayarlari'],
       ['gruplar', 'g', 'deneme-ozet'],
+      // Gunluk soru takibi ve kaynak kitaplar
+      ['gunluk-soru', 'kayitlar'],
+      ['gunluk-soru', 'kayitlar', 'k'],
+      ['gunluk-soru', 'son-kullanilanlar'],
+      ['gunluk-soru', 'analiz'],
+      ['gunluk-soru', 'analiz', 'hucre'],
+      ['gunluk-soru', 'sinif-analizi'],
+      ['ogrenciler', 'o', 'gunluk-soru', 'analiz'],
+      ['ogrenciler', 'o', 'gunluk-soru', 'analiz', 'hucre'],
+      ['ogrenciler', 'o', 'gunluk-soru', 'haftalik-ozet'],
+      ['ogrenciler', 'o', 'gunluk-soru', 'gorev-ver'],
+      ['kaynak-kitaplar'],
+      ['kaynak-kitaplar', 'b'],
+      ['kaynak-kitaplar', 'b', 'testler'],
+      ['kaynak-kitaplar', 'b', 'testler', 't'],
     ];
     for (const son of uclar) {
       expect(ogrenmeYoluIzinliMi(['kurumlar', K, ...son]), son.join('/')).toBe(true);
@@ -56,6 +71,14 @@ describe('ogrenme izinli yollar', () => {
       ['kurumlar', K, 'ogrenciler', 'o', 'finans'],
       ['kurumlar', K, 'denemeler', '..', 'x'],
       ['kurumlar', K, 'denemeler', 'sablon.xlsx.exe.js'],
+      ['kurumlar', K, 'gunluk-soru'],
+      ['kurumlar', K, 'gunluk-soru', 'kayitlar', 'k', 'x'],
+      ['kurumlar', K, 'gunluk-soru', 'analiz', 'baska'],
+      ['kurumlar', K, 'gunluk-soru', '..', 'analiz'],
+      ['kurumlar', K, 'ogrenciler', 'o', 'gunluk-soru'],
+      ['kurumlar', K, 'ogrenciler', 'o', 'gunluk-soru', 'kayitlar'],
+      ['kurumlar', K, 'kaynak-kitaplar', 'b', 'testler', 't', 'x'],
+      ['kurumlar', K, 'kaynak-kitaplar', 'b', 'baska'],
       ['admin'],
     ]) {
       expect(ogrenmeYoluIzinliMi(parcalar), parcalar.join('/')).toBe(false);

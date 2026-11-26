@@ -1849,6 +1849,122 @@ function denemeIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockY
   return null;
 }
 
+// --- Gunluk soru mock'u icin kopru ---------------------------------------------------------------
+
+/**
+ * `gunluk-soru-mock.ts` ogrenme durumuna (konu, plan, gorev, odev) yalniz bu kopru uzerinden erisir;
+ * boylece durum yapisi ve plan/odev kurallari bu dosyada kalir.
+ */
+export function gunlukSoruKoprusu(kurumId: string) {
+  const s = durum(kurumId);
+  const { ogretmenId, ogrenciler, benId, v } = kimlikler(kurumId);
+  return {
+    rol: rolu(kurumId),
+    benId,
+    ogretmenId,
+    ogrenciler: ogrenciler.map((u) => ({ id: u.uyelik_id, ad: u.gorunen_ad })),
+    gruplar: v.gruplar,
+    grupOgrencileri: (grupId: string) => grupOgrencileri(kurumId, grupId),
+    konular: s.konular.map((k) => ({
+      id: k.id,
+      ad: k.ad,
+      brans_kodu: k.brans_kodu,
+      ust_id: k.ust_id,
+      seviye: k.seviye,
+    })),
+    /** Ogrencinin yayindaki planindaki bir `soru` gorevi (yoksa `undefined`). */
+    soruGorevi(ogrenciId: string, gorevId: string) {
+      const g = s.gorevler.find(
+        (x) => x.id === gorevId && x.ogrenci_id === ogrenciId && x.hedef_turu === 'soru',
+      );
+      const p = g ? s.planlar.find((x) => x.id === g.plan_id) : undefined;
+      return p?.durum === 'yayinda' && g?.durum !== 'devredildi' ? g : undefined;
+    },
+    /** Gorevin gerceklesen miktarini baglanan kayitlarin toplamina esitler (durum yeniden hesaplanir). */
+    gorevMiktariniEsitle(gorevId: string, toplam: number) {
+      const g = s.gorevler.find((x) => x.id === gorevId);
+      if (!g) return;
+      g.gerceklesen_miktar = toplam;
+      g.durum = gorevDurumu(g.hedef_miktar as number, toplam);
+      g.tamamlandi_at = g.durum === 'tamam' ? simdi() : null;
+      g.surum += 1;
+    },
+    /** Oneriden plana gorev: plan yoksa yayinda acilir; hafta kilitliyse `null`. */
+    planaGorevEkle(a: {
+      ogrenciId: string;
+      gun: string;
+      brans: string;
+      konuId: string;
+      baslik: string;
+      miktar: number;
+    }) {
+      const hafta = pazartesi(a.gun);
+      if (planKilitli(hafta)) return null;
+      let plan = s.planlar.find((x) => x.ogrenci_id === a.ogrenciId && x.hafta_baslangic === hafta);
+      if (!plan) {
+        plan = planYap(a.ogrenciId, hafta, ogretmenId, 'yayinda');
+        s.planlar.push(plan);
+      }
+      const sira = s.gorevler.filter((x) => x.plan_id === plan.id && x.gun === a.gun).length;
+      const gorev = gorevYap(plan, a.gun, a.brans, 'soru', a.miktar, sira, {
+        konu_id: a.konuId,
+        baslik: a.baslik,
+      });
+      s.gorevler.push(gorev);
+      return {
+        plan_id: plan.id,
+        gorev_id: gorev.id,
+        hafta_baslangic: hafta,
+        gun: a.gun,
+        plan_durum: plan.durum,
+      };
+    },
+    /** Oneriden tek ogrencilik, yayinda odev. */
+    odevVer(a: {
+      ogrenciId: string;
+      brans: string;
+      konuId: string;
+      baslik: string;
+      miktar: number;
+      sonTeslimAt: string;
+    }) {
+      const o: Odev = {
+        id: uid(),
+        baslik: a.baslik,
+        aciklama: null,
+        brans_kodu: a.brans,
+        konu_id: a.konuId,
+        tur: 'soru',
+        kaynak: null,
+        hedef_turu: 'ogrenci',
+        hedef_id: a.ogrenciId,
+        veren_id: ogretmenId,
+        son_teslim_at: a.sonTeslimAt,
+        hedef_soru_sayisi: a.miktar,
+        fotograf_gerekli: false,
+        durum: 'yayinda',
+        yayin_at: simdi(),
+        fan_out_durum: 'tamamlandi',
+        atanan_sayisi: 1,
+        surum: 1,
+        created_at: simdi(),
+      };
+      s.odevler.push(o);
+      s.ogrOdevleri.push(ogrOdevAcilmis(o.id, a.ogrenciId));
+      return o;
+    },
+    /** Teslim edilmis, konulu odevler (analizde zorluk `belirtilmemis`). */
+    teslimler(ogrenciId: string) {
+      return s.ogrOdevleri
+        .filter((r) => r.ogrenci_id === ogrenciId && r.teslim_edildi === true)
+        .flatMap((r) => {
+          const o = s.odevler.find((x) => x.id === r.odev_id);
+          return o?.konu_id ? [{ r, o }] : [];
+        });
+    },
+  };
+}
+
 // --- Giris --------------------------------------------------------------------------------------
 
 export function ogrenmeMock(istek: MockIstek): MockYanit {
