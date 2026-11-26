@@ -27361,6 +27361,612 @@
         ]
       }
     },
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirme-hatirlatma": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eksik_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "hafta_baslangic": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "ogrenci_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "ogrenciler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ogrenci_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "son_degerlendirme_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "ogrenci_id",
+                          "ogrenci_ad",
+                          "son_degerlendirme_gun"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "hafta_baslangic",
+                    "ogrenci_sayisi",
+                    "eksik_sayisi",
+                    "ogrenciler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Bugun karti: bu hafta (Pazartesi-Pazar, Europe/Istanbul) KENDI yazdigi degerlendirmesi olmayan ogrencilerim (kapsamdaki etkin ogrenciler; sahip/yonetici icin herhangi birinin yazdigi). En eski/hic olmayan once, en cok 100; `eksik_sayisi` toplam. Bildirim uretmez.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirmeler/{id}": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "anlama_duzeyi": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "brans_kodu": {
+                    "maxLength": 40,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "calisma_duzeni": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "derse_katilim": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "donem_baslangic": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "donem_bitis": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "odev_disiplini": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "ogrenci_gorur": {
+                    "type": "boolean"
+                  },
+                  "surum": {
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "yorum": {
+                    "maxLength": 4000,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anlama_duzeyi": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "benim": {
+                      "type": "boolean"
+                    },
+                    "brans_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "calisma_duzeni": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "derse_katilim": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "donem_baslangic": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "donem_bitis": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "duzenleme_son_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "duzenlenebilir": {
+                      "type": "boolean"
+                    },
+                    "geri_cekildi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "odev_disiplini": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "ogrenci_gorur": {
+                      "type": "boolean"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "yazar_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "yazar_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yorum": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "yazar_id",
+                    "yazar_ad",
+                    "donem_baslangic",
+                    "donem_bitis",
+                    "brans_kodu",
+                    "calisma_duzeni",
+                    "derse_katilim",
+                    "odev_disiplini",
+                    "anlama_duzeyi",
+                    "yorum",
+                    "ogrenci_gorur",
+                    "geri_cekildi_at",
+                    "benim",
+                    "duzenlenebilir",
+                    "duzenleme_son_at",
+                    "surum",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Degerlendirmeyi duzenle: yalniz yazar (baskasi 403; kapsam disi ogrenci 404) ve olusturmadan sonraki 7 gun icinde (sonra 409 `degerlendirme_duzenlenemez`, yeni kayit yazilir); geri cekilmis kayit 409 `degerlendirme_geri_cekildi`. Verilen alanlar degisir, `null` alani temizler; `surum` iyimser kilit (409 `surum_cakismasi`). Gorunurluk kapaliyken acilirsa ogrenciye (bir kez) bildirim olayi yayimlanir.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirmeler/{id}/geri-cek": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anlama_duzeyi": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "benim": {
+                      "type": "boolean"
+                    },
+                    "brans_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "calisma_duzeni": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "derse_katilim": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "donem_baslangic": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "donem_bitis": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "duzenleme_son_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "duzenlenebilir": {
+                      "type": "boolean"
+                    },
+                    "geri_cekildi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "odev_disiplini": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "ogrenci_gorur": {
+                      "type": "boolean"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "yazar_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "yazar_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yorum": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "yazar_id",
+                    "yazar_ad",
+                    "donem_baslangic",
+                    "donem_bitis",
+                    "brans_kodu",
+                    "calisma_duzeni",
+                    "derse_katilim",
+                    "odev_disiplini",
+                    "anlama_duzeyi",
+                    "yorum",
+                    "ogrenci_gorur",
+                    "geri_cekildi_at",
+                    "benim",
+                    "duzenlenebilir",
+                    "duzenleme_son_at",
+                    "surum",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Degerlendirmeyi geri cek (silme degil): yazar ya da sahip/yonetici; baskasi 403, kapsam disi 404. Geri cekilen ogrenciye hicbir kosulda gorunmez ve kocluk gorunumunde yer almaz. Tekrar cagri 200 ve ayni kayit.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirmelerim": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "imlec",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degerlendirmeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "anlama_duzeyi": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "brans_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "calisma_duzeni": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "derse_katilim": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "donem_baslangic": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "donem_bitis": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "odev_disiplini": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "yazar_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "yorum": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "yazar_ad",
+                          "donem_baslangic",
+                          "donem_bitis",
+                          "brans_kodu",
+                          "calisma_duzeni",
+                          "derse_katilim",
+                          "odev_disiplini",
+                          "anlama_duzeyi",
+                          "yorum",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sonraki_imlec": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "degerlendirmeler",
+                    "sonraki_imlec"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrenci: kendisine GORUNUR isaretlenmis ve geri cekilmemis degerlendirmeler (en yeni once). Yanitta gorunurluk bayragi, yazar kimligi ve surum yoktur. Gorunur olmayan hicbir degerlendirme bu uctan (ya da baska bir uctan) alinamaz; veritabaninda ayrica RESTRICTIVE RLS vardir.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
     "/v1/ogrenme/kurumlar/{kurum_id}/deneme-ayarlari": {
       "get": {
         "parameters": [
@@ -35380,6 +35986,375 @@
         ]
       }
     },
+    "/v1/ogrenme/kurumlar/{kurum_id}/kaynak-onerileri/{id}/geri-cek": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "baglanti_url": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "basladi": {
+                      "nullable": true,
+                      "type": "boolean"
+                    },
+                    "baslik": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "benim": {
+                      "type": "boolean"
+                    },
+                    "brans_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "geri_cekildi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "ilk_kullanim_gun": {
+                      "format": "date",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "kayit_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "kaynak_kitap_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kaynak_kitap_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak_test_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kaynak_test_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "konu_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "konu_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "oneren_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "oneren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "son_kullanim_gun": {
+                      "format": "date",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "tur": {
+                      "enum": [
+                        "kaynak_kitap",
+                        "kaynak_kitap_testi",
+                        "link",
+                        "serbest"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "oneren_id",
+                    "oneren_ad",
+                    "tur",
+                    "kaynak_kitap_id",
+                    "kaynak_kitap_ad",
+                    "kaynak_test_id",
+                    "kaynak_test_ad",
+                    "baglanti_url",
+                    "baslik",
+                    "brans_kodu",
+                    "konu_id",
+                    "konu_ad",
+                    "not",
+                    "basladi",
+                    "ilk_kullanim_gun",
+                    "son_kullanim_gun",
+                    "kayit_sayisi",
+                    "geri_cekildi_at",
+                    "benim",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kaynak onerisini geri cek (silme degil): oneren ya da sahip/yonetici; baskasi 403, kapsam disi 404. Tekrar cagri 200.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/kaynak-onerilerim": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "oneriler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "baglanti_url": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "basladi": {
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "baslik": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "benim": {
+                            "type": "boolean"
+                          },
+                          "brans_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "geri_cekildi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "ilk_kullanim_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "kayit_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "kaynak_kitap_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kaynak_kitap_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak_test_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kaynak_test_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "oneren_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "oneren_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "son_kullanim_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "kaynak_kitap",
+                              "kaynak_kitap_testi",
+                              "link",
+                              "serbest"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ogrenci_id",
+                          "oneren_id",
+                          "oneren_ad",
+                          "tur",
+                          "kaynak_kitap_id",
+                          "kaynak_kitap_ad",
+                          "kaynak_test_id",
+                          "kaynak_test_ad",
+                          "baglanti_url",
+                          "baslik",
+                          "brans_kodu",
+                          "konu_id",
+                          "konu_ad",
+                          "not",
+                          "basladi",
+                          "ilk_kullanim_gun",
+                          "son_kullanim_gun",
+                          "kayit_sayisi",
+                          "geri_cekildi_at",
+                          "benim",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "oneriler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrenci: kendisine onerilen (geri cekilmeyen) kaynaklar, en yeni once (\"Ogretmenimin onerdikleri\"). Tek dokunusla gunluk kayitta kaynak olarak secilir; `basladi` kendi kayitlarindan hesaplanir.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
     "/v1/ogrenme/kurumlar/{kurum_id}/konular": {
       "get": {
         "parameters": [
@@ -39955,6 +40930,433 @@
         ]
       }
     },
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/degerlendirmeler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "imlec",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "geri_cekilenler",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ogrenci_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degerlendirmeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "anlama_duzeyi": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "benim": {
+                            "type": "boolean"
+                          },
+                          "brans_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "calisma_duzeni": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "derse_katilim": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "donem_baslangic": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "donem_bitis": {
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "duzenleme_son_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "duzenlenebilir": {
+                            "type": "boolean"
+                          },
+                          "geri_cekildi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "odev_disiplini": {
+                            "maximum": 5,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "ogrenci_gorur": {
+                            "type": "boolean"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "surum": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "yazar_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "yazar_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "yorum": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ogrenci_id",
+                          "yazar_id",
+                          "yazar_ad",
+                          "donem_baslangic",
+                          "donem_bitis",
+                          "brans_kodu",
+                          "calisma_duzeni",
+                          "derse_katilim",
+                          "odev_disiplini",
+                          "anlama_duzeyi",
+                          "yorum",
+                          "ogrenci_gorur",
+                          "geri_cekildi_at",
+                          "benim",
+                          "duzenlenebilir",
+                          "duzenleme_son_at",
+                          "surum",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sonraki_imlec": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "degerlendirmeler",
+                    "sonraki_imlec"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Personel: ogrencinin TUM ogretmenlerinin degerlendirmeleri (en yeni once, imlec sayfali; `geri_cekilenler=true` ile geri cekilenler de). Ogretmen yalniz kendi ogrencilerini gorur (kapsam disi 404).",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ogrenci_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "anlama_duzeyi": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "brans_kodu": {
+                    "maxLength": 40,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "calisma_duzeni": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "derse_katilim": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "donem_baslangic": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "donem_bitis": {
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                    "type": "string"
+                  },
+                  "odev_disiplini": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "ogrenci_gorur": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "yorum": {
+                    "maxLength": 4000,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "donem_baslangic"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anlama_duzeyi": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "benim": {
+                      "type": "boolean"
+                    },
+                    "brans_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "calisma_duzeni": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "derse_katilim": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "donem_baslangic": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "donem_bitis": {
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "duzenleme_son_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "duzenlenebilir": {
+                      "type": "boolean"
+                    },
+                    "geri_cekildi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "odev_disiplini": {
+                      "maximum": 5,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "ogrenci_gorur": {
+                      "type": "boolean"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "surum": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "yazar_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "yazar_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "yorum": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "yazar_id",
+                    "yazar_ad",
+                    "donem_baslangic",
+                    "donem_bitis",
+                    "brans_kodu",
+                    "calisma_duzeni",
+                    "derse_katilim",
+                    "odev_disiplini",
+                    "anlama_duzeyi",
+                    "yorum",
+                    "ogrenci_gorur",
+                    "geri_cekildi_at",
+                    "benim",
+                    "duzenlenebilir",
+                    "duzenleme_son_at",
+                    "surum",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrenci icin degerlendirme yaz (ogretmen: kendi ogrencileri, kapsam disi 404; sahip/yonetici: kurum). Donem: baslangic (bugunden sonra olamaz) ve istege bagli bitis (tek gun = bitis yok; en cok 31 gun; 422 `donem_gecersiz`); olcekler 1-5 ve hepsi istege bagli, yorum ya da en az bir olcek dolu olmali. `ogrenci_gorur` varsayilan false; true ise ogrenciye `ogrenme.degerlendirme.yayimlandi.v1` (uygulama ici bildirim, yorum olayda yok).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
     "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/gunluk-soru/analiz": {
       "get": {
         "parameters": [
@@ -41200,6 +42602,1956 @@
           }
         },
         "summary": "Ogrenci karti haftalik ozeti (Pazartesi baslar, Europe/Istanbul): cozulen soru, en zayif 3 konu (en az 5 soru) ve tum konular birlikte zorluk bandi degisimi (onceki hafta ile). Tum dersler birlikte.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/kaynak-onerileri": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "geri_cekilenler",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ogrenci_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "oneriler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "baglanti_url": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "basladi": {
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "baslik": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "benim": {
+                            "type": "boolean"
+                          },
+                          "brans_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "geri_cekildi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "ilk_kullanim_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "kayit_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "kaynak_kitap_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kaynak_kitap_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak_test_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kaynak_test_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "oneren_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "oneren_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "son_kullanim_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "kaynak_kitap",
+                              "kaynak_kitap_testi",
+                              "link",
+                              "serbest"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ogrenci_id",
+                          "oneren_id",
+                          "oneren_ad",
+                          "tur",
+                          "kaynak_kitap_id",
+                          "kaynak_kitap_ad",
+                          "kaynak_test_id",
+                          "kaynak_test_ad",
+                          "baglanti_url",
+                          "baslik",
+                          "brans_kodu",
+                          "konu_id",
+                          "konu_ad",
+                          "not",
+                          "basladi",
+                          "ilk_kullanim_gun",
+                          "son_kullanim_gun",
+                          "kayit_sayisi",
+                          "geri_cekildi_at",
+                          "benim",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "oneriler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Personel: ogrenciye onerilen kaynaklar (en yeni once) ve `basladi` durumu (oneriden sonra gunluk soru kaydinda o kitap/test/metin kullanildiysa true; `link` icin null). `geri_cekilenler=true` ile geri cekilenler de.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ogrenci_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "kaynak_kitap_id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string"
+                      },
+                      "konu_id": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string"
+                      },
+                      "not": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "tur": {
+                        "enum": [
+                          "kaynak_kitap"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tur",
+                      "kaynak_kitap_id"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "properties": {
+                      "kaynak_test_id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string"
+                      },
+                      "konu_id": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string"
+                      },
+                      "not": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "tur": {
+                        "enum": [
+                          "kaynak_kitap_testi"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tur",
+                      "kaynak_test_id"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "properties": {
+                      "baglanti_url": {
+                        "maxLength": 2000,
+                        "type": "string"
+                      },
+                      "baslik": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "brans_kodu": {
+                        "maxLength": 40,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "konu_id": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string"
+                      },
+                      "not": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "tur": {
+                        "enum": [
+                          "link"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tur",
+                      "baglanti_url",
+                      "baslik"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "properties": {
+                      "baslik": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "brans_kodu": {
+                        "maxLength": 40,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "konu_id": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string"
+                      },
+                      "not": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "tur": {
+                        "enum": [
+                          "serbest"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tur",
+                      "baslik"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "baglanti_url": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "basladi": {
+                      "nullable": true,
+                      "type": "boolean"
+                    },
+                    "baslik": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "benim": {
+                      "type": "boolean"
+                    },
+                    "brans_kodu": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "geri_cekildi_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "ilk_kullanim_gun": {
+                      "format": "date",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "kayit_sayisi": {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "kaynak_kitap_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kaynak_kitap_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "kaynak_test_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "kaynak_test_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "konu_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "konu_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "not": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "oneren_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "oneren_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "son_kullanim_gun": {
+                      "format": "date",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                      "type": "string"
+                    },
+                    "tur": {
+                      "enum": [
+                        "kaynak_kitap",
+                        "kaynak_kitap_testi",
+                        "link",
+                        "serbest"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ogrenci_id",
+                    "oneren_id",
+                    "oneren_ad",
+                    "tur",
+                    "kaynak_kitap_id",
+                    "kaynak_kitap_ad",
+                    "kaynak_test_id",
+                    "kaynak_test_ad",
+                    "baglanti_url",
+                    "baslik",
+                    "brans_kodu",
+                    "konu_id",
+                    "konu_ad",
+                    "not",
+                    "basladi",
+                    "ilk_kullanim_gun",
+                    "son_kullanim_gun",
+                    "kayit_sayisi",
+                    "geri_cekildi_at",
+                    "benim",
+                    "created_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrenciye kaynak oner: `kaynak_kitap` / `kaynak_kitap_testi` (kurumun aktif kaynak kitaplarindan), `link` (yalniz http/https, baslik zorunlu) ya da `serbest` (baslik). Istege bagli konu (kitap/testte kitabin dersi, link/serbestte `brans_kodu` ile) ve not. Gecersiz kaynak 422 `kaynak_gecersiz`, kapsam disi ogrenci 404. Ogrenciye `ogrenme.kaynak_onerisi.eklendi.v1` (uygulama ici bildirim).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/kocluk": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ogrenci_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "degerlendirmeler": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "degerlendirmeler": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "anlama_duzeyi": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "benim": {
+                                "type": "boolean"
+                              },
+                              "brans_kodu": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "calisma_duzeni": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "derse_katilim": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "donem_baslangic": {
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                                "type": "string"
+                              },
+                              "donem_bitis": {
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                                "type": "string"
+                              },
+                              "duzenleme_son_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "duzenlenebilir": {
+                                "type": "boolean"
+                              },
+                              "geri_cekildi_at": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "odev_disiplini": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "ogrenci_gorur": {
+                                "type": "boolean"
+                              },
+                              "ogrenci_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "surum": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "yazar_ad": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "yazar_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "yorum": {
+                                "nullable": true,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ogrenci_id",
+                              "yazar_id",
+                              "yazar_ad",
+                              "donem_baslangic",
+                              "donem_bitis",
+                              "brans_kodu",
+                              "calisma_duzeni",
+                              "derse_katilim",
+                              "odev_disiplini",
+                              "anlama_duzeyi",
+                              "yorum",
+                              "ogrenci_gorur",
+                              "geri_cekildi_at",
+                              "benim",
+                              "duzenlenebilir",
+                              "duzenleme_son_at",
+                              "surum",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "sonraki_imlec": {
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "degerlendirmeler",
+                        "sonraki_imlec"
+                      ],
+                      "type": "object"
+                    },
+                    "konu_analizi": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "bas": {
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                          "type": "string"
+                        },
+                        "bit": {
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                          "type": "string"
+                        },
+                        "bransler": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "brans_kodu": {
+                                "type": "string"
+                              },
+                              "oneriler": {
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "basari": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "brans_kodu": {
+                                          "type": "string"
+                                        },
+                                        "konu_ad": {
+                                          "nullable": true,
+                                          "type": "string"
+                                        },
+                                        "konu_id": {
+                                          "format": "uuid",
+                                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                          "type": "string"
+                                        },
+                                        "soru_sayisi": {
+                                          "maximum": 9007199254740991,
+                                          "minimum": -9007199254740991,
+                                          "type": "integer"
+                                        },
+                                        "tur": {
+                                          "enum": [
+                                            "gorev_oner"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "zorluk": {
+                                          "enum": [
+                                            "kolay",
+                                            "orta",
+                                            "zor"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "tur",
+                                        "brans_kodu",
+                                        "konu_id",
+                                        "konu_ad",
+                                        "zorluk",
+                                        "soru_sayisi",
+                                        "basari"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "brans_kodu": {
+                                          "type": "string"
+                                        },
+                                        "konu_ad": {
+                                          "nullable": true,
+                                          "type": "string"
+                                        },
+                                        "konu_id": {
+                                          "format": "uuid",
+                                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                          "type": "string"
+                                        },
+                                        "onceki_hafta_basari": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "son_hafta_basari": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "tur": {
+                                          "enum": [
+                                            "birebir_ders"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "zor_basari": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "tur",
+                                        "brans_kodu",
+                                        "konu_id",
+                                        "konu_ad",
+                                        "zor_basari",
+                                        "onceki_hafta_basari",
+                                        "son_hafta_basari"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  ]
+                                },
+                                "type": "array"
+                              },
+                              "toplam": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "basari": {
+                                    "nullable": true,
+                                    "type": "number"
+                                  },
+                                  "bos": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "type": "integer"
+                                  },
+                                  "cozulen": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "type": "integer"
+                                  },
+                                  "dogru": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "type": "integer"
+                                  },
+                                  "yanlis": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "cozulen",
+                                  "dogru",
+                                  "yanlis",
+                                  "bos",
+                                  "basari"
+                                ],
+                                "type": "object"
+                              },
+                              "zayif_konular": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "bant": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "bant": {
+                                          "enum": [
+                                            "kolay",
+                                            "orta",
+                                            "zor"
+                                          ],
+                                          "nullable": true,
+                                          "type": "string"
+                                        },
+                                        "bant_basarilari": {
+                                          "additionalProperties": false,
+                                          "properties": {
+                                            "kolay": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            },
+                                            "orta": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            },
+                                            "zor": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            }
+                                          },
+                                          "required": [
+                                            "kolay",
+                                            "orta",
+                                            "zor"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "durum": {
+                                          "enum": [
+                                            "veri_az",
+                                            "tespit_yok",
+                                            "zorlaniyor"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "durum",
+                                        "bant",
+                                        "bant_basarilari"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "hucreler": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "belirtilmemis": {
+                                          "additionalProperties": false,
+                                          "properties": {
+                                            "basari": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            },
+                                            "bos": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "cozulen": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "dogru": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "yanlis": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            }
+                                          },
+                                          "required": [
+                                            "cozulen",
+                                            "dogru",
+                                            "yanlis",
+                                            "bos",
+                                            "basari"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "kolay": {
+                                          "additionalProperties": false,
+                                          "properties": {
+                                            "basari": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            },
+                                            "bos": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "cozulen": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "dogru": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "yanlis": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            }
+                                          },
+                                          "required": [
+                                            "cozulen",
+                                            "dogru",
+                                            "yanlis",
+                                            "bos",
+                                            "basari"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "orta": {
+                                          "additionalProperties": false,
+                                          "properties": {
+                                            "basari": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            },
+                                            "bos": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "cozulen": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "dogru": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "yanlis": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            }
+                                          },
+                                          "required": [
+                                            "cozulen",
+                                            "dogru",
+                                            "yanlis",
+                                            "bos",
+                                            "basari"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "zor": {
+                                          "additionalProperties": false,
+                                          "properties": {
+                                            "basari": {
+                                              "nullable": true,
+                                              "type": "number"
+                                            },
+                                            "bos": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "cozulen": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "dogru": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            },
+                                            "yanlis": {
+                                              "maximum": 9007199254740991,
+                                              "minimum": -9007199254740991,
+                                              "type": "integer"
+                                            }
+                                          },
+                                          "required": [
+                                            "cozulen",
+                                            "dogru",
+                                            "yanlis",
+                                            "bos",
+                                            "basari"
+                                          ],
+                                          "type": "object"
+                                        }
+                                      },
+                                      "required": [
+                                        "kolay",
+                                        "orta",
+                                        "zor",
+                                        "belirtilmemis"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "konu_ad": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "konu_id": {
+                                      "format": "uuid",
+                                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                      "type": "string"
+                                    },
+                                    "toplam": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "basari": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "bos": {
+                                          "maximum": 9007199254740991,
+                                          "minimum": -9007199254740991,
+                                          "type": "integer"
+                                        },
+                                        "cozulen": {
+                                          "maximum": 9007199254740991,
+                                          "minimum": -9007199254740991,
+                                          "type": "integer"
+                                        },
+                                        "dogru": {
+                                          "maximum": 9007199254740991,
+                                          "minimum": -9007199254740991,
+                                          "type": "integer"
+                                        },
+                                        "yanlis": {
+                                          "maximum": 9007199254740991,
+                                          "minimum": -9007199254740991,
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "required": [
+                                        "cozulen",
+                                        "dogru",
+                                        "yanlis",
+                                        "bos",
+                                        "basari"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "ust_konu_ad": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "konu_id",
+                                    "konu_ad",
+                                    "ust_konu_ad",
+                                    "hucreler",
+                                    "toplam",
+                                    "bant"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "brans_kodu",
+                              "toplam",
+                              "zayif_konular",
+                              "oneriler"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "haftalik_ozet": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "bant": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "degisim": {
+                                  "enum": [
+                                    "iyilesti",
+                                    "ayni",
+                                    "kotulesti",
+                                    "belirsiz"
+                                  ],
+                                  "type": "string"
+                                },
+                                "onceki": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "bant": {
+                                      "enum": [
+                                        "kolay",
+                                        "orta",
+                                        "zor"
+                                      ],
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "bant_basarilari": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "kolay": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "orta": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "zor": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "kolay",
+                                        "orta",
+                                        "zor"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "durum": {
+                                      "enum": [
+                                        "veri_az",
+                                        "tespit_yok",
+                                        "zorlaniyor"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "durum",
+                                    "bant",
+                                    "bant_basarilari"
+                                  ],
+                                  "type": "object"
+                                },
+                                "simdiki": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "bant": {
+                                      "enum": [
+                                        "kolay",
+                                        "orta",
+                                        "zor"
+                                      ],
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "bant_basarilari": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "kolay": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "orta": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        },
+                                        "zor": {
+                                          "nullable": true,
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "kolay",
+                                        "orta",
+                                        "zor"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "durum": {
+                                      "enum": [
+                                        "veri_az",
+                                        "tespit_yok",
+                                        "zorlaniyor"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "durum",
+                                    "bant",
+                                    "bant_basarilari"
+                                  ],
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "onceki",
+                                "simdiki",
+                                "degisim"
+                              ],
+                              "type": "object"
+                            },
+                            "basari": {
+                              "nullable": true,
+                              "type": "number"
+                            },
+                            "bos": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "cozulen": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "dogru": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "en_zayif_konular": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "basari": {
+                                    "nullable": true,
+                                    "type": "number"
+                                  },
+                                  "brans_kodu": {
+                                    "type": "string"
+                                  },
+                                  "cozulen": {
+                                    "maximum": 9007199254740991,
+                                    "minimum": -9007199254740991,
+                                    "type": "integer"
+                                  },
+                                  "konu_ad": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "konu_id": {
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "brans_kodu",
+                                  "konu_id",
+                                  "konu_ad",
+                                  "cozulen",
+                                  "basari"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "hafta_baslangic": {
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                              "type": "string"
+                            },
+                            "ogrenci_id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "yanlis": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "ogrenci_id",
+                            "hafta_baslangic",
+                            "cozulen",
+                            "dogru",
+                            "yanlis",
+                            "bos",
+                            "basari",
+                            "en_zayif_konular",
+                            "bant"
+                          ],
+                          "type": "object"
+                        },
+                        "toplam": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "basari": {
+                              "nullable": true,
+                              "type": "number"
+                            },
+                            "bos": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "cozulen": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "dogru": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "yanlis": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "cozulen",
+                            "dogru",
+                            "yanlis",
+                            "bos",
+                            "basari"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "bas",
+                        "bit",
+                        "toplam",
+                        "haftalik_ozet",
+                        "bransler"
+                      ],
+                      "type": "object"
+                    },
+                    "kullanilan_kaynaklar": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kitaplar": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "ad": {
+                                "type": "string"
+                              },
+                              "brans_kodu": {
+                                "type": "string"
+                              },
+                              "cozulen_soru": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "cozulen_test": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "kayit_sayisi": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "kaynak_kitap_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "son_kullanim_gun": {
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                                "type": "string"
+                              },
+                              "toplam_test": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "kaynak_kitap_id",
+                              "ad",
+                              "brans_kodu",
+                              "cozulen_test",
+                              "toplam_test",
+                              "kayit_sayisi",
+                              "cozulen_soru",
+                              "son_kullanim_gun"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "odevler": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "ad": {
+                                "type": "string"
+                              },
+                              "odev_sayisi": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "son_kullanim_gun": {
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "ad",
+                              "odev_sayisi",
+                              "son_kullanim_gun"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "serbest": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "ad": {
+                                "type": "string"
+                              },
+                              "kayit_sayisi": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              },
+                              "son_kullanim_gun": {
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "ad",
+                              "kayit_sayisi",
+                              "son_kullanim_gun"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "kitaplar",
+                        "serbest",
+                        "odevler"
+                      ],
+                      "type": "object"
+                    },
+                    "ogrenci_ad": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ogrenci_id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "olcek_ortalamalari": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "haftalar": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "anlama_duzeyi": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "number"
+                              },
+                              "calisma_duzeni": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "number"
+                              },
+                              "derse_katilim": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "number"
+                              },
+                              "hafta_baslangic": {
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                                "type": "string"
+                              },
+                              "odev_disiplini": {
+                                "maximum": 5,
+                                "minimum": 1,
+                                "nullable": true,
+                                "type": "number"
+                              },
+                              "sayi": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "sayi",
+                              "calisma_duzeni",
+                              "derse_katilim",
+                              "odev_disiplini",
+                              "anlama_duzeyi",
+                              "hafta_baslangic"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "toplam": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "anlama_duzeyi": {
+                              "maximum": 5,
+                              "minimum": 1,
+                              "nullable": true,
+                              "type": "number"
+                            },
+                            "calisma_duzeni": {
+                              "maximum": 5,
+                              "minimum": 1,
+                              "nullable": true,
+                              "type": "number"
+                            },
+                            "derse_katilim": {
+                              "maximum": 5,
+                              "minimum": 1,
+                              "nullable": true,
+                              "type": "number"
+                            },
+                            "odev_disiplini": {
+                              "maximum": 5,
+                              "minimum": 1,
+                              "nullable": true,
+                              "type": "number"
+                            },
+                            "sayi": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "sayi",
+                            "calisma_duzeni",
+                            "derse_katilim",
+                            "odev_disiplini",
+                            "anlama_duzeyi"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "haftalar",
+                        "toplam"
+                      ],
+                      "type": "object"
+                    },
+                    "oneriler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "baglanti_url": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "basladi": {
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "baslik": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "benim": {
+                            "type": "boolean"
+                          },
+                          "brans_kodu": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "geri_cekildi_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "ilk_kullanim_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "kayit_sayisi": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "kaynak_kitap_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kaynak_kitap_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "kaynak_test_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kaynak_test_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "konu_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "konu_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "not": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "ogrenci_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "oneren_ad": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "oneren_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "son_kullanim_gun": {
+                            "format": "date",
+                            "nullable": true,
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                            "type": "string"
+                          },
+                          "tur": {
+                            "enum": [
+                              "kaynak_kitap",
+                              "kaynak_kitap_testi",
+                              "link",
+                              "serbest"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ogrenci_id",
+                          "oneren_id",
+                          "oneren_ad",
+                          "tur",
+                          "kaynak_kitap_id",
+                          "kaynak_kitap_ad",
+                          "kaynak_test_id",
+                          "kaynak_test_ad",
+                          "baglanti_url",
+                          "baslik",
+                          "brans_kodu",
+                          "konu_id",
+                          "konu_ad",
+                          "not",
+                          "basladi",
+                          "ilk_kullanim_gun",
+                          "son_kullanim_gun",
+                          "kayit_sayisi",
+                          "geri_cekildi_at",
+                          "benim",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "plan_odev": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "odev": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "acik": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "geciken": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "inceleme_bekleyen": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "teslim_edildi": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "acik",
+                            "geciken",
+                            "teslim_edildi",
+                            "inceleme_bekleyen"
+                          ],
+                          "type": "object"
+                        },
+                        "plan": {
+                          "additionalProperties": false,
+                          "nullable": true,
+                          "properties": {
+                            "dakika": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "gerceklesen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "planlanan": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "planlanan",
+                                "gerceklesen"
+                              ],
+                              "type": "object"
+                            },
+                            "durum": {
+                              "enum": [
+                                "taslak",
+                                "yayinda"
+                              ],
+                              "type": "string"
+                            },
+                            "gorev_sayisi": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            "hafta_baslangic": {
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                              "type": "string"
+                            },
+                            "plan_id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string"
+                            },
+                            "soru": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "gerceklesen": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                },
+                                "planlanan": {
+                                  "maximum": 9007199254740991,
+                                  "minimum": -9007199254740991,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "planlanan",
+                                "gerceklesen"
+                              ],
+                              "type": "object"
+                            },
+                            "tamam_sayisi": {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "plan_id",
+                            "hafta_baslangic",
+                            "durum",
+                            "gorev_sayisi",
+                            "tamam_sayisi",
+                            "soru",
+                            "dakika"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "plan",
+                        "odev"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "ogrenci_id",
+                    "ogrenci_ad",
+                    "degerlendirmeler",
+                    "olcek_ortalamalari",
+                    "kullanilan_kaynaklar",
+                    "oneriler",
+                    "konu_analizi",
+                    "plan_odev"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrenci kocluk gorunumu (personel; ogretmen yalniz kendi ogrencileri, kapsam disi 404; ogrenci rolu 403): (1) tum ogretmenlerin degerlendirme zaman cizelgesi (ilk sayfa, gorunurluk isaretli; devami `degerlendirmeler` liste ucundan), (2) son 4 haftanin olcek ortalamalari, (3) kullanilan kaynaklar (gunluk kayit ve odevlerden, son 90 gun; kitap ilerlemesi), (4) onerilen kaynaklar ve baslama durumu, (5) son 30 gun konu analizi ozeti, zayif konular ve sistem onerileri (G1 fonksiyonlari), (6) bu haftanin plani ve odev durumu. Geri cekilen degerlendirme ve oneriler yoktur. Hedef: 2 sn.",
         "tags": [
           "ogrenme"
         ]
