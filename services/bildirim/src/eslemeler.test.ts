@@ -12,6 +12,8 @@ import {
   motivasyonSeriBozuldiV1,
   motivasyonSeriKilometreTasiV1,
   motivasyonSeviyeAtladiV1,
+  ogrenmeDegerlendirmeYayimlandiV1,
+  ogrenmeKaynakOnerisiEklendiV1,
   ogrenmeMufredatYayinlandiV1,
   ogrenmeOdevIncelendiV1,
   ogrenmeOdevTeslimEdildiV1,
@@ -775,6 +777,81 @@ describe.skipIf(dbYok())('olay eslemeleri (bildirim_app, kurum baglami)', () => 
       await calistir(hoca.kurumId, olay(hoca.kurumId));
       const b = await bildirimler(hoca.kurumId, 'mufredat_guncellendi');
       expect(b.map((x) => x.alici_id)).toEqual([sahip.uyelikId]);
+    });
+  });
+
+  // --- ogretmen degerlendirmesi ve onerilen kaynak ---------------------------------------------
+  describe('ogrenme.degerlendirme.* ve ogrenme.kaynak_onerisi.*', () => {
+    it('degerlendirme yayimlandi: ogrenciye yalniz kutu, genel metin (yorum/ad yok), ayni degerlendirme tek bildirim', async () => {
+      const k = await kurumKur(2);
+      const a = og(k, 0);
+      const degerlendirmeId = uuidv7();
+      const olay = ogrenmeDegerlendirmeYayimlandiV1.create({
+        ...zarf(k.kurumId),
+        data: {
+          degerlendirme_id: degerlendirmeId,
+          ogrenci_id: a.uyelikId,
+          yazar_id: k.ogretmen.uyelikId,
+        },
+      });
+      await calistir(k.kurumId, olay);
+      await calistir(k.kurumId, olay);
+      const b = await bildirimler(k.kurumId, 'degerlendirme_yayimlandi');
+      expect(b).toHaveLength(1);
+      expect(b[0]).toMatchObject({
+        alici_id: a.uyelikId,
+        kategori: 'odev',
+        baslik: 'Yeni değerlendirme',
+        govde: 'Öğretmeninden yeni bir değerlendirme.',
+        derin_baglanti: 'kopru://degerlendirmelerim',
+        tekil_anahtar: `degerlendirme_yayimlandi:${degerlendirmeId}`,
+      });
+      expect(b[0]?.veri).toEqual({ degerlendirme_id: degerlendirmeId });
+      // Push yok.
+      expect(await gonderimler(k.kurumId)).toHaveLength(0);
+      // Baska ogrenciye (ve ogretmene) bildirim gitmez.
+      expect(b.every((x) => x.alici_id !== og(k, 1).uyelikId)).toBe(true);
+      // Farkli degerlendirme yeni bildirim uretir.
+      await calistir(
+        k.kurumId,
+        ogrenmeDegerlendirmeYayimlandiV1.create({
+          ...zarf(k.kurumId),
+          data: {
+            degerlendirme_id: uuidv7(),
+            ogrenci_id: a.uyelikId,
+            yazar_id: k.ogretmen.uyelikId,
+          },
+        }),
+      );
+      expect(await bildirimler(k.kurumId, 'degerlendirme_yayimlandi')).toHaveLength(2);
+    });
+
+    it('kaynak onerisi eklendi: ogrenciye yalniz kutu, genel metin, ayni oneri tek bildirim', async () => {
+      const k = await kurumKur(1);
+      const a = og(k, 0);
+      const oneriId = uuidv7();
+      const olay = ogrenmeKaynakOnerisiEklendiV1.create({
+        ...zarf(k.kurumId),
+        data: {
+          oneri_id: oneriId,
+          ogrenci_id: a.uyelikId,
+          oneren_id: k.ogretmen.uyelikId,
+          tur: 'kaynak_kitap_testi',
+        },
+      });
+      await calistir(k.kurumId, olay);
+      await calistir(k.kurumId, olay);
+      const b = await bildirimler(k.kurumId, 'kaynak_onerisi_eklendi');
+      expect(b).toHaveLength(1);
+      expect(b[0]).toMatchObject({
+        alici_id: a.uyelikId,
+        kategori: 'odev',
+        govde: 'Öğretmenin sana yeni bir kaynak önerdi.',
+        derin_baglanti: 'kopru://kaynak-onerilerim',
+        tekil_anahtar: `kaynak_onerisi_eklendi:${oneriId}`,
+      });
+      expect(b[0]?.veri).toEqual({ oneri_id: oneriId, tur: 'kaynak_kitap_testi' });
+      expect(await gonderimler(k.kurumId)).toHaveLength(0);
     });
   });
 

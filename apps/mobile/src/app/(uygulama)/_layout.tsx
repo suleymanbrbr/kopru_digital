@@ -60,6 +60,7 @@ export default function UygulamaDuzeni() {
           options={{ title: t('mobil.abonelik.limit.baslik'), presentation: 'modal' }}
         />
         <Stack.Screen name="oturumlar" options={{ title: t('mobil.oturumlar.baslik') }} />
+        <Stack.Screen name="hesabim" options={{ title: t('mobil.hesabim.baslik') }} />
         <Stack.Screen name="katilim" options={{ title: t('mobil.sinifKodu.baslik') }} />
         <Stack.Screen name="ders-ekle" options={{ title: t('mobil.ders.formBaslik') }} />
         <Stack.Screen name="yoklama/[dersId]" options={{ title: t('mobil.yoklama.ekranBaslik') }} />

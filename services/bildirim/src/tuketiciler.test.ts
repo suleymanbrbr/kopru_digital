@@ -50,6 +50,8 @@ describe('eslemeler kayit listesi', () => {
       'evt.finans.paket.satildi.v1',
       'evt.hesap.davet.kabul_edildi.v1',
       'evt.ogrenme.mufredat.yayinlandi.v1',
+      'evt.ogrenme.degerlendirme.yayimlandi.v1',
+      'evt.ogrenme.kaynak_onerisi.eklendi.v1',
     ]);
     expect(new Set(turler).size).toBe(turler.length);
   });

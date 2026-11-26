@@ -31,6 +31,7 @@ import { CevrimdisiSerit } from './CevrimdisiSerit';
 import { DersSatiri } from './DerslerEkrani';
 import { DuyuruKarti } from './duyuru/DuyuruKarti';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
+import { SilmeSeridi } from './hesabim/SilmeSeridi';
 import { KayitlarimGirisi } from './KayitlarimGirisi';
 import { BugunMotivasyon } from './motivasyon/BugunMotivasyon';
 import { OgrenciBugunOgrenme } from './OgrenciBugunOgrenme';
@@ -120,7 +121,15 @@ export function OgrenciBugun() {
     .reverse();
 
   return (
-    <Ekran ust={<CevrimdisiSerit />} kenarlar={['top', 'left', 'right']}>
+    <Ekran
+      ust={
+        <>
+          <CevrimdisiSerit />
+          <SilmeSeridi />
+        </>
+      }
+      kenarlar={['top', 'left', 'right']}
+    >
       <View className="flex-row items-center gap-2">
         <Metin varyant="baslik" accessibilityRole="header" className="flex-1">
           {t('mobil.bugun.selam', { ad: ad ?? '' })}

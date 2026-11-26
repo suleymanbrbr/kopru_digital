@@ -45,7 +45,7 @@ describe('izin sozlugu', () => {
   });
 
   it('finans izinleri: ogretmen grup kapsaminda satar/tahsil eder, sablon yonetemez; ogrenci yalniz kendi', () => {
-    expect(IZIN_SOZLUGU_SURUMU).toBe(11);
+    expect(IZIN_SOZLUGU_SURUMU).toBe(12);
     expect(izinKapsami('sahip', 'rapor.oku')).toBe('kurum');
     expect(izinKapsami('yonetici', 'rapor.oku')).toBe('kurum');
     expect(izinKapsami('ogretmen', 'rapor.oku')).toBe('grup');
@@ -100,6 +100,22 @@ describe('izin sozlugu', () => {
     expect(izinKapsami('yonetici', 'soru.yonet')).toBe('kurum');
     expect(izinKapsami('veli', 'soru.yonet')).toBeNull();
     expect(izinModulu('soru.yonet')).toBe('soru_sor');
+  });
+
+  it('degerlendirme ve kocluk: personel yazar, ogrenci yalniz kendine gorunen okur, kocluk ogrenciye kapali, veli yok', () => {
+    for (const izin of ['degerlendirme.yaz', 'kaynak_onerisi.yaz', 'kocluk.oku'] as const) {
+      expect(izinKapsami('sahip', izin)).toBe('kurum');
+      expect(izinKapsami('yonetici', izin)).toBe('kurum');
+      expect(izinKapsami('ogretmen', izin)).toBe('grup');
+      expect(izinKapsami('ogrenci', izin)).toBeNull();
+      expect(izinKapsami('veli', izin)).toBeNull();
+      expect(izinModulu(izin)).toBeNull();
+    }
+    for (const izin of ['degerlendirme.oku', 'kaynak_onerisi.oku'] as const) {
+      expect(izinKapsami('ogretmen', izin)).toBe('grup');
+      expect(izinKapsami('ogrenci', izin)).toBe('kendi');
+      expect(izinKapsami('veli', izin)).toBeNull();
+    }
   });
 
   it('abonelik izinleri yalniz sahibindir ve cekirdektir (kapatilamaz)', () => {

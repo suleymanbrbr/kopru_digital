@@ -71,6 +71,11 @@ function hesapSahte(ez: Partial<HesapAdapter> = {}): HesapAdapter {
     oturumlar: yok,
     oturumSonlandir: yok,
     oturumlariKapat: yok,
+    silmeDurumu: yok,
+    silmeKoduGonder: yok,
+    silmeTalebiAc: yok,
+    silmeTalebiGeriAl: yok,
+    verilerimiIndir: yok,
     ...ez,
   };
 }

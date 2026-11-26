@@ -163,6 +163,32 @@ describe.skipIf(dbYok())('guvenlik: rol yukseltme', () => {
     }
   }, 120_000);
 
+  it('ogrenci: degerlendirme, kaynak onerisi (yazma/personel okuma), kocluk ve hatirlatma uclari kapali; yalniz kendi iki GET ucu acik', async () => {
+    const kimlik = auth('ogrenci');
+    const gecen: string[] = [];
+    let incelenen = 0;
+    for (const r of kiraciRotalari()) {
+      if (!/\/degerlendirme|\/kaynak-onerileri|\/kocluk/.test(r.url)) continue;
+      incelenen += 1;
+      if ((await kapiSonucu(r, kimlik)) === 0) gecen.push(`${r.method} ${r.url}`);
+    }
+    expect(incelenen).toBeGreaterThanOrEqual(9);
+    // `/degerlendirmelerim` ve `/kaynak-onerilerim` ogrencinin kendi uclaridir (sunucuda yalniz gorunurleri doner).
+    expect(gecen.sort()).toEqual([
+      'GET /v1/ogrenme/kurumlar/:kurum_id/degerlendirmelerim',
+      'GET /v1/ogrenme/kurumlar/:kurum_id/kaynak-onerilerim',
+    ]);
+  }, 120_000);
+
+  it('taklit belirteci: degerlendirme yazma, duzenleme ve geri cekme uclarina gecemez', async () => {
+    const kimlik = auth('sahip', { imp: { taklit_id: SAHTE, bitis: '2999-01-01T00:00:00Z' } });
+    const yazma = kiraciRotalari().filter(
+      (r) => r.method !== 'GET' && /\/degerlendirme|\/kaynak-onerileri/.test(r.url),
+    );
+    expect(yazma.length).toBeGreaterThanOrEqual(4);
+    for (const r of yazma) expect(await kapiSonucu(r, kimlik), `${r.method} ${r.url}`).toBe(403);
+  }, 120_000);
+
   it('ogrenci: abonelik, finans, davet, modul ve kurum yonetimi okuma uclari da kapali', async () => {
     const kimlik = auth('ogrenci');
     const gecen: string[] = [];

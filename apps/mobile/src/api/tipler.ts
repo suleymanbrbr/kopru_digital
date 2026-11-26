@@ -138,6 +138,47 @@ export interface OturumKaydi {
   buOturum: boolean;
 }
 
+/** Hesap silme talebi (KVKK; 30 gunluk soguma). */
+export type SilmeTalebiDurumu = 'beklemede' | 'geri_alindi' | 'tamamlandi' | 'engellendi';
+export interface SilmeTalebi {
+  id: string;
+  durum: SilmeTalebiDurumu;
+  /** Kalici anonimlestirmenin planlandigi an (ISO). */
+  planlanan: string;
+  /** Talebin acildigi an (ISO). */
+  talep: string;
+}
+export type SilmeDogrulamaYontemi = 'otp' | 'parola';
+/** Kurumun tek aktif sahibiysen ve kurumda baska aktif uye varsa silme engellenir. */
+export interface SilmeEngeli {
+  kurumId: string;
+  kurumAd: string;
+  digerUyeSayisi: number;
+}
+export interface SilmeDurumu {
+  /**
+   * Son talep (api: bekleyen varsa o, yoksa en yenisi); hic yoksa null. Yalnizca `beklemede` talep
+   * bekleyen sayilir (`silmeBekliyorMu`); `geri_alindi`/`engellendi` bilgi amaclidir.
+   */
+  talep: SilmeTalebi | null;
+  sogumaGun: number;
+  engeller: SilmeEngeli[];
+  dogrulamaYontemleri: SilmeDogrulamaYontemi[];
+}
+/** Bekleyen (30 gunluk soguma icindeki) talep var mi? */
+export function silmeBekliyorMu(d: Pick<SilmeDurumu, 'talep'> | undefined): boolean {
+  return d?.talep?.durum === 'beklemede';
+}
+export type SilmeDogrulama = { yontem: 'otp'; kod: string } | { yontem: 'parola'; parola: string };
+
+/** Kisisel veri dosyasi: JSON metni ve onerilen dosya adi. */
+export interface VeriDosyasi {
+  dosyaAdi: string;
+  icerik: string;
+  /** Ulasilamayan servisler (kismi sonuc); bos ise veri tamamdir. */
+  eksikServisler: string[];
+}
+
 export interface DavetSonucu {
   kurumId: string;
   uyelikId: string;

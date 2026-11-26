@@ -11414,6 +11414,267 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirme-hatirlatma": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bugun karti: bu hafta (Pazartesi-Pazar, Europe/Istanbul) KENDI yazdigi degerlendirmesi olmayan ogrencilerim (kapsamdaki etkin ogrenciler; sahip/yonetici icin herhangi birinin yazdigi). En eski/hic olmayan once, en cok 100; `eksik_sayisi` toplam. Bildirim uretmez. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            eksik_sayisi: number;
+                            /** Format: date */
+                            hafta_baslangic: string;
+                            ogrenci_sayisi: number;
+                            ogrenciler: {
+                                ogrenci_ad: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                /** Format: date */
+                                son_degerlendirme_gun: string | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirmeler/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Degerlendirmeyi duzenle: yalniz yazar (baskasi 403; kapsam disi ogrenci 404) ve olusturmadan sonraki 7 gun icinde (sonra 409 `degerlendirme_duzenlenemez`, yeni kayit yazilir); geri cekilmis kayit 409 `degerlendirme_geri_cekildi`. Verilen alanlar degisir, `null` alani temizler; `surum` iyimser kilit (409 `surum_cakismasi`). Gorunurluk kapaliyken acilirsa ogrenciye (bir kez) bildirim olayi yayimlanir. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        anlama_duzeyi?: number | null;
+                        brans_kodu?: string | null;
+                        calisma_duzeni?: number | null;
+                        derse_katilim?: number | null;
+                        /** Format: date */
+                        donem_baslangic?: string;
+                        /** Format: date */
+                        donem_bitis?: string;
+                        odev_disiplini?: number | null;
+                        ogrenci_gorur?: boolean;
+                        surum?: number;
+                        yorum?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            anlama_duzeyi: number | null;
+                            benim: boolean;
+                            brans_kodu: string | null;
+                            calisma_duzeni: number | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            derse_katilim: number | null;
+                            /** Format: date */
+                            donem_baslangic: string;
+                            /** Format: date */
+                            donem_bitis: string;
+                            /** Format: date-time */
+                            duzenleme_son_at: string;
+                            duzenlenebilir: boolean;
+                            /** Format: date-time */
+                            geri_cekildi_at: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            odev_disiplini: number | null;
+                            ogrenci_gorur: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            surum: number;
+                            yazar_ad: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                            yorum: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirmeler/{id}/geri-cek": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Degerlendirmeyi geri cek (silme degil): yazar ya da sahip/yonetici; baskasi 403, kapsam disi 404. Geri cekilen ogrenciye hicbir kosulda gorunmez ve kocluk gorunumunde yer almaz. Tekrar cagri 200 ve ayni kayit. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            anlama_duzeyi: number | null;
+                            benim: boolean;
+                            brans_kodu: string | null;
+                            calisma_duzeni: number | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            derse_katilim: number | null;
+                            /** Format: date */
+                            donem_baslangic: string;
+                            /** Format: date */
+                            donem_bitis: string;
+                            /** Format: date-time */
+                            duzenleme_son_at: string;
+                            duzenlenebilir: boolean;
+                            /** Format: date-time */
+                            geri_cekildi_at: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            odev_disiplini: number | null;
+                            ogrenci_gorur: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            surum: number;
+                            yazar_ad: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                            yorum: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/degerlendirmelerim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrenci: kendisine GORUNUR isaretlenmis ve geri cekilmemis degerlendirmeler (en yeni once). Yanitta gorunurluk bayragi, yazar kimligi ve surum yoktur. Gorunur olmayan hicbir degerlendirme bu uctan (ya da baska bir uctan) alinamaz; veritabaninda ayrica RESTRICTIVE RLS vardir. */
+        get: {
+            parameters: {
+                query?: {
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degerlendirmeler: {
+                                anlama_duzeyi: number | null;
+                                brans_kodu: string | null;
+                                calisma_duzeni: number | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                derse_katilim: number | null;
+                                /** Format: date */
+                                donem_baslangic: string;
+                                /** Format: date */
+                                donem_bitis: string;
+                                /** Format: uuid */
+                                id: string;
+                                odev_disiplini: number | null;
+                                yazar_ad: string | null;
+                                yorum: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/deneme-ayarlari": {
         parameters: {
             query?: never;
@@ -14296,6 +14557,155 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/kaynak-onerileri/{id}/geri-cek": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kaynak onerisini geri cek (silme degil): oneren ya da sahip/yonetici; baskasi 403, kapsam disi 404. Tekrar cagri 200. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            baglanti_url: string | null;
+                            basladi: boolean | null;
+                            baslik: string | null;
+                            benim: boolean;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            geri_cekildi_at: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date */
+                            ilk_kullanim_gun: string | null;
+                            kayit_sayisi: number;
+                            kaynak_kitap_ad: string | null;
+                            /** Format: uuid */
+                            kaynak_kitap_id: string | null;
+                            kaynak_test_ad: string | null;
+                            /** Format: uuid */
+                            kaynak_test_id: string | null;
+                            konu_ad: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            oneren_ad: string | null;
+                            /** Format: uuid */
+                            oneren_id: string;
+                            /** Format: date */
+                            son_kullanim_gun: string | null;
+                            /** @enum {string} */
+                            tur: "kaynak_kitap" | "kaynak_kitap_testi" | "link" | "serbest";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/kaynak-onerilerim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrenci: kendisine onerilen (geri cekilmeyen) kaynaklar, en yeni once ("Ogretmenimin onerdikleri"). Tek dokunusla gunluk kayitta kaynak olarak secilir; `basladi` kendi kayitlarindan hesaplanir. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            oneriler: {
+                                baglanti_url: string | null;
+                                basladi: boolean | null;
+                                baslik: string | null;
+                                benim: boolean;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                geri_cekildi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date */
+                                ilk_kullanim_gun: string | null;
+                                kayit_sayisi: number;
+                                kaynak_kitap_ad: string | null;
+                                /** Format: uuid */
+                                kaynak_kitap_id: string | null;
+                                kaynak_test_ad: string | null;
+                                /** Format: uuid */
+                                kaynak_test_id: string | null;
+                                konu_ad: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                oneren_ad: string | null;
+                                /** Format: uuid */
+                                oneren_id: string;
+                                /** Format: date */
+                                son_kullanim_gun: string | null;
+                                /** @enum {string} */
+                                tur: "kaynak_kitap" | "kaynak_kitap_testi" | "link" | "serbest";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/konular": {
         parameters: {
             query?: never;
@@ -16003,6 +16413,148 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/degerlendirmeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personel: ogrencinin TUM ogretmenlerinin degerlendirmeleri (en yeni once, imlec sayfali; `geri_cekilenler=true` ile geri cekilenler de). Ogretmen yalniz kendi ogrencilerini gorur (kapsam disi 404). */
+        get: {
+            parameters: {
+                query?: {
+                    geri_cekilenler?: "true" | "false";
+                    imlec?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degerlendirmeler: {
+                                anlama_duzeyi: number | null;
+                                benim: boolean;
+                                brans_kodu: string | null;
+                                calisma_duzeni: number | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                derse_katilim: number | null;
+                                /** Format: date */
+                                donem_baslangic: string;
+                                /** Format: date */
+                                donem_bitis: string;
+                                /** Format: date-time */
+                                duzenleme_son_at: string;
+                                duzenlenebilir: boolean;
+                                /** Format: date-time */
+                                geri_cekildi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                odev_disiplini: number | null;
+                                ogrenci_gorur: boolean;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                surum: number;
+                                yazar_ad: string | null;
+                                /** Format: uuid */
+                                yazar_id: string;
+                                yorum: string | null;
+                            }[];
+                            sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ogrenci icin degerlendirme yaz (ogretmen: kendi ogrencileri, kapsam disi 404; sahip/yonetici: kurum). Donem: baslangic (bugunden sonra olamaz) ve istege bagli bitis (tek gun = bitis yok; en cok 31 gun; 422 `donem_gecersiz`); olcekler 1-5 ve hepsi istege bagli, yorum ya da en az bir olcek dolu olmali. `ogrenci_gorur` varsayilan false; true ise ogrenciye `ogrenme.degerlendirme.yayimlandi.v1` (uygulama ici bildirim, yorum olayda yok). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        anlama_duzeyi?: number | null;
+                        brans_kodu?: string | null;
+                        calisma_duzeni?: number | null;
+                        derse_katilim?: number | null;
+                        /** Format: date */
+                        donem_baslangic: string;
+                        /** Format: date */
+                        donem_bitis?: string;
+                        odev_disiplini?: number | null;
+                        /** @default false */
+                        ogrenci_gorur?: boolean;
+                        yorum?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            anlama_duzeyi: number | null;
+                            benim: boolean;
+                            brans_kodu: string | null;
+                            calisma_duzeni: number | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            derse_katilim: number | null;
+                            /** Format: date */
+                            donem_baslangic: string;
+                            /** Format: date */
+                            donem_bitis: string;
+                            /** Format: date-time */
+                            duzenleme_son_at: string;
+                            duzenlenebilir: boolean;
+                            /** Format: date-time */
+                            geri_cekildi_at: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            odev_disiplini: number | null;
+                            ogrenci_gorur: boolean;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            surum: number;
+                            yazar_ad: string | null;
+                            /** Format: uuid */
+                            yazar_id: string;
+                            yorum: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/gunluk-soru/analiz": {
         parameters: {
             query?: never;
@@ -16373,6 +16925,504 @@ export interface paths {
                             /** Format: uuid */
                             ogrenci_id: string;
                             yanlis: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/kaynak-onerileri": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personel: ogrenciye onerilen kaynaklar (en yeni once) ve `basladi` durumu (oneriden sonra gunluk soru kaydinda o kitap/test/metin kullanildiysa true; `link` icin null). `geri_cekilenler=true` ile geri cekilenler de. */
+        get: {
+            parameters: {
+                query?: {
+                    geri_cekilenler?: "true" | "false";
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            oneriler: {
+                                baglanti_url: string | null;
+                                basladi: boolean | null;
+                                baslik: string | null;
+                                benim: boolean;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                geri_cekildi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date */
+                                ilk_kullanim_gun: string | null;
+                                kayit_sayisi: number;
+                                kaynak_kitap_ad: string | null;
+                                /** Format: uuid */
+                                kaynak_kitap_id: string | null;
+                                kaynak_test_ad: string | null;
+                                /** Format: uuid */
+                                kaynak_test_id: string | null;
+                                konu_ad: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                oneren_ad: string | null;
+                                /** Format: uuid */
+                                oneren_id: string;
+                                /** Format: date */
+                                son_kullanim_gun: string | null;
+                                /** @enum {string} */
+                                tur: "kaynak_kitap" | "kaynak_kitap_testi" | "link" | "serbest";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ogrenciye kaynak oner: `kaynak_kitap` / `kaynak_kitap_testi` (kurumun aktif kaynak kitaplarindan), `link` (yalniz http/https, baslik zorunlu) ya da `serbest` (baslik). Istege bagli konu (kitap/testte kitabin dersi, link/serbestte `brans_kodu` ile) ve not. Gecersiz kaynak 422 `kaynak_gecersiz`, kapsam disi ogrenci 404. Ogrenciye `ogrenme.kaynak_onerisi.eklendi.v1` (uygulama ici bildirim). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        kaynak_kitap_id: string;
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        not?: string | null;
+                        /** @enum {string} */
+                        tur: "kaynak_kitap";
+                    } | {
+                        /** Format: uuid */
+                        kaynak_test_id: string;
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        not?: string | null;
+                        /** @enum {string} */
+                        tur: "kaynak_kitap_testi";
+                    } | {
+                        baglanti_url: string;
+                        baslik: string;
+                        brans_kodu?: string | null;
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        not?: string | null;
+                        /** @enum {string} */
+                        tur: "link";
+                    } | {
+                        baslik: string;
+                        brans_kodu?: string | null;
+                        /** Format: uuid */
+                        konu_id?: string | null;
+                        not?: string | null;
+                        /** @enum {string} */
+                        tur: "serbest";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            baglanti_url: string | null;
+                            basladi: boolean | null;
+                            baslik: string | null;
+                            benim: boolean;
+                            brans_kodu: string | null;
+                            /** Format: date-time */
+                            created_at: string;
+                            /** Format: date-time */
+                            geri_cekildi_at: string | null;
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date */
+                            ilk_kullanim_gun: string | null;
+                            kayit_sayisi: number;
+                            kaynak_kitap_ad: string | null;
+                            /** Format: uuid */
+                            kaynak_kitap_id: string | null;
+                            kaynak_test_ad: string | null;
+                            /** Format: uuid */
+                            kaynak_test_id: string | null;
+                            konu_ad: string | null;
+                            /** Format: uuid */
+                            konu_id: string | null;
+                            not: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            oneren_ad: string | null;
+                            /** Format: uuid */
+                            oneren_id: string;
+                            /** Format: date */
+                            son_kullanim_gun: string | null;
+                            /** @enum {string} */
+                            tur: "kaynak_kitap" | "kaynak_kitap_testi" | "link" | "serbest";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenciler/{ogrenci_id}/kocluk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrenci kocluk gorunumu (personel; ogretmen yalniz kendi ogrencileri, kapsam disi 404; ogrenci rolu 403): (1) tum ogretmenlerin degerlendirme zaman cizelgesi (ilk sayfa, gorunurluk isaretli; devami `degerlendirmeler` liste ucundan), (2) son 4 haftanin olcek ortalamalari, (3) kullanilan kaynaklar (gunluk kayit ve odevlerden, son 90 gun; kitap ilerlemesi), (4) onerilen kaynaklar ve baslama durumu, (5) son 30 gun konu analizi ozeti, zayif konular ve sistem onerileri (G1 fonksiyonlari), (6) bu haftanin plani ve odev durumu. Geri cekilen degerlendirme ve oneriler yoktur. Hedef: 2 sn. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    kurum_id: string;
+                    ogrenci_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            degerlendirmeler: {
+                                degerlendirmeler: {
+                                    anlama_duzeyi: number | null;
+                                    benim: boolean;
+                                    brans_kodu: string | null;
+                                    calisma_duzeni: number | null;
+                                    /** Format: date-time */
+                                    created_at: string;
+                                    derse_katilim: number | null;
+                                    /** Format: date */
+                                    donem_baslangic: string;
+                                    /** Format: date */
+                                    donem_bitis: string;
+                                    /** Format: date-time */
+                                    duzenleme_son_at: string;
+                                    duzenlenebilir: boolean;
+                                    /** Format: date-time */
+                                    geri_cekildi_at: string | null;
+                                    /** Format: uuid */
+                                    id: string;
+                                    odev_disiplini: number | null;
+                                    ogrenci_gorur: boolean;
+                                    /** Format: uuid */
+                                    ogrenci_id: string;
+                                    surum: number;
+                                    yazar_ad: string | null;
+                                    /** Format: uuid */
+                                    yazar_id: string;
+                                    yorum: string | null;
+                                }[];
+                                sonraki_imlec: string | null;
+                            };
+                            konu_analizi: {
+                                /** Format: date */
+                                bas: string;
+                                /** Format: date */
+                                bit: string;
+                                bransler: {
+                                    brans_kodu: string;
+                                    oneriler: ({
+                                        basari: number | null;
+                                        brans_kodu: string;
+                                        konu_ad: string | null;
+                                        /** Format: uuid */
+                                        konu_id: string;
+                                        soru_sayisi: number;
+                                        /** @enum {string} */
+                                        tur: "gorev_oner";
+                                        /** @enum {string} */
+                                        zorluk: "kolay" | "orta" | "zor";
+                                    } | {
+                                        brans_kodu: string;
+                                        konu_ad: string | null;
+                                        /** Format: uuid */
+                                        konu_id: string;
+                                        onceki_hafta_basari: number | null;
+                                        son_hafta_basari: number | null;
+                                        /** @enum {string} */
+                                        tur: "birebir_ders";
+                                        zor_basari: number;
+                                    })[];
+                                    toplam: {
+                                        basari: number | null;
+                                        bos: number;
+                                        cozulen: number;
+                                        dogru: number;
+                                        yanlis: number;
+                                    };
+                                    zayif_konular: {
+                                        bant: {
+                                            /** @enum {string|null} */
+                                            bant: "kolay" | "orta" | "zor" | null;
+                                            bant_basarilari: {
+                                                kolay: number | null;
+                                                orta: number | null;
+                                                zor: number | null;
+                                            };
+                                            /** @enum {string} */
+                                            durum: "veri_az" | "tespit_yok" | "zorlaniyor";
+                                        };
+                                        hucreler: {
+                                            belirtilmemis: {
+                                                basari: number | null;
+                                                bos: number;
+                                                cozulen: number;
+                                                dogru: number;
+                                                yanlis: number;
+                                            };
+                                            kolay: {
+                                                basari: number | null;
+                                                bos: number;
+                                                cozulen: number;
+                                                dogru: number;
+                                                yanlis: number;
+                                            };
+                                            orta: {
+                                                basari: number | null;
+                                                bos: number;
+                                                cozulen: number;
+                                                dogru: number;
+                                                yanlis: number;
+                                            };
+                                            zor: {
+                                                basari: number | null;
+                                                bos: number;
+                                                cozulen: number;
+                                                dogru: number;
+                                                yanlis: number;
+                                            };
+                                        };
+                                        konu_ad: string | null;
+                                        /** Format: uuid */
+                                        konu_id: string;
+                                        toplam: {
+                                            basari: number | null;
+                                            bos: number;
+                                            cozulen: number;
+                                            dogru: number;
+                                            yanlis: number;
+                                        };
+                                        ust_konu_ad: string | null;
+                                    }[];
+                                }[];
+                                haftalik_ozet: {
+                                    bant: {
+                                        /** @enum {string} */
+                                        degisim: "iyilesti" | "ayni" | "kotulesti" | "belirsiz";
+                                        onceki: {
+                                            /** @enum {string|null} */
+                                            bant: "kolay" | "orta" | "zor" | null;
+                                            bant_basarilari: {
+                                                kolay: number | null;
+                                                orta: number | null;
+                                                zor: number | null;
+                                            };
+                                            /** @enum {string} */
+                                            durum: "veri_az" | "tespit_yok" | "zorlaniyor";
+                                        };
+                                        simdiki: {
+                                            /** @enum {string|null} */
+                                            bant: "kolay" | "orta" | "zor" | null;
+                                            bant_basarilari: {
+                                                kolay: number | null;
+                                                orta: number | null;
+                                                zor: number | null;
+                                            };
+                                            /** @enum {string} */
+                                            durum: "veri_az" | "tespit_yok" | "zorlaniyor";
+                                        };
+                                    };
+                                    basari: number | null;
+                                    bos: number;
+                                    cozulen: number;
+                                    dogru: number;
+                                    en_zayif_konular: {
+                                        basari: number | null;
+                                        brans_kodu: string;
+                                        cozulen: number;
+                                        konu_ad: string | null;
+                                        /** Format: uuid */
+                                        konu_id: string;
+                                    }[];
+                                    /** Format: date */
+                                    hafta_baslangic: string;
+                                    /** Format: uuid */
+                                    ogrenci_id: string;
+                                    yanlis: number;
+                                };
+                                toplam: {
+                                    basari: number | null;
+                                    bos: number;
+                                    cozulen: number;
+                                    dogru: number;
+                                    yanlis: number;
+                                };
+                            };
+                            kullanilan_kaynaklar: {
+                                kitaplar: {
+                                    ad: string;
+                                    brans_kodu: string;
+                                    cozulen_soru: number;
+                                    cozulen_test: number;
+                                    kayit_sayisi: number;
+                                    /** Format: uuid */
+                                    kaynak_kitap_id: string;
+                                    /** Format: date */
+                                    son_kullanim_gun: string;
+                                    toplam_test: number;
+                                }[];
+                                odevler: {
+                                    ad: string;
+                                    odev_sayisi: number;
+                                    /** Format: date */
+                                    son_kullanim_gun: string;
+                                }[];
+                                serbest: {
+                                    ad: string;
+                                    kayit_sayisi: number;
+                                    /** Format: date */
+                                    son_kullanim_gun: string;
+                                }[];
+                            };
+                            ogrenci_ad: string | null;
+                            /** Format: uuid */
+                            ogrenci_id: string;
+                            olcek_ortalamalari: {
+                                haftalar: {
+                                    anlama_duzeyi: number | null;
+                                    calisma_duzeni: number | null;
+                                    derse_katilim: number | null;
+                                    /** Format: date */
+                                    hafta_baslangic: string;
+                                    odev_disiplini: number | null;
+                                    sayi: number;
+                                }[];
+                                toplam: {
+                                    anlama_duzeyi: number | null;
+                                    calisma_duzeni: number | null;
+                                    derse_katilim: number | null;
+                                    odev_disiplini: number | null;
+                                    sayi: number;
+                                };
+                            };
+                            oneriler: {
+                                baglanti_url: string | null;
+                                basladi: boolean | null;
+                                baslik: string | null;
+                                benim: boolean;
+                                brans_kodu: string | null;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                geri_cekildi_at: string | null;
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date */
+                                ilk_kullanim_gun: string | null;
+                                kayit_sayisi: number;
+                                kaynak_kitap_ad: string | null;
+                                /** Format: uuid */
+                                kaynak_kitap_id: string | null;
+                                kaynak_test_ad: string | null;
+                                /** Format: uuid */
+                                kaynak_test_id: string | null;
+                                konu_ad: string | null;
+                                /** Format: uuid */
+                                konu_id: string | null;
+                                not: string | null;
+                                /** Format: uuid */
+                                ogrenci_id: string;
+                                oneren_ad: string | null;
+                                /** Format: uuid */
+                                oneren_id: string;
+                                /** Format: date */
+                                son_kullanim_gun: string | null;
+                                /** @enum {string} */
+                                tur: "kaynak_kitap" | "kaynak_kitap_testi" | "link" | "serbest";
+                            }[];
+                            plan_odev: {
+                                odev: {
+                                    acik: number;
+                                    geciken: number;
+                                    inceleme_bekleyen: number;
+                                    teslim_edildi: number;
+                                };
+                                plan: {
+                                    dakika: {
+                                        gerceklesen: number;
+                                        planlanan: number;
+                                    };
+                                    /** @enum {string} */
+                                    durum: "taslak" | "yayinda";
+                                    gorev_sayisi: number;
+                                    /** Format: date */
+                                    hafta_baslangic: string;
+                                    /** Format: uuid */
+                                    plan_id: string;
+                                    soru: {
+                                        gerceklesen: number;
+                                        planlanan: number;
+                                    };
+                                    tamam_sayisi: number;
+                                } | null;
+                            };
                         };
                     };
                 };
