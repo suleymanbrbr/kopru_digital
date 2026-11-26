@@ -9,6 +9,11 @@ export default function GunlukSoruYeni() {
     konuId?: string;
     hedef?: string;
     duzelt?: string;
+    kaynakKitapId?: string;
+    kaynakKitapAd?: string;
+    kaynakTestId?: string;
+    kaynakTestAd?: string;
+    kaynakMetin?: string;
   }>();
   return (
     <GunlukSoruFormu
@@ -17,6 +22,11 @@ export default function GunlukSoruYeni() {
       {...(p.konuId ? { konuId: p.konuId } : {})}
       {...(p.hedef ? { hedef: p.hedef } : {})}
       {...(p.duzelt ? { duzelt: p.duzelt } : {})}
+      {...(p.kaynakKitapId ? { kaynakKitapId: p.kaynakKitapId } : {})}
+      {...(p.kaynakKitapAd ? { kaynakKitapAd: p.kaynakKitapAd } : {})}
+      {...(p.kaynakTestId ? { kaynakTestId: p.kaynakTestId } : {})}
+      {...(p.kaynakTestAd ? { kaynakTestAd: p.kaynakTestAd } : {})}
+      {...(p.kaynakMetin ? { kaynakMetin: p.kaynakMetin } : {})}
     />
   );
 }

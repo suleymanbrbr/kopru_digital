@@ -55,6 +55,7 @@ export function derinBaglantiyiAyristir(url: string | null | undefined): Ayrisan
  * - ders / yoklama: personel -> Dersler sekmesi (yoklama + kimlik -> yoklama ekrani); ogrenci -> Bugun.
  * - kayit / kayitlar / kayitlarim: ogrenci -> Kayitlarim; baska rol ya da modul kapali -> kutu.
  * - karakter / motivasyon / seri: ogrenci + `oyunlastirma` acik -> Karakterim, aksi halde Bugun.
+ * - degerlendirmelerim / kaynak-onerilerim: ogrenci -> "Ogretmenim" (ilgili bolum); baska rol -> kutu.
  * - duyuru: `duyuru` modulu aciksa duyuru detayi (okundu orada isaretlenir); kapaliysa ya da kimlik
  *   yoksa kutu.
  * - bugun: Bugun. Bilinmeyen turler: kutu.
@@ -100,6 +101,15 @@ export function baglantiRotasi(
       return ogrenci && acik('oyunlastirma')
         ? { pathname: '/karakterim', navigate: true }
         : { pathname: '/bugun', navigate: true };
+    case 'degerlendirmelerim':
+      // Ogrenciye GORUNUR isaretlenen degerlendirme; baska rol bu bildirimi almaz (kutu).
+      return ogrenci
+        ? { pathname: '/ogretmenim', params: { bolum: 'degerlendirmeler' }, navigate: true }
+        : KUTU_ROTASI;
+    case 'kaynak-onerilerim':
+      return ogrenci
+        ? { pathname: '/ogretmenim', params: { bolum: 'oneriler' }, navigate: true }
+        : KUTU_ROTASI;
     case 'duyuru':
       if (!b.id || !acik('duyuru')) return KUTU_ROTASI;
       return { pathname: '/duyuru/[id]', params: { id: b.id } };

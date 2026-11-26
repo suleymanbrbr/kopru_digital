@@ -84,6 +84,18 @@ function baglanmamisAdaptorler(): Adaptorler {
       haftalikOzet: hata,
       gorevVer: hata,
     },
+    degerlendirme: {
+      degerlendirmeYaz: hata,
+      degerlendirmeDuzenle: hata,
+      degerlendirmeGeriCek: hata,
+      degerlendirmeler: hata,
+      kocluk: hata,
+      hatirlatma: hata,
+      kaynakOner: hata,
+      kaynakOneriGeriCek: hata,
+      degerlendirmelerim: hata,
+      kaynakOnerilerim: hata,
+    },
     kayit: {
       kayitlarim: hata,
       kayit: hata,

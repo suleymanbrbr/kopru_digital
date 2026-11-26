@@ -28,6 +28,7 @@ import {
 import { BildirimIzinKarti } from './bildirim/BildirimIzinKarti';
 import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { OgretmenimGirisi } from './degerlendirme/OgretmenimGirisi';
 import { DersSatiri } from './DerslerEkrani';
 import { DuyuruKarti } from './duyuru/DuyuruKarti';
 import { GeriBildirimKartlari } from './GeriBildirimKartlari';
@@ -140,6 +141,7 @@ export function OgrenciBugun() {
       {oyun ? <BugunMotivasyon /> : null}
       <OgrenciEylemleri soru={soru} />
       <GunlukBugunKarti />
+      <OgretmenimGirisi />
       <DuyuruKarti en={1} />
       <OgrenciBugunOgrenme />
       {takvim ? (

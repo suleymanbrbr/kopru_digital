@@ -104,6 +104,25 @@ describe('baglantiRotasi', () => {
     });
   });
 
+  it('degerlendirmelerim ve kaynak-onerilerim: ogrenci Ogretmenim bolumune, baska rol kutuya', () => {
+    expect(baglantiRotasi('kopru://degerlendirmelerim', ogrenci())).toEqual({
+      pathname: '/ogretmenim',
+      params: { bolum: 'degerlendirmeler' },
+      navigate: true,
+    });
+    expect(baglantiRotasi('kopru://kaynak-onerilerim', ogrenci())).toEqual({
+      pathname: '/ogretmenim',
+      params: { bolum: 'oneriler' },
+      navigate: true,
+    });
+    // Modul anahtarindan bagimsiz: degerlendirme/oneri cekirdek izinlidir (modulu yok).
+    expect(
+      baglantiRotasi('kopru://degerlendirmelerim', ogrenci({ ...HEPSI, kayitlar: false })),
+    ).toMatchObject({ pathname: '/ogretmenim' });
+    expect(baglantiRotasi('kopru://degerlendirmelerim', hoca())).toBe(KUTU_ROTASI);
+    expect(baglantiRotasi('kopru://kaynak-onerilerim', hoca())).toBe(KUTU_ROTASI);
+  });
+
   it('duyuru: modul aciksa detay (her rol), kapaliysa ya da kimliksizse kutu', () => {
     const detay = { pathname: '/duyuru/[id]', params: { id: ID } };
     expect(baglantiRotasi(`kopru://duyuru/${ID}`, ogrenci())).toEqual(detay);

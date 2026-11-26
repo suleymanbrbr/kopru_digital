@@ -99,6 +99,10 @@ export default function UygulamaDuzeni() {
           options={{ title: t('mobil.gunluk.analiz.ekranBaslik') }}
         />
         <Stack.Screen name="kaynak-kitaplar" options={{ title: t('mobil.gunluk.kitap.baslik') }} />
+        <Stack.Screen name="kocluk" options={{ title: t('kocluk.baslik') }} />
+        <Stack.Screen name="degerlendirme-yaz" options={{ title: t('degerlendirme.yaz') }} />
+        <Stack.Screen name="kaynak-oner" options={{ title: t('kaynakOnerisi.baslik') }} />
+        <Stack.Screen name="ogretmenim" options={{ title: t('mobil.ogretmenim.baslik') }} />
         <Stack.Screen name="sorularim" options={{ title: t('mobil.soru.ogrenci.sorularim') }} />
         <Stack.Screen name="soru/[id]" options={{ title: t('mobil.soru.detay.baslik') }} />
         <Stack.Screen name="soru-cevap/[id]" options={{ title: t('mobil.soru.cevap.baslik') }} />

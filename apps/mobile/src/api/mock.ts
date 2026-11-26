@@ -6,6 +6,7 @@ import {
   type MockAbonelikSenaryosu,
 } from './mockAbonelik';
 import { mockBildirim } from './mockBildirim';
+import { mockDegerlendirme } from './mockDegerlendirme';
 import { mockGunlukSoru } from './mockGunlukSoru';
 import { mockKayit } from './mockKayit';
 import { mockMedya } from './mockMedya';
@@ -276,6 +277,7 @@ export function mockAdaptorler(
   const operasyon = mockOperasyon(operasyonSecenekleri);
   const ogrenme = mockOgrenme(operasyonSecenekleri);
   const gunlukSoru = mockGunlukSoru(operasyonSecenekleri, ogrenme);
+  const degerlendirme = mockDegerlendirme(operasyonSecenekleri, gunlukSoru);
   const kayit = mockKayit(operasyonSecenekleri, operasyon.okuma);
   const soru = mockSoru(operasyonSecenekleri);
   const medya = mockMedya({ gecikmeMs: Math.min(gecikmeMs, 200), isle: 300 });
@@ -307,7 +309,15 @@ export function mockAdaptorler(
   });
   const gunlukSoruXp = xpKancali(gunlukSoru, {
     kayitOlustur: (r) => {
-      if ((r as { yeni?: boolean }).yeni) motivasyon.odul('gunluk_soru');
+      const sonuc = r as {
+        yeni?: boolean;
+        kayit?: Parameters<typeof degerlendirme.kullanimKaydet>[0];
+      };
+      if (sonuc.yeni) {
+        motivasyon.odul('gunluk_soru');
+        // "Basladi" (onerilen kaynak) ve koclukta kullanilan kaynaklar bu kayittan beslenir.
+        if (sonuc.kayit) degerlendirme.kullanimKaydet(sonuc.kayit);
+      }
     },
   });
   const kayitXp = xpKancali(kayit, {
@@ -333,6 +343,7 @@ export function mockAdaptorler(
     finans: operasyon.finans,
     ogrenme: ogrenmeXp,
     gunlukSoru: gunlukSoruXp,
+    degerlendirme: degerlendirme.adaptor,
     kayit: kayitXp,
     soru: soruXp,
     medya,

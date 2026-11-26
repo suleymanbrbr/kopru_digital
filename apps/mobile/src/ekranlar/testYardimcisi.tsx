@@ -12,6 +12,7 @@ import type { ReactElement } from 'react';
 import { create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 
 import { abonelikUyariYoneticisi } from '../abonelik/uyari';
+import { cevrimiciKorumaliDegerlendirme } from '../api/cevrimiciDegerlendirme';
 import { cevrimiciKorumaliGunlukSoru } from '../api/cevrimiciGunlukSoru';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliOgrenme } from '../api/cevrimiciOgrenme';
@@ -74,6 +75,10 @@ export function ortamKur(): Ortam {
   // Uretimdeki gibi: cevrimdisiyken ogrenme istekleri gonderilmez (gerceklesen kuyrugu haric).
   adaptorler.ogrenme = cevrimiciKorumaliOgrenme(adaptorler.ogrenme, () => cevrimici.deger);
   adaptorler.gunlukSoru = cevrimiciKorumaliGunlukSoru(adaptorler.gunlukSoru, () => cevrimici.deger);
+  adaptorler.degerlendirme = cevrimiciKorumaliDegerlendirme(
+    adaptorler.degerlendirme,
+    () => cevrimici.deger,
+  );
   adaptorler.kayit = cevrimiciKorumaliKayit(adaptorler.kayit, () => cevrimici.deger);
   const geriBildirimDeposu = new GeriBildirimDeposu(bellekKv());
   const kuyruk = new OfflineKuyruk({

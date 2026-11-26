@@ -11,6 +11,7 @@ import {
 import { adaptorleriOlustur } from '../api';
 import type { Adaptorler } from '../api/adaptorler';
 import { cevrimiciKorumaliBildirim } from '../api/cevrimiciBildirim';
+import { cevrimiciKorumaliDegerlendirme } from '../api/cevrimiciDegerlendirme';
 import { cevrimiciKorumaliGunlukSoru } from '../api/cevrimiciGunlukSoru';
 import { cevrimiciKorumaliKayit } from '../api/cevrimiciKayit';
 import { cevrimiciKorumaliMotivasyon } from '../api/cevrimiciMotivasyon';
@@ -91,6 +92,9 @@ export function servisleriKur(): Servisler {
     finans: operasyon.finans,
     ogrenme: cevrimiciKorumaliOgrenme(ham.ogrenme, () => agGozlemcisi.cevrimiciMi()),
     gunlukSoru: cevrimiciKorumaliGunlukSoru(ham.gunlukSoru, () => agGozlemcisi.cevrimiciMi()),
+    degerlendirme: cevrimiciKorumaliDegerlendirme(ham.degerlendirme, () =>
+      agGozlemcisi.cevrimiciMi(),
+    ),
     kayit: cevrimiciKorumaliKayit(ham.kayit, () => agGozlemcisi.cevrimiciMi()),
     motivasyon: cevrimiciKorumaliMotivasyon(ham.motivasyon, () => agGozlemcisi.cevrimiciMi()),
     bildirim: cevrimiciKorumaliBildirim(ham.bildirim, () => agGozlemcisi.cevrimiciMi()),

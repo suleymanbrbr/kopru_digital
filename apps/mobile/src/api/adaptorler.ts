@@ -1,5 +1,6 @@
 import type { AbonelikAdapter } from './abonelikTipleri';
 import type { BildirimAdapter } from './bildirimTipleri';
+import type { DegerlendirmeAdapter } from './degerlendirmeTipleri';
 import type { GunlukSoruAdapter } from './gunlukSoruTipleri';
 import type { KayitAdapter } from './kayitTipleri';
 import type { MedyaAdapter } from './medyaTipleri';
@@ -111,6 +112,8 @@ export interface Adaptorler {
   ogrenme: OgrenmeAdapter;
   /** Gunluk soru takibi, kaynak kitap ve konu analizi. */
   gunlukSoru: GunlukSoruAdapter;
+  /** Ogretmen degerlendirmeleri, kaynak onerileri ve ogrenci koclugu. */
+  degerlendirme: DegerlendirmeAdapter;
   kayit: KayitAdapter;
   soru: SoruAdapter;
   /** Dosya yukleme (medya servisi); soru/cevap fotograf ve ses ekleri icin. */
