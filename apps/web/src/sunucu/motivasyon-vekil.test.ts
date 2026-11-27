@@ -214,7 +214,7 @@ describe('motivasyon vekili', () => {
     expect(seri.gunler.at(-1)).toMatchObject({ bugun: true, durum: 'aktif' });
   });
 
-  it('mock: mock_motivasyon cerezi ayri durum verir; XP ve karakter eylemleri birbirine karismaz', async () => {
+  it('mock: mock_durum cerezi ayri durum verir; XP ve karakter eylemleri birbirine karismaz', async () => {
     mockModu();
     const cerezli = (
       yol: string,
@@ -226,7 +226,7 @@ describe('motivasyon vekili', () => {
         headers: {
           authorization: 'Bearer tok',
           host: 'localhost',
-          cookie: `mock_motivasyon=${anahtar}`,
+          cookie: `mock_durum=${anahtar}`,
           ...(ek.headers as Record<string, string> | undefined),
         },
       });

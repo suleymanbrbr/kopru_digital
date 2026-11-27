@@ -1,8 +1,8 @@
+import { markdownAyristir, type Blok, type Satir } from '@kopru/markdown';
 import type { ReactNode } from 'react';
 import { Linking, Text, View } from 'react-native';
 
 import { Metin } from '../../ui/Metin';
-import { markdownAyristir, type Blok, type Satir } from './ayristir';
 
 function baglantiAc(href: string) {
   // Ayristirici yalniz http/https baglantisi uretir; yine de cihaz hatasi ekrani dusurmesin.

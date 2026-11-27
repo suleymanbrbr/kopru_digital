@@ -1,7 +1,7 @@
+import { markdownAyristir } from '@kopru/markdown';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { markdownAyristir } from './ayristir';
 import { Markdown } from './markdown';
 
 const ORNEK = `# Ana baslik
