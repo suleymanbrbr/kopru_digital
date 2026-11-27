@@ -9,6 +9,7 @@
  */
 import { act } from 'react';
 import type { ReactElement } from 'react';
+import { Linking } from 'react-native';
 import type { ReactTestRenderer } from 'react-test-renderer';
 
 import { MOCK_SAAT_DILIMI } from '../api/mockOperasyon';
@@ -353,6 +354,51 @@ describe('odev teslim (ogrenci)', () => {
     expect(var_(r, 'teslim-ozeti')).toBe(true);
     expect(metinler(r)).toContain('Tamam');
     expect(metinler(r)).toContain('Aferin, böyle devam.');
+  });
+});
+
+describe('odev ve plan ek dosyalari', () => {
+  it('ogrenci odev ekraninda ekleri gorur ve acar; ek yoksa kart cizilmez', async () => {
+    const o = await ogrenciOrtami();
+    const ac_ = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const r = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-1-uyelik-ogrenci-a" />);
+    expect(var_(r, 'odev-ekleri')).toBe(true);
+    const m = metinler(r);
+    expect(m).toContain('Ek dosyalar');
+    expect(m).toContain('PDF belgesi · 1,2 MB');
+    expect(m).toContain('Fotoğraf · 340 KB');
+    await testIDDokun(r, 'ek-ac-0');
+    expect(ac_).toHaveBeenCalledWith('https://dosya.mock.kopru.test/odev-1/ek-1.pdf');
+    // odev-2'de ek yok
+    const r2 = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-2-uyelik-ogrenci-a" />);
+    expect(var_(r2, 'odev-ekleri')).toBe(false);
+  });
+
+  it('adres acilamazsa mesaj gosterilir', async () => {
+    const o = await ogrenciOrtami();
+    jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('yok'));
+    const r = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-1-uyelik-ogrenci-a" />);
+    await testIDDokun(r, 'ek-ac-0');
+    expect(metinler(r)).toContain('Dosya açılamadı');
+  });
+
+  it('ogrenci planinda hazir plan eki gorunur', async () => {
+    const o = await ogrenciOrtami();
+    const r = await ac(o, <OgrenciGorevler />);
+    expect(var_(r, 'plan-ekleri')).toBe(true);
+    expect(metinler(r)).toContain('PDF belgesi · 512 KB');
+  });
+
+  it('ogretmen odev ozetinde ekleri gorur; ogrenci ucu ogretmene kapali (mock)', async () => {
+    const o = await ogretmenOrtami();
+    const r = await ac(o, <OdevOzetEkrani odevId="odev-1" />);
+    expect(var_(r, 'odev-ekleri')).toBe(true);
+    expect(metinler(r)).toContain('Ek 2');
+    const r2 = await ac(o, <OdevOzetEkrani odevId="odev-2" />);
+    expect(var_(r2, 'odev-ekleri')).toBe(false);
+    await expect(
+      o.adaptorler.ogrenme.odevEkleri('oo-odev-1-uyelik-ogrenci-a', 'ogrenci_odevi'),
+    ).rejects.toBeDefined();
   });
 });
 

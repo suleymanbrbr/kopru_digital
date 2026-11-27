@@ -52,6 +52,24 @@ export interface OgrenciOdevi {
   gecTeslim: boolean;
   incelemeSonucu: IncelemeSonucu | null;
   incelemeNotu: string | null;
+  /** Odevin ek dosya sayisi (`odevEkleri` ile okunur). */
+  ekSayisi: number;
+}
+
+/** Odev ya da haftalik plan eki (PDF/fotograf). `adres` kisa omurlu (10 dk) imzali baglantidir. */
+export interface Ek {
+  medyaDosyaId: string;
+  sira: number;
+  mimeTipi: string;
+  boyutBayt: number;
+  /** Medya yanit vermediyse `null`. */
+  adres: string | null;
+}
+
+export interface EkListesi {
+  ekler: Ek[];
+  /** Medya servisi yanit vermedi: adresler bos (yeniden denenebilir). */
+  adreslerAlinamadi: boolean;
 }
 
 export interface TeslimGirdisi {
@@ -300,6 +318,13 @@ export interface OgrenmeAdapter {
   // Odev (ogrenci)
   odevlerim: () => Promise<OgrenciOdevi[]>;
   odevTeslim: (ogrenciOdevId: string, g: TeslimGirdisi) => Promise<OgrenciOdevi>;
+  /**
+   * Odevin ekleri. `kaynak: 'ogrenci_odevi'` ogrencinin kendi satir kimligiyle, `'odev'` ogretmenin odev
+   * kimligiyle okur (yukleme web'dedir; mobilde yalniz gorulur/acilir).
+   */
+  odevEkleri: (id: string, kaynak: 'ogrenci_odevi' | 'odev') => Promise<EkListesi>;
+  /** Haftalik plan ekleri (hazir plan PDF/resim); ogrenci yalniz yayindaki kendi planini okur. */
+  planEkleri: (planId: string, kaynak: 'ogrenci' | 'personel') => Promise<EkListesi>;
   // Odev (ogretmen)
   odevler: () => Promise<Odev[]>;
   odevVer: (g: OdevVerGirdisi) => Promise<Odev>;

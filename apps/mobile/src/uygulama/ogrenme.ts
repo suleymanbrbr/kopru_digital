@@ -79,6 +79,37 @@ export function useOdevlerim() {
   });
 }
 
+/** Odev ekleri: ogrenci kendi satir kimligiyle, ogretmen odev kimligiyle (yalniz okuma/acma). */
+export function useOdevEkleri(
+  id: string | undefined,
+  kaynak: 'ogrenci_odevi' | 'odev',
+  etkin = true,
+) {
+  const { adaptorler } = useServisler();
+  const uyelikId = useUyelikId();
+  const acik = useModulAcik('odev');
+  return useQuery({
+    queryKey: ['odev', uyelikId, 'ekler', kaynak, id],
+    queryFn: () => adaptorler.ogrenme.odevEkleri(id ?? '', kaynak),
+    enabled: !!uyelikId && acik && !!id && etkin,
+    // Imzali adresler 10 dk gecerli: kisa tut, ekran her acildiginda tazelensin.
+    staleTime: 60_000,
+  });
+}
+
+/** Haftalik plan ekleri (hazir plan PDF/resim). */
+export function usePlanEkleri(planId: string | undefined, kaynak: 'ogrenci' | 'personel') {
+  const { adaptorler } = useServisler();
+  const uyelikId = useUyelikId();
+  const acik = useModulAcik('haftalik_plan');
+  return useQuery({
+    queryKey: ['plan', uyelikId, 'ekler', kaynak, planId],
+    queryFn: () => adaptorler.ogrenme.planEkleri(planId ?? '', kaynak),
+    enabled: !!uyelikId && acik && !!planId,
+    staleTime: 60_000,
+  });
+}
+
 export function useBekleyenTeslimler() {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();

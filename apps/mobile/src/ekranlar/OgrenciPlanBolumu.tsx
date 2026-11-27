@@ -24,10 +24,11 @@ import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { Secici } from '../ui/Secici';
 import { useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { useKonuHaritasi, useOgrenciPlani } from '../uygulama/ogrenme';
+import { useKonuHaritasi, useOgrenciPlani, usePlanEkleri } from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
 import { KONU_SECIMI_BOS, KonuSecici, type KonuSecimi } from './KonuSecici';
 import { gorevAdi, hedefMetni, ilerlemeMetni } from './OgrenciPlani';
+import { EkKarti } from './OgrenmeEkleri';
 
 const TURLER: readonly PlanHedefTuru[] = ['soru', 'dakika'];
 
@@ -171,6 +172,7 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
   const [gun, setGun] = useState<string | null>(null);
   const hafta = haftaBaslangici(gun ?? bugun);
   const sorgu = useOgrenciPlani(ogrenciId, hafta);
+  const planEkleri = usePlanEkleri(sorgu.data?.plan?.id, 'personel');
   const konular = useKonuHaritasi();
   const [form, setForm] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
@@ -244,6 +246,8 @@ export function OgrenciPlanBolumu({ ogrenciId }: { ogrenciId: string }) {
           {t('mobil.ogrenme.plan.ogretmenKilitli')}
         </Metin>
       ) : null}
+
+      {d?.plan ? <EkKarti sorgu={planEkleri} bosGizle testID="plan-ekleri" /> : null}
 
       {d?.plan === null ? (
         <>

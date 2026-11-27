@@ -300,6 +300,7 @@ describe('odev yardimcilari', () => {
     gecTeslim: false,
     incelemeSonucu: null,
     incelemeNotu: null,
+    ekSayisi: 0,
     ...ek,
   });
 

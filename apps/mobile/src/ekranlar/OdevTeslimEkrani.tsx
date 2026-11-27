@@ -17,8 +17,9 @@ import { Metin } from '../ui/Metin';
 import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { useKonuHaritasi, useOdevlerim } from '../uygulama/ogrenme';
+import { useKonuHaritasi, useOdevEkleri, useOdevlerim } from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
+import { EkKarti } from './OgrenmeEkleri';
 import { sonucMetni } from './OgrenciGorevler';
 
 const HATA_ANAHTARI: Record<TeslimHatasi, string> = {
@@ -82,6 +83,7 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
   const liste = useOdevlerim();
   const konular = useKonuHaritasi();
   const odev = liste.data?.find((o) => o.id === ogrenciOdevId);
+  const ekler = useOdevEkleri(ogrenciOdevId, 'ogrenci_odevi', (odev?.ekSayisi ?? 0) > 0);
 
   const [yapilan, setYapilan] = useState<string | null>(null);
   const [dogru, setDogru] = useState('');
@@ -182,6 +184,8 @@ export function OdevTeslimEkrani({ ogrenciOdevId }: { ogrenciOdevId: string }) {
           </Metin>
         ) : null}
       </View>
+
+      {odev.ekSayisi > 0 ? <EkKarti sorgu={ekler} testID="odev-ekleri" /> : null}
 
       {teslimBekliyorMu(odev) ? (
         <>

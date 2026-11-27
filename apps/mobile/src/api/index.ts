@@ -46,6 +46,8 @@ function baglanmamisAdaptorler(): Adaptorler {
       konular: hata,
       odevlerim: hata,
       odevTeslim: hata,
+      odevEkleri: hata,
+      planEkleri: hata,
       odevler: hata,
       odevVer: hata,
       odevOzeti: hata,
