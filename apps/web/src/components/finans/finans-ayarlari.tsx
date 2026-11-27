@@ -33,9 +33,11 @@ import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
+import { bransAdi, siraliBransler } from '@/lib/bransler';
 import { finansDosyaAl, finansIstek } from '@/lib/hesap-istek';
 import { tutarCoz } from '@/lib/operasyon';
 import { useGruplar, useSaatDilimi } from '@/lib/operasyon-verisi';
+import { useOgrenciler } from '@/lib/ogrenme/veri';
 import { bugunYerel, yerelAy } from '@/lib/saat';
 import { yenidenDene } from '@/lib/sayfali-sorgu';
 
@@ -391,6 +393,7 @@ function PaketFormu({
 function Tarifeler({ kurumId, bildir }: { kurumId: string; bildir: (b: Bildirim) => void }) {
   const yenile = useFinansYenile(kurumId);
   const gruplar = useGruplar(kurumId);
+  const ogrenciler = useOgrenciler(kurumId);
   const q = useQuery({
     queryKey: [...finansAnahtari(kurumId), 'tarifeler'],
     retry: yenidenDene,
@@ -445,9 +448,16 @@ function Tarifeler({ kurumId, bildir }: { kurumId: string; bildir: (b: Bildirim)
             <li key={x.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <p className="font-medium">
-                  {x.grup_id
-                    ? (gruplar.adlar.get(x.grup_id)?.etiket ?? '-')
-                    : t('operasyon.finans.ayar.tarifeKapsam')}
+                  {[
+                    x.ogrenci_id
+                      ? (ogrenciler.adlar.get(x.ogrenci_id) ?? '-')
+                      : x.grup_id
+                        ? (gruplar.adlar.get(x.grup_id)?.etiket ?? '-')
+                        : t('operasyon.finans.ayar.tarifeKapsam'),
+                    x.brans_kodu ? bransAdi(x.brans_kodu) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </p>
                 <p className="text-sm text-metin-ikincil">
                   {t('operasyon.finans.ayar.tarifeDetay', {
@@ -474,6 +484,7 @@ function Tarifeler({ kurumId, bildir }: { kurumId: string; bildir: (b: Bildirim)
         <TarifeFormu
           kurumId={kurumId}
           gruplar={gruplar.secenekler}
+          ogrenciler={ogrenciler.liste}
           kapat={() => {
             setAcik(false);
           }}
@@ -484,14 +495,18 @@ function Tarifeler({ kurumId, bildir }: { kurumId: string; bildir: (b: Bildirim)
   );
 }
 
+type TarifeKapsami = 'kurum' | 'grup' | 'ogrenci';
+
 function TarifeFormu({
   kurumId,
   gruplar,
+  ogrenciler,
   kapat,
   bildir,
 }: {
   kurumId: string;
   gruplar: readonly { id: string; etiket: string }[];
+  ogrenciler: readonly { id: string; ad: string }[];
   kapat: () => void;
   bildir: (b: Bildirim) => void;
 }) {
@@ -500,8 +515,11 @@ function TarifeFormu({
   const [ucret, setUcret] = useState('');
   const [baslangic, setBaslangic] = useState(bugunYerel(saatDilimi));
   const [bitis, setBitis] = useState('');
+  const [kapsam, setKapsam] = useState<TarifeKapsami>('kurum');
   const [grupId, setGrupId] = useState('');
-  const [h, setH] = useState<{ ucret?: string }>({});
+  const [ogrenciId, setOgrenciId] = useState('');
+  const [bransKodu, setBransKodu] = useState('');
+  const [h, setH] = useState<{ ucret?: string; grup?: string; ogrenci?: string }>({});
   const kaydet = useMutation({
     mutationFn: (govde: Record<string, unknown>) =>
       finansIstek(`kurumlar/${kurumId}/ucret-tarifeleri`, { yontem: 'POST', govde }),
@@ -514,13 +532,22 @@ function TarifeFormu({
   const gonder = (e: SyntheticEvent) => {
     e.preventDefault();
     const c = tutarCoz(ucret);
-    setH(c.ok ? {} : { ucret: t('operasyon.finans.odemeAl.hata.tutar') });
-    if (!c.ok) return;
+    const hatalar = {
+      ...(c.ok ? {} : { ucret: t('operasyon.finans.odemeAl.hata.tutar') }),
+      ...(kapsam === 'grup' && !grupId ? { grup: t('operasyon.finans.ayar.tarifeHata.grup') } : {}),
+      ...(kapsam === 'ogrenci' && !ogrenciId
+        ? { ogrenci: t('operasyon.finans.ayar.tarifeHata.ogrenci') }
+        : {}),
+    };
+    setH(hatalar);
+    if (!c.ok || Object.keys(hatalar).length > 0) return;
     kaydet.mutate({
       ucret_kurus: c.kurus,
       gecerlilik_baslangic: baslangic,
       ...(bitis ? { gecerlilik_bitis: bitis } : {}),
-      ...(grupId ? { grup_id: grupId } : {}),
+      ...(kapsam === 'grup' ? { grup_id: grupId } : {}),
+      ...(kapsam === 'ogrenci' ? { ogrenci_id: ogrenciId } : {}),
+      ...(bransKodu ? { brans_kodu: bransKodu } : {}),
     });
   };
   return (
@@ -538,19 +565,78 @@ function TarifeFormu({
           />
         )}
       </Alan>
-      <Alan etiket={t('operasyon.takvim.form.grup')}>
+      <Alan etiket={t('operasyon.finans.ayar.tarifeKapsamTuru')}>
         {(o) => (
           <Secim
             {...o}
-            value={grupId}
+            value={kapsam}
             onChange={(e) => {
-              setGrupId(e.target.value);
+              setKapsam(e.target.value as TarifeKapsami);
+              setH({});
             }}
           >
-            <option value="">{t('operasyon.finans.ayar.tarifeKapsam')}</option>
-            {gruplar.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.etiket}
+            <option value="kurum">{t('operasyon.finans.ayar.tarifeKapsam')}</option>
+            <option value="grup">{t('operasyon.finans.ayar.tarifeKapsamGrup')}</option>
+            <option value="ogrenci">{t('operasyon.finans.ayar.tarifeKapsamOgrenci')}</option>
+          </Secim>
+        )}
+      </Alan>
+      {kapsam === 'grup' ? (
+        <Alan etiket={t('operasyon.finans.ayar.tarifeGrup')} hata={h.grup}>
+          {(o) => (
+            <Secim
+              {...o}
+              value={grupId}
+              onChange={(e) => {
+                setGrupId(e.target.value);
+              }}
+            >
+              <option value="">{t('operasyon.finans.ayar.tarifeSec')}</option>
+              {gruplar.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.etiket}
+                </option>
+              ))}
+            </Secim>
+          )}
+        </Alan>
+      ) : null}
+      {kapsam === 'ogrenci' ? (
+        <Alan etiket={t('operasyon.finans.ayar.tarifeOgrenci')} hata={h.ogrenci}>
+          {(o) => (
+            <Secim
+              {...o}
+              value={ogrenciId}
+              onChange={(e) => {
+                setOgrenciId(e.target.value);
+              }}
+            >
+              <option value="">{t('operasyon.finans.ayar.tarifeSec')}</option>
+              {ogrenciler.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.ad || t('operasyon.ortak.adsiz')}
+                </option>
+              ))}
+            </Secim>
+          )}
+        </Alan>
+      ) : null}
+      <Alan
+        etiket={t('operasyon.finans.ayar.tarifeBrans')}
+        yardim={t('operasyon.finans.ayar.tarifeOncelik')}
+      >
+        {(o) => (
+          <Secim
+            {...o}
+            value={bransKodu}
+            onChange={(e) => {
+              setBransKodu(e.target.value);
+            }}
+          >
+            <option value="">{t('operasyon.finans.ayar.tarifeTumBransler')}</option>
+            {siraliBransler().map((b) => (
+              <option key={b.kod} value={b.kod}>
+                {b.ad}
               </option>
             ))}
           </Secim>

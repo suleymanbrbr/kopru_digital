@@ -391,6 +391,33 @@ test.describe('finans', () => {
     expect(readFileSync(yol).subarray(0, 2).toString('latin1')).toBe('PK');
   });
 
+  test('sahip: ucret tarifesine ogrenci ve brans kapsami ekler', async ({ page }) => {
+    await girisYap(page, 'Kuzey Yıldızı Akademi');
+    await page
+      .getByRole('navigation', { name: 'Ana menü' })
+      .getByRole('link', { name: 'Finans' })
+      .click();
+    await page.getByRole('button', { name: 'Ayarlar' }).click();
+
+    await page.getByRole('button', { name: 'Tarife ekle' }).click();
+    const form = page.getByRole('dialog');
+    await form.getByLabel('Ders ücreti (TL)').fill('750');
+    // Ogrenci kapsami secilip ogrenci verilmezse hata.
+    await form.getByLabel('Kapsam', { exact: true }).selectOption('ogrenci');
+    await form.getByRole('button', { name: 'Tarifeyi kaydet' }).click();
+    await expect(form.getByText('Bir öğrenci seç.')).toBeVisible();
+
+    const ogrenci = form.getByLabel('Öğrenci', { exact: true });
+    await ogrenci.selectOption({ index: 1 });
+    const ad = ((await ogrenci.locator('option:checked').textContent()) ?? '').trim();
+    await form.getByLabel('Branş (isteğe bağlı)').selectOption('matematik');
+    await form.getByRole('button', { name: 'Tarifeyi kaydet' }).click();
+    await expect(page.getByText('Tarife eklendi.')).toBeVisible();
+
+    // Liste satiri ogrenci ve brans kapsamini gosterir.
+    await expect(page.getByText(`${ad} · Matematik`)).toBeVisible();
+  });
+
   test('ogretmen finans ekranini gorur ama ayarlari gormez', async ({ page }) => {
     await girisYap(page, 'Ege Işık Dershanesi');
     await page
