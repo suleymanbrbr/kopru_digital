@@ -124,3 +124,19 @@ export const planSablonGorevleri = ogrenme.table(
     ),
   ],
 );
+
+/** Haftalik plan ek dosyalari (migrations/0024): medya `plan_eki`, en cok 10, bir dosya tek plana baglanir. */
+export const planEkleri = ogrenme.table(
+  'plan_ekleri',
+  {
+    ...kiraci(),
+    plan_id: uuid('plan_id').notNull(),
+    medya_dosya_id: uuid('medya_dosya_id').notNull(),
+    sira: smallint('sira').notNull().default(0),
+  },
+  (t) => [
+    unique('plan_ekleri_medya_dosya_id_uniq').on(t.medya_dosya_id),
+    unique('plan_ekleri_plan_id_sira_uniq').on(t.plan_id, t.sira),
+    index('plan_ekleri_kurum_id_plan_id_idx').on(t.kurum_id, t.plan_id),
+  ],
+);

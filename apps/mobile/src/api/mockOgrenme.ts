@@ -5,6 +5,8 @@ import { MOCK_SAAT_DILIMI, type MockOperasyonSecenekleri } from './mockOperasyon
 import type {
   BekleyenTeslim,
   Deneme,
+  Ek,
+  EkListesi,
   DenemeBolumu,
   DenemeGelisimi,
   DenemeKurali,
@@ -77,6 +79,36 @@ export function konuTohumu(): Konu[] {
     k('konu-t-yardimci', 'turkce', 'konu-t-paragraf', 'konu', 'Yardımcı Düşünce', 2),
   ];
 }
+
+/** Odev ekleri tohumu (odev kimligi -> ekler): bir PDF ve bir fotograf. */
+const EK_TOHUMU: Record<string, Ek[]> = {
+  'odev-1': [
+    {
+      medyaDosyaId: 'ek-odev-1-a',
+      sira: 0,
+      mimeTipi: 'application/pdf',
+      boyutBayt: 1_258_291,
+      adres: 'https://dosya.mock.kopru.test/odev-1/ek-1.pdf',
+    },
+    {
+      medyaDosyaId: 'ek-odev-1-b',
+      sira: 1,
+      mimeTipi: 'image/jpeg',
+      boyutBayt: 348_160,
+      adres: 'https://dosya.mock.kopru.test/odev-1/ek-2.jpg',
+    },
+  ],
+};
+/** Haftalik plan eki tohumu: ogrencinin bu haftaki yayindaki plani icin hazir plan PDF'i. */
+const PLAN_EK_TOHUMU: Ek[] = [
+  {
+    medyaDosyaId: 'ek-plan-a',
+    sira: 0,
+    mimeTipi: 'application/pdf',
+    boyutBayt: 524_288,
+    adres: 'https://dosya.mock.kopru.test/plan/hazir-plan.pdf',
+  },
+];
 
 const KURALLAR: DenemeKurali[] = [
   {
@@ -237,6 +269,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
       gecTeslim: false,
       incelemeSonucu: null,
       incelemeNotu: null,
+      ekSayisi: EK_TOHUMU[odev.id]?.length ?? 0,
       ...ek,
     };
   }
@@ -387,7 +420,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
   }
 
   // --- Deneme tohumu -------------------------------------------------------------------------
-  const denemeler: (Deneme & { surum: number })[] = [];
+  const denemeler: Deneme[] = [];
 
   function bolumHesapla(
     kural: DenemeKurali,
@@ -429,7 +462,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         return { bolumKodu: b.bolumKodu, dogru, yanlis };
       }),
     );
-    const d: Deneme & { surum: number } = {
+    const d: Deneme = {
       id: yeniId('deneme'),
       ogrenciId,
       ogrenciAd: OGRENCI_ADLARI[ogrenciId] ?? null,
@@ -596,6 +629,37 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
           gecTeslim: s.gecTeslim,
         }));
       return sonuc.sort((a, b) => Date.parse(a.teslimAt ?? '') - Date.parse(b.teslimAt ?? ''));
+    },
+
+    // --- Ek dosyalar ---
+    async odevEkleri(id, kaynak): Promise<EkListesi> {
+      await gecik();
+      let odevId: string | undefined;
+      if (kaynak === 'ogrenci_odevi') {
+        const ogr = ogrenciOlmali();
+        odevId = satirlar.find((s) => s.id === id && s.ogrenciId === ogr)?.odevId;
+      } else {
+        personelOlmali();
+        odevId = odevler.find((o) => o.id === id)?.id;
+      }
+      if (!odevId) throw bulunamadi();
+      return kopya({ ekler: EK_TOHUMU[odevId] ?? [], adreslerAlinamadi: false });
+    },
+
+    async planEkleri(planId, kaynak): Promise<EkListesi> {
+      await gecik();
+      const p = planlar.find((x) => x.id === planId);
+      if (kaynak === 'ogrenci') {
+        if (p?.ogrenciId !== ogrenciOlmali() || p.durum !== 'yayinda') throw bulunamadi();
+      } else {
+        personelOlmali();
+        if (!p) throw bulunamadi();
+      }
+      const buHafta = p.hafta === haftaBaslangici(bugun);
+      return kopya({
+        ekler: p.ogrenciId === DENIZ && buHafta ? PLAN_EK_TOHUMU : [],
+        adreslerAlinamadi: false,
+      });
     },
 
     // --- Plan (ogrenci) ---
@@ -773,7 +837,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         throw cakisma('deneme_zaten_var');
       }
       const bolumler = bolumHesapla(kural, g.bolumler);
-      const d: Deneme & { surum: number } = {
+      const d: Deneme = {
         id: yeniId('deneme'),
         ogrenciId,
         ogrenciAd: ogr ? null : (OGRENCI_ADLARI[ogrenciId] ?? null),
@@ -790,6 +854,35 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         surum: 1,
       };
       denemeler.push(d);
+      return kopya(d);
+    },
+
+    async denemeGuncelle(denemeId, g) {
+      await gecik();
+      const ogr = ogrenciKimligi();
+      const d = denemeler.find((x) => x.id === denemeId);
+      if (!d || (ogr && (d.ogrenciId !== ogr || d.kaynak !== 'ogrenci'))) throw bulunamadi();
+      if (ogr && !ogrenciGirisiAcik()) {
+        throw new ApiHata('izin_yok', undefined, {
+          durum: 403,
+          ayrinti: 'ogrenci_deneme_girisi_kapali',
+        });
+      }
+      if (ogr && d.onayDurumu === 'onaylandi') throw cakisma('deneme_onay_durumu_gecersiz');
+      if (g.surum !== d.surum) throw cakisma('surum_cakismasi');
+      const kural = kuralBul(d.kuralKodu);
+      if (g.bolumler) {
+        d.bolumler = bolumHesapla(kural, g.bolumler);
+        d.toplamNet = yuvarla2(d.bolumler.reduce((t, b) => t + b.net, 0));
+      }
+      if (g.ad !== undefined) d.ad = g.ad;
+      if (g.yayinevi !== undefined) d.yayinevi = g.yayinevi;
+      if (g.sinavTarihi !== undefined) d.sinavTarihi = g.sinavTarihi;
+      if (ogr) {
+        d.onayDurumu = 'bekliyor';
+        d.redNedeni = null;
+      }
+      d.surum += 1;
       return kopya(d);
     },
 

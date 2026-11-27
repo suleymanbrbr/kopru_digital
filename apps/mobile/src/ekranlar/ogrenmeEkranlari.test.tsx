@@ -9,6 +9,7 @@
  */
 import { act } from 'react';
 import type { ReactElement } from 'react';
+import { Linking } from 'react-native';
 import type { ReactTestRenderer } from 'react-test-renderer';
 
 import { MOCK_SAAT_DILIMI } from '../api/mockOperasyon';
@@ -17,6 +18,7 @@ import { ApiHata } from '../api/tipler';
 import { bugunTarihi } from '../lib/saat';
 import { haftaKaydir } from '../ogrenme/hafta';
 import { BasarisizIsler } from './BasarisizIsler';
+import { DenemeDuzeltEkrani } from './DenemeDuzeltEkrani';
 import { DenemeGirisFormu } from './DenemeGirisFormu';
 import { DenemeOnayKuyrugu } from './DenemeOnayKuyrugu';
 import { KonuSecici, KONU_SECIMI_BOS, type KonuSecimi } from './KonuSecici';
@@ -355,6 +357,51 @@ describe('odev teslim (ogrenci)', () => {
   });
 });
 
+describe('odev ve plan ek dosyalari', () => {
+  it('ogrenci odev ekraninda ekleri gorur ve acar; ek yoksa kart cizilmez', async () => {
+    const o = await ogrenciOrtami();
+    const ac_ = jest.spyOn(Linking, 'openURL').mockImplementation(() => Promise.resolve());
+    const r = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-1-uyelik-ogrenci-a" />);
+    expect(var_(r, 'odev-ekleri')).toBe(true);
+    const m = metinler(r);
+    expect(m).toContain('Ek dosyalar');
+    expect(m).toContain('PDF belgesi · 1,2 MB');
+    expect(m).toContain('Fotoğraf · 340 KB');
+    await testIDDokun(r, 'ek-ac-0');
+    expect(ac_).toHaveBeenCalledWith('https://dosya.mock.kopru.test/odev-1/ek-1.pdf');
+    // odev-2'de ek yok
+    const r2 = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-2-uyelik-ogrenci-a" />);
+    expect(var_(r2, 'odev-ekleri')).toBe(false);
+  });
+
+  it('adres acilamazsa mesaj gosterilir', async () => {
+    const o = await ogrenciOrtami();
+    jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('yok'));
+    const r = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-1-uyelik-ogrenci-a" />);
+    await testIDDokun(r, 'ek-ac-0');
+    expect(metinler(r)).toContain('Dosya açılamadı');
+  });
+
+  it('ogrenci planinda hazir plan eki gorunur', async () => {
+    const o = await ogrenciOrtami();
+    const r = await ac(o, <OgrenciGorevler />);
+    expect(var_(r, 'plan-ekleri')).toBe(true);
+    expect(metinler(r)).toContain('PDF belgesi · 512 KB');
+  });
+
+  it('ogretmen odev ozetinde ekleri gorur; ogrenci ucu ogretmene kapali (mock)', async () => {
+    const o = await ogretmenOrtami();
+    const r = await ac(o, <OdevOzetEkrani odevId="odev-1" />);
+    expect(var_(r, 'odev-ekleri')).toBe(true);
+    expect(metinler(r)).toContain('Ek 2');
+    const r2 = await ac(o, <OdevOzetEkrani odevId="odev-2" />);
+    expect(var_(r2, 'odev-ekleri')).toBe(false);
+    await expect(
+      o.adaptorler.ogrenme.odevEkleri('oo-odev-1-uyelik-ogrenci-a', 'ogrenci_odevi'),
+    ).rejects.toBeDefined();
+  });
+});
+
 describe('ogrenci deneme', () => {
   it('denemelerim: onay bekliyor / reddedildi + neden; baskasinin sonucu ve sinif ortalamasi yok', async () => {
     const o = await ogrenciOrtami();
@@ -407,6 +454,72 @@ describe('ogrenci deneme', () => {
       bos: 0,
     });
     expect(metinler(r)).toContain('Onaya gönderildi');
+  });
+
+  it('varsayilan tur: gecmisi olan ogrencide son girdigi tur (TYT), olmayanda sartname sirasi (LGS)', async () => {
+    const o = await ogrenciOrtami();
+    const gecmis = await o.adaptorler.ogrenme.denemelerim();
+    const son = [...gecmis].sort((a, b) => b.sinavTarihi.localeCompare(a.sinavTarihi))[0]!;
+    expect(son.kuralKodu).toBe('tyt'); // katalogdaki ilk (lgs) degil
+    const olustur = jest.spyOn(o.adaptorler.ogrenme, 'denemeOlustur');
+    const r = await ac(o, <DenemeGirisFormu />);
+    await yaz(r, 'Deneme adı', 'Varsayılan tür');
+    await dokun(r, 'Kaydet');
+    expect(olustur.mock.calls[0]![0].kuralKodu).toBe(son.kuralKodu);
+
+    // Gecmisi bos ogrenci: katalog sirasi degil sartname sirasi (mock katalogu lgs, tyt).
+    const o2 = await ogrenciOrtami();
+    jest.spyOn(o2.adaptorler.ogrenme, 'denemelerim').mockResolvedValue([]);
+    const olustur2 = jest.spyOn(o2.adaptorler.ogrenme, 'denemeOlustur');
+    const r2 = await ac(o2, <DenemeGirisFormu />);
+    await yaz(r2, 'Deneme adı', 'Boş geçmiş');
+    await dokun(r2, 'Kaydet');
+    expect(olustur2.mock.calls[0]![0].kuralKodu).toBe('lgs');
+  });
+
+  it('reddedilen deneme: Duzelt butonu duzeltme ekranina gider; duzeltilince yeniden onaya duser', async () => {
+    const o = await ogrenciOrtami();
+    const liste = await o.adaptorler.ogrenme.denemelerim();
+    const red = liste.find((d) => d.onayDurumu === 'reddedildi')!;
+    const r0 = await ac(o, <OgrenciDenemeler />);
+    expect(var_(r0, `deneme-duzelt-${red.id}`)).toBe(true);
+    // Onay bekleyen ve onayli denemede Duzelt yok.
+    const bekleyen = liste.find((d) => d.onayDurumu === 'bekliyor')!;
+    expect(var_(r0, `deneme-duzelt-${bekleyen.id}`)).toBe(false);
+    await testIDDokun(r0, `deneme-duzelt-${red.id}`);
+    expect(mockYonlendirici.push).toHaveBeenCalledWith({
+      pathname: '/deneme-duzelt',
+      params: { id: red.id },
+    });
+
+    const guncelle = jest.spyOn(o.adaptorler.ogrenme, 'denemeGuncelle');
+    const r = await ac(o, <DenemeDuzeltEkrani denemeId={red.id} />);
+    expect(metinler(r)).toContain('Sonucu düzelt');
+    expect(var_(r, 'duzelt-tur')).toBe(true);
+    await yaz(r, 'Deneme adı', 'Düzeltilmiş giriş');
+    await yaz(r, 'Temel matematik: Doğru', '30');
+    await dokun(r, 'Düzelt ve yeniden gönder');
+    expect(guncelle).toHaveBeenCalledTimes(1);
+    expect(guncelle.mock.calls[0]![0]).toBe(red.id);
+    expect(guncelle.mock.calls[0]![1]).toMatchObject({ surum: red.surum, ad: 'Düzeltilmiş giriş' });
+    expect(metinler(r)).toContain('Onaya gönderildi');
+    const son = (await o.adaptorler.ogrenme.denemelerim()).find((d) => d.id === red.id)!;
+    expect(son).toMatchObject({ onayDurumu: 'bekliyor', redNedeni: null, ad: 'Düzeltilmiş giriş' });
+    expect(son.surum).toBe(red.surum + 1);
+  });
+
+  it('onayli ya da olmayan deneme duzeltme ekraninda acilmaz; surum cakismasi mesaj verir', async () => {
+    const o = await ogrenciOrtami();
+    const liste = await o.adaptorler.ogrenme.denemelerim();
+    const onayli = liste.find((d) => d.onayDurumu === 'onaylandi')!;
+    const r = await ac(o, <DenemeDuzeltEkrani denemeId={onayli.id} />);
+    expect(metinler(r)).toContain('düzeltilemiyor');
+    const r2 = await ac(o, <DenemeDuzeltEkrani denemeId="yok" />);
+    expect(metinler(r2)).toContain('düzeltilemiyor');
+    const red = liste.find((d) => d.onayDurumu === 'reddedildi')!;
+    await expect(
+      o.adaptorler.ogrenme.denemeGuncelle(red.id, { surum: red.surum + 5, ad: 'x' }),
+    ).rejects.toMatchObject({ kod: 'cakisma', ayrinti: 'surum_cakismasi' });
   });
 
   it('ayni deneme tekrar girilirse deneme_zaten_var mesaji', async () => {

@@ -3,7 +3,7 @@
 import type { OgrenciOdeviTipi } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
-import { NotebookPen } from 'lucide-react';
+import { NotebookPen, Paperclip } from 'lucide-react';
 import { useState } from 'react';
 
 import { BosDurum } from '@/components/bos-durum';
@@ -18,6 +18,7 @@ import {
 } from '@/components/hesap/ortak';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
@@ -101,6 +102,7 @@ function OdevlerimIcerigi() {
             {veri.odevler.map((o) => (
               <OdevKarti
                 key={o.id}
+                kurumId={kurumId}
                 odev={o}
                 teslimEt={() => {
                   setTeslim(o);
@@ -132,7 +134,16 @@ function OdevlerimIcerigi() {
   );
 }
 
-function OdevKarti({ odev: o, teslimEt }: { odev: OgrenciOdeviTipi; teslimEt: () => void }) {
+function OdevKarti({
+  kurumId,
+  odev: o,
+  teslimEt,
+}: {
+  kurumId: string;
+  odev: OgrenciOdeviTipi;
+  teslimEt: () => void;
+}) {
+  const [ekAcik, setEkAcik] = useState(false);
   const d = ogrenciOdevDurumu(o.durum);
   const gecikti = gecikmisMi(o.durum, o.son_teslim_at);
   const teslimEdilebilir =
@@ -167,6 +178,34 @@ function OdevKarti({ odev: o, teslimEt }: { odev: OgrenciOdeviTipi; teslimEt: ()
           </Dugme>
         ) : null}
       </div>
+      {o.ek_sayisi > 0 ? (
+        <div className="flex flex-col gap-2">
+          <Dugme
+            type="button"
+            gorunum="ikincil"
+            boyut="sm"
+            className="self-start"
+            aria-expanded={ekAcik}
+            onClick={() => {
+              setEkAcik((a) => !a);
+            }}
+          >
+            <Paperclip aria-hidden />
+            {t('ogrenme.ek.gorBaslik', { n: o.ek_sayisi })}
+            <span className="sr-only">
+              {' '}
+              {ekAcik ? t('ogrenme.ek.gizle') : t('ogrenme.ek.goster')}
+            </span>
+          </Dugme>
+          {ekAcik ? (
+            <EkListesiGorunumu
+              kurumId={kurumId}
+              yol={`ogrenci-odevleri/${o.id}/ekler`}
+              baslik={false}
+            />
+          ) : null}
+        </div>
+      ) : null}
       {o.teslim_at && o.yapilan_soru_sayisi !== null ? (
         <p className="text-sm text-metin-ikincil">
           {t('ogrenme.odev.teslimOzeti', {

@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import type { DenemeBolumGirdisi, DenemeKurali } from '../api/ogrenmeTipleri';
+import type { Deneme, DenemeBolumGirdisi, DenemeKurali } from '../api/ogrenmeTipleri';
 import { bugunTarihi, tarihGecerliMi } from '../lib/saat';
+import { varsayilanKuralKodu } from '../ogrenme/denemeTuru';
 import { bolumKur, netBicimle, yuvarla2, type BolumHatasi } from '../ogrenme/net';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
@@ -17,7 +18,13 @@ import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { Secici } from '../ui/Secici';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { denemeleriTazele, useDenemeKurallari, useOgrenciDenemeAyari } from '../uygulama/ogrenme';
+import {
+  denemeleriTazele,
+  useDenemeKurallari,
+  useDenemeler,
+  useDenemelerim,
+  useOgrenciDenemeAyari,
+} from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
 
 interface BolumMetinleri {
@@ -118,9 +125,12 @@ function BolumKarti({
 export function DenemeGirisFormu({
   ogrenciId,
   ogrenciAd,
+  duzelt,
 }: {
   ogrenciId?: string;
   ogrenciAd?: string;
+  /** Verilirse yeni sonuc degil bu (reddedilmis/onaysiz) sonuc duzeltilir; sinav turu degismez. */
+  duzelt?: Deneme;
 }) {
   const router = useRouter();
   const qc = useQueryClient();
@@ -130,24 +140,45 @@ export function DenemeGirisFormu({
   const { tz } = useSaatDilimi();
   const kurallar = useDenemeKurallari();
   const ayar = useOgrenciDenemeAyari();
+  // Varsayilan tur: kisinin son girdigi tur (ogrenci kendi, ogretmen sectigi ogrencinin gecmisi).
+  const ogrenciGecmisi = useDenemelerim(ogrenciMi);
+  const secilenGecmis = useDenemeler({ ogrenciId: ogrenciId ?? '' }, !ogrenciMi && !!ogrenciId);
+  const gecmis = (ogrenciMi ? ogrenciGecmisi.data : secilenGecmis.data) ?? [];
 
-  const [kuralKodu, setKuralKodu] = useState<string | null>(null);
-  const [ad, setAd] = useState('');
-  const [tarih, setTarih] = useState(() => bugunTarihi(tz));
-  const [yayinevi, setYayinevi] = useState('');
-  const [metinler, setMetinler] = useState<Record<string, BolumMetinleri>>({});
+  const [kuralKodu, setKuralKodu] = useState<string | null>(duzelt?.kuralKodu ?? null);
+  const [ad, setAd] = useState(duzelt?.ad ?? '');
+  const [tarih, setTarih] = useState(() => duzelt?.sinavTarihi ?? bugunTarihi(tz));
+  const [yayinevi, setYayinevi] = useState(duzelt?.yayinevi ?? '');
+  const [metinler, setMetinler] = useState<Record<string, BolumMetinleri>>(() =>
+    Object.fromEntries(
+      (duzelt?.bolumler ?? []).map((b) => [
+        b.bolumKodu,
+        { dogru: String(b.dogru), yanlis: String(b.yanlis), bos: '' },
+      ]),
+    ),
+  );
   const [denendi, setDenendi] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [bitti, setBitti] = useState<null | 'onay' | 'kaydedildi'>(null);
 
   const kural =
-    kurallar.data?.find((k) => k.kod === (kuralKodu ?? kurallar.data[0]?.kod)) ?? undefined;
+    kurallar.data?.find(
+      (k) => k.kod === (kuralKodu ?? varsayilanKuralKodu(kurallar.data, gecmis)),
+    ) ?? undefined;
   const bos: BolumMetinleri = { dogru: '', yanlis: '', bos: '' };
 
   const olustur = useMutation({
     networkMode: 'always',
     mutationFn: (g: Parameters<typeof adaptorler.ogrenme.denemeOlustur>[0]) =>
-      adaptorler.ogrenme.denemeOlustur(g),
+      duzelt
+        ? adaptorler.ogrenme.denemeGuncelle(duzelt.id, {
+            surum: duzelt.surum,
+            ad: g.ad,
+            yayinevi: g.yayinevi ?? null,
+            sinavTarihi: g.sinavTarihi,
+            bolumler: g.bolumler,
+          })
+        : adaptorler.ogrenme.denemeOlustur(g),
     onSuccess: () => {
       setHata(null);
       setBitti(ogrenciMi ? 'onay' : 'kaydedildi');
@@ -158,7 +189,13 @@ export function DenemeGirisFormu({
     },
   });
 
-  if (kurallar.isPending || (ogrenciMi && ayar.isPending)) {
+  // Gecmis yuklenmeden form acilmaz: varsayilan tur sonradan degisip girilen sayilari bozmasin.
+  if (
+    kurallar.isPending ||
+    (ogrenciMi && ayar.isPending) ||
+    ogrenciGecmisi.isLoading ||
+    secilenGecmis.isLoading
+  ) {
     return (
       <Ekran kenarlar={['left', 'right', 'bottom']}>
         <Yukleniyor />
@@ -250,14 +287,23 @@ export function DenemeGirisFormu({
     <Ekran kenarlar={['left', 'right', 'bottom']} klavye>
       <View className="gap-1">
         <Metin varyant="baslik" accessibilityRole="header">
-          {t('mobil.ogrenme.deneme.girisBaslik')}
+          {duzelt ? t('mobil.ogrenme.deneme.duzeltBaslik') : t('mobil.ogrenme.deneme.girisBaslik')}
         </Metin>
         {ogrenciAd ? <Metin varyant="ikincil">{ogrenciAd}</Metin> : null}
         {ogrenciMi ? (
-          <Metin varyant="kucuk">{t('mobil.ogrenme.deneme.ogrenciOnayNotu')}</Metin>
+          <Metin varyant="kucuk">
+            {duzelt
+              ? t('mobil.ogrenme.deneme.duzeltNotu')
+              : t('mobil.ogrenme.deneme.ogrenciOnayNotu')}
+          </Metin>
         ) : null}
       </View>
-      {kurallar.data.length > 0 ? (
+      {duzelt ? (
+        <Metin varyant="etiket" testID="duzelt-tur">
+          {kurallar.data.find((k) => k.kod === duzelt.kuralKodu)?.ad ??
+            duzelt.kuralKodu.toUpperCase()}
+        </Metin>
+      ) : kurallar.data.length > 0 ? (
         <Secici
           baslik={t('mobil.ogrenme.deneme.tur')}
           deger={kural?.kod ?? null}
@@ -330,7 +376,7 @@ export function DenemeGirisFormu({
       ) : null}
       <Dugme
         buyuk
-        etiket={t('mobil.ogrenme.deneme.kaydet')}
+        etiket={duzelt ? t('mobil.ogrenme.deneme.duzeltGonder') : t('mobil.ogrenme.deneme.kaydet')}
         yukleniyor={olustur.isPending}
         disabled={!kural}
         onPress={gonder}

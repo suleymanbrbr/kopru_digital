@@ -13,6 +13,7 @@ export * from './finans/api.js';
 export * from './finans/olaylar.js';
 export * from './ogrenme/deneme.js';
 export * from './ogrenme/degerlendirme.js';
+export * from './ogrenme/ek.js';
 export * from './ogrenme/gunluk-soru.js';
 export * from './ogrenme/mufredat.js';
 export * from './ogrenme/odev.js';

@@ -15,6 +15,7 @@ import { uuidv7 } from 'uuidv7';
 
 import { odevler, ogrenciOdevleri } from '../../db/schema.js';
 import { gorunenAdlar, requirePermission } from '../hesap/index.js';
+import { ODEV_EK_KAYNAGI, ekleriEsitle } from './ek-deposu.js';
 import {
   atananSayisi,
   bransGecerliOlmali,
@@ -50,7 +51,7 @@ export const odevYollari: ServicePlugin = (app) => {
       schema: {
         tags: ['ogrenme'],
         summary:
-          'Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici.',
+          'Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici. `ek_dosya_idleri` (ops., hazir `odev_eki`) ayni islemde baglanir; sonradan `PUT /odevler/:id/ekler`.',
         params: kurumParam,
         body: OdevOlusturGirdiSema,
         response: { 201: OdevSema },
@@ -59,6 +60,7 @@ export const odevYollari: ServicePlugin = (app) => {
     async (request, reply) => {
       const y = yetkiAl(request);
       const g = request.body;
+      const baglam = olayBaglami(y, request.correlationId);
       const sonuc = await withTenant(db, kiraci(y), async (tx) => {
         const hedefId = await hedefiDogrula(tx, y, g.hedef_turu, g.hedef_id);
         await bransGecerliOlmali(tx, g.brans_kodu);
@@ -83,11 +85,14 @@ export const odevYollari: ServicePlugin = (app) => {
           })
           .returning();
         if (!o) throw new Error('ödev oluşturulamadı');
+        const ekler = g.ek_dosya_idleri ?? [];
+        if (ekler.length > 0) await ekleriEsitle(tx, y, baglam, ODEV_EK_KAYNAGI, o.id, ekler);
         await odevDenetimiYaz(tx, y, request.ip, 'odev.olustur', 'odev', o.id, null, {
           hedef_turu: o.hedef_turu,
           hedef_id: o.hedef_id,
           brans_kodu: o.brans_kodu,
           tur: o.tur,
+          ek_sayisi: ekler.length,
         });
         return odevYaniti(o);
       });

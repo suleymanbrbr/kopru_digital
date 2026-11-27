@@ -16,9 +16,10 @@ import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { Secici } from '../ui/Secici';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { useOdevOzeti } from '../uygulama/ogrenme';
+import { useOdevEkleri, useOdevOzeti } from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { EkKarti } from './OgrenmeEkleri';
 
 const SONUCLAR: readonly IncelemeSonucu[] = ['tamam', 'eksik', 'tekrar'];
 /** Incelenecekler (teslim edilen) en uste; sonra bekleyenler, tekrar istenenler, incelenenler. */
@@ -177,6 +178,7 @@ function SatirDetayi({
 export function OdevOzetEkrani({ odevId }: { odevId: string }) {
   const { tz } = useSaatDilimi();
   const sorgu = useOdevOzeti(odevId);
+  const ekler = useOdevEkleri(odevId, 'odev');
   const [acik, setAcik] = useState<string | null>(null);
   const o = sorgu.data;
   const satirlar = [...(o?.ogrenciler ?? [])].sort(
@@ -236,6 +238,7 @@ export function OdevOzetEkrani({ odevId }: { odevId: string }) {
               </View>
             ))}
           </Kart>
+          <EkKarti sorgu={ekler} bosGizle testID="odev-ekleri" />
           <Kart className="gap-0 p-0" testID="odev-ogrenciler">
             {satirlar.map((s, i) => {
               const secili = acik === s.ogrenciOdevId;

@@ -109,6 +109,15 @@ export function OgrenciDenemeler() {
               <Metin>{d.redNedeni ?? t('mobil.ogrenme.deneme.redNedeniYok')}</Metin>
             </View>
           ) : null}
+          {d.onayDurumu === 'reddedildi' && d.kaynak === 'ogrenci' && ayar.data === true ? (
+            <Dugme
+              etiket={t('mobil.ogrenme.deneme.duzelt')}
+              testID={`deneme-duzelt-${d.id}`}
+              onPress={() => {
+                router.push({ pathname: '/deneme-duzelt', params: { id: d.id } });
+              }}
+            />
+          ) : null}
           <BolumNetleri deneme={d} />
         </Kart>
       ))}

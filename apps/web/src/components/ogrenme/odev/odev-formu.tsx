@@ -5,6 +5,7 @@ import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
+import { EkSecici, useEkSecimi } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { KonuSecici } from '@/components/ogrenme/konu-secici';
 import { OgrenciSecimi } from '@/components/ogrenme/ortak';
 import { Alan } from '@/components/operasyon/ortak';
@@ -15,6 +16,7 @@ import { Secim } from '@/components/ui/secim';
 import { hataMesaji } from '@/lib/api';
 import { bransAdi, siraliBransler } from '@/lib/bransler';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
+import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
 import { odevFormunuDogrula, type OdevFormDegeri, type OdevHedefTuru } from '@/lib/ogrenme/odev';
 import { useOdevSablonlari, useOgrenciler, useOgrenmeYenile } from '@/lib/ogrenme/veri';
 import { useGruplar, useKademeler, useSaatDilimi } from '@/lib/operasyon-verisi';
@@ -66,6 +68,7 @@ export function OdevFormu({
   const [hatalar, setHatalar] = useState<Record<string, string>>({});
   const [genelHata, setGenelHata] = useState<string | null>(null);
   const [sablonAdi, setSablonAdi] = useState<string | null>(null);
+  const ekler = useEkSecimi();
 
   const guncelle = (parca: Partial<OdevFormDegeri>) => {
     setF((o) => ({ ...o, ...parca }));
@@ -91,8 +94,9 @@ export function OdevFormu({
       ...(f.kaynak.trim() ? { kaynak: f.kaynak.trim() } : {}),
       ...(f.sonTeslim ? { son_teslim_at: yerelUtc(f.sonTeslim, '23:59', saatDilimi) } : {}),
       ...(f.tur === 'soru' && f.hedefSayi ? { hedef_soru_sayisi: Number(f.hedefSayi) } : {}),
+      ...(ekler.hazirIdler.length > 0 ? { ek_dosya_idleri: ekler.hazirIdler } : {}),
     }),
-    [baslik, f, hedefId, saatDilimi],
+    [baslik, f, hedefId, saatDilimi, ekler.hazirIdler],
   );
 
   const kaydet = useMutation({
@@ -144,6 +148,10 @@ export function OdevFormu({
 
   const gonder = (yayinla: boolean) => {
     setGenelHata(null);
+    if (ekler.yukleniyor) {
+      setGenelHata(t('ogrenme.ek.yuklemeBekle'));
+      return;
+    }
     if (dogrula()) kaydet.mutate(yayinla);
   };
 
@@ -382,6 +390,17 @@ export function OdevFormu({
           )}
         </Alan>
 
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-sm font-medium">{t('ogrenme.ek.baslik')}</legend>
+          <p className="text-sm text-metin-ikincil">
+            {t('ogrenme.ek.odevAciklama', {
+              n: EK_EN_FAZLA_DOSYA,
+              mb: EK_EN_FAZLA_BAYT / (1024 * 1024),
+            })}
+          </p>
+          <EkSecici depo={ekler} tur="odev_eki" />
+        </fieldset>
+
         {genelHata ? (
           <p role="alert" className="text-sm text-hata">
             {genelHata}
@@ -411,14 +430,14 @@ export function OdevFormu({
           <Dugme
             type="button"
             gorunum="ikincil"
-            disabled={kaydet.isPending}
+            disabled={kaydet.isPending || ekler.yukleniyor}
             onClick={() => {
               gonder(false);
             }}
           >
             {t('ogrenme.odev.taslakKaydet')}
           </Dugme>
-          <Dugme type="submit" disabled={kaydet.isPending}>
+          <Dugme type="submit" disabled={kaydet.isPending || ekler.yukleniyor}>
             {kaydet.isPending ? t('ortak.yukleniyor') : t('ogrenme.odev.yayinla')}
           </Dugme>
         </div>

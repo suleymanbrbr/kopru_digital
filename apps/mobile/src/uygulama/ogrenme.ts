@@ -79,6 +79,37 @@ export function useOdevlerim() {
   });
 }
 
+/** Odev ekleri: ogrenci kendi satir kimligiyle, ogretmen odev kimligiyle (yalniz okuma/acma). */
+export function useOdevEkleri(
+  id: string | undefined,
+  kaynak: 'ogrenci_odevi' | 'odev',
+  etkin = true,
+) {
+  const { adaptorler } = useServisler();
+  const uyelikId = useUyelikId();
+  const acik = useModulAcik('odev');
+  return useQuery({
+    queryKey: ['odev', uyelikId, 'ekler', kaynak, id],
+    queryFn: () => adaptorler.ogrenme.odevEkleri(id ?? '', kaynak),
+    enabled: !!uyelikId && acik && !!id && etkin,
+    // Imzali adresler 10 dk gecerli: kisa tut, ekran her acildiginda tazelensin.
+    staleTime: 60_000,
+  });
+}
+
+/** Haftalik plan ekleri (hazir plan PDF/resim). */
+export function usePlanEkleri(planId: string | undefined, kaynak: 'ogrenci' | 'personel') {
+  const { adaptorler } = useServisler();
+  const uyelikId = useUyelikId();
+  const acik = useModulAcik('haftalik_plan');
+  return useQuery({
+    queryKey: ['plan', uyelikId, 'ekler', kaynak, planId],
+    queryFn: () => adaptorler.ogrenme.planEkleri(planId ?? '', kaynak),
+    enabled: !!uyelikId && acik && !!planId,
+    staleTime: 60_000,
+  });
+}
+
 export function useBekleyenTeslimler() {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();
@@ -137,26 +168,27 @@ export function useOgrenciDenemeAyari() {
   });
 }
 
-export function useDenemelerim() {
+/** `etkin=false`: sorgu hic calismaz (ornegin ogretmen ekraninda ogrenci ucu 403 verir). */
+export function useDenemelerim(etkin = true) {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();
   const acik = useModulAcik('deneme');
   return useQuery({
     queryKey: ['deneme', uyelikId, 'denemelerim'],
     queryFn: () => adaptorler.ogrenme.denemelerim(),
-    enabled: !!uyelikId && acik,
+    enabled: !!uyelikId && acik && etkin,
   });
 }
 
 /** Ogretmen: onay kuyrugu (`ogrenciId` yok) ya da tek ogrencinin denemeleri. */
-export function useDenemeler(s: { onay?: 'bekliyor'; ogrenciId?: string }) {
+export function useDenemeler(s: { onay?: 'bekliyor'; ogrenciId?: string }, etkin = true) {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();
   const acik = useModulAcik('deneme');
   return useQuery({
     queryKey: ['deneme', uyelikId, 'liste', s.onay ?? 'tum', s.ogrenciId ?? 'hepsi'],
     queryFn: () => adaptorler.ogrenme.denemeler(s),
-    enabled: !!uyelikId && acik,
+    enabled: !!uyelikId && acik && etkin,
   });
 }
 

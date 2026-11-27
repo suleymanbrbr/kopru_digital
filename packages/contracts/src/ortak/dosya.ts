@@ -13,6 +13,7 @@ export const MEDYA_DOSYA_TURLERI = [
   'soru_cizim',
   'soru_ses',
   'odev_eki',
+  'plan_eki',
   'odev_teslim_fotografi',
   'gunluk_soru_fotografi',
   'kurum_logosu',
@@ -25,6 +26,7 @@ export type MedyaDosyaTuru = z.infer<typeof medyaDosyaTuruSema>;
 export const MEDYA_BAGLI_TURLERI = [
   'odev_teslimi',
   'odev_eki',
+  'plan_eki',
   'soru',
   'soru_mesaji',
   'gunluk_soru_kaydi',

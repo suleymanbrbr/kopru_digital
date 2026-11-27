@@ -38770,6 +38770,16 @@
                     "minLength": 1,
                     "type": "string"
                   },
+                  "ek_dosya_idleri": {
+                    "description": "Hazır `odev_eki` dosyaları (PDF/fotoğraf); sonradan `PUT /odevler/:id/ekler` ile değişir.",
+                    "items": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  },
                   "fotograf_gerekli": {
                     "default": false,
                     "type": "boolean"
@@ -38970,7 +38980,7 @@
             "description": "Default Response"
           }
         },
-        "summary": "Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici.",
+        "summary": "Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici. `ek_dosya_idleri` (ops., hazir `odev_eki`) ayni islemde baglanir; sonradan `PUT /odevler/:id/ekler`.",
         "tags": [
           "ogrenme"
         ]
@@ -39457,6 +39467,327 @@
           }
         },
         "summary": "Yayindaki odevin hedefini yeniden cozer: sonradan katilan ogrenciye satir acar, ayrilip donen ogrencinin iptal satirini yeniden acar. Idempotent: ikinci cagri yeni satir yaratmaz.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}/ekler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adresler_alinamadi": {
+                      "type": "boolean"
+                    },
+                    "ekler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "adres": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "asil_url": {
+                                "format": "uri",
+                                "type": "string"
+                              },
+                              "dosya_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "gecerlilik_bitis_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "genislik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "kucuk_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "mime_tipi": {
+                                "type": "string"
+                              },
+                              "orta_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "sure_sn": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "yukseklik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "dosya_id",
+                              "mime_tipi",
+                              "asil_url",
+                              "kucuk_url",
+                              "orta_url",
+                              "genislik",
+                              "yukseklik",
+                              "sure_sn",
+                              "gecerlilik_bitis_at"
+                            ],
+                            "type": "object"
+                          },
+                          "boyut_bayt": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "medya_dosya_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "mime_tipi": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "medya_dosya_id",
+                          "sira",
+                          "mime_tipi",
+                          "boyut_bayt",
+                          "adres"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "ekler",
+                    "adresler_alinamadi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Odev ekleri (sirali) ve kisa omurlu okuma adresleri (10 dk). Kapsam disi odev 404. Medya yanit vermezse `adresler_alinamadi`.",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "medya_dosya_idleri": {
+                    "description": "Hazır `odev_eki` / `plan_eki` dosyaları (çağıranın kendi yüklemeleri), sıralı.",
+                    "items": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "medya_dosya_idleri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adresler_alinamadi": {
+                      "type": "boolean"
+                    },
+                    "ekler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "adres": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "asil_url": {
+                                "format": "uri",
+                                "type": "string"
+                              },
+                              "dosya_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "gecerlilik_bitis_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "genislik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "kucuk_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "mime_tipi": {
+                                "type": "string"
+                              },
+                              "orta_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "sure_sn": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "yukseklik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "dosya_id",
+                              "mime_tipi",
+                              "asil_url",
+                              "kucuk_url",
+                              "orta_url",
+                              "genislik",
+                              "yukseklik",
+                              "sure_sn",
+                              "gecerlilik_bitis_at"
+                            ],
+                            "type": "object"
+                          },
+                          "boyut_bayt": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "medya_dosya_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "mime_tipi": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "medya_dosya_id",
+                          "sira",
+                          "mime_tipi",
+                          "boyut_bayt",
+                          "adres"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "ekler",
+                    "adresler_alinamadi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Odev ek kumesini verilen listeye esitler (en cok 10, sirali). Dosyalar hazir `odev_eki`, cagiranin kendi yuklemesi ve baska kayda bagli degildir (409 `dosya_hazir_degil`, `dosya_zaten_bagli`; 422 `dosya_gecersiz`). Cikarilan dosya medyada hemen silinir. Taslak ve yayindaki odevde yazilir; kapali odevde 409. Ogretmen yalniz kendi odevini degistirir (baskasi 403).",
         "tags": [
           "ogrenme"
         ]
@@ -40246,6 +40577,12 @@
                             ],
                             "type": "string"
                           },
+                          "ek_sayisi": {
+                            "description": "Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`).",
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
                           "fotograf_gerekli": {
                             "type": "boolean"
                           },
@@ -40366,7 +40703,8 @@
                           "gec_teslim",
                           "inceleme_sonucu",
                           "inceleme_notu",
-                          "incelendi_at"
+                          "incelendi_at",
+                          "ek_sayisi"
                         ],
                         "type": "object"
                       },
@@ -40389,6 +40727,155 @@
           }
         },
         "summary": "Ogrencinin kendi odevleri (yalniz kendi satirlari; yayindaki/kapali odevler, iptal satirlar haric). Sayfali.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenci-odevleri/{id}/ekler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adresler_alinamadi": {
+                      "type": "boolean"
+                    },
+                    "ekler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "adres": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "asil_url": {
+                                "format": "uri",
+                                "type": "string"
+                              },
+                              "dosya_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "gecerlilik_bitis_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "genislik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "kucuk_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "mime_tipi": {
+                                "type": "string"
+                              },
+                              "orta_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "sure_sn": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "yukseklik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "dosya_id",
+                              "mime_tipi",
+                              "asil_url",
+                              "kucuk_url",
+                              "orta_url",
+                              "genislik",
+                              "yukseklik",
+                              "sure_sn",
+                              "gecerlilik_bitis_at"
+                            ],
+                            "type": "object"
+                          },
+                          "boyut_bayt": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "medya_dosya_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "mime_tipi": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "medya_dosya_id",
+                          "sira",
+                          "mime_tipi",
+                          "boyut_bayt",
+                          "adres"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "ekler",
+                    "adresler_alinamadi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrencinin kendi odev satirinin ekleri ve okuma adresleri (taslak odev ve iptal satir 404; baskasinin satiri 404).",
         "tags": [
           "ogrenme"
         ]
@@ -40484,6 +40971,12 @@
                         "iptal"
                       ],
                       "type": "string"
+                    },
+                    "ek_sayisi": {
+                      "description": "Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
                     },
                     "fotograf_gerekli": {
                       "type": "boolean"
@@ -40605,7 +41098,8 @@
                     "gec_teslim",
                     "inceleme_sonucu",
                     "inceleme_notu",
-                    "incelendi_at"
+                    "incelendi_at",
+                    "ek_sayisi"
                   ],
                   "type": "object"
                 }
@@ -40723,6 +41217,12 @@
                       ],
                       "type": "string"
                     },
+                    "ek_sayisi": {
+                      "description": "Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`).",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
                     "fotograf_gerekli": {
                       "type": "boolean"
                     },
@@ -40843,7 +41343,8 @@
                     "gec_teslim",
                     "inceleme_sonucu",
                     "inceleme_notu",
-                    "incelendi_at"
+                    "incelendi_at",
+                    "ek_sayisi"
                   ],
                   "type": "object"
                 }
@@ -46181,6 +46682,155 @@
         ]
       }
     },
+    "/v1/ogrenme/kurumlar/{kurum_id}/planim/{id}/ekler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adresler_alinamadi": {
+                      "type": "boolean"
+                    },
+                    "ekler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "adres": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "asil_url": {
+                                "format": "uri",
+                                "type": "string"
+                              },
+                              "dosya_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "gecerlilik_bitis_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "genislik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "kucuk_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "mime_tipi": {
+                                "type": "string"
+                              },
+                              "orta_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "sure_sn": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "yukseklik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "dosya_id",
+                              "mime_tipi",
+                              "asil_url",
+                              "kucuk_url",
+                              "orta_url",
+                              "genislik",
+                              "yukseklik",
+                              "sure_sn",
+                              "gecerlilik_bitis_at"
+                            ],
+                            "type": "object"
+                          },
+                          "boyut_bayt": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "medya_dosya_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "mime_tipi": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "medya_dosya_id",
+                          "sira",
+                          "mime_tipi",
+                          "boyut_bayt",
+                          "adres"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "ekler",
+                    "adresler_alinamadi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Ogrencinin kendi (yayindaki) planinin ekleri ve okuma adresleri. Taslak plan ya da baskasinin plani 404.",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
     "/v1/ogrenme/kurumlar/{kurum_id}/planlar": {
       "post": {
         "parameters": [
@@ -46874,6 +47524,327 @@
           }
         },
         "summary": "Plan ve gorevleri (kapsam disi 404).",
+        "tags": [
+          "ogrenme"
+        ]
+      }
+    },
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/ekler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adresler_alinamadi": {
+                      "type": "boolean"
+                    },
+                    "ekler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "adres": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "asil_url": {
+                                "format": "uri",
+                                "type": "string"
+                              },
+                              "dosya_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "gecerlilik_bitis_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "genislik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "kucuk_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "mime_tipi": {
+                                "type": "string"
+                              },
+                              "orta_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "sure_sn": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "yukseklik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "dosya_id",
+                              "mime_tipi",
+                              "asil_url",
+                              "kucuk_url",
+                              "orta_url",
+                              "genislik",
+                              "yukseklik",
+                              "sure_sn",
+                              "gecerlilik_bitis_at"
+                            ],
+                            "type": "object"
+                          },
+                          "boyut_bayt": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "medya_dosya_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "mime_tipi": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "medya_dosya_id",
+                          "sira",
+                          "mime_tipi",
+                          "boyut_bayt",
+                          "adres"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "ekler",
+                    "adresler_alinamadi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Plan ekleri (hazir plan PDF/resim) ve okuma adresleri (kapsam disi plan 404).",
+        "tags": [
+          "ogrenme"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "medya_dosya_idleri": {
+                    "description": "Hazır `odev_eki` / `plan_eki` dosyaları (çağıranın kendi yüklemeleri), sıralı.",
+                    "items": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "medya_dosya_idleri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adresler_alinamadi": {
+                      "type": "boolean"
+                    },
+                    "ekler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "adres": {
+                            "additionalProperties": false,
+                            "nullable": true,
+                            "properties": {
+                              "asil_url": {
+                                "format": "uri",
+                                "type": "string"
+                              },
+                              "dosya_id": {
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                "type": "string"
+                              },
+                              "gecerlilik_bitis_at": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string"
+                              },
+                              "genislik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "kucuk_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "mime_tipi": {
+                                "type": "string"
+                              },
+                              "orta_url": {
+                                "format": "uri",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "sure_sn": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              },
+                              "yukseklik": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "nullable": true,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "dosya_id",
+                              "mime_tipi",
+                              "asil_url",
+                              "kucuk_url",
+                              "orta_url",
+                              "genislik",
+                              "yukseklik",
+                              "sure_sn",
+                              "gecerlilik_bitis_at"
+                            ],
+                            "type": "object"
+                          },
+                          "boyut_bayt": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          },
+                          "medya_dosya_id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "mime_tipi": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "medya_dosya_id",
+                          "sira",
+                          "mime_tipi",
+                          "boyut_bayt",
+                          "adres"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "ekler",
+                    "adresler_alinamadi"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Plan ek kumesini verilen listeye esitler (en cok 10, sirali): hazir plani PDF/resim olarak yukleme. Dosyalar hazir `plan_eki`, cagiranin kendi yuklemesi ve baska kayda bagli degildir. Yayindaki planda da yazilir; kilitli hafta 409 `plan_kilitli`.",
         "tags": [
           "ogrenme"
         ]

@@ -1,4 +1,11 @@
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import {
+  medyaMockAdres,
+  medyaMockBoyut,
+  medyaMockHazirMi,
+  medyaMockMime,
+  medyaMockTur,
+} from './medya-mock';
 import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 import { xlsxOku, xlsxYaz, type Hucre } from './xlsx-mini';
@@ -154,6 +161,8 @@ interface Durum {
   denemeler: Deneme[];
   kurallar: Kural[];
   ayarlar: { ogrenci_deneme_girisi: boolean };
+  /** Odev ve plan ek dosyalari: kayit kimligi -> sirali medya dosya kimlikleri. */
+  ekler: Record<string, string[]>;
 }
 
 const kutu = globalThis as unknown as { __kopruOgrenmeMock?: Record<string, Durum> };
@@ -561,6 +570,7 @@ function kur(kurumId: string): Durum {
     denemeler,
     kurallar,
     ayarlar: { ogrenci_deneme_girisi: true },
+    ekler: {},
   };
 }
 
@@ -708,6 +718,7 @@ function odevGorunumu(s: Durum, o: Odev): Kayit {
 function ogrenciOdevi(s: Durum, r: OgrOdev): Kayit {
   const o = ilk(s.odevler.find((x) => x.id === r.odev_id));
   return {
+    ek_sayisi: (s.ekler[o.id] ?? []).length,
     id: r.id,
     odev_id: o.id,
     baslik: o.baslik,
@@ -761,6 +772,47 @@ function ozetSatiri(kurumId: string, o: Odev, r: OgrOdev): Kayit {
   };
 }
 
+// --- Ek dosyalar (odev_eki / plan_eki) ---------------------------------------------------------
+
+function ekListesi(s: Durum, anahtar: string, i: MockIstek) {
+  const kaynak = i.kaynak ?? 'http://localhost:3000';
+  return {
+    ekler: (s.ekler[anahtar] ?? []).map((id, sira) => ({
+      medya_dosya_id: id,
+      sira,
+      mime_tipi: medyaMockMime(id),
+      boyut_bayt: medyaMockBoyut(id),
+      adres: { dosya_id: id, ...medyaMockAdres(kaynak, id) },
+    })),
+    adresler_alinamadi: false,
+  };
+}
+
+/** Ek kumesini esitler (api `ekleriEsitle` ile ayni hata kodlari); basarida `null`. */
+function ekKumesiYaz(
+  s: Durum,
+  anahtar: string,
+  ham: unknown,
+  tur: 'odev_eki' | 'plan_eki',
+): MockYanit | null {
+  const idler = nesne(ham).medya_dosya_idleri;
+  if (!Array.isArray(idler) || idler.some((x) => typeof x !== 'string') || idler.length > 10) {
+    return dogrulama();
+  }
+  const liste = idler as string[];
+  if (new Set(liste).size !== liste.length) return hata(422, 'dosya_gecersiz', 'Yinelenen dosya.');
+  const mevcut = new Set(s.ekler[anahtar] ?? []);
+  for (const id of liste) {
+    if (mevcut.has(id)) continue;
+    if (!medyaMockHazirMi(id)) return hata(409, 'dosya_hazir_degil', 'Dosya henüz hazır değil.');
+    if (medyaMockTur(id) !== tur) return hata(422, 'dosya_gecersiz', 'Dosya türü uygun değil.');
+    const baska = Object.entries(s.ekler).some(([k, v]) => k !== anahtar && v.includes(id));
+    if (baska) return hata(409, 'dosya_zaten_bagli', 'Dosya zaten bir kayda bağlı.');
+  }
+  s.ekler[anahtar] = liste;
+  return null;
+}
+
 function odevIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYanit | null {
   const personel = personelMi(kurumId);
   const { ogretmenId, benId } = kimlikler(kurumId);
@@ -773,6 +825,14 @@ function odevIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYan
       .filter((r) => ilk(s.odevler.find((o) => o.id === r.odev_id)).durum !== 'taslak');
     const { dilim, sonraki } = sayfala(liste, i.sorgu);
     return ok({ odevler: dilim.map((r) => ogrenciOdevi(s, r)), sonraki_imlec: sonraki });
+  }
+
+  if (p[0] === 'ogrenci-odevleri' && p[1] && p[2] === 'ekler' && i.yontem === 'GET') {
+    if (personel) return izinYok();
+    const r = s.ogrOdevleri.find((x) => x.id === p[1] && x.ogrenci_id === benId);
+    const od = r ? s.odevler.find((x) => x.id === r.odev_id) : undefined;
+    if (!r || !od || r.durum === 'iptal' || od.durum === 'taslak') return bulunamadi();
+    return ok(ekListesi(s, od.id, i));
   }
 
   if (p[0] === 'odev-sablonlari') {
@@ -890,6 +950,15 @@ function odevIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYan
       surum: 1,
       created_at: simdi(),
     };
+    if ('ek_dosya_idleri' in g) {
+      const hataYaniti = ekKumesiYaz(
+        s,
+        o.id,
+        { medya_dosya_idleri: g.ek_dosya_idleri },
+        'odev_eki',
+      );
+      if (hataYaniti) return hataYaniti;
+    }
     s.odevler.unshift(o);
     return ok(odevGorunumu(s, o), 201);
   }
@@ -902,6 +971,11 @@ function odevIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYan
   const o = s.odevler.find((x) => x.id === p[1]);
   if (!o) return bulunamadi();
   if (p.length === 2 && i.yontem === 'GET') return ok(odevGorunumu(s, o));
+  if (p[2] === 'ekler' && i.yontem === 'GET') return ok(ekListesi(s, o.id, i));
+  if (p[2] === 'ekler' && i.yontem === 'PUT') {
+    if (o.durum === 'kapali') return hata(409, 'odev_kapali', 'Ödev kapalı.');
+    return ekKumesiYaz(s, o.id, i.govde, 'odev_eki') ?? ok(ekListesi(s, o.id, i));
+  }
   if (p.length === 2 && i.yontem === 'PATCH') {
     const g = nesne(i.govde);
     for (const alan of [
@@ -1090,6 +1164,26 @@ function planIsle(s: Durum, kurumId: string, p: string[], i: MockIstek): MockYan
     typeof g === 'string' && TARIH.test(g) ? pazartesi(g) : pazartesi(bugun());
 
   // --- Ogrenci ---
+  if (p[0] === 'planim' && p[1] && p[2] === 'ekler' && i.yontem === 'GET') {
+    if (personel) return izinYok();
+    const pl = s.planlar.find(
+      (x) => x.id === p[1] && x.ogrenci_id === benId && x.durum === 'yayinda',
+    );
+    return pl ? ok(ekListesi(s, pl.id, i)) : bulunamadi();
+  }
+  if (
+    p[0] === 'planlar' &&
+    p[1] &&
+    p[2] === 'ekler' &&
+    (i.yontem === 'GET' || i.yontem === 'PUT')
+  ) {
+    if (!personel) return izinYok();
+    const pl = s.planlar.find((x) => x.id === p[1]);
+    if (!pl) return bulunamadi();
+    if (i.yontem === 'GET') return ok(ekListesi(s, pl.id, i));
+    if (planKilitli(pl.hafta_baslangic)) return KILITLI();
+    return ekKumesiYaz(s, pl.id, i.govde, 'plan_eki') ?? ok(ekListesi(s, pl.id, i));
+  }
   if (p[0] === 'planim' && i.yontem === 'GET') {
     if (personel) return izinYok();
     return ok(planDetayi(s, benId, haftaOf(i.sorgu.get('hafta')), true));

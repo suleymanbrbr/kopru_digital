@@ -51,6 +51,7 @@ describe.skipIf(dbYok())(
       const foto = await dosya(k1, kullanici, 'soru_fotografi');
       const avatar = await dosya(k2, kullanici, 'avatar');
       const odevEki = await dosya(k1, kullanici, 'odev_eki');
+      const planEki = await dosya(k1, kullanici, 'plan_eki');
       const logo = await dosya(k1, kullanici, 'kurum_logosu');
       const fatura = await dosya(k1, kullanici, 'fatura_pdf');
       const baskaFoto = await dosya(k1, baska, 'soru_fotografi');
@@ -67,7 +68,7 @@ describe.skipIf(dbYok())(
       expect(await sistemDb.orm.transaction((tx) => kullaniciSilindi(tx, olay))).toBe(2);
       for (const id of [foto, avatar])
         expect(await plan(id)).toMatchObject({ silme_nedeni: 'kullanici_silindi', simdi: true });
-      for (const id of [odevEki, logo, fatura, baskaFoto])
+      for (const id of [odevEki, planEki, logo, fatura, baskaFoto])
         expect((await plan(id))?.silme_nedeni).not.toBe('kullanici_silindi');
       // Idempotent
       expect(await sistemDb.orm.transaction((tx) => kullaniciSilindi(tx, olay))).toBe(0);

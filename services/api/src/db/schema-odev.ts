@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  smallint,
   text,
   timestamp,
   unique,
@@ -113,5 +114,21 @@ export const odevSablonlari = ogrenme.table(
       t.ogretmen_id,
       t.created_at,
     ),
+  ],
+);
+
+/** Odev ek dosyalari (migrations/0024): medya `odev_eki`, en cok 10, bir dosya tek odeve baglanir. */
+export const odevEkleri = ogrenme.table(
+  'odev_ekleri',
+  {
+    ...kiraci(),
+    odev_id: uuid('odev_id').notNull(),
+    medya_dosya_id: uuid('medya_dosya_id').notNull(),
+    sira: smallint('sira').notNull().default(0),
+  },
+  (t) => [
+    unique('odev_ekleri_medya_dosya_id_uniq').on(t.medya_dosya_id),
+    unique('odev_ekleri_odev_id_sira_uniq').on(t.odev_id, t.sira),
+    index('odev_ekleri_kurum_id_odev_id_idx').on(t.kurum_id, t.odev_id),
   ],
 );

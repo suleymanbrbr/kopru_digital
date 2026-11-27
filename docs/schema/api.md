@@ -1124,6 +1124,7 @@ erDiagram
   konular ||--o{ konular : "ust_id"
   odevler ||--o{ ogrenci_odevleri : "fan-out"
   odevler ||--o{ odev_ekleri : "ek"
+  haftalik_planlar ||--o{ plan_ekleri : "ek"
   ogrenci_odevleri ||--o{ teslim_dosyalari : "foto"
   haftalik_planlar ||--o{ plan_gorevleri : "gorev"
   plan_gorevleri ||--o| plan_gorevleri : "devreden"
@@ -1299,7 +1300,13 @@ Olaylar: `ogrenme.odev.teslim_edildi.v1`, `ogrenme.odev.incelendi.v1`.
 
 #### `ogrenme.odev_ekleri`
 
-Öğretmenin ödeve eklediği dosyalar. Profil: `K`. RLS: evet. Sütunlar: `odev_id uuid NOT NULL` (bileşik FK), `medya_dosya_id uuid NOT NULL`, `sira smallint NOT NULL DEFAULT 0`. `UNIQUE (odev_id, medya_dosya_id)`. En çok 10 ek (uygulama). Bağlama: `ortak.medya_dosya_kopyalari` doğrulaması + `ortak.dosya.baglandi.v1`. Olaylar: `ortak.dosya.baglandi.v1`.
+Öğretmenin ödeve eklediği dosyalar (PDF/fotoğraf). Profil: `K` (migration 0024). RLS: evet. Sütunlar: `odev_id uuid NOT NULL` (bileşik FK `(kurum_id, odev_id)`), `medya_dosya_id uuid NOT NULL`, `sira smallint NOT NULL DEFAULT 0`. `UNIQUE (medya_dosya_id)` (bir dosya tek kayda bağlanır), `UNIQUE (odev_id, sira)`, `CHECK (sira BETWEEN 0 AND 9)` (en çok 10 ek). Bağlama: dosya `ortak.medya_dosya_kopyalari`'nda **hazır**, aynı kurumda, türü `odev_eki` ve sahibi çağıran kullanıcı olmalı (`dosyalariDogrula`); aynı işlemde `ortak.dosya.baglandi.v1` (`bagli_tur='odev_eki'`, `bagli_id` = ödev kimliği). Listeden çıkarılan dosya için `ortak.dosya.birakildi.v1` (`hemen_sil=true`; medyada hemen silinir). Olaylar: `ortak.dosya.baglandi.v1`, `ortak.dosya.birakildi.v1`.
+
+**Uygulama notları.** Uçlar: `PUT|GET /odevler/:id/ekler` (öğretmen/yönetici; PUT ek kümesini verilen sıralı listeye eşitler, taslak ve yayındaki ödevde yazılır, kapalıda 409 `odev_kapali`; öğretmen yalnız kendi ödevini değiştirir), `GET /ogrenci-odevleri/:id/ekler` (öğrenci, yalnız kendi satırı; taslak ödev ve iptal satır 404), `POST /odevler` gövdesinde isteğe bağlı `ek_dosya_idleri` (ödevle aynı işlemde bağlanır). Yanıt `{ ekler: [{ medya_dosya_id, sira, mime_tipi, boyut_bayt, adres }], adresler_alinamadi }`; `adres` medya iç ucundan (`POST /ic/okuma-adresleri`, servis JWT'si) alınan 10 dk'lık imzalı adrestir, medya yanıt vermezse `null` + `adresler_alinamadi=true` (ödev bilgisi yine gelir). Dosya adı tutulmaz (medya özgün adı saklamaz). Hata kodları: `dosya_gecersiz` (422: başkasının/yanlış türde dosya, yinelenen kimlik), `dosya_hazir_degil` (409; başka kurumun dosyası da bu kodu alır), `dosya_islenemedi` (422), `dosya_zaten_bagli` (409). Ödev şablonu ve ödevi kopyalama ekleri taşımaz. Saklama: `odev_eki` 365 gün ([medya.md](medya.md)); KVKK silmede kalır ([kvkk-silme.md](kvkk-silme.md)).
+
+#### `ogrenme.plan_ekleri`
+
+Öğretmenin haftalık plana yüklediği hazır plan dosyası (PDF/resim; şartname: "hazır planı resim/PDF olarak yükle"). Profil: `K` (migration 0024). RLS: evet. Sütunlar: `plan_id uuid NOT NULL` (bileşik FK `(kurum_id, plan_id)` → `haftalik_planlar`), `medya_dosya_id uuid NOT NULL`, `sira smallint NOT NULL DEFAULT 0`. `UNIQUE (medya_dosya_id)`, `UNIQUE (plan_id, sira)`, `CHECK (sira BETWEEN 0 AND 9)`. Bağlama `odev_ekleri` ile aynıdır; medya türü ve bağlı tür `plan_eki` (medya migration 0005; kurallar `odev_eki` ile aynı). Uçlar: `PUT|GET /planlar/:id/ekler` (`plan.gorev.yaz` / `plan.oku`, grup kapsamı; PUT yayındaki planda da yazılır, kilitli haftada 409 `plan_kilitli`), `GET /planim/:id/ekler` (öğrenci, yalnız kendi **yayındaki** planı; taslak 404). Plan kopyalama ve toplu plan ekleri taşımaz. Görev düzeyinde ek yoktur (şartname plan düzeyinde yükleme der).
 
 #### `ogrenme.teslim_dosyalari`
 
@@ -1397,7 +1404,7 @@ Kısıtlar: `UNIQUE (kurum_id, id)`. İndeks: `(kurum_id, ogretmen_id, created_a
 - Toplu plan: grubun etkin öğrencilerinden o haftada planı olmayanlara aynı görevlerle (`sablon_id` ya da satır içi `gorevler`; ikisi birden değil) plan açılır, `yayinla` true ise yayında. İdempotent: planı olan öğrenciye dokunulmaz (`zaten_var`); `ON CONFLICT DO NOTHING` ile eş zamanlı çağrıda tek plan. Yanıt `olusturulan`, `atlanan` ve öğrenci bazında plan kimliklerini verir.
 - Özet (`/ozet`): ders (`brans_kodu`) bazında `soru` ve `dakika` ayrı toplanır (birbirine eklenmez); `planlanan` = hedef toplamı, `devredildi` görevde yalnız yapılan kısım (kalanı devir yavrusunda sayılır); `gorev_sayisi` devredilenleri saymaz, `tamam_sayisi` `tamam` görevlerdir.
 - Her yazma `hesap.denetim_kayitlari`na (`plan.*` eylemleri) yazılır; kayıtta serbest metin (not, başlık) yoktur. Olay yükünde ad, telefon, e-posta, görev başlığı ve not yoktur.
-- Kapsam dışı (bu paket): PDF/resim plan yükleme (`medya` bloğu), XP ve bildirim (olayı `motivasyon`/`bildirim` tüketir).
+- PDF/resim plan yükleme `ogrenme.plan_ekleri` ile yapılır (aşağıda). Kapsam dışı (bu paket): XP ve bildirim (olayı `motivasyon`/`bildirim` tüketir).
 
 ### Deneme sınavı
 

@@ -30,8 +30,9 @@ import { Metin } from '../ui/Metin';
 import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { gerceklesenIyimser, useKonuHaritasi, usePlanim } from '../uygulama/ogrenme';
+import { gerceklesenIyimser, useKonuHaritasi, usePlanEkleri, usePlanim } from '../uygulama/ogrenme';
 import { useKuyruk, useSaatDilimi } from '../uygulama/operasyon';
+import { EkKarti } from './OgrenmeEkleri';
 
 const DURUM_IKON = {
   bekliyor: 'ellipse-outline',
@@ -229,6 +230,7 @@ export function OgrenciPlani() {
   const gun = secilen ?? bugun;
   const hafta = haftaBaslangici(gun);
   const sorgu = usePlanim(hafta);
+  const planEkleri = usePlanEkleri(sorgu.data?.plan?.id, 'ogrenci');
   const konular = useKonuHaritasi();
   const { bekleyen, basarisiz } = useKuyruk();
 
@@ -342,6 +344,7 @@ export function OgrenciPlani() {
           {t('mobil.ogrenme.plan.kilitli')}
         </Metin>
       ) : null}
+      {sorgu.data?.plan ? <EkKarti sorgu={planEkleri} bosGizle testID="plan-ekleri" /> : null}
       {sorgu.data ? (
         <Metin varyant="etiket" testID="gun-ozeti" accessibilityLiveRegion="polite">
           {gunBasligi(gun)}

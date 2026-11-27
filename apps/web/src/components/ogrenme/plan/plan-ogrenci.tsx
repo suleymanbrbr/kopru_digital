@@ -20,6 +20,7 @@ import {
   type Bildirim,
 } from '@/components/hesap/ortak';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { Rozet } from '@/components/ui/rozet';
@@ -110,6 +111,7 @@ export function PlanOgrenci() {
               <p className="mt-1 text-sm">{detay.plan.not}</p>
             </section>
           ) : null}
+          <EkListesiGorunumu kurumId={kurumId} yol={`planim/${detay.plan.id}/ekler`} />
           <ol aria-label={t('ogrenme.plan.gunler')} className="flex flex-col gap-3">
             {gunler
               ? [...gunler.entries()].map(([gun, gorevler]) => (

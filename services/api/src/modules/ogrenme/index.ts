@@ -4,6 +4,7 @@ import { denemeAnalizYollari } from './deneme-analiz-yollari.js';
 import { denemeExcelYollari } from './deneme-excel-yollari.js';
 import { denemeKuralYollari } from './deneme-kural-yollari.js';
 import { denemeYollari } from './deneme-yollari.js';
+import { ekYollari } from './ek-yollari.js';
 import { gunlukSoruAnalizYollari } from './gunluk-soru-analiz-yollari.js';
 import { gunlukSoruYollari } from './gunluk-soru-yollari.js';
 import { kaynakKitapYollari } from './kaynak-kitap-yollari.js';
@@ -40,6 +41,7 @@ export const ogrenmeModule = defineModule(
       await app.register(odevSablonYollari);
       await app.register(odevOgrenciYollari);
       await app.register(odevTeslimYollari);
+      await app.register(ekYollari);
       await app.register(planYollari);
       await app.register(planSablonYollari);
       await app.register(planOgrenciYollari);
