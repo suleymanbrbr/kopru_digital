@@ -26,8 +26,8 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
 import { bransAdi } from '@/lib/bransler';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
-import { ogrenciOdevDurumu } from '@/lib/ogrenme/odev';
 import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
+import { ogrenciOdevDurumu } from '@/lib/ogrenme/odev';
 import { useOdevOzeti, useOgrenmeYenile } from '@/lib/ogrenme/veri';
 
 type Satir = z.infer<typeof OdevOgrenciSatiriSema>;

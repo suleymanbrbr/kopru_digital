@@ -176,7 +176,9 @@ export function useEkSecimi(mevcutSayisi = 0) {
   const [secimler, setSecimler] = useState<EkSecimi[]>([]);
   const [hatalar, setHatalar] = useState<string[]>([]);
   const ref = useRef(secimler);
-  ref.current = secimler;
+  useEffect(() => {
+    ref.current = secimler;
+  });
 
   const ekle = useCallback(
     (dosyalar: readonly File[]) => {

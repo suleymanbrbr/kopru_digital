@@ -34,6 +34,7 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
 import { bransAdi } from '@/lib/bransler';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
+import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
 import {
   devralindiMi,
   devredilmisMi,
@@ -42,7 +43,6 @@ import {
   ilerlemeEtiketi,
   miktarEtiketi,
 } from '@/lib/ogrenme/plan';
-import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
 import { ogrenmeYetkileri } from '@/lib/ogrenme/rol';
 import {
   useKonular,

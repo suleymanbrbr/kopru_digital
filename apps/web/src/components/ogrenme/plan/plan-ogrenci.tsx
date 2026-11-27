@@ -11,7 +11,6 @@ import { HaftaGezgini } from './hafta-gezgini';
 import { PlanOzeti } from './plan-ozeti';
 
 import { BosDurum } from '@/components/bos-durum';
-import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,
@@ -21,6 +20,7 @@ import {
   type Bildirim,
 } from '@/components/hesap/ortak';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { Dugme, dugmeStili } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { Rozet } from '@/components/ui/rozet';

@@ -17,8 +17,8 @@ import {
   type Bildirim,
 } from '@/components/hesap/ortak';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
-import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
