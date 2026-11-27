@@ -522,6 +522,12 @@ export function mockAdaptorler(
         return { kurumId: davetKurumu.id, uyelikId, rol: 'ogrenci' };
       },
 
+      async adGuncelle(ad) {
+        await bekle(gecikmeMs / 2);
+        await oturumGerekli();
+        return ad.trim();
+      },
+
       async oturumlar() {
         await bekle(gecikmeMs / 2);
         await oturumGerekli();

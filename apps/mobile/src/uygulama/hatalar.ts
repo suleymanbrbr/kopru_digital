@@ -133,6 +133,8 @@ export function hataMesaji(e: unknown): string {
       return t('mobil.giris.kodGecersiz');
     case 'otp_cok_deneme':
       return t('mobil.giris.kodCokDeneme');
+    case 'otp_gonderim_siniri':
+      return gonderimSiniriMesaji(e.detay);
     case 'cok_istek':
       return t('mobil.hata.cokIstek');
     case 'zaten_uye':
@@ -146,6 +148,18 @@ export function hataMesaji(e: unknown): string {
     default:
       return t('ortak.hataGenel');
   }
+}
+
+/** "Çok fazla kod istedin. 12 dakika sonra yeniden dene." (sure bilinmiyorsa genel metin). */
+function gonderimSiniriMesaji(detay: unknown): string {
+  const sn = (detay as { beklemeSn?: unknown } | undefined)?.beklemeSn;
+  if (typeof sn !== 'number' || !(sn > 0)) return t('mobil.giris.kodGonderimSiniriGenel');
+  const dk = Math.ceil(sn / 60);
+  const sure =
+    dk >= 60
+      ? t('mobil.giris.sureSaat', { n: Math.ceil(dk / 60) })
+      : t('mobil.giris.sureDakika', { n: dk });
+  return t('mobil.giris.kodGonderimSiniri', { sure });
 }
 
 function cakismaMesaji(ayrinti: string | undefined): string {

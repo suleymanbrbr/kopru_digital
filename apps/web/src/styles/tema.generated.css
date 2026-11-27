@@ -5,21 +5,21 @@
 
 :root {
   color-scheme: light;
-  --arka-plan: #F7F8FA;
-  --yuzey: #FFFFFF;
-  --yuzey-ikincil: #EEF0F3;
-  --kenar: #DDE1E7;
-  --metin: #161B26;
-  --metin-ikincil: #5B6577;
-  --birincil: #1F63D6;
-  --birincil-uzeri: #FFFFFF;
-  --vurgu: #FF8A3D;
-  --basari: #14703D;
-  --uyari: #9A6B00;
-  --hata: #A12520;
+  --arka-plan: #f7f8fa;
+  --yuzey: #ffffff;
+  --yuzey-ikincil: #eef0f3;
+  --kenar: #dde1e7;
+  --metin: #161b26;
+  --metin-ikincil: #5b6577;
+  --birincil: #1f63d6;
+  --birincil-uzeri: #ffffff;
+  --vurgu: #ff8a3d;
+  --basari: #14703d;
+  --uyari: #9a6b00;
+  --hata: #a12520;
 
   /* Vurgu rengi uzerindeki metin. Kurum rengi verilince calisma aninda yeniden hesaplanir. */
-  --vurgu-uzeri: #161B26;
+  --vurgu-uzeri: #161b26;
 
   /* Turetilmis yumusak zeminler: durum ve vurgu renklerinin seffaf karisimi. */
   --birincil-yumusak: color-mix(in oklab, var(--birincil) 12%, transparent);
@@ -31,23 +31,23 @@
 
 .dark {
   color-scheme: dark;
-  --arka-plan: #0B0E14;
-  --yuzey: #161B26;
-  --yuzey-ikincil: #2A3140;
-  --kenar: #2A3140;
-  --metin: #F7F8FA;
-  --metin-ikincil: #9AA3B2;
-  --birincil: #8EC1FF;
-  --birincil-uzeri: #0B0E14;
-  --vurgu: #FFC38A;
-  --basari: #1F9D57;
-  --uyari: #E0A100;
-  --hata: #F2847E;
+  --arka-plan: #0b0e14;
+  --yuzey: #161b26;
+  --yuzey-ikincil: #2a3140;
+  --kenar: #2a3140;
+  --metin: #f7f8fa;
+  --metin-ikincil: #9aa3b2;
+  --birincil: #8ec1ff;
+  --birincil-uzeri: #0b0e14;
+  --vurgu: #ffc38a;
+  --basari: #1f9d57;
+  --uyari: #e0a100;
+  --hata: #f2847e;
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
-    sans-serif;
+  --font-sans:
+    'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --color-arka-plan: var(--arka-plan);
   --color-yuzey: var(--yuzey);
@@ -68,35 +68,35 @@
   --color-uyari-yumusak: var(--uyari-yumusak);
   --color-hata-yumusak: var(--hata-yumusak);
 
-  --color-marka-50: #EEF6FF;
-  --color-marka-100: #D9EAFF;
-  --color-marka-300: #8EC1FF;
-  --color-marka-500: #2F7BF6;
-  --color-marka-600: #1F63D6;
-  --color-marka-700: #1A4FAD;
-  --color-marka-900: #132F63;
-  --color-vurgu-300: #FFC38A;
-  --color-vurgu-500: #FF8A3D;
-  --color-vurgu-700: #C85A12;
-  --color-basari-100: #DDF5E6;
-  --color-basari-500: #1F9D57;
-  --color-basari-700: #14703D;
-  --color-uyari-100: #FFF1D6;
-  --color-uyari-500: #E0A100;
-  --color-uyari-700: #9A6B00;
-  --color-hata-100: #FDE2E1;
-  --color-hata-300: #F2847E;
-  --color-hata-500: #D93A33;
-  --color-hata-700: #A12520;
-  --color-notr-0: #FFFFFF;
-  --color-notr-50: #F7F8FA;
-  --color-notr-100: #EEF0F3;
-  --color-notr-200: #DDE1E7;
-  --color-notr-400: #9AA3B2;
-  --color-notr-600: #5B6577;
-  --color-notr-800: #2A3140;
-  --color-notr-900: #161B26;
-  --color-notr-1000: #0B0E14;
+  --color-marka-50: #eef6ff;
+  --color-marka-100: #d9eaff;
+  --color-marka-300: #8ec1ff;
+  --color-marka-500: #2f7bf6;
+  --color-marka-600: #1f63d6;
+  --color-marka-700: #1a4fad;
+  --color-marka-900: #132f63;
+  --color-vurgu-300: #ffc38a;
+  --color-vurgu-500: #ff8a3d;
+  --color-vurgu-700: #c85a12;
+  --color-basari-100: #ddf5e6;
+  --color-basari-500: #1f9d57;
+  --color-basari-700: #14703d;
+  --color-uyari-100: #fff1d6;
+  --color-uyari-500: #e0a100;
+  --color-uyari-700: #9a6b00;
+  --color-hata-100: #fde2e1;
+  --color-hata-300: #f2847e;
+  --color-hata-500: #d93a33;
+  --color-hata-700: #a12520;
+  --color-notr-0: #ffffff;
+  --color-notr-50: #f7f8fa;
+  --color-notr-100: #eef0f3;
+  --color-notr-200: #dde1e7;
+  --color-notr-400: #9aa3b2;
+  --color-notr-600: #5b6577;
+  --color-notr-800: #2a3140;
+  --color-notr-900: #161b26;
+  --color-notr-1000: #0b0e14;
 
   --radius-kucuk: 6px;
   --radius-orta: 10px;

@@ -55,6 +55,16 @@ describe('oturum yoneticisi', () => {
     expect(temizle).toHaveBeenCalledTimes(2);
   });
 
+  it('adGuncelle kullanici adini durumda gunceller', async () => {
+    const { y, adaptorler } = kur();
+    await adaptorler.auth.otpDogrula('+905551110005', '123456');
+    await y.girisTamamlandi();
+    await y.adGuncelle('  Ayşe Demir ');
+    const d = y.depo.al();
+    if (d.asama !== 'giris') throw new Error();
+    expect(d.kullanici.adSoyad).toBe('Ayşe Demir');
+  });
+
   it('kvkk metinleri durumda gelir; rizaGerekli bayat metinleri temizler, yukle yeniden doldurur', async () => {
     const { y, adaptorler } = kur();
     await adaptorler.auth.otpDogrula('+905551110001', '123456');

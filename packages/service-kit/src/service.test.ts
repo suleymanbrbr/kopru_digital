@@ -26,6 +26,11 @@ const demoPlugin: ServicePlugin = (app) => {
     },
     (request) => ({ ad: request.body.ad }),
   );
+  app.post(
+    '/govdesiz',
+    { schema: { response: { 200: z.object({ govde: z.boolean() }) } } },
+    (request) => ({ govde: request.body !== undefined }),
+  );
   app.get('/app-error', () => {
     throw new AppError(409, 'cakisma', 'Bu kayıt zaten var.');
   });
@@ -111,6 +116,42 @@ describe('createService', () => {
     const app = await build();
     const res = await app.inject({ method: 'POST', url: '/echo', payload: { ad: 'Ayşe' } });
     expect(res.json()).toEqual({ ad: 'Ayşe' });
+  });
+
+  it('content-type json + bos govde govdesiz istek gibi kabul edilir; bozuk json yine 400', async () => {
+    const app = await build();
+    const json = { 'content-type': 'application/json' };
+    const bos = await app.inject({ method: 'POST', url: '/govdesiz', headers: json });
+    expect(bos.statusCode).toBe(200);
+    expect(bos.json()).toEqual({ govde: false });
+    const bosluk = await app.inject({
+      method: 'POST',
+      url: '/govdesiz',
+      headers: json,
+      payload: '  ',
+    });
+    expect(bosluk.statusCode).toBe(200);
+    // Zorunlu govdeli rota bos govdede dogrulama hatasi verir (500 degil).
+    const zorunlu = await app.inject({ method: 'POST', url: '/echo', headers: json });
+    expect(zorunlu.statusCode).toBe(400);
+    // Bozuk JSON ve dolu govde eskisi gibi.
+    const bozuk = await app.inject({ method: 'POST', url: '/echo', headers: json, payload: '{x' });
+    expect(bozuk.statusCode).toBe(400);
+    const dolu = await app.inject({
+      method: 'POST',
+      url: '/echo',
+      headers: json,
+      payload: '{"ad":"A"}',
+    });
+    expect(dolu.json()).toEqual({ ad: 'A' });
+    // Prototip zehirlenmesi denemesi reddedilir.
+    const zehir = await app.inject({
+      method: 'POST',
+      url: '/echo',
+      headers: json,
+      payload: '{"ad":"A","__proto__":{"x":1}}',
+    });
+    expect(zehir.statusCode).toBe(400);
   });
 
   it('openapi dokumanini uretir', async () => {

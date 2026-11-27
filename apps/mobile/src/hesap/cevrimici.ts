@@ -22,6 +22,7 @@ export function cevrimiciKorumali(hesap: HesapAdapter, cevrimiciMi: () => boolea
     katilimKodu: kor(hesap.katilimKodu),
     katilimKoduYenile: kor(hesap.katilimKoduYenile),
     davetKabul: kor(hesap.davetKabul),
+    adGuncelle: kor(hesap.adGuncelle),
     oturumlar: kor(hesap.oturumlar),
     oturumSonlandir: kor(hesap.oturumSonlandir),
     oturumlariKapat: kor(hesap.oturumlariKapat),

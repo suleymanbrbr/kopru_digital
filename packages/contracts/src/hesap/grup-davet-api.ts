@@ -82,6 +82,15 @@ export const GrupListeSorguSema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   imlec: z.uuid().optional().describe('Önceki sayfanın `sonraki_imlec` değeri.'),
 });
+/** Kurumun (arşivlenmemiş) kademeleri: kademe hedefli ödev/duyuru seçimi için. */
+export const KademeSema = z.object({
+  id: z.uuid(),
+  ad: z.string(),
+  seviye: z.number().int().nullable(),
+  sira: z.number().int(),
+});
+export const KademeListeYanitSema = z.object({ kademeler: z.array(KademeSema) });
+
 /** Liste satiri: birebir grupta etkin ogrencinin gorunen adi (tek sorguyla cozulur); diger turlerde `null`. */
 export const GrupListeSatiriSema = GrupSema.extend({
   ogrenci_ad: z

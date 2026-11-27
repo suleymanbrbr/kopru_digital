@@ -63,7 +63,8 @@ describe('BFF izinli yollar', () => {
     expect(yolIzinliMi(['kurumlar', 'k1', 'rapor', 'ogrenciler'])).toBe(true);
     expect(yolIzinliMi(['kurumlar', 'k1', 'rapor', 'baska'])).toBe(false);
     expect(yolIzinliMi(['kurumlar', 'k1', 'modul-ayarlari', 'x'])).toBe(false);
-    expect(yolIzinliMi(['ben'])).toBe(false);
+    // `ben` yalniz profil adi (PATCH) icin acik; alt yollar (ben/x) kapali.
+    expect(yolIzinliMi(['ben', 'baska'])).toBe(false);
     expect(yolIzinliMi(['kurumlar', '..', 'gruplar'])).toBe(false);
     expect(yolIzinliMi([])).toBe(false);
   });

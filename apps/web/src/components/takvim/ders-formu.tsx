@@ -8,6 +8,7 @@ import { useState, type SyntheticEvent } from 'react';
 
 import { cakisanlariOku, useDersYenile, type CakisanDers } from './ders-verisi';
 
+import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { basari, type Bildirim } from '@/components/hesap/ortak';
 import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
@@ -17,7 +18,6 @@ import { Pencere } from '@/components/ui/pencere';
 import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
 import { hataMesaji } from '@/lib/api';
-import { siraliBransler } from '@/lib/bransler';
 import { dersIstek } from '@/lib/hesap-istek';
 import {
   dersFormunuDogrula,
@@ -302,11 +302,7 @@ function FormIcerigi({
               }}
             >
               <option value="">{t('operasyon.takvim.form.bransAtamadan')}</option>
-              {siraliBransler().map((b) => (
-                <option key={b.kod} value={b.kod}>
-                  {b.ad}
-                </option>
-              ))}
+              <BransSecenekleri />
             </Secim>
           )}
         </Alan>

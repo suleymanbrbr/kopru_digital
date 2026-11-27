@@ -2098,6 +2098,8 @@ Hepsi `/v1/hesap` altında; kurum yolu belirteçteki `kurum_id` ile eşleşmelid
 | --- | --- | --- | --- |
 | POST | `/kurumlar/:kurum_id/gruplar` | `grup.yaz` (sube) | Grup oluştur |
 | GET | `/kurumlar/:kurum_id/gruplar` | `grup.oku` | Listele (`durum`, `tur`, `kademe_id`, `limit`, `imlec`) |
+| GET | `/kurumlar/:kurum_id/kademeler` | `grup.oku` | Kurumun arşivlenmemiş kademeleri (`sira`, `ad`); kademe hedefli ödev/duyuru seçimi için |
+| GET | `/v1/hesap/bransler` | yalnız kimlik | `ortak.bransler` aktif satırları (`sira`, `kod`); global referans, kişisel veri yok |
 | GET / PATCH | `/kurumlar/:kurum_id/gruplar/:grup_id` | `grup.oku` / `grup.yaz` | Tekil / güncelle (`tur` değişmez) |
 | POST | `.../gruplar/:grup_id/arsivle` | `grup.yaz` | Arşivle |
 | GET / POST | `.../gruplar/:grup_id/uyeler` | `grup.oku` / `grup.yaz` | Etkin öğrenciler / çoklu ekleme (kapasite `FOR UPDATE`, `409 kapasite_dolu`) |
