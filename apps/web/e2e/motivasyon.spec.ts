@@ -1,12 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-import { girisYap, simdi, test } from './yardimcilar';
+import { girisYap, motivasyonTest as test, simdi } from './yardimcilar';
 
 /**
  * Mock modda motivasyon ekranlari: karakter secimi, yuva, odak, XP geri bildirimi (ogrenci `Atlas`);
  * haftanin yildizi, seri duraklatma, ogrenci ozeti (ogretmen `Ege`); modul kapali (yonetici `Mavi`).
- * Mock veri sunucu surecinde ortaktir; durumlu testler yalniz masaustu projesinde ve sirayla calisir.
+ * Mock veri sunucu surecinde ortaktir; bu dosya `mock_motivasyon` cerezi ile kendi durumunu kullanir
+ * (baska spec'lerin XP eylemleri karismaz). Durumlu testler yalniz masaustu projesinde ve sirayla calisir.
  * Mobil projesi yalniz durumdan bagimsiz duzen ve erisilebilirlik denetimlerini yapar.
  */
 
@@ -37,6 +38,9 @@ async function git(page: Page, baglanti: string, baslik: string) {
 
 async function ihlaller(page: Page) {
   await expect(page).toHaveTitle(/.+/);
+  // "+N XP" rozeti 3,4 sn'lik solma animasyonuyla ucar ve 3,6 sn sonra kalkar; solarken yari saydam
+  // oldugu icin axe renk karsitligini yanlis olcer (kosu hizina bagli). Gecici ogenin gitmesi beklenir.
+  await expect(page.getByTestId('xp-rozeti')).toHaveCount(0, { timeout: 10_000 });
   await page.mouse.move(0, 0);
   await page.waitForTimeout(300);
   const sonuc = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();

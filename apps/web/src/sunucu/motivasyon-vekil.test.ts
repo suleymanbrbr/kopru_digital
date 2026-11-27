@@ -214,6 +214,59 @@ describe('motivasyon vekili', () => {
     expect(seri.gunler.at(-1)).toMatchObject({ bugun: true, durum: 'aktif' });
   });
 
+  it('mock: mock_motivasyon cerezi ayri durum verir; XP ve karakter eylemleri birbirine karismaz', async () => {
+    mockModu();
+    const cerezli = (
+      yol: string,
+      anahtar: string,
+      ek: ConstructorParameters<typeof NextRequest>[1] = {},
+    ) =>
+      new NextRequest(`http://localhost/api/motivasyon/${yol}`, {
+        ...ek,
+        headers: {
+          authorization: 'Bearer tok',
+          host: 'localhost',
+          cookie: `mock_motivasyon=${anahtar}`,
+          ...(ek.headers as Record<string, string> | undefined),
+        },
+      });
+    const benimA = async () =>
+      MotivasyonOgrenciDurumuSema.parse(
+        await (await motivasyonVekili(cerezli('x', 'abc1'), ['kurumlar', K, 'benim'])).json(),
+      );
+
+    const varsayilan = await benim();
+    const once = await benimA();
+    expect(once.toplam_xp).toBe(varsayilan.toplam_xp);
+
+    // Anahtarli XP yazimi yalniz kendi durumunu degistirir.
+    motivasyonMockXpYaz('ogrenme', 'PUT', `kurumlar/${K}/gorevler/g1/gerceklesen`, 'abc1');
+    expect((await benimA()).toplam_xp).toBe(once.toplam_xp + 5);
+    expect((await benim()).toplam_xp).toBe(varsayilan.toplam_xp);
+
+    // Anahtarsiz yazim da anahtarli durumu degistirmez.
+    motivasyonMockXpYaz('ogrenme', 'PUT', `kurumlar/${K}/gorevler/g1/gerceklesen`);
+    expect((await benim()).toplam_xp).toBe(varsayilan.toplam_xp + 5);
+    expect((await benimA()).toplam_xp).toBe(once.toplam_xp + 5);
+
+    // Karakter secimi de yalitilir; gecersiz cerez varsayilan duruma duser.
+    const sec = await motivasyonVekili(
+      cerezli('x', 'abc1', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ tur_kodu: 'dinamo', ad: 'Pamuk' }),
+      }),
+      ['kurumlar', K, 'karakter'],
+    );
+    expect(sec.status).toBe(201);
+    expect((await benimA()).karakter).toMatchObject({ ad: 'Pamuk' });
+    expect((await benim()).karakter).toBeNull();
+    const bozuk = MotivasyonOgrenciDurumuSema.parse(
+      await (await motivasyonVekili(cerezli('x', 'A/../b'), ['kurumlar', K, 'benim'])).json(),
+    );
+    expect(bozuk.karakter).toBeNull();
+  });
+
   it('mock: rol uyumsuzlugu 403 izin_yok; modul kapali kurumda 403 modul_kapali', async () => {
     mockModu();
     const ogretmenBenim = await motivasyonVekili(istek('x'), ['kurumlar', OGRETMEN, 'benim']);

@@ -65,3 +65,23 @@ export async function platformMesaji(
     },
   ]);
 }
+
+/**
+ * Motivasyon mock durumu (`mock_motivasyon` cerezi): durumlu motivasyon testleri kendi ogrenci/ogretmen
+ * durumunu kullanir; baska spec'lerin XP, odak, plan, odev vb. eylemleri onu etkilemez (ve tersi).
+ * Anahtar iscinin omru boyunca sabittir (seri `describe` icindeki testler durumu paylasir); test
+ * basarisiz olup tekrar denenince yeni isci yeni anahtar alir, yani tekrar temiz durumla baslar.
+ */
+const motivasyonAnahtari = `m${Math.random().toString(36).slice(2, 10)}`;
+export const motivasyonTest = test.extend({
+  context: async ({ context }, kullan) => {
+    await context.addCookies([
+      {
+        name: 'mock_motivasyon',
+        value: motivasyonAnahtari,
+        url: process.env.E2E_BASE_URL ?? `http://localhost:${process.env.E2E_MOCK_PORT ?? '3000'}`,
+      },
+    ]);
+    await kullan(context);
+  },
+});

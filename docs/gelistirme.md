@@ -84,7 +84,11 @@ docker compose -f infra/docker/compose.yaml exec postgres psql -U postgres -c 'c
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/kopru_test pnpm test
 ```
 
-**Web e2e saat kuralı.** `apps/web` Playwright paketi (mock modu) gün saatinden ve haftanın gününden bağımsızdır: `playwright.config.ts` referans anı olarak koşu gününün İstanbul tarihiyle 12:00'yi seçer ve gerçek saate göre sabit kaymayı `E2E_KAYMA_MS` ile hem mock sunucuya (`src/sunucu/mock-zaman.ts` → `mockSimdi()`) hem tarayıcıya (`e2e/yardimcilar.ts` içindeki genişletilmiş `test` fixture'ı) verir. Spec dosyaları `test`'i `./yardimcilar`'dan almalı ve `Date.now()` yerine `simdi()` kullanmalı; mock dosyalarında `Date.now()` / `new Date()` yerine `mockSimdi()`. Başka bir an denemek için: `E2E_SIMDI_ISO=2026-11-18T23:30:00+03:00 npx playwright test`.
+**Web e2e saat kuralı.** `apps/web` Playwright paketi (mock modu) gün saatinden ve haftanın gününden bağımsızdır: `playwright.config.ts` referans anı olarak koşu gününün İstanbul tarihiyle 12:00'yi seçer ve gerçek saate göre sabit kaymayı `E2E_KAYMA_MS` ile hem mock sunucuya (`src/sunucu/mock-zaman.ts` → `mockSimdi()`) hem tarayıcıya (`e2e/yardimcilar.ts` içindeki genişletilmiş `test` fixture'ı) verir. Spec dosyaları `test`'i `./yardimcilar`'dan almalı ve `Date.now()` yerine `simdi()` kullanmalı; mock dosyalarında `Date.now()` / `new Date()` yerine `mockSimdi()`.
+
+**Web e2e durum yalıtımı.** Mock veri Next sunucu sürecinde bellekte ve tüm spec'lerce ortaktır; başka spec'lerin eylemleri (ödev teslimi, plan görevi, soru vb.) öğrencinin motivasyon XP'sini de değiştirir. Durumlu testler bu yüzden kendi durumunu kullanır: `abonelik` için `abonelikSenaryosu`, motivasyon için `yardimcilar.ts` içindeki `motivasyonTest` (`mock_motivasyon` çerezi; her işçi süreci rastgele anahtar alır, test başarısız olup yeniden denenince temiz durumla başlar). Çerez yalnız mock modunda (`NEXT_PUBLIC_API_MOCK`) okunur; üretimde istek gerçek servise gider. Yeni durumlu spec yazarken ortak `kurum-*` durumuna güvenme, aynı kalıpla yalıt.
+
+Saat kuralı için başka bir an denemek: `E2E_SIMDI_ISO=2026-11-18T23:30:00+03:00 npx playwright test`.
 
 Turbo, `DATABASE_URL` ve `NATS_URL` değerlerini test önbellek anahtarına katar. `lint`, `typecheck` ve `test`, bağımlı paketlerin derlenmiş çıktısına (`dist`) ihtiyaç duyduğu için önce `^build` çalışır.
 
