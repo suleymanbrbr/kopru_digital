@@ -28,6 +28,7 @@ export const OGRENME_IZINLI_YOLLAR: readonly RegExp[] = [
   // Haftalik plan
   new RegExp(`^${K}\\/(planlar|plan-sablonlari|gorevler)(\\/|$)`),
   new RegExp(`^${K}\\/(planim|gorevlerim)$`),
+  new RegExp(`^${K}\\/planim\\/[^/]+\\/ekler$`),
   new RegExp(`^${K}\\/ogrenciler\\/[^/]+\\/(plan|deneme-gelisim)$`),
   // Deneme
   new RegExp(`^${K}\\/(denemeler|deneme-kurallari)(\\/|$)`),

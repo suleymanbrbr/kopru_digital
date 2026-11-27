@@ -11,6 +11,7 @@ import { HaftaGezgini } from './hafta-gezgini';
 import { PlanOzeti } from './plan-ozeti';
 
 import { BosDurum } from '@/components/bos-durum';
+import { EkListesiGorunumu } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,
@@ -110,6 +111,7 @@ export function PlanOgrenci() {
               <p className="mt-1 text-sm">{detay.plan.not}</p>
             </section>
           ) : null}
+          <EkListesiGorunumu kurumId={kurumId} yol={`planim/${detay.plan.id}/ekler`} />
           <ol aria-label={t('ogrenme.plan.gunler')} className="flex flex-col gap-3">
             {gunler
               ? [...gunler.entries()].map(([gun, gorevler]) => (

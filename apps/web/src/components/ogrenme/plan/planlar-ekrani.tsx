@@ -23,6 +23,7 @@ import {
 } from '@/components/hesap/ortak';
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { EkDuzenleyici } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { OgrenciSecimi } from '@/components/ogrenme/ortak';
 import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
@@ -41,6 +42,7 @@ import {
   ilerlemeEtiketi,
   miktarEtiketi,
 } from '@/lib/ogrenme/plan';
+import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
 import { ogrenmeYetkileri } from '@/lib/ogrenme/rol';
 import {
   useKonular,
@@ -477,6 +479,20 @@ function PersonelPlan() {
                 </li>
               ))}
             </ol>
+          ) : null}
+
+          {planId && detay?.plan ? (
+            <EkDuzenleyici
+              kurumId={kurumId}
+              yol={`planlar/${planId}`}
+              tur="plan_eki"
+              aciklama={t('ogrenme.ek.planAciklama', {
+                n: EK_EN_FAZLA_DOSYA,
+                mb: EK_EN_FAZLA_BAYT / (1024 * 1024),
+              })}
+              salt={kilitli}
+              {...(kilitli ? { saltNedeni: t('ogrenme.ek.kilitliSalt') } : {})}
+            />
           ) : null}
 
           {planId && detay?.plan ? (

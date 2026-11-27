@@ -46,6 +46,11 @@ export function medyaMockTur(id: string): MedyaDosyaTuru | null {
   return depo().get(id)?.tur ?? null;
 }
 
+/** Dosya boyutu (bayt); tohum dosyalari icin sabit. */
+export function medyaMockBoyut(id: string): number {
+  return depo().get(id)?.boyut ?? 250_000;
+}
+
 export function medyaMockMime(id: string): string {
   if (ORNEK.test(id)) return 'image/jpeg';
   return depo().get(id)?.mime ?? 'application/octet-stream';

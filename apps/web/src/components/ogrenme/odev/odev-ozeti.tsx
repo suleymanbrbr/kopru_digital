@@ -16,15 +16,18 @@ import {
   zamanYaz,
   type Bildirim,
 } from '@/components/hesap/ortak';
+import { EkDuzenleyici } from '@/components/ogrenme/ek/ek-bilesenleri';
 import { yuzdeMetni } from '@/components/ogrenme/ortak';
 import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Pencere } from '@/components/ui/pencere';
 import { Rozet } from '@/components/ui/rozet';
+import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
 import { bransAdi } from '@/lib/bransler';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
 import { ogrenciOdevDurumu } from '@/lib/ogrenme/odev';
+import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
 import { useOdevOzeti, useOgrenmeYenile } from '@/lib/ogrenme/veri';
 
 type Satir = z.infer<typeof OdevOgrenciSatiriSema>;
@@ -42,6 +45,7 @@ export function OdevOzeti({
   odevId: string;
   geri: () => void;
 }) {
+  const { uyelik, rol } = useKurum();
   const ozet = useOdevOzeti(kurumId, odevId);
   const yenile = useOgrenmeYenile(kurumId);
   const [bildirim, setBildirim] = useState<Bildirim>(null);
@@ -153,6 +157,18 @@ export function OdevOzeti({
         ) : null}
       </div>
       <BildirimKutusu bildirim={bildirim} />
+
+      <EkDuzenleyici
+        kurumId={kurumId}
+        yol={`odevler/${odevId}`}
+        tur="odev_eki"
+        aciklama={t('ogrenme.ek.odevAciklama', {
+          n: EK_EN_FAZLA_DOSYA,
+          mb: EK_EN_FAZLA_BAYT / (1024 * 1024),
+        })}
+        salt={odev.durum === 'kapali' || (rol === 'ogretmen' && odev.veren_id !== uyelik.id)}
+        {...(odev.durum === 'kapali' ? { saltNedeni: t('ogrenme.ek.kapaliSalt') } : {})}
+      />
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5" aria-label={t('ogrenme.odev.sayilar')}>
         <Sayi etiket={t('ogrenme.odev.sayi.atanan')} deger={String(sayilar.atanan)} />
