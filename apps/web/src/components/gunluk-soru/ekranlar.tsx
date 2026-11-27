@@ -13,6 +13,7 @@ import { OgrenciKitaplari } from './kitap-ekranlari';
 
 import { BolumKapisi } from '@/components/kabuk/bolum-yer-tutucu';
 import { SayfaBasligi } from '@/components/kabuk/sayfa-basligi';
+import { OgretmenimSekmesi } from '@/components/kocluk/ogrenci-tarafi';
 import { Sekmeler } from '@/components/ogrenme/ortak';
 import { dugmeStili } from '@/components/ui/button';
 import { Kart } from '@/components/ui/kart';
@@ -40,6 +41,10 @@ function SoruCozdumIcerigi() {
           baslangic={{
             ...(params.get('brans') ? { brans: params.get('brans') ?? '' } : {}),
             ...(params.get('konu') ? { konuId: params.get('konu') ?? '' } : {}),
+            // Ogretmen onerisinden gelindiyse kaynak on secilir (`kitap`, `test` ya da serbest `metin`).
+            ...(params.get('kitap') ? { kitapId: params.get('kitap') ?? '' } : {}),
+            ...(params.get('test') ? { testId: params.get('test') ?? '' } : {}),
+            ...(params.get('metin') ? { kaynakMetin: params.get('metin') ?? '' } : {}),
             ...(gorev ? { gorevId: gorev } : {}),
             ...(Number.isInteger(miktar) && miktar > 0 ? { gorevMiktar: miktar } : {}),
           }}
@@ -59,7 +64,7 @@ export function GunlukSoruEkrani() {
   );
 }
 
-const SEKMELER = ['kayitlar', 'analiz', 'kitaplar'] as const;
+const SEKMELER = ['kayitlar', 'analiz', 'kitaplar', 'ogretmenim'] as const;
 
 function GunlukSoruIcerigi() {
   const { uyelik } = useKurum();
@@ -96,6 +101,11 @@ function GunlukSoruIcerigi() {
             anahtar: 'kitaplar',
             etiket: t('gunlukSoru.ekran.kitaplar'),
             icerik: <OgrenciKitaplari />,
+          },
+          {
+            anahtar: 'ogretmenim',
+            etiket: t('kocluk.ogrenci.sekme'),
+            icerik: <OgretmenimSekmesi />,
           },
         ]}
       />

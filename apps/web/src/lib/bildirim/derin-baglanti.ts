@@ -21,6 +21,9 @@ import type { Rol } from '@/lib/navigasyon';
  * - `odak`                                   -> ogrenci `odak`
  * - `finans[/...]`, `kredi`, `tahsilat`      -> personel `finans` (ogrencide bildirimler)
  * - `ogrenci/:id`, `ogrenciler`              -> personel `ogrenciler[/:id]`
+ * - `degerlendirmelerim`, `degerlendirme`,
+ *   `kaynak-onerilerim`, `kaynak-onerisi`      -> ogrenci `gunluk-soru?sekme=ogretmenim` (personelde bildirimler)
+ * - `kocluk/:id`                             -> personel `ogrenciler/:id?sekme=kocluk`
  * - `grup/:id`, `gruplar`                    -> personel `gruplar[/:id]`
  * - `geri-bildirim`                          -> yonetim `geri-bildirim`, ogrenci `bugun`
  * - `abonelik`                               -> sahip `abonelik`
@@ -106,6 +109,15 @@ export function derinBaglantiyiCoz(baglanti: string | null | undefined, baglam: 
     case 'ogrenci':
     case 'ogrenciler':
       return personel ? kimlikli('ogrenciler') : varsayilan;
+    case 'degerlendirmelerim':
+    case 'degerlendirme':
+    case 'degerlendirmeler':
+    case 'kaynak-onerilerim':
+    case 'kaynak-onerisi':
+    case 'kaynak-onerileri':
+      return ogrenci ? `${k}/gunluk-soru?sekme=ogretmenim` : varsayilan;
+    case 'kocluk':
+      return personel && kimlik ? `${k}/ogrenciler/${kimlik}?sekme=kocluk` : varsayilan;
     case 'grup':
     case 'gruplar':
       return personel ? kimlikli('gruplar') : varsayilan;

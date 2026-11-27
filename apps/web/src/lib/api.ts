@@ -160,11 +160,22 @@ const gunlukSoruKodlari = new Set([
   'gorev_hedefi_gecersiz',
 ]);
 
+/** Ogretmen degerlendirmeleri ve onerilen kaynaklar: bu koda ozgu mesajlar `degerlendirme.hata.*` altindadir. */
+const degerlendirmeKodlari = new Set([
+  'degerlendirme_duzenlenemez',
+  'degerlendirme_geri_cekildi',
+  'donem_gecersiz',
+  'kaynak_gecersiz',
+]);
+
 /** Hata kodunu Turkce, eyleme yonelik metne cevirir; bilinmeyen kodda genel mesaj. */
 export function hataMesaji(hata: unknown): string {
   if (hata instanceof UygulamaHatasi && hata.kod === 'hizmet_kullanilamiyor') return t('hata.ag');
   if (hata instanceof UygulamaHatasi && gunlukSoruKodlari.has(hata.kod)) {
     return t(`gunlukSoru.hata.${hata.kod}` as MessageKey);
+  }
+  if (hata instanceof UygulamaHatasi && degerlendirmeKodlari.has(hata.kod)) {
+    return t(`degerlendirme.hata.${hata.kod}` as MessageKey);
   }
   if (hata instanceof UygulamaHatasi && operasyonKodlari.has(hata.kod)) {
     return t(`operasyon.hata.${hata.kod}` as MessageKey);

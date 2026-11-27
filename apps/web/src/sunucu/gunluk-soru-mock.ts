@@ -135,6 +135,11 @@ function kur(kurumId: string): Depo {
     ['Test 2', 25],
     ['Test 3', 20],
   ]);
+  // Yalniz koçluk onerisi senaryosu icin: baska hicbir akis bu kitabi kullanmaz ("basladi" durumu izole kalir).
+  kitapYap('Seçme Matematik Fasikülleri', 'Deneme Yayınları', 'matematik', [
+    ['Test 1', 10],
+    ['Test 2', 10],
+  ]);
   kitapYap('Fen Bilimleri Konu Testleri', 'Deneme Yayınları', 'fen_bilimleri', [
     ['Test 1', 15],
     ['Test 2', 15],
@@ -1145,4 +1150,154 @@ export function gunlukSoruMock(istek: MockIstek): MockYanit | null {
     if (p[3] === 'gorev-ver' && istek.yontem === 'POST') return gorevVer(kurumId, p[1], istek);
   }
   return null;
+}
+
+// --- Kocluk gorunumu koprusu --------------------------------------------------------------------
+// `degerlendirme-mock.ts` kitap, kaynak kullanimi ve konu analizi ozetine yalniz bu fonksiyonlarla erisir.
+
+/** Kurumun kaynak kitaplari (testleriyle). */
+export function koclukKitaplari(kurumId: string) {
+  return depo(kurumId).kitaplar.map((k) => ({
+    id: k.id,
+    ad: k.ad,
+    brans_kodu: k.brans_kodu,
+    testler: k.testler.map((x) => ({ id: x.id, ad: x.ad })),
+  }));
+}
+
+/** Ogrencinin gunluk kayitlarindan kitap bazli ilerleme ve serbest kaynak kullanimi (son 90 gun). */
+export function koclukKaynakKullanimi(kurumId: string, ogrenciId: string) {
+  const d = depo(kurumId);
+  const bas = gunEkle(bugun(), -89);
+  const benim = d.kayitlar.filter((x) => x.ogrenci_id === ogrenciId && x.gun >= bas);
+  const kitaplar = d.kitaplar
+    .map((kitap) => {
+      const testIdleri = new Set(kitap.testler.map((x) => x.id));
+      const liste = benim.filter((x) => x.kaynak_test_id && testIdleri.has(x.kaynak_test_id));
+      if (liste.length === 0) return null;
+      return {
+        kaynak_kitap_id: kitap.id,
+        ad: kitap.ad,
+        brans_kodu: kitap.brans_kodu,
+        cozulen_test: new Set(liste.map((x) => x.kaynak_test_id)).size,
+        toplam_test: kitap.testler.length,
+        kayit_sayisi: liste.length,
+        cozulen_soru: liste.reduce((n, x) => n + x.dogru + x.yanlis + x.bos, 0),
+        son_kullanim_gun:
+          liste
+            .map((x) => x.gun)
+            .sort()
+            .at(-1) ?? bugun(),
+      };
+    })
+    .filter((x) => x !== null)
+    .sort((a, b) => b.son_kullanim_gun.localeCompare(a.son_kullanim_gun));
+  const serbestHarita = new Map<
+    string,
+    { ad: string; kayit_sayisi: number; son_kullanim_gun: string }
+  >();
+  for (const x of benim) {
+    const ad = x.kaynak_metin?.trim();
+    if (!ad) continue;
+    const anahtar = ad.toLowerCase();
+    const mevcut = serbestHarita.get(anahtar);
+    const sonGun = mevcut && mevcut.son_kullanim_gun > x.gun ? mevcut.son_kullanim_gun : x.gun;
+    serbestHarita.set(anahtar, {
+      ad: mevcut?.ad ?? ad,
+      kayit_sayisi: (mevcut?.kayit_sayisi ?? 0) + 1,
+      son_kullanim_gun: sonGun,
+    });
+  }
+  return { kitaplar, serbest: [...serbestHarita.values()], odevler: [] as never[] };
+}
+
+/**
+ * Onerilen kaynak "basladi mi": oneriden sonra olusturulan bir gunluk kayitta o kitap/test ya da ayni metin
+ * (buyuk/kucuk harf ve bosluk gozetilmez) kullanildiysa.
+ */
+export function koclukBasladiMi(
+  kurumId: string,
+  ogrenciId: string,
+  o: { kitapId?: string | null; testId?: string | null; metin?: string | null; sonra: string },
+) {
+  const d = depo(kurumId);
+  const kitapTestleri = new Set(
+    d.kitaplar.find((k) => k.id === o.kitapId)?.testler.map((x) => x.id) ?? [],
+  );
+  const metin = o.metin?.trim().toLowerCase();
+  const liste = d.kayitlar.filter(
+    (x) =>
+      x.ogrenci_id === ogrenciId &&
+      x.created_at >= o.sonra &&
+      (x.kaynak_test_id !== null && o.testId === x.kaynak_test_id
+        ? true
+        : x.kaynak_test_id !== null && !o.testId && kitapTestleri.has(x.kaynak_test_id)
+          ? true
+          : metin !== undefined && metin !== '' && x.kaynak_metin?.trim().toLowerCase() === metin),
+  );
+  const gunler = liste.map((x) => x.gun).sort();
+  return {
+    basladi: liste.length > 0,
+    ilk_kullanim_gun: gunler[0] ?? null,
+    son_kullanim_gun: gunler.at(-1) ?? null,
+    kayit_sayisi: liste.length,
+  };
+}
+
+/** Son 30 gunun konu analizi ozeti (kocluk yaniti `konu_analizi`). */
+export function koclukKonuAnalizi(kurumId: string, ogrenciId: string) {
+  const bit = bugun();
+  const bas = gunEkle(bit, -29);
+  const d = depo(kurumId);
+  const branslar = [
+    ...new Set(
+      d.kayitlar
+        .filter((x) => x.ogrenci_id === ogrenciId && x.gun >= bas && x.gun <= bit)
+        .map((x) => x.brans_kodu),
+    ),
+  ].slice(0, 4);
+  const istek = (sorgu: Record<string, string>): MockIstek => ({
+    yontem: 'GET',
+    yol: '',
+    sorgu: new URLSearchParams(sorgu),
+    govde: undefined,
+    basliklar: {},
+  });
+  interface HucreOzeti {
+    cozulen: number;
+    dogru: number;
+    yanlis: number;
+    bos: number;
+    basari: number | null;
+  }
+  const bransler = branslar.map((b) => {
+    const y = analizYap(kurumId, ogrenciId, istek({ brans_kodu: b, donem: '30' }), true).govde as {
+      konular: { toplam: HucreOzeti }[];
+      toplam: HucreOzeti;
+      oneriler: unknown[];
+    };
+    const zayif = y.konular
+      .filter((k) => k.toplam.cozulen >= 5 && k.toplam.basari !== null)
+      .sort((a, c) => (a.toplam.basari ?? 1) - (c.toplam.basari ?? 1))
+      .slice(0, 5);
+    return { brans_kodu: b, toplam: y.toplam, zayif_konular: zayif, oneriler: y.oneriler };
+  });
+  const toplam = bransler.reduce<HucreOzeti>(
+    (t, b) => ({
+      cozulen: t.cozulen + b.toplam.cozulen,
+      dogru: t.dogru + b.toplam.dogru,
+      yanlis: t.yanlis + b.toplam.yanlis,
+      bos: t.bos + b.toplam.bos,
+      basari: null,
+    }),
+    { cozulen: 0, dogru: 0, yanlis: 0, bos: 0, basari: null },
+  );
+  toplam.basari = basariOrani(toplam.dogru, toplam.dogru + toplam.yanlis + toplam.bos);
+  return {
+    bas,
+    bit,
+    toplam,
+    haftalik_ozet: haftalikOzet(kurumId, ogrenciId, istek({})).govde,
+    bransler,
+  };
 }
