@@ -155,6 +155,39 @@ test.describe('takvim', () => {
     await tasi.getByRole('button', { name: 'Taşı', exact: true }).click();
     await cakismaVarsaOnayla(page, 'Yine de taşı', /ders taşındı\./);
   });
+
+  test('sahip: derse telafi katilimci ekler; ders ayrintisinda turuyle gorunur', async ({
+    page,
+  }) => {
+    await girisYap(page, 'Kuzey Yıldızı Akademi');
+    await takvimeGit(page);
+    await page
+      .getByRole('button', { name: /Üslü sayılar/ })
+      .first()
+      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Katılımcı ekle' }).click();
+    const form = page.getByRole('dialog');
+    await expect(form.getByRole('heading', { name: 'Derse katılımcı ekle' })).toBeVisible();
+
+    // Ogrenci secmeden gonderilemez.
+    await form.getByRole('button', { name: 'Ekle', exact: true }).click();
+    await expect(form.getByText('Bir öğrenci seç.')).toBeVisible();
+
+    // Ilk eklenebilir ogrenciyi telafi olarak ekle.
+    const secim = form.getByLabel('Öğrenci', { exact: true });
+    await secim.selectOption({ index: 1 });
+    const ad = (await secim.locator('option:checked').textContent()) ?? '';
+    await form.getByLabel('Katılım türü').selectOption('telafi');
+    await form.getByRole('button', { name: 'Ekle', exact: true }).click();
+    await expect(page.getByText('Katılımcı derse eklendi.')).toBeVisible();
+
+    // Ders ayrintisinda katilimci turuyle listelenir.
+    await page
+      .getByRole('button', { name: /Üslü sayılar/ })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog').getByText(`${ad} (Telafi)`)).toBeVisible();
+  });
 });
 
 test.describe('yoklama', () => {

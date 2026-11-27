@@ -1747,6 +1747,12 @@ export const tr = {
         duzenle: 'Düzenle',
         iptalEt: 'İptal et',
         telafiEkle: 'Telafi dersi ekle',
+        katilimciEkle: 'Katılımcı ekle',
+        katilimciTuru: {
+          uye: 'Üye',
+          misafir: 'Misafir',
+          telafi: 'Telafi',
+        },
         telafi: 'Telafi dersi',
         telafiAciklama: 'Bu iptal edilen dersin telafisi olarak yeni bir ders ekle.',
         degismis: 'Ders değişmiş. Güncel halini görmek için yenile.',
@@ -1767,6 +1773,20 @@ export const tr = {
         tasi: 'Taşı',
         tasindi: 'Ders taşındı.',
         seriTasindi: '{sayi} ders taşındı.',
+      },
+      katilimciEkle: {
+        baslik: 'Derse katılımcı ekle',
+        aciklama:
+          'Grubun üyesi olmayan bir öğrenciyi bu derse misafir ya da telafi katılımcısı olarak ekle.',
+        ogrenci: 'Öğrenci',
+        ogrenciSec: 'Öğrenci seç',
+        tur: 'Katılım türü',
+        misafir: 'Misafir (tek seferlik katılım)',
+        telafi: 'Telafi (kaçırdığı dersin yerine)',
+        ogrenciYok: 'Eklenebilecek öğrenci yok.',
+        ogrenciGerekli: 'Bir öğrenci seç.',
+        ekle: 'Ekle',
+        eklendi: 'Katılımcı derse eklendi.',
       },
       duzenle: {
         baslik: 'Dersi düzenle',
