@@ -19,8 +19,8 @@ import { useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
 import { useKonuHaritasi, useOdevEkleri, useOdevlerim } from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
-import { EkKarti } from './OgrenmeEkleri';
 import { sonucMetni } from './OgrenciGorevler';
+import { EkKarti } from './OgrenmeEkleri';
 
 const HATA_ANAHTARI: Record<TeslimHatasi, string> = {
   yapilan: t('mobil.ogrenme.odev.yapilanGerekli'),

@@ -650,7 +650,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
       await gecik();
       const p = planlar.find((x) => x.id === planId);
       if (kaynak === 'ogrenci') {
-        if (!p || p.ogrenciId !== ogrenciOlmali() || p.durum !== 'yayinda') throw bulunamadi();
+        if (p?.ogrenciId !== ogrenciOlmali() || p.durum !== 'yayinda') throw bulunamadi();
       } else {
         personelOlmali();
         if (!p) throw bulunamadi();

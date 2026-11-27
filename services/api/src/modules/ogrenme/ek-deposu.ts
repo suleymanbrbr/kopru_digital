@@ -177,7 +177,7 @@ export async function ekSatirlari(tx: Tx, kaynak: EkKaynagi, ustId: string) {
   return mevcut.flatMap((m) => {
     const k = harita.get(m.medya_dosya_id);
     // Medya kopyasi yoksa (olay henuz gelmedi) ya da dosya silindiyse ek gosterilmez.
-    if (!k || k.durum !== 'hazir') return [];
+    if (k?.durum !== 'hazir') return [];
     return [
       {
         medya_dosya_id: m.medya_dosya_id,

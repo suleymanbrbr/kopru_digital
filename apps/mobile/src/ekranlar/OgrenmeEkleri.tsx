@@ -76,7 +76,7 @@ export function EkKarti({
   bosGizle?: boolean;
   testID?: string;
 }) {
-  if (bosGizle && (sorgu.isPending || (sorgu.data && sorgu.data.ekler.length === 0))) return null;
+  if (bosGizle && (sorgu.isPending || sorgu.data?.ekler.length === 0)) return null;
   return (
     <Kart className="gap-1" testID={testID}>
       <Metin varyant="altBaslik" accessibilityRole="header">
@@ -89,7 +89,7 @@ export function EkKarti({
           tekrar={() => void sorgu.refetch()}
         />
       ) : null}
-      {sorgu.data && sorgu.data.ekler.length === 0 ? (
+      {sorgu.data?.ekler.length === 0 ? (
         <Metin varyant="ikincil">{t('mobil.ogrenme.ek.yok')}</Metin>
       ) : null}
       {sorgu.data?.ekler.map((e) => (

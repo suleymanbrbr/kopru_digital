@@ -360,7 +360,7 @@ describe('odev teslim (ogrenci)', () => {
 describe('odev ve plan ek dosyalari', () => {
   it('ogrenci odev ekraninda ekleri gorur ve acar; ek yoksa kart cizilmez', async () => {
     const o = await ogrenciOrtami();
-    const ac_ = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const ac_ = jest.spyOn(Linking, 'openURL').mockImplementation(() => Promise.resolve());
     const r = await ac(o, <OdevTeslimEkrani ogrenciOdevId="oo-odev-1-uyelik-ogrenci-a" />);
     expect(var_(r, 'odev-ekleri')).toBe(true);
     const m = metinler(r);
