@@ -60,29 +60,6 @@ export function useOgrenciKarti(kurumId: string, ogrenciId: string) {
   });
 }
 
-/** Ogrenci karti yaniti ad tasimaz; ad, finans ogrenci listesinden (en cok 1000 kayit) bulunur. */
-export function useOgrenciAdi(kurumId: string, ogrenciId: string): string | null {
-  const q = useQuery({
-    queryKey: [...finansAnahtari(kurumId), 'ad', ogrenciId],
-    staleTime: 5 * 60_000,
-    queryFn: async () => {
-      let imlec: string | undefined;
-      for (let sayfa = 0; sayfa < 5; sayfa += 1) {
-        const yanit = await finansIstek(
-          `kurumlar/${kurumId}/ogrenciler${sorguDizgesi({ limit: 200, imlec })}`,
-          { sema: FinansOgrenciListeYanitSema },
-        );
-        const bulunan = yanit.ogrenciler.find((o) => o.ogrenci_id === ogrenciId);
-        if (bulunan) return bulunan.gorunen_ad ?? '';
-        if (!yanit.sonraki_imlec) break;
-        imlec = yanit.sonraki_imlec;
-      }
-      return '';
-    },
-  });
-  return q.data === undefined || q.data === '' ? null : q.data;
-}
-
 export function usePaketler(kurumId: string, durum: 'aktif' | 'hepsi' = 'aktif', etkin = true) {
   return useQuery({
     queryKey: [...finansAnahtari(kurumId), 'paketler', durum],

@@ -7195,6 +7195,7 @@ export interface paths {
                             model: "paket" | "ders_basi" | "yok";
                             odeyen_ad: string | null;
                             odeyen_telefon: string | null;
+                            ogrenci_ad: string | null;
                             /** Format: uuid */
                             ogrenci_id: string;
                             son_bakiye_hareketleri: {
@@ -9577,6 +9578,8 @@ export interface paths {
                                 /** Format: uuid */
                                 kademe_id: string | null;
                                 kapasite: number | null;
+                                /** @description Yalniz birebir grupta etkin ogrencinin gorunen adi; baska turlerde `null`. */
+                                ogrenci_ad: string | null;
                                 renk: string | null;
                                 /** Format: uuid */
                                 sube_id: string | null;

@@ -399,6 +399,7 @@ export function finansMock(istek: MockIstek): MockYanit {
       govde: {
         gorunum: 'tam',
         ogrenci_id: id,
+        ogrenci_ad: adi(kurumId, id),
         model: o.model,
         kalan_kredi: kalanKredi(o),
         dusuk_kredi_esigi: f.politika.dusuk_kredi_esigi,

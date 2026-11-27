@@ -51,7 +51,8 @@ export const olayBaglami = (y: YetkiBaglami, correlationId: string): DersOlayBag
 
 /**
  * Modul kurum duzeyinde `requirePermission` ile denetlenir; grup/kademe duzeyinde kapatma ancak ders
- * ya da grup bilindiginde denetlenebilir, yazma yollari bunu burada cagirir.
+ * ya da grup bilindiginde denetlenebilir: tekil okuma ve yazma yollari bunu burada cagirir (403
+ * `modul_kapali`); liste okumalari `kapaliGruplar` ile kapali grubun kayitlarini disarida birakir.
  */
 export async function grupModuluAcikOlmali(
   tx: Tx,
@@ -62,6 +63,24 @@ export async function grupModuluAcikOlmali(
   if (!(await modulAcikMi(tx, y.kurumId, modul, { grupId }))) {
     throw new AppError(403, errorCodes.modulKapali, 'Bu özellik bu grupta kapalı.');
   }
+}
+
+/**
+ * Liste okumalarinda: verilen gruplardan `modul`u kapali olanlar. Liste yanitlari bu gruplarin
+ * kayitlarini sessizce dislar (tek kayit okumalarinda ise `grupModuluAcikOlmali` 403 verir).
+ * Cozum grup basina bir kez yapilir (`hesap.modul_acik_mi` satir basina cagrilmaz).
+ */
+export async function kapaliGruplar(
+  tx: Tx,
+  y: YetkiBaglami,
+  modul: ModulKodu,
+  grupIdleri: readonly string[],
+): Promise<Set<string>> {
+  const kapali = new Set<string>();
+  for (const g of new Set(grupIdleri)) {
+    if (!(await modulAcikMi(tx, y.kurumId, modul, { grupId: g }))) kapali.add(g);
+  }
+  return kapali;
 }
 
 /** Kapsamdaki aktif grup (kapsam disi = 404, arsivli = 409). */
