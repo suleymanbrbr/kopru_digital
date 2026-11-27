@@ -68,6 +68,7 @@ function hesapSahte(ez: Partial<HesapAdapter> = {}): HesapAdapter {
     katilimKodu: yok,
     katilimKoduYenile: yok,
     davetKabul: yok,
+    adGuncelle: yok,
     oturumlar: yok,
     oturumSonlandir: yok,
     oturumlariKapat: yok,

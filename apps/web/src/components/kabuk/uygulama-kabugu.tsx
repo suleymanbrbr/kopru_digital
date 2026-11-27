@@ -95,9 +95,17 @@ function KullaniciAlani({ tiklandi }: { tiklandi?: () => void }) {
   return (
     <div className="flex flex-col gap-3 border-t border-kenar pt-4">
       <div className="flex items-center justify-between gap-2 px-1">
-        <span className="min-w-0 truncate text-sm font-medium">
-          {kullaniciAd || t('kabuk.kullaniciMenusu')}
-        </span>
+        {kullaniciAd ? (
+          <span className="min-w-0 truncate text-sm font-medium">{kullaniciAd}</span>
+        ) : (
+          <Link
+            href={`/${uyelik.kurumId}/ayarlar/hesabim#profil`}
+            onClick={tiklandi}
+            className="min-w-0 truncate text-sm font-medium text-birincil underline underline-offset-2"
+          >
+            {t('hesap.profil.adEkle')}
+          </Link>
+        )}
         <TemaAnahtari />
       </div>
       <Link

@@ -15,6 +15,8 @@ export const HESAP_IZINLI_YOLLAR: readonly RegExp[] = [
   /^kurumlar\/[^/]+\/(rapor\/(ozet|ogrenciler)|modul-ayarlari)$/,
   /^oturumlar(\/|$)/,
   // KVKK: hesap silme talebi (+ OTP kodu) ve kisisel veri disa aktarma
+  // Profil: kendi gorunen adini girme/degistirme
+  /^ben$/,
   /^ben\/(silme-talebi(\/kod-gonder)?|verilerim)$/,
   /^sinif-kodu\/(katil|istekler)(\/|$)/,
 ];

@@ -371,6 +371,20 @@ describe('davet kabul', () => {
   });
 });
 
+describe('profil adi', () => {
+  it('PATCH /v1/hesap/ben ile gorunen adi gunceller', async () => {
+    const { adaptorler, cagrilar } = await kur(() =>
+      json({ gorunen_ad: 'Ayşe Demir', dil: 'tr', degisen_alanlar: ['gorunen_ad'] }),
+    );
+    expect(await adaptorler.hesap.adGuncelle('Ayşe Demir')).toBe('Ayşe Demir');
+    expect(cagrilar[0]).toMatchObject({
+      yontem: 'PATCH',
+      yol: '/v1/hesap/ben',
+      govde: { gorunen_ad: 'Ayşe Demir' },
+    });
+  });
+});
+
 describe('oturumlarim', () => {
   const liste = {
     oturumlar: [

@@ -35,10 +35,12 @@ const UA_AZAMI = 300;
  * cevrilir (guvenlik karari verilmez); kontrol karakterleri atilir, uzunluk sinirlanir.
  */
 export function istemciUserAgentBasliklari(gelen: Pick<Headers, 'get'>): Record<string, string> {
-  // eslint-disable-next-line no-control-regex
-  const ua = gelen
-    .get('user-agent')
-    ?.replace(/[\u0000-\u001f\u007f]/g, '')
-    .trim();
+  const ham = gelen.get('user-agent') ?? '';
+  let ua = '';
+  for (let i = 0; i < ham.length; i++) {
+    const kod = ham.charCodeAt(i);
+    if (kod >= 0x20 && kod !== 0x7f) ua += ham.charAt(i);
+  }
+  ua = ua.trim();
   return ua ? { 'user-agent': ua.slice(0, UA_AZAMI) } : {};
 }

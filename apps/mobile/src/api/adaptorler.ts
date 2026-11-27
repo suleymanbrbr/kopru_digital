@@ -80,6 +80,9 @@ export interface HesapAdapter {
   /** Daveti kabul eder (giris + KVKK sonrasi). */
   davetKabul: (belirtec: string) => Promise<DavetSonucu>;
 
+  /** Kendi gorunen adini girer/degistirir (OTP ile acilan hesaplarda ad bostur). */
+  adGuncelle: (ad: string) => Promise<string>;
+
   oturumlar: () => Promise<OturumKaydi[]>;
   /** `buOturum`: sonlandirilan oturum bu cihazinki ise yerel belirtecler de silinir. */
   oturumSonlandir: (

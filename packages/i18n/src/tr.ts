@@ -1471,6 +1471,19 @@ export const tr = {
       bos: 'Etkin oturum yok',
       yuklenemedi: 'Oturumlar yüklenemedi',
     },
+    profil: {
+      baslik: 'Profilim',
+      aciklama: 'Öğrenciler ve öğretmenler seni bu adla görür.',
+      adEtiketi: 'Görünen adın',
+      adIpucu: 'Ad Soyad',
+      kaydet: 'Kaydet',
+      kaydediliyor: 'Kaydediliyor...',
+      kaydedildi: 'Adın kaydedildi.',
+      adsizKullanici: 'Adsız kullanıcı',
+      adEkle: 'Adını ekle',
+      adUyari: 'Henüz bir adın yok. Diğer kişiler seni tanıyabilsin diye adını gir.',
+      adKisa: 'Ad en az 2 karakter olmalı.',
+    },
     kvkk: {
       menu: 'Hesabım ve verilerim',
       baslik: 'Hesabım ve verilerim',
@@ -4327,6 +4340,7 @@ export const tr = {
     },
     bugun: {
       selam: 'Merhaba {ad}',
+      selamAdsiz: 'Merhaba',
       ogretmen: {
         bugunkuDersler: 'Bugünkü dersler',
         bugunkuDerslerBos: 'Bugün için planlanmış ders yok.',
@@ -5071,6 +5085,12 @@ export const tr = {
       engelHatasi: 'Hesabını şu an silemezsin: kurum sahibi engeli var.',
     },
     profil: {
+      adsizKullanici: 'Adsız kullanıcı',
+      adUyari: 'Henüz bir adın yok. Diğer kişiler seni tanıyabilsin diye adını gir.',
+      adEtiketi: 'Görünen adın',
+      adIpucu: 'Ad Soyad',
+      adKaydet: 'Adı kaydet',
+      adKisa: 'Ad en az 2 karakter olmalı.',
       abonelik: 'Abonelik',
       baslik: 'Profil',
       kurum: 'Kurum',

@@ -633,6 +633,11 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         return { kurumId: d.kurum_id, uyelikId: d.uyelik_id, rol: d.rol };
       },
 
+      async adGuncelle(ad) {
+        const d = veriAl(await yetkili.PATCH('/v1/hesap/ben', { body: { gorunen_ad: ad } }));
+        return d.gorunen_ad ?? ad;
+      },
+
       async oturumlar() {
         const d = veriAl(await yetkili.GET('/v1/hesap/oturumlar'));
         return d.oturumlar.map((o): OturumKaydi => ({

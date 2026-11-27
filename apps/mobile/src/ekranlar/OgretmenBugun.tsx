@@ -160,7 +160,9 @@ export function OgretmenBugun() {
           <Metin varyant="baslik" accessibilityRole="header">
             {t('mobil.sekmeler.bugun')}
           </Metin>
-          <Metin varyant="ikincil">{t('mobil.bugun.selam', { ad: ad ?? '' })}</Metin>
+          <Metin varyant="ikincil">
+            {ad ? t('mobil.bugun.selam', { ad }) : t('mobil.bugun.selamAdsiz')}
+          </Metin>
         </View>
         <BildirimZili />
       </View>

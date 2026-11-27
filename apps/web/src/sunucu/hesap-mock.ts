@@ -816,6 +816,14 @@ function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
   const senaryo = istek.senaryo?.split(':').pop();
   const g = govdeNesnesi(istek.govde);
   const talepYaniti = (t: Kayit) => ({ talep: t });
+  if (parcalar.length === 1 && istek.yontem === 'PATCH') {
+    const ad = typeof g.gorunen_ad === 'string' ? g.gorunen_ad.trim() : '';
+    if (ad.length < 1) return hata(400, 'dogrulama', 'İstek doğrulanamadı.');
+    return {
+      durum: 200,
+      govde: { gorunen_ad: ad, dil: 'tr', degisen_alanlar: ['gorunen_ad'] },
+    };
+  }
   if (parcalar[1] === 'verilerim' && istek.yontem === 'GET') {
     return {
       durum: 200,
