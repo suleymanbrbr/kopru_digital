@@ -22,6 +22,7 @@ interface Cagri {
   govde: unknown;
   govdeMetni: string;
   icerikTuru: string | null;
+  kullaniciAjani: string | null;
 }
 type Yonlendirici = (c: Cagri) => Response | Promise<Response>;
 
@@ -48,6 +49,7 @@ async function kur(yonlendir: Yonlendirici) {
       govde: metin ? (JSON.parse(metin) as unknown) : undefined,
       govdeMetni: metin,
       icerikTuru: girdi.headers.get('content-type'),
+      kullaniciAjani: girdi.headers.get('user-agent'),
     };
     cagrilar.push(c);
     if (c.yol === '/v1/hesap/ben') {
@@ -375,6 +377,12 @@ describe('oturumlarim', () => {
       [OTURUM, true, 'iPhone'],
       [OTURUM_2, false, null],
     ]);
+  });
+
+  it('api okunur cihaz adi cikarsin diye user-agent baslik gonderir', async () => {
+    const { adaptorler, cagrilar } = await kur(() => json(liste));
+    await adaptorler.hesap.oturumlar();
+    expect(cagrilar[0]?.kullaniciAjani).toBe('Kopru-Mobil/1 (ios)');
   });
 
   it('baska oturumu sonlandirmak yerel belirteci silmez', async () => {

@@ -11,12 +11,13 @@ import { and, desc, eq, gt, isNull, ne } from 'drizzle-orm';
 
 import { oturumlar } from '../../db/schema.js';
 import { oturumSonlandirSistem } from '../../sistem/oturum-sonlandir.js';
+import { cihazAdiCoz } from './cihaz-adi.js';
 
 const CIHAZ_AZAMI = 80;
 
-/** Cihaz bilgisini listede gostermek icin kisaltir (tam user-agent doner degil). */
+/** Cihaz adi (varsa kayitli) ya da user-agent'tan turetilen okunur ad; ham user-agent donmez. */
 export function cihazKisalt(adi: string | null, userAgent: string | null): string | null {
-  const ham = (adi ?? userAgent)?.trim();
+  const ham = (adi?.trim() ? adi : cihazAdiCoz(userAgent))?.trim();
   if (!ham) return null;
   return ham.length > CIHAZ_AZAMI ? `${ham.slice(0, CIHAZ_AZAMI - 1)}…` : ham;
 }

@@ -7,9 +7,11 @@ describe('oturum yonetimi: saf yardimcilar', () => {
     expect(cihazKisalt(null, null)).toBeNull();
     expect(cihazKisalt('  ', null)).toBeNull();
     expect(cihazKisalt('iPhone 15', 'ua')).toBe('iPhone 15');
-    const uzun = cihazKisalt(null, 'x'.repeat(300));
+    const uzun = cihazKisalt('x'.repeat(300), null);
     expect(uzun).toHaveLength(80);
     expect(uzun?.endsWith('…')).toBe(true);
+    expect(cihazKisalt(null, 'node')).toBeNull();
+    expect(cihazKisalt(null, 'Kopru-Mobil/1 (ios)')).toBe('iOS · Köprü uygulaması');
     expect(ipMaskele(null)).toBeNull();
     expect(ipMaskele('192.168.4.77')).toBe('192.168.*.*');
     expect(ipMaskele('10.1.2.3/32')).toBe('10.1.*.*');

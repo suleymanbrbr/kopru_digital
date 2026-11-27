@@ -1,6 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { istemciIpBasliklari, istemciIpCoz } from './istemci-ip';
+import { istemciIpBasliklari, istemciIpCoz, istemciUserAgentBasliklari } from './istemci-ip';
+
+describe('istemciUserAgentBasliklari', () => {
+  it('kullanicinin user agent degerini iletir, yoksa baslik uretmez', () => {
+    expect(istemciUserAgentBasliklari(new Headers({ 'user-agent': 'Mozilla/5.0 Safari' }))).toEqual(
+      { 'user-agent': 'Mozilla/5.0 Safari' },
+    );
+    expect(istemciUserAgentBasliklari(new Headers())).toEqual({});
+  });
+
+  it('uzun degeri keser', () => {
+    const sonuc = istemciUserAgentBasliklari(new Headers({ 'user-agent': 'a'.repeat(900) }));
+    expect(sonuc['user-agent']).toHaveLength(300);
+  });
+});
 
 describe('istemciIpCoz', () => {
   it('proxy yoksa baslik kullanilmaz', () => {

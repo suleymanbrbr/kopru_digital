@@ -206,6 +206,10 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   /** Ag/zaman asimi hatalarini `ApiHata`ya cevirir. Yanit durumu burada yorumlanmaz. */
   const aglaFetch: typeof globalThis.fetch = async (girdi, init) => {
     const dene = sec.fetch ?? globalThis.fetch;
+    // Oturumlarim'da okunur cihaz adi icin (api `cihaz-adi.ts`): `Kopru-Mobil/1 (ios)`.
+    if (girdi instanceof Request && kaynak !== 'web' && !girdi.headers.has('User-Agent')) {
+      girdi.headers.set('User-Agent', `Kopru-Mobil/1 (${kaynak})`);
+    }
     const kontrol = new AbortController();
     const zd = { doldu: false };
     const zamanlayici = setTimeout(() => {
