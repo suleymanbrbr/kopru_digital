@@ -375,7 +375,9 @@ function govdeNesnesi(govde: unknown): Kayit {
 
 function grupSatiri(k: KurumDurumu, g: Grup): Kayit {
   const uyeSayisi = (k.grupUyeleri[g.id] ?? []).filter((u) => u.bitis_tarihi === null).length;
-  return { ...g, uye_sayisi: uyeSayisi };
+  const etkin = (k.grupUyeleri[g.id] ?? []).find((u) => u.bitis_tarihi === null);
+  const ogrenciAd = g.tur === 'birebir' ? (etkin?.gorunen_ad ?? null) : null;
+  return { ...g, uye_sayisi: uyeSayisi, ogrenci_ad: ogrenciAd };
 }
 
 function telefonNormalle(ham: unknown): string | null {

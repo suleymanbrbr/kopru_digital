@@ -532,6 +532,7 @@ export function mockOperasyon(sec: MockOperasyonSecenekleri): {
       return {
         gorunum: 'tam',
         ogrenciId,
+        ogrenciAd: o.ad,
         model: o.model,
         kalanKredi: o.kalan,
         dusukKrediEsigi: 2,

@@ -75,7 +75,7 @@ export {
   type EpostaGonderici,
   type EpostaMesaji,
 } from './eposta.js';
-export { birebirGrupOlustur, grupEtkinOgrencileri } from './grup-deposu.js';
+export { birebirGrupOlustur, birebirOgrenciAdlari, grupEtkinOgrencileri } from './grup-deposu.js';
 export { gorunenAdlar, grupOlayVerisi, grupUyesiOlayVerisi } from './grup-deposu.js';
 export {
   atananGruplar,
