@@ -19,6 +19,8 @@ interface Props {
   onDegis: (k: KaynakSecimi) => void;
   /** Bu dersin son kullanilan kaynaklari: tek dokunusla secilir. */
   sonlar: readonly SonKullanilanKaynak[];
+  /** Onerilen kitap (test henuz secilmedi): kitap secili, test listesi acik baslar. */
+  baslangicKitapId?: string;
 }
 
 type Mod = 'yok' | 'test' | 'metin';
@@ -40,12 +42,13 @@ function sonSecime(k: SonKullanilanKaynak): KaynakSecimi | null {
  * Kaynak (isteğe bağlı): yok / kitap-test / serbest metin. Son kullanılan kaynaklar tek dokunuşla
  * seçilir (15 sn çıtası); kitap testi iki adımda (kitap, test) seçilir.
  */
-export function KaynakSecici({ bransKodu, deger, onDegis, sonlar }: Props) {
-  const [mod, setMod] = useState<Mod>(deger.tur);
+export function KaynakSecici({ bransKodu, deger, onDegis, sonlar, baslangicKitapId }: Props) {
+  const kitapOnerildi = deger.tur === 'yok' && !!baslangicKitapId;
+  const [mod, setMod] = useState<Mod>(kitapOnerildi ? 'test' : deger.tur);
   const [kitapId, setKitapId] = useState<string | null>(
-    deger.tur === 'test' ? deger.kitapId : null,
+    deger.tur === 'test' ? deger.kitapId : (baslangicKitapId ?? null),
   );
-  const [kitapListesiAcik, setKitapListesiAcik] = useState(deger.tur !== 'test');
+  const [kitapListesiAcik, setKitapListesiAcik] = useState(deger.tur !== 'test' && !kitapOnerildi);
   // Test secildiyse liste kapanir (D/Y/B alani kaydirmadan gorunsun); "Degistir" yeniden acar.
   const [testAcik, setTestAcik] = useState(deger.tur !== 'test');
   const kitaplar = useKaynakKitaplar(bransKodu ?? undefined, undefined, mod === 'test');

@@ -51,6 +51,15 @@ export interface GunlukFormParametreleri {
   hedef?: string;
   /** Duzeltilecek (bugunku) kaydin kimligi. */
   duzelt?: string;
+  /**
+   * Ogretmenin onerisinden gelindiyse kaynak on secili acilir ("Ogretmenimin onerdikleri" ->
+   * "Soru cozdum"): kitap (+ test) ya da serbest metin. Kitap adlari yalniz gosterim icindir.
+   */
+  kaynakKitapId?: string;
+  kaynakKitapAd?: string;
+  kaynakTestId?: string;
+  kaynakTestAd?: string;
+  kaynakMetin?: string;
 }
 
 /**
@@ -65,6 +74,11 @@ export function GunlukSoruFormu({
   konuId: konuParam,
   hedef,
   duzelt,
+  kaynakKitapId: oneriKitapId,
+  kaynakKitapAd: oneriKitapAd,
+  kaynakTestId: oneriTestId,
+  kaynakTestAd: oneriTestAd,
+  kaynakMetin: oneriMetin,
 }: GunlukFormParametreleri) {
   const router = useRouter();
   const { gonderim, yerelDepo, agGozlemcisi } = useServisler();
@@ -85,7 +99,19 @@ export function GunlukSoruFormu({
     konuId: konuParam ?? baslangic.konuId,
   });
   const [zorluk, setZorluk] = useState<Zorluk | null>(baslangic.zorluk);
-  const [kaynak, setKaynak] = useState<KaynakSecimi>(baslangic.kaynak);
+  const oneriKaynagi: KaynakSecimi | null =
+    oneriKitapId && oneriTestId
+      ? {
+          tur: 'test',
+          kitapId: oneriKitapId,
+          kitapAd: oneriKitapAd ?? '',
+          testId: oneriTestId,
+          testAd: oneriTestAd ?? '',
+        }
+      : oneriMetin
+        ? { tur: 'metin', metin: oneriMetin }
+        : null;
+  const [kaynak, setKaynak] = useState<KaynakSecimi>(oneriKaynagi ?? baslangic.kaynak);
   const [dogru, setDogru] = useState(0);
   const [yanlis, setYanlis] = useState(0);
   const [bos, setBos] = useState(0);
@@ -96,7 +122,7 @@ export function GunlukSoruFormu({
   const [mesgul, setMesgul] = useState(false);
   const [denendi, setDenendi] = useState(false);
   const [dokundu, setDokundu] = useState(
-    () => !!bransParam || !!konuParam || !!baslangic.bransKodu,
+    () => !!bransParam || !!konuParam || !!baslangic.bransKodu || !!oneriKaynagi || !!oneriKitapId,
   );
   const [sunucuUygulandi, setSunucuUygulandi] = useState(false);
   const [duzeltUygulandi, setDuzeltUygulandi] = useState(false);
@@ -416,6 +442,7 @@ export function GunlukSoruFormu({
         deger={kaynak}
         onDegis={setKaynak}
         sonlar={dersSon?.kaynaklar ?? []}
+        {...(oneriKitapId && !oneriKaynagi ? { baslangicKitapId: oneriKitapId } : {})}
       />
 
       {!duzelt ? (

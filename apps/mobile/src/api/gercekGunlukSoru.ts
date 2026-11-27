@@ -119,7 +119,7 @@ const konuAnaliziCevir = (k: ApiKonuAnalizi): KonuAnalizi => ({
   bant: bantCevir(k.bant),
 });
 
-type ApiOneri =
+export type ApiOneri =
   | {
       tur: 'gorev_oner';
       brans_kodu: string;
@@ -139,7 +139,7 @@ type ApiOneri =
       son_hafta_basari: number | null;
     };
 
-function oneriCevir(o: ApiOneri): Oneri {
+export function oneriCevir(o: ApiOneri): Oneri {
   if (o.tur === 'gorev_oner') {
     return {
       tur: 'gorev_oner',

@@ -27,6 +27,7 @@ import { BekleyenYoklamaKartlari, YoklamaEylemleri } from './BekleyenYoklamaKart
 import { BildirimIzinKarti } from './bildirim/BildirimIzinKarti';
 import { BildirimZili } from './bildirim/BildirimZili';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { DegerlendirmeHatirlatmaKarti } from './degerlendirme/DegerlendirmeHatirlatmaKarti';
 import { DersSatiri } from './DerslerEkrani';
 import { DuyuruKarti } from './duyuru/DuyuruKarti';
 import { SilmeSeridi } from './hesabim/SilmeSeridi';
@@ -194,6 +195,7 @@ export function OgretmenBugun() {
       <BekleyenSorularKarti />
       <HizliEylemler />
       {yoklama ? <BekleyenYoklamaKartlari /> : null}
+      <DegerlendirmeHatirlatmaKarti />
       <OgretmenOgrenmeKartlari />
       <DuyuruKarti />
       <BildirimIzinKarti />

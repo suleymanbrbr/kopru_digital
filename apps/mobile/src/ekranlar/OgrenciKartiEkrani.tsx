@@ -17,6 +17,7 @@ import { KalanDersRozeti } from '../ui/Rozet';
 import { hataMesaji } from '../uygulama/hatalar';
 import { useModulAcik, useOgrenciKarti, useSaatDilimi } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
+import { KoclukGirisi } from './degerlendirme/KoclukGirisi';
 import { GunlukAnalizGirisi } from './gunluk/GunlukAnalizGirisi';
 import { OgrenciMotivasyonKarti } from './motivasyon/OgrenciMotivasyonKarti';
 import { OgrenciDenemeBolumu } from './OgrenciDenemeBolumu';
@@ -232,6 +233,7 @@ export function OgrenciKartiEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: s
         </Metin>
       ) : null}
       <OgrenciMotivasyonKarti ogrenciId={ogrenciId} />
+      <KoclukGirisi ogrenciId={ogrenciId} ad={ad} />
       <GunlukAnalizGirisi ogrenciId={ogrenciId} ad={ad} />
       {plan ? <OgrenciPlanBolumu ogrenciId={ogrenciId} /> : null}
       {deneme ? <OgrenciDenemeBolumu ogrenciId={ogrenciId} ogrenciAd={ad} /> : null}

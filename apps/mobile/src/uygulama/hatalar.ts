@@ -50,6 +50,11 @@ const AYRINTI_MESAJLARI: Record<string, MessageKey> = {
   dosya_hazir_degil: 'gunlukSoru.hata.dosya_hazir_degil',
   dosya_gecersiz: 'gunlukSoru.hata.dosya_gecersiz',
   gorev_hedefi_gecersiz: 'gunlukSoru.hata.gorev_hedefi_gecersiz',
+  // Degerlendirme ve kaynak onerisi (metinler `degerlendirme.hata.*`, web ile ortak)
+  degerlendirme_duzenlenemez: 'degerlendirme.hata.degerlendirme_duzenlenemez',
+  degerlendirme_geri_cekildi: 'degerlendirme.hata.degerlendirme_geri_cekildi',
+  donem_gecersiz: 'degerlendirme.hata.donem_gecersiz',
+  kaynak_gecersiz: 'degerlendirme.hata.kaynak_gecersiz',
   // Ders kayitlari ve geri bildirim
   kaynak_sorun_zaten_acik: 'mobil.kayit.hata.sorunZatenAcik',
   kaynak_url_gecersiz: 'mobil.kayit.hata.urlGecersiz',
@@ -82,6 +87,17 @@ export function kuyrukHataMesaji(kod: string | undefined): string {
   if (kod === 'plan_limiti') return t('hata.plan_limiti');
   if (kod === 'kurum_askida') return t('hata.kurum_askida');
   return t('ortak.hataGenel');
+}
+
+/**
+ * Degerlendirme/oneri islemlerinde hata mesaji: `surum_cakismasi` burada "Kayit" der (genel mesaj
+ * ders icindir); digerleri genel esleme.
+ */
+export function degerlendirmeHataMesaji(e: unknown): string {
+  if (apiHatasiMi(e) && e.ayrinti === 'surum_cakismasi') {
+    return t('degerlendirme.hata.surum_cakismasi');
+  }
+  return hataMesaji(e);
 }
 
 /** Hatayi kullaniciya gorunur Turkce mesaja cevirir. */
