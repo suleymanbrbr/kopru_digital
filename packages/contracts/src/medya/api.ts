@@ -69,6 +69,11 @@ export const MEDYA_TUR_KURALLARI = {
     izinli_mime: [...MEDYA_GORSEL_MIME, ...MEDYA_PDF_MIME],
     azami_boyut_bayt: 20 * MB,
   },
+  plan_eki: {
+    roller: PERSONEL,
+    izinli_mime: [...MEDYA_GORSEL_MIME, ...MEDYA_PDF_MIME],
+    azami_boyut_bayt: 20 * MB,
+  },
   odev_teslim_fotografi: {
     roller: ['ogrenci'],
     izinli_mime: MEDYA_GORSEL_MIME,

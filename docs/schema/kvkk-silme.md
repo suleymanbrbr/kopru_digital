@@ -40,7 +40,7 @@ Hesap silme, tüm üyelikleri `ayrildi` yapmayı **içerir** ama onunla bitmez: 
 | XP defteri, seviye, rozet, seri, sayaçlar, beceri puanları | motivasyon | **Kalır (anonim)** | `ogrenci_id` üyelik kimliğidir; hesap anonimleşince kişiye bağlanamaz. Defter yalnız-ekleme; kurumun sıralama/toplamları bozulmaz. (Şema dokümanındaki "satırlar silinir" planından sapma) |
 | Öğrenci yüklediği dosyalar: soru fotoğrafı/çizimi/sesi, ödev teslim fotoğrafı, avatar | medya | **Silinir** (`silinecek_at = now()`; silme işi S3 nesnesini ve küçük resimleri kaldırır, satır `silindi` olur) | Kişisel içerik (el yazısı, yüz) |
 | Öğretmenin yüklediği soru cevap fotoğrafı/sesi/çizimi | medya | **Silinir** (sahibi silinen hesap) | **Proje sahibi onayı bekliyor**: alternatif "öğrencinin sorusu için kurum içeriği olarak kalsın" |
-| `odev_eki` (ödev materyali), `kurum_logosu`, `fatura_pdf` | medya | **Kalır** | Kurum varlığı; kişisel veri taşımaz; fatura vergi mevzuatı |
+| `odev_eki` (ödev materyali), `plan_eki` (hazır haftalık plan dosyası), `kurum_logosu`, `fatura_pdf` | medya | **Kalır** | Kurum varlığı; kişisel veri taşımaz; fatura vergi mevzuatı |
 | `ortak.medya_dosya_kopyalari` | api | `medya.dosya.silindi` olayıyla `durum='silindi'` | Mevcut tüketici |
 
 ### Kurum ve üyelik kuralları

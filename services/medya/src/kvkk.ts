@@ -7,11 +7,11 @@ import { sql } from 'drizzle-orm';
  * (`silinecek_at = now()`, `silme_nedeni = 'kullanici_silindi'`); fiziksel silmeyi silme isi (5 dk) yapar:
  * nesne + kucuk resimler S3'ten kalkar, satir `durum='silindi'` olur.
  *
- * KALANLAR (kurum varligi, kisisel veri tasimaz; dosya `tur`u): `odev_eki` (ogretmenin odev materyali),
- * `kurum_logosu` ve `fatura_pdf` (vergi mevzuati). Bunlarin sahip kimligi anonimlesen hesaba
+ * KALANLAR (kurum varligi, kisisel veri tasimaz; dosya `tur`u): `odev_eki` (ogretmenin odev materyali), `plan_eki` (hazir
+ * haftalik plan dosyasi), `kurum_logosu` ve `fatura_pdf` (vergi mevzuati). Bunlarin sahip kimligi anonimlesen hesaba
  * baglidir. Ogrenci teslimleri, soru fotograf/cizim/sesleri ve avatar silinir.
  */
-export const KVKK_KALAN_TURLER = ['odev_eki', 'kurum_logosu', 'fatura_pdf'] as const;
+export const KVKK_KALAN_TURLER = ['odev_eki', 'plan_eki', 'kurum_logosu', 'fatura_pdf'] as const;
 
 /** Silinmis dosya, guclu plan: baska nedenli (ornegin `kurum_kapandi`) daha erken planlari ezmez. */
 export async function kullaniciSilindi(

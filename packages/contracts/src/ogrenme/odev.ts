@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { defineEvent } from '../event.js';
+import { EK_EN_FAZLA_DOSYA } from './ek.js';
 
 /**
  * `ogrenme` odev HTTP sozlesmeleri ve olaylari (docs/schema/api.md "Odev", olaylar.md `ogrenme.odev.*`).
@@ -135,6 +136,13 @@ export const OdevOlusturGirdiSema = z.object({
   son_teslim_at: zaman.optional(),
   hedef_soru_sayisi: sayi.optional(),
   fotograf_gerekli: z.boolean().default(false),
+  ek_dosya_idleri: z
+    .array(z.uuid())
+    .max(EK_EN_FAZLA_DOSYA)
+    .optional()
+    .describe(
+      'Hazır `odev_eki` dosyaları (PDF/fotoğraf); sonradan `PUT /odevler/:id/ekler` ile değişir.',
+    ),
 });
 
 export const OdevGuncelleGirdiSema = z.object({
@@ -235,6 +243,10 @@ export const OgrenciOdeviSema = z.object({
   inceleme_sonucu: IncelemeSonucuSema.nullable(),
   inceleme_notu: z.string().nullable(),
   incelendi_at: zaman.nullable(),
+  ek_sayisi: z
+    .number()
+    .int()
+    .describe('Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`).'),
 });
 export type OgrenciOdeviTipi = z.infer<typeof OgrenciOdeviSema>;
 

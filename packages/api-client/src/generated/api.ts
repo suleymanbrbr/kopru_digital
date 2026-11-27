@@ -15559,7 +15559,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici. */
+        /** Odev olustur (taslak). Ogretmen yalniz atandigi grup/ogrenciye verir; kademe ve kurum hedefi sahip/yonetici. `ek_dosya_idleri` (ops., hazir `odev_eki`) ayni islemde baglanir; sonradan `PUT /odevler/:id/ekler`. */
         post: {
             parameters: {
                 query?: never;
@@ -15575,6 +15575,8 @@ export interface paths {
                         aciklama?: string;
                         baslik: string;
                         brans_kodu: string;
+                        /** @description Hazır `odev_eki` dosyaları (PDF/fotoğraf); sonradan `PUT /odevler/:id/ekler` ile değişir. */
+                        ek_dosya_idleri?: string[];
                         /** @default false */
                         fotograf_gerekli?: boolean;
                         /**
@@ -15831,6 +15833,125 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/odevler/{id}/ekler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Odev ekleri (sirali) ve kisa omurlu okuma adresleri (10 dk). Kapsam disi odev 404. Medya yanit vermezse `adresler_alinamadi`. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            adresler_alinamadi: boolean;
+                            ekler: {
+                                adres: {
+                                    /** Format: uri */
+                                    asil_url: string;
+                                    /** Format: uuid */
+                                    dosya_id: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    /** Format: uri */
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    /** Format: uri */
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                boyut_bayt: number;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                mime_tipi: string;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /** Odev ek kumesini verilen listeye esitler (en cok 10, sirali). Dosyalar hazir `odev_eki`, cagiranin kendi yuklemesi ve baska kayda bagli degildir (409 `dosya_hazir_degil`, `dosya_zaten_bagli`; 422 `dosya_gecersiz`). Cikarilan dosya medyada hemen silinir. Taslak ve yayindaki odevde yazilir; kapali odevde 409. Ogretmen yalniz kendi odevini degistirir (baskasi 403). */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Hazır `odev_eki` / `plan_eki` dosyaları (çağıranın kendi yüklemeleri), sıralı. */
+                        medya_dosya_idleri: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            adresler_alinamadi: boolean;
+                            ekler: {
+                                adres: {
+                                    /** Format: uri */
+                                    asil_url: string;
+                                    /** Format: uuid */
+                                    dosya_id: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    /** Format: uri */
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    /** Format: uri */
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                boyut_bayt: number;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                mime_tipi: string;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -16123,6 +16244,8 @@ export interface paths {
                                 dogru_sayisi: number | null;
                                 /** @enum {string} */
                                 durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                                /** @description Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`). */
+                                ek_sayisi: number;
                                 fotograf_gerekli: boolean;
                                 gec_teslim: boolean;
                                 hedef_soru_sayisi: number | null;
@@ -16154,6 +16277,70 @@ export interface paths {
                                 yapilan_soru_sayisi: number | null;
                             }[];
                             sonraki_imlec: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/ogrenci-odevleri/{id}/ekler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin kendi odev satirinin ekleri ve okuma adresleri (taslak odev ve iptal satir 404; baskasinin satiri 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            adresler_alinamadi: boolean;
+                            ekler: {
+                                adres: {
+                                    /** Format: uri */
+                                    asil_url: string;
+                                    /** Format: uuid */
+                                    dosya_id: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    /** Format: uri */
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    /** Format: uri */
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                boyut_bayt: number;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                mime_tipi: string;
+                                sira: number;
+                            }[];
                         };
                     };
                 };
@@ -16211,6 +16398,8 @@ export interface paths {
                             dogru_sayisi: number | null;
                             /** @enum {string} */
                             durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                            /** @description Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`). */
+                            ek_sayisi: number;
                             fotograf_gerekli: boolean;
                             gec_teslim: boolean;
                             hedef_soru_sayisi: number | null;
@@ -16297,6 +16486,8 @@ export interface paths {
                             dogru_sayisi: number | null;
                             /** @enum {string} */
                             durum: "atandi" | "teslim_edildi" | "incelendi" | "tekrar_istendi" | "iptal";
+                            /** @description Ödevin ek dosya sayısı (`GET /ogrenci-odevleri/:id/ekler`). */
+                            ek_sayisi: number;
                             fotograf_gerekli: boolean;
                             gec_teslim: boolean;
                             hedef_soru_sayisi: number | null;
@@ -18002,6 +18193,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planim/{id}/ekler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ogrencinin kendi (yayindaki) planinin ekleri ve okuma adresleri. Taslak plan ya da baskasinin plani 404. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            adresler_alinamadi: boolean;
+                            ekler: {
+                                adres: {
+                                    /** Format: uri */
+                                    asil_url: string;
+                                    /** Format: uuid */
+                                    dosya_id: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    /** Format: uri */
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    /** Format: uri */
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                boyut_bayt: number;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                mime_tipi: string;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ogrenme/kurumlar/{kurum_id}/planlar": {
         parameters: {
             query?: never;
@@ -18191,6 +18446,125 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ogrenme/kurumlar/{kurum_id}/planlar/{id}/ekler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan ekleri (hazir plan PDF/resim) ve okuma adresleri (kapsam disi plan 404). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            adresler_alinamadi: boolean;
+                            ekler: {
+                                adres: {
+                                    /** Format: uri */
+                                    asil_url: string;
+                                    /** Format: uuid */
+                                    dosya_id: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    /** Format: uri */
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    /** Format: uri */
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                boyut_bayt: number;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                mime_tipi: string;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /** Plan ek kumesini verilen listeye esitler (en cok 10, sirali): hazir plani PDF/resim olarak yukleme. Dosyalar hazir `plan_eki`, cagiranin kendi yuklemesi ve baska kayda bagli degildir. Yayindaki planda da yazilir; kilitli hafta 409 `plan_kilitli`. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Hazır `odev_eki` / `plan_eki` dosyaları (çağıranın kendi yüklemeleri), sıralı. */
+                        medya_dosya_idleri: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            adresler_alinamadi: boolean;
+                            ekler: {
+                                adres: {
+                                    /** Format: uri */
+                                    asil_url: string;
+                                    /** Format: uuid */
+                                    dosya_id: string;
+                                    /** Format: date-time */
+                                    gecerlilik_bitis_at: string;
+                                    genislik: number | null;
+                                    /** Format: uri */
+                                    kucuk_url: string | null;
+                                    mime_tipi: string;
+                                    /** Format: uri */
+                                    orta_url: string | null;
+                                    sure_sn: number | null;
+                                    yukseklik: number | null;
+                                } | null;
+                                boyut_bayt: number;
+                                /** Format: uuid */
+                                medya_dosya_id: string;
+                                mime_tipi: string;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;

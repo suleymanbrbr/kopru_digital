@@ -19,6 +19,7 @@ import {
   gruplar,
   grupUyeleri,
   kademeler,
+  odevEkleri,
   odevler,
   ogrenciOdevleri,
   uyelikler,
@@ -91,7 +92,25 @@ export function odevYaniti(o: OdevSatiri): OdevTipi {
   };
 }
 
-export function ogrenciOdeviYaniti(s: OgrenciOdevSatiri, o: OdevSatiri): OgrenciOdeviTipi {
+/** Odevlerin ek sayilari (ek yoksa girdi de yoktur). Tek sorgu; ogrenci listesinde "N ek" gostergesi icin. */
+export async function ekSayilari(
+  tx: Tx,
+  odevIdleri: readonly string[],
+): Promise<Map<string, number>> {
+  if (odevIdleri.length === 0) return new Map();
+  const satirlar = await tx
+    .select({ odev_id: odevEkleri.odev_id, n: sql<number>`count(*)::int` })
+    .from(odevEkleri)
+    .where(inArray(odevEkleri.odev_id, [...odevIdleri]))
+    .groupBy(odevEkleri.odev_id);
+  return new Map(satirlar.map((r) => [r.odev_id, r.n]));
+}
+
+export function ogrenciOdeviYaniti(
+  s: OgrenciOdevSatiri,
+  o: OdevSatiri,
+  ekSayisi: number,
+): OgrenciOdeviTipi {
   return {
     id: s.id,
     odev_id: o.id,
@@ -116,6 +135,7 @@ export function ogrenciOdeviYaniti(s: OgrenciOdevSatiri, o: OdevSatiri): Ogrenci
     inceleme_sonucu: s.inceleme_sonucu as OgrenciOdeviTipi['inceleme_sonucu'],
     inceleme_notu: s.inceleme_notu,
     incelendi_at: s.incelendi_at?.toISOString() ?? null,
+    ek_sayisi: ekSayisi,
   };
 }
 

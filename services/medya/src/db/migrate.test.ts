@@ -35,6 +35,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
       '0002_medya.sql',
       '0003_saklama_olay_at.sql',
       '0004_gunluk_soru_fotografi.sql',
+      '0005_plan_eki.sql',
     ]);
     expect(await migrate({ url: ownerUrl })).toEqual([]);
     owner = postgres(ownerUrl, { max: 2, onnotice: () => undefined });
@@ -46,7 +47,7 @@ describe.skipIf(dbYok())('migrations (sifirdan)', () => {
        where table_schema = 'ortak' and table_name in ('outbox', 'processed_events')`;
     expect(t[0]?.n).toBe(2);
     const p = await owner<{ n: number }[]>`select count(*)::int n from medya.saklama_politikalari`;
-    expect(p[0]?.n).toBe(10);
+    expect(p[0]?.n).toBe(11);
   });
 
   it('degistirilmis migration reddedilir', async () => {

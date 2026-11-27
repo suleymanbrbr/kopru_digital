@@ -24,6 +24,7 @@ import {
   odevBulunamadi,
   odevDenetimiYaz,
   odevModuluAcikOlmali,
+  ekSayilari,
   ogrenciOdeviYaniti,
   olayBaglami,
   yazilacakOdevBul,
@@ -75,8 +76,12 @@ export const odevOgrenciYollari: ServicePlugin = (app) => {
           .limit(limit + 1);
         const sayfa = satirlar.slice(0, limit);
         const son = sayfa.at(-1);
+        const ekler = await ekSayilari(
+          tx,
+          sayfa.map((r) => r.odev.id),
+        );
         return {
-          odevler: sayfa.map((r) => ogrenciOdeviYaniti(r.satir, r.odev)),
+          odevler: sayfa.map((r) => ogrenciOdeviYaniti(r.satir, r.odev, ekler.get(r.odev.id) ?? 0)),
           sonraki_imlec: satirlar.length > limit && son ? imlecYaz(son.satir.id) : null,
         };
       });
@@ -184,7 +189,7 @@ export const odevOgrenciYollari: ServicePlugin = (app) => {
           { durum: satir.durum },
           { durum: 'teslim_edildi', gec_teslim: gec, yeniden_teslim: yeniden },
         );
-        return ogrenciOdeviYaniti(yeni, odev);
+        return ogrenciOdeviYaniti(yeni, odev, (await ekSayilari(tx, [odev.id])).get(odev.id) ?? 0);
       });
     },
   );
@@ -267,7 +272,7 @@ export const odevOgrenciYollari: ServicePlugin = (app) => {
           { durum: 'teslim_edildi' },
           { durum: yeni.durum, inceleme_sonucu: g.sonuc, not_var: g.not !== undefined },
         );
-        return ogrenciOdeviYaniti(yeni, odev);
+        return ogrenciOdeviYaniti(yeni, odev, (await ekSayilari(tx, [odev.id])).get(odev.id) ?? 0);
       });
     },
   );
