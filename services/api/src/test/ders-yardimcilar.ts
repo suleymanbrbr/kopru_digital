@@ -172,7 +172,10 @@ export function dersYardimcilari({ t, sistem }: Yardimcilar) {
   /** Giris yapmayan toplu ogrenciler (sistem rolu ile); uyelik kimlikleri doner. */
   async function topluOgrenci(kurumId: string, n: number, onEk = 'Ogrenci'): Promise<string[]> {
     const telefonlar = new Set<string>();
-    while (telefonlar.size < n) telefonlar.add(`+9053${String(randomInt(10_000_000, 99_999_999))}`);
+    // Giris yapmayan satirlar: 15 haneli genis aralik (1e12); 90 milyonluk `+9053...` araligi ortak CI
+    // veritabaninda binlerce satirla ara sira `kullanicilar_telefon_e164_uniq` cakismasi veriyordu.
+    while (telefonlar.size < n)
+      telefonlar.add(`+909${String(randomInt(100_000_000_000, 999_999_999_999))}`);
     const kullanicilar = [...telefonlar].map((telefon) => ({
       id: uuidv7(),
       telefon_e164: telefon,
