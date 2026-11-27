@@ -8,7 +8,6 @@ import type {
   DersGrubu,
   FinansAdapter,
   FinansHareketi,
-  GrupTuru,
   OgrenciKarti,
 } from './operasyonTipleri';
 
