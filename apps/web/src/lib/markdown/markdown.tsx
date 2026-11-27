@@ -1,7 +1,7 @@
+import { markdownAyristir, type Blok, type Satir } from '@kopru/markdown';
 import type { ReactNode } from 'react';
 
 import { cn } from '../cn';
-import { markdownAyristir, type Blok, type Satir } from './ayristir';
 
 function SatirlariCiz({ satirlar }: { satirlar: Satir[] }): ReactNode {
   return satirlar.map((s, i) => {

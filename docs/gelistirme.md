@@ -259,7 +259,7 @@ pnpm start        # sonraki günlerde yalnızca Metro (dev client'a bağlanır)
 
 - `pnpm ios` "Resolve Package Graph" aşamasında donuyorsa Swift paket yöneticisi Keychain erişim izni bekliyordur (ör. `gh auth login` sonrası `github.com` kaydı; Rive binary paketi indirilirken sorulur). Çözüm: Keychain penceresine izin verin ya da komut satırından `cd apps/mobile/ios && xcodebuild -workspace Kopru.xcworkspace -scheme Kopru -sdk iphonesimulator -packageAuthorizationProvider netrc build` ile derleyin.
 - `ios/` ve `android/` dizinleri git'e girmez; `app.config.ts` + config plugin'lerden üretilir (`pnpm prebuild:native`, kimlik/plugin değişince `--clean`).
-- `pnpm ios/android/start` önce `@kopru/ui-tokens` ve `@kopru/i18n` paketlerini derler (Metro `dist` çıktısını okur). `packages/i18n` ya da `ui-tokens` değişince Metro'yu yeniden başlatın.
+- `pnpm ios/android/start` önce `@kopru/ui-tokens`, `@kopru/i18n` ve `@kopru/markdown` paketlerini derler (Metro `dist` çıktısını okur). `packages/i18n`, `ui-tokens` ya da `markdown` değişince Metro'yu yeniden başlatın.
 - Uygulama kimliği `app.config.ts` içinde ortamdan okunur: `APP_BUNDLE_ID` (varsayılan `com.koprudigital.app`, yer tutucu), `APP_ADI`, `APP_SCHEME`.
 - Hızlı UI denemesi için tarayıcıda: `pnpm --filter @kopru/mobile web` (Rive/MMKV/SecureStore web karşılıklarıyla çalışır; yalnızca geliştirme amaçlı).
 

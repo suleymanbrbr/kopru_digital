@@ -20,7 +20,13 @@ const config: NextConfig = {
   poweredByHeader: false,
   devIndicators: false,
   // Paylasilan paketler derlenmis (dist) ESM olarak gelir.
-  transpilePackages: ['@kopru/i18n', '@kopru/ui-tokens', '@kopru/api-client', '@kopru/contracts'],
+  transpilePackages: [
+    '@kopru/i18n',
+    '@kopru/markdown',
+    '@kopru/ui-tokens',
+    '@kopru/api-client',
+    '@kopru/contracts',
+  ],
   headers() {
     return Promise.resolve([
       {

@@ -1,4 +1,6 @@
-import { guvenliBaglanti, markdownAyristir } from './ayristir';
+import { describe, expect, it } from 'vitest';
+
+import { guvenliBaglanti, markdownAyristir } from './index.js';
 
 const ORNEK = `# Ana baslik
 

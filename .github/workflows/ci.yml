@@ -183,7 +183,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Bagimliliklari derle (ui-tokens, i18n)
+      - name: Bagimliliklari derle (ui-tokens, i18n, markdown)
         run: pnpm --filter @kopru/mobile run deps:build
       - name: Lint
         run: pnpm --filter @kopru/mobile lint
