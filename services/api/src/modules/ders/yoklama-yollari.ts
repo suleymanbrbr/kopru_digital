@@ -38,6 +38,7 @@ import {
 import {
   dersParam,
   grupModuluAcikOlmali,
+  kapaliGruplar,
   kiraci,
   kurumParam,
   kurumSaatDilimi,
@@ -347,6 +348,7 @@ export const yoklamaYollari: ServicePlugin = (app) => {
           y.kullaniciId,
         );
         const ders = await dersBul(tx, y, request.params.id);
+        await grupModuluAcikOlmali(tx, y, 'yoklama', ders.grup_id);
         const satirlar = await tx
           .select({ ogrenci_id: dersKatilimcilari.ogrenci_id, tur: dersKatilimcilari.tur })
           .from(dersKatilimcilari)
@@ -451,12 +453,20 @@ export const yoklamaYollari: ServicePlugin = (app) => {
           tx,
           sayfa.map((s) => s.ders.id),
         );
+        const kapali = await kapaliGruplar(
+          tx,
+          y,
+          'yoklama',
+          sayfa.map((s) => s.ders.grup_id),
+        );
         const son = sayfa.at(-1);
         return {
-          dersler: sayfa.map((s) => ({
-            ...dersYaniti(s.ders, sayilar.get(s.ders.id) ?? 0),
-            yoklamasi_eksik_sayisi: s.eksik,
-          })),
+          dersler: sayfa
+            .filter((s) => !kapali.has(s.ders.grup_id))
+            .map((s) => ({
+              ...dersYaniti(s.ders, sayilar.get(s.ders.id) ?? 0),
+              yoklamasi_eksik_sayisi: s.eksik,
+            })),
           sonraki_imlec: satirlar.length > limit && son ? imlecYaz(son.ders) : null,
         };
       });
