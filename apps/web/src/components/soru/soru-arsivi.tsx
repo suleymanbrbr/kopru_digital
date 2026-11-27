@@ -6,8 +6,8 @@ import { FileQuestion, MessageSquareText, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useId, useState } from 'react';
 
-import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { BosDurum } from '@/components/bos-durum';
+import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import { DahaFazla, ListeIskeleti, zamanYaz } from '@/components/hesap/ortak';
 import { KonuSecici } from '@/components/ogrenme/konu-secici';

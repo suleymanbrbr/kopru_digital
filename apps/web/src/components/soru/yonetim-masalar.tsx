@@ -7,8 +7,8 @@ import { Plus, Table2, Trash2, UserPlus, X } from 'lucide-react';
 import { useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
 
-import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { BosDurum } from '@/components/bos-durum';
+import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,

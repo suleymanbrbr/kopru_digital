@@ -11,7 +11,6 @@ import {
 import { t } from '@kopru/i18n';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { basari, basarisiz, BildirimKutusu, tarihYaz, type Bildirim } from './ortak';
@@ -27,6 +26,7 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji, UygulamaHatasi } from '@/lib/api';
 import { hesapIstek } from '@/lib/hesap-istek';
 import { yenidenDene } from '@/lib/sayfali-sorgu';
+import { useOturum } from '@/oturum/saglayici';
 
 const ANAHTAR = ['hesap', 'silme-talebi'] as const;
 type Yontem = 'otp' | 'parola';
@@ -34,7 +34,8 @@ type Yontem = 'otp' | 'parola';
 /** Profilim: gorunen ad. Adi bos hesaplarda (OTP ile acilan) girmeye yonlendirir. */
 function ProfilKarti({ bildir }: { bildir: (b: Bildirim) => void }) {
   const { kullaniciAd } = useKurum();
-  const router = useRouter();
+  const { durum, yenile } = useOturum();
+  const aktifUyelikId = durum.tur === 'hazir' ? durum.oturum.aktifUyelikId : undefined;
   const [ad, setAd] = useState(kullaniciAd);
   const [hata, setHata] = useState<string | null>(null);
   const kaydet = useMutation({
@@ -46,8 +47,8 @@ function ProfilKarti({ bildir }: { bildir: (b: Bildirim) => void }) {
       }),
     onSuccess: () => {
       bildir(basari(t('hesap.profil.kaydedildi')));
-      // Ad sunucu bilesenlerinden (kabuk, Bugun) geldigi icin yeniden okunur.
-      router.refresh();
+      // Ad istemci oturum durumunda tutulur (kabuk, Bugun); oturum yeniden okunur.
+      yenile(aktifUyelikId ? { uyelikId: aktifUyelikId } : {}).catch(() => undefined);
     },
     onError: (e) => {
       setHata(hataMesaji(e));

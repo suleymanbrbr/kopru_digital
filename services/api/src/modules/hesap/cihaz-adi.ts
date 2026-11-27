@@ -9,10 +9,10 @@ const MOBIL = /^Kopru-Mobil\/\S+ \((ios|android)\)/i;
 
 function isletimSistemi(ua: string): string | null {
   if (/iPhone|iPod/.test(ua)) return 'iPhone';
-  if (/iPad/.test(ua)) return 'iPad';
-  if (/Android/.test(ua)) return 'Android';
-  if (/Windows/.test(ua)) return 'Windows';
-  if (/CrOS/.test(ua)) return 'Chromebook';
+  if (ua.includes('iPad')) return 'iPad';
+  if (ua.includes('Android')) return 'Android';
+  if (ua.includes('Windows')) return 'Windows';
+  if (ua.includes('CrOS')) return 'Chromebook';
   // iPad "masaustu" Safari kendini Mac olarak tanitir; dokunmatik oldugu UA'dan anlasilmaz.
   if (/Macintosh|Mac OS X/.test(ua)) return 'Mac';
   if (/Linux|X11/.test(ua)) return 'Linux';
@@ -22,10 +22,10 @@ function isletimSistemi(ua: string): string | null {
 function tarayici(ua: string): string | null {
   if (/Edg(e|A|iOS)?\//.test(ua)) return 'Edge';
   if (/OPR\/|Opera/.test(ua)) return 'Opera';
-  if (/SamsungBrowser\//.test(ua)) return 'Samsung Internet';
+  if (ua.includes('SamsungBrowser/')) return 'Samsung Internet';
   if (/Firefox\/|FxiOS\//.test(ua)) return 'Firefox';
   if (/Chrome\/|CriOS\//.test(ua)) return 'Chrome';
-  if (/Safari\//.test(ua) && /Version\//.test(ua)) return 'Safari';
+  if (ua.includes('Safari/') && ua.includes('Version/')) return 'Safari';
   return null;
 }
 

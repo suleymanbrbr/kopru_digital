@@ -134,7 +134,7 @@ export function createService(options: CreateServiceOptions): Service {
       done(null, undefined);
       return;
     }
-    varsayilanJson(request, govde as string, done);
+    void varsayilanJson(request, govde as string, done);
   });
 
   app.setValidatorCompiler(validatorCompiler);
