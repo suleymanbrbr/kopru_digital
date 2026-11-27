@@ -26,8 +26,8 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji, UygulamaHatasi } from '@/lib/api';
 import { bransAdi } from '@/lib/bransler';
 import { dersIstek } from '@/lib/hesap-istek';
-import type { GrupSecenegi } from '@/lib/operasyon-verisi';
 import { useOgrenciler } from '@/lib/ogrenme/veri';
+import type { GrupSecenegi } from '@/lib/operasyon-verisi';
 import { gunEtiketi, saatAraligi, yerelSaat, yerelTarih } from '@/lib/saat';
 
 type Gorunum = 'ozet' | 'tasi' | 'duzenle' | 'iptal' | 'katilimci';

@@ -35,9 +35,9 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
 import { bransAdi, siraliBransler } from '@/lib/bransler';
 import { finansDosyaAl, finansIstek } from '@/lib/hesap-istek';
+import { useOgrenciler } from '@/lib/ogrenme/veri';
 import { tutarCoz } from '@/lib/operasyon';
 import { useGruplar, useSaatDilimi } from '@/lib/operasyon-verisi';
-import { useOgrenciler } from '@/lib/ogrenme/veri';
 import { bugunYerel, yerelAy } from '@/lib/saat';
 import { yenidenDene } from '@/lib/sayfali-sorgu';
 
