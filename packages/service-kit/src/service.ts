@@ -125,6 +125,18 @@ export function createService(options: CreateServiceOptions): Service {
     },
   }).withTypeProvider<ZodTypeProvider>();
 
+  // `content-type: application/json` + bos govde (istemciler govdesiz POST/DELETE'te bu basligi
+  // koyabilir) Fastify'da varsayilan olarak 400 `FST_ERR_CTP_EMPTY_JSON_BODY`; govdesiz istek gibi
+  // kabul edilir. Dolu govde varsayilan (prototip zehirlenmesine karsi korumali) ayristiriciyla.
+  const varsayilanJson = app.getDefaultJsonParser('error', 'error');
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (request, govde, done) => {
+    if (typeof govde === 'string' && govde.trim() === '') {
+      done(null, undefined);
+      return;
+    }
+    varsayilanJson(request, govde as string, done);
+  });
+
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   app.setErrorHandler(errorHandler);
