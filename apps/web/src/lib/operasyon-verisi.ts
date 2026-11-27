@@ -2,6 +2,7 @@
 
 import {
   GrupListeYanitSema,
+  KademeListeYanitSema,
   GrupUyeListeYanitSema,
   UyeListeYanitSema,
   type GrupTipi,
@@ -38,6 +39,20 @@ export interface GrupSecenegi {
   etiket: string;
   /** Etkin ogrenci sayisi (duyuru onayinda "yaklasik N kisiye gidecek"). */
   uyeSayisi: number;
+}
+
+/** Kurumun kademeleri (`GET .../kademeler`): kademe hedefli odev secimi ve adlari icin. */
+export function useKademeler(kurumId: string, etkin = true) {
+  const q = useQuery({
+    queryKey: ['hesap', kurumId, 'kademeler'],
+    enabled: etkin,
+    staleTime: 5 * 60_000,
+    retry: yenidenDene,
+    queryFn: () => hesapIstek(`kurumlar/${kurumId}/kademeler`, { sema: KademeListeYanitSema }),
+  });
+  const liste = useMemo(() => q.data?.kademeler ?? [], [q.data]);
+  const adlar = useMemo(() => new Map(liste.map((k) => [k.id, k.ad])), [liste]);
+  return { liste, adlar, yukleniyor: q.isPending, hata: q.isError };
 }
 
 /** Aktif gruplar (en cok 200) ve birebir gruplarin ogrenci adlari; ders formunda ve takvimde etiket olur. */

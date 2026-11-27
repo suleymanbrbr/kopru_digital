@@ -2186,6 +2186,8 @@ export const tr = {
       hedefTuru: { ogrenci: 'Öğrenci', grup: 'Grup / sınıf', kurum: 'Tüm kurum', kademe: 'Kademe' },
       grup: 'Grup',
       grupSec: 'Grup seç',
+      kademe: 'Kademe',
+      kademeSec: 'Kademe seç',
       kurumAciklama: 'Ödev kurumdaki tüm öğrencilere verilir.',
       ders: 'Ders',
       baslik: 'Başlık',

@@ -33,7 +33,7 @@ import { bransAdi } from '@/lib/bransler';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
 import { ogrenmeYetkileri } from '@/lib/ogrenme/rol';
 import { useOdevler, useOdevSablonlari, useOgrenciler, useOgrenmeYenile } from '@/lib/ogrenme/veri';
-import { useGruplar } from '@/lib/operasyon-verisi';
+import { useGruplar, useKademeler } from '@/lib/operasyon-verisi';
 import { useYeniParametresi } from '@/lib/yeni-parametresi';
 
 export function OdevlerEkrani() {
@@ -168,6 +168,7 @@ function OdevListesi({
   const veri = useOdevler(kurumId, durum);
   const gruplar = useGruplar(kurumId);
   const ogrenciler = useOgrenciler(kurumId);
+  const kademeler = useKademeler(kurumId);
   const yenile = useOgrenmeYenile(kurumId);
 
   const yayinla = useMutation({
@@ -188,7 +189,7 @@ function OdevListesi({
       return gruplar.adlar.get(o.hedef_id)?.etiket ?? t('ogrenme.odev.hedefTuru.grup');
     if (o.hedef_turu === 'ogrenci')
       return ogrenciler.adlar.get(o.hedef_id) ?? t('ogrenme.odev.hedefTuru.ogrenci');
-    return t('ogrenme.odev.hedefTuru.kademe');
+    return kademeler.adlar.get(o.hedef_id) ?? t('ogrenme.odev.hedefTuru.kademe');
   };
 
   return (
