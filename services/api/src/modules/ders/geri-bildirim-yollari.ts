@@ -15,7 +15,7 @@ import {
   yoklamaHataKodlari,
   type GeriBildirimDeger,
 } from '@kopru/contracts';
-import { AppError, publishInTx, withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
+import { AppError, publishInTx, withTenant, type ServicePlugin } from '@kopru/service-kit';
 import { and, desc, eq, exists, gt, inArray, lte, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
