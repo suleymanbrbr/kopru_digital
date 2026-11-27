@@ -4,7 +4,8 @@ import { ayniKaynakMi, hataYaniti } from './bff';
 import { istemciIpBasliklari } from './istemci-ip';
 import { mockModu } from './kimlik';
 import { apiAdresi } from './kimlik/api';
-import { motivasyonAnahtariOku, motivasyonMockXpYaz } from './motivasyon-mock';
+import { MOCK_DURUM_CEREZI, mockDurumAnahtariAyarla, mockDurumAnahtariOku } from './mock-durum';
+import { motivasyonMockXpYaz } from './motivasyon-mock';
 
 /**
  * `/api/<servis>/<yol>` -> `api` servisinin `/v1/<servis>/<yol>` ucu icin ortak gecit. Tarayici bellekteki
@@ -26,8 +27,8 @@ export interface MockIstek {
   kaynak?: string;
   /** Mock senaryo anahtari (`mock_senaryo` cerezi): e2e testleri birbirinin durumunu bozmasin diye. */
   senaryo?: string;
-  /** Motivasyon mock durum anahtari (`mock_motivasyon` cerezi): e2e testi kendi ogrenci durumunu kullanir. */
-  motivasyonAnahtari?: string;
+  /** Mock durum anahtari (`mock_durum` cerezi, bkz. `mock-durum.ts`): e2e testi kendi durumunu kullanir. */
+  durumAnahtari?: string;
 }
 
 export interface MockYanit {
@@ -145,7 +146,8 @@ export async function servisVekili(
   const idempotency = anahtar && UUID.test(anahtar) ? anahtar : undefined;
 
   if (mockModu()) {
-    const motivasyonAnahtari = motivasyonAnahtariOku(request.cookies.get('mock_motivasyon')?.value);
+    const durumAnahtari = mockDurumAnahtariOku(request.cookies.get(MOCK_DURUM_CEREZI)?.value);
+    mockDurumAnahtariAyarla(durumAnahtari);
     const sonuc = tanim.mock({
       yontem: request.method,
       yol,
@@ -156,12 +158,11 @@ export async function servisVekili(
       ...(request.cookies.get('mock_senaryo')?.value
         ? { senaryo: request.cookies.get('mock_senaryo')?.value ?? '' }
         : {}),
-      ...(motivasyonAnahtari ? { motivasyonAnahtari } : {}),
+      ...(durumAnahtari ? { durumAnahtari } : {}),
       ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
     });
     // Mock'ta olay tuketicisi yok: basarili ogrenci eylemi motivasyon mock'unda XP yazar.
-    if (sonuc.durum < 300)
-      motivasyonMockXpYaz(tanim.servis, request.method, yol, motivasyonAnahtari);
+    if (sonuc.durum < 300) motivasyonMockXpYaz(tanim.servis, request.method, yol, durumAnahtari);
     return mockYaniti(sonuc);
   }
 

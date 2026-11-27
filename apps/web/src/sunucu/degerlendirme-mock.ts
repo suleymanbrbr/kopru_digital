@@ -5,6 +5,7 @@ import {
   koclukKonuAnalizi,
 } from './gunluk-soru-mock';
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import { mockDurumDepoAnahtari } from './mock-durum';
 import { mockSimdi } from './mock-zaman';
 import { gunlukSoruKoprusu } from './ogrenme-mock';
 import type { MockIstek, MockYanit } from './vekil';
@@ -243,9 +244,8 @@ function kur(kurumId: string): Depo {
 }
 
 function depo(kurumId: string): Depo {
-  kutu.__kopruDegerlendirmeMock ??= {};
-  kutu.__kopruDegerlendirmeMock[kurumId] ??= kur(kurumId);
-  return kutu.__kopruDegerlendirmeMock[kurumId];
+  const depolar = (kutu.__kopruDegerlendirmeMock ??= {});
+  return (depolar[mockDurumDepoAnahtari(kurumId)] ??= kur(kurumId));
 }
 
 // --- Gorunumler ---------------------------------------------------------------------------------

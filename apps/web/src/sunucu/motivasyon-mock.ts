@@ -1,4 +1,5 @@
 import { MOCK_KURUM_ROLLERI, mockKurumVerisi } from './hesap-mock';
+import { mockDurumAnahtariAyarla, mockDurumDepoAnahtari } from './mock-durum';
 import { mockSimdi } from './mock-zaman';
 import type { MockIstek, MockYanit } from './vekil';
 
@@ -380,17 +381,11 @@ function gunuYuvarla(d: KurumDurumu): void {
 }
 
 /**
- * E2E yalitimi: `mock_motivasyon` cerezi (yalniz mock modunda okunur) bir durum anahtari tasir; bu
- * anahtarli istekler kendi kurum durumlarini gorur, diger spec'lerin XP/karakter eylemleri onlari
- * etkilemez. Cerez yoksa varsayilan (ortak) durum. Giris noktalari anahtari senkron ayarlar.
+ * E2E yalitimi: durum anahtari (`mock_durum` cerezi, bkz. `mock-durum.ts`) ile ayri kurum durumu;
+ * anahtarsiz istekler varsayilan (ortak) durumu gorur.
  */
-const ANAHTAR = /^[a-z0-9]{1,32}$/;
-export const motivasyonAnahtariOku = (cerez: string | undefined): string | undefined =>
-  cerez !== undefined && ANAHTAR.test(cerez) ? cerez : undefined;
-let gecerliAnahtar = '';
-
 const kurum = (kurumId: string): KurumDurumu => {
-  const d = (depo()[`${gecerliAnahtar}|${kurumId}`] ??= kurumKur());
+  const d = (depo()[mockDurumDepoAnahtari(kurumId)] ??= kurumKur());
   gunuYuvarla(d);
   return d;
 };
@@ -612,7 +607,7 @@ export function motivasyonMockXpYaz(
   yol: string,
   anahtar?: string,
 ): void {
-  gecerliAnahtar = anahtar ?? '';
+  mockDurumAnahtariAyarla(anahtar);
   const m = /^kurumlar\/([^/]+)\//.exec(yol);
   const kurumId = m?.[1];
   if (!kurumId || MOCK_KURUM_ROLLERI[kurumId] !== 'ogrenci' || kapaliMi(kurumId)) return;
@@ -1040,7 +1035,7 @@ function duraklatmaIstegi(
 // --- Ana yonlendirici -------------------------------------------------------------------------
 
 export function motivasyonMock(istek: MockIstek): MockYanit {
-  gecerliAnahtar = istek.motivasyonAnahtari ?? '';
+  mockDurumAnahtariAyarla(istek.durumAnahtari);
   const m = /^kurumlar\/([^/]+)\/(.*)$/.exec(istek.yol);
   const kurumId = m?.[1];
   const alt = m?.[2];

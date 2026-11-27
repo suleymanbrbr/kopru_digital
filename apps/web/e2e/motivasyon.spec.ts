@@ -1,12 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-import { girisYap, motivasyonTest as test, simdi } from './yardimcilar';
+import { girisYap, durumluTest as test, simdi } from './yardimcilar';
 
 /**
  * Mock modda motivasyon ekranlari: karakter secimi, yuva, odak, XP geri bildirimi (ogrenci `Atlas`);
  * haftanin yildizi, seri duraklatma, ogrenci ozeti (ogretmen `Ege`); modul kapali (yonetici `Mavi`).
- * Mock veri sunucu surecinde ortaktir; bu dosya `mock_motivasyon` cerezi ile kendi durumunu kullanir
+ * Mock veri sunucu surecinde ortaktir; bu dosya `mock_durum` cerezi ile kendi durumunu kullanir
  * (baska spec'lerin XP eylemleri karismaz). Durumlu testler yalniz masaustu projesinde ve sirayla calisir.
  * Mobil projesi yalniz durumdan bagimsiz duzen ve erisilebilirlik denetimlerini yapar.
  */
