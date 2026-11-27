@@ -10,12 +10,7 @@ import { useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
 
 import { DefterPenceresi } from './defter';
-import {
-  useFinansYenile,
-  useOgrenciAdi,
-  useOgrenciKarti,
-  useOgrenciOdemeleri,
-} from './finans-verisi';
+import { useFinansYenile, useOgrenciKarti, useOgrenciOdemeleri } from './finans-verisi';
 import { HatirlatmaPenceresi, hatirlatmaMetni } from './hatirlatma';
 import { bakiyeMetni, KrediRozeti } from './kredi-rozeti';
 import { IptalPenceresi, OdemeAl } from './odeme-al';
@@ -61,8 +56,8 @@ function KartYukleyici() {
   const { ogrenciId } = useParams<{ ogrenciId: string }>();
   const { uyelik } = useKurum();
   const kurumId = uyelik.kurumId;
-  const ad = useOgrenciAdi(kurumId, ogrenciId);
   const q = useOgrenciKarti(kurumId, ogrenciId);
+  const ad = q.data?.gorunum === 'tam' ? q.data.ogrenci_ad : null;
 
   return (
     <>

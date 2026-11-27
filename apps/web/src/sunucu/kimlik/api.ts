@@ -2,7 +2,7 @@ import { ApiHatasi, createServisIstemcileri } from '@kopru/api-client';
 import { MODUL_KODLARI } from '@kopru/contracts';
 import { headers } from 'next/headers';
 
-import { istemciIpBasliklari } from '../istemci-ip';
+import { istemciIpBasliklari, istemciUserAgentBasliklari } from '../istemci-ip';
 import { KimlikHatasi, type KimlikAdaptoru } from './arayuz';
 
 import type { Oturum, Uyelik } from '@/oturum/tipler';
@@ -10,7 +10,8 @@ import type { Oturum, Uyelik } from '@/oturum/tipler';
 /** Istek kapsami disinda (birim testleri) `next/headers` hata verir; o zaman baslik eklenmez. */
 async function gelenIpBasliklari(): Promise<Record<string, string>> {
   try {
-    return istemciIpBasliklari(await headers());
+    const gelen = await headers();
+    return { ...istemciIpBasliklari(gelen), ...istemciUserAgentBasliklari(gelen) };
   } catch {
     return {};
   }

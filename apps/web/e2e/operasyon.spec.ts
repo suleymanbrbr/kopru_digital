@@ -155,6 +155,39 @@ test.describe('takvim', () => {
     await tasi.getByRole('button', { name: 'Taşı', exact: true }).click();
     await cakismaVarsaOnayla(page, 'Yine de taşı', /ders taşındı\./);
   });
+
+  test('sahip: derse telafi katilimci ekler; ders ayrintisinda turuyle gorunur', async ({
+    page,
+  }) => {
+    await girisYap(page, 'Kuzey Yıldızı Akademi');
+    await takvimeGit(page);
+    await page
+      .getByRole('button', { name: /Üslü sayılar/ })
+      .first()
+      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Katılımcı ekle' }).click();
+    const form = page.getByRole('dialog');
+    await expect(form.getByRole('heading', { name: 'Derse katılımcı ekle' })).toBeVisible();
+
+    // Ogrenci secmeden gonderilemez.
+    await form.getByRole('button', { name: 'Ekle', exact: true }).click();
+    await expect(form.getByText('Bir öğrenci seç.')).toBeVisible();
+
+    // Ilk eklenebilir ogrenciyi telafi olarak ekle.
+    const secim = form.getByLabel('Öğrenci', { exact: true });
+    await secim.selectOption({ index: 1 });
+    const ad = (await secim.locator('option:checked').textContent()) ?? '';
+    await form.getByLabel('Katılım türü').selectOption('telafi');
+    await form.getByRole('button', { name: 'Ekle', exact: true }).click();
+    await expect(page.getByText('Katılımcı derse eklendi.')).toBeVisible();
+
+    // Ders ayrintisinda katilimci turuyle listelenir.
+    await page
+      .getByRole('button', { name: /Üslü sayılar/ })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog').getByText(`${ad} (Telafi)`)).toBeVisible();
+  });
 });
 
 test.describe('yoklama', () => {
@@ -356,6 +389,33 @@ test.describe('finans', () => {
     const yol = await dosya.path();
     const { readFileSync } = await import('node:fs');
     expect(readFileSync(yol).subarray(0, 2).toString('latin1')).toBe('PK');
+  });
+
+  test('sahip: ucret tarifesine ogrenci ve brans kapsami ekler', async ({ page }) => {
+    await girisYap(page, 'Kuzey Yıldızı Akademi');
+    await page
+      .getByRole('navigation', { name: 'Ana menü' })
+      .getByRole('link', { name: 'Finans' })
+      .click();
+    await page.getByRole('button', { name: 'Ayarlar' }).click();
+
+    await page.getByRole('button', { name: 'Tarife ekle' }).click();
+    const form = page.getByRole('dialog');
+    await form.getByLabel('Ders ücreti (TL)').fill('750');
+    // Ogrenci kapsami secilip ogrenci verilmezse hata.
+    await form.getByLabel('Kapsam', { exact: true }).selectOption('ogrenci');
+    await form.getByRole('button', { name: 'Tarifeyi kaydet' }).click();
+    await expect(form.getByText('Bir öğrenci seç.')).toBeVisible();
+
+    const ogrenci = form.getByLabel('Öğrenci', { exact: true });
+    await ogrenci.selectOption({ index: 1 });
+    const ad = ((await ogrenci.locator('option:checked').textContent()) ?? '').trim();
+    await form.getByLabel('Branş (isteğe bağlı)').selectOption('matematik');
+    await form.getByRole('button', { name: 'Tarifeyi kaydet' }).click();
+    await expect(page.getByText('Tarife eklendi.')).toBeVisible();
+
+    // Liste satiri ogrenci ve brans kapsamini gosterir.
+    await expect(page.getByText(`${ad} · Matematik`)).toBeVisible();
   });
 
   test('ogretmen finans ekranini gorur ama ayarlari gormez', async ({ page }) => {

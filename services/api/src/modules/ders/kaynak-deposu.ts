@@ -39,7 +39,7 @@ import {
   type YetkiBaglami,
 } from '../hesap/index.js';
 import { OUTBOX_TABLOSU, katilimciIdleri, type DersOlayBaglami } from './ders-deposu.js';
-import { grupModuluAcikOlmali } from './ders-ortak.js';
+import { grupModuluAcikOlmali, kapaliGruplar } from './ders-ortak.js';
 import { parolaCoz } from './kaynak-sifre.js';
 
 export type KaynakSatiri = typeof dersKaynaklari.$inferSelect;
@@ -322,6 +322,26 @@ export async function alicilariYaz(
       ogrenci_id,
     })),
   );
+}
+
+/**
+ * Personel liste okumasi: `kayitlar` modulu grubunda kapali olan kaynaklar elenir (aday gruplar icin
+ * modul bir kez cozulur). Tekil okumalarda `kayitModuluAcikOlmali` 403 verir.
+ */
+export async function personelGorunurKosul(tx: Tx, y: YetkiBaglami, temel: SQL): Promise<SQL> {
+  const adaylar = await tx
+    .selectDistinct({ grup_id: dersKaynaklari.grup_id })
+    .from(dersKaynaklari)
+    .where(and(eq(dersKaynaklari.kurum_id, y.kurumId), temel));
+  const kapali = [
+    ...(await kapaliGruplar(
+      tx,
+      y,
+      'kayitlar',
+      adaylar.map((a) => a.grup_id),
+    )),
+  ];
+  return kapali.length === 0 ? temel : ve(temel, notInArray(dersKaynaklari.grup_id, kapali));
 }
 
 /** Kaynagin yazma/okuma yolunda grubundaki `kayitlar` modulunu denetler (kapaliysa 403). */

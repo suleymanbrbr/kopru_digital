@@ -17768,6 +17768,10 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "ogrenci_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "ogrenci_id": {
                           "format": "uuid",
                           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
@@ -17943,6 +17947,7 @@
                       "required": [
                         "gorunum",
                         "ogrenci_id",
+                        "ogrenci_ad",
                         "model",
                         "kalan_kredi",
                         "dusuk_kredi_esigi",
@@ -21417,6 +21422,57 @@
         ]
       }
     },
+    "/v1/hesap/bransler": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bransler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "kod": {
+                            "type": "string"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "kod",
+                          "ad",
+                          "sira"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "bransler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Aktif branslar (global referans listesi, `sira` ve `ad` sirasiyla). Kisisel veri icermez.",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
     "/v1/hesap/davetler/kabul": {
       "post": {
         "requestBody": {
@@ -23530,6 +23586,11 @@
                             "nullable": true,
                             "type": "integer"
                           },
+                          "ogrenci_ad": {
+                            "description": "Yalniz birebir grupta etkin ogrencinin gorunen adi; baska turlerde `null`.",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "renk": {
                             "nullable": true,
                             "type": "string"
@@ -23573,7 +23634,8 @@
                           "arsivlendi_at",
                           "uye_sayisi",
                           "surum",
-                          "created_at"
+                          "created_at",
+                          "ogrenci_ad"
                         ],
                         "type": "object"
                       },
@@ -25518,6 +25580,78 @@
           }
         },
         "summary": "Ogrenciyi gruptan cikar (bitis_tarihi dolar, gecmis korunur)",
+        "tags": [
+          "hesap"
+        ]
+      }
+    },
+    "/v1/hesap/kurumlar/{kurum_id}/kademeler": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kurum_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kademeler": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "ad": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string"
+                          },
+                          "seviye": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "sira": {
+                            "maximum": 9007199254740991,
+                            "minimum": -9007199254740991,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ad",
+                          "seviye",
+                          "sira"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kademeler"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Kurumun kademeleri (arsivlenmemis; sira, ad). Kademe hedefli odev/duyuru secimi icin; kisisel veri icermez.",
         "tags": [
           "hesap"
         ]

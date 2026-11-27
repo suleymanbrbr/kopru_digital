@@ -205,6 +205,8 @@ export const HATA_KODLARI = [
   'yapilandirma',
   'otp_gecersiz',
   'otp_cok_deneme',
+  /** OTP gonderim siniri (429; telefon/IP basina saatlik). `detay.beklemeSn` kalan sure. */
+  'otp_gonderim_siniri',
   /** Genel hiz siniri (429); OTP disinda. */
   'cok_istek',
   /** Sinif kodu gecersiz/kapali/suresi dolmus (410). */

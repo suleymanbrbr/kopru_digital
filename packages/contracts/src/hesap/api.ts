@@ -121,6 +121,14 @@ export const BenKullaniciSema = KullaniciOzetSema.extend({
     .describe('E-posta adresi doğrulandı mı (eposta yoksa false). Davet eşleştirmesi için ipucu.'),
 });
 
+/** `ortak.bransler`: global referans listesi (kiracısız, kişisel veri yok). */
+export const BransSema = z.object({
+  kod: z.string(),
+  ad: z.string(),
+  sira: z.number().int(),
+});
+export const BransListeYanitSema = z.object({ bransler: z.array(BransSema) });
+
 export const BenYanitSema = z.object({
   kullanici: BenKullaniciSema,
   onay_gerekli: z.boolean(),

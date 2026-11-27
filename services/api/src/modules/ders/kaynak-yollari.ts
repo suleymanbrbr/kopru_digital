@@ -37,6 +37,7 @@ import {
   alicilariYaz,
   hedefOgrenciler,
   kayitModuluAcikOlmali,
+  personelGorunurKosul,
   kaynakEklendiOlayiYaz,
   kaynakTemeli,
   parolaOku,
@@ -351,7 +352,7 @@ export const kaynakYollari: ServicePlugin = (app) => {
       return withTenant(db, kiraci(y), async (tx) => {
         const kosullar = [
           eq(dersKaynaklari.kurum_id, y.kurumId),
-          personelKapsami(tx, y),
+          await personelGorunurKosul(tx, y, personelKapsami(tx, y)),
           ...(await suzgecKosullari(tx, y.kurumId, suzgec)),
         ];
         if (durum) kosullar.push(eq(dersKaynaklari.durum, durum));
@@ -409,6 +410,7 @@ export const kaynakYollari: ServicePlugin = (app) => {
       personelOlmali(y);
       return withTenant(db, kiraci(y), async (tx) => {
         const { k, d } = await personelKaynagiBul(tx, y, request.params.id);
+        await kayitModuluAcikOlmali(tx, y, k.grup_id);
         return detayYaniti(tx, k, d);
       });
     },
@@ -431,6 +433,7 @@ export const kaynakYollari: ServicePlugin = (app) => {
       personelOlmali(y);
       return withTenant(db, kiraci(y), async (tx) => {
         const { k } = await personelKaynagiBul(tx, y, request.params.id);
+        await kayitModuluAcikOlmali(tx, y, k.grup_id);
         const [hedefler, izlemeler] = await Promise.all([
           hedefOgrenciler(tx, k),
           tx
@@ -478,6 +481,7 @@ export const kaynakYollari: ServicePlugin = (app) => {
       personelOlmali(y);
       return withTenant(db, kiraci(y), async (tx) => {
         const { k } = await personelKaynagiBul(tx, y, request.params.id);
+        await kayitModuluAcikOlmali(tx, y, k.grup_id);
         const satirlar = await tx
           .select()
           .from(dersKaynagiSorunlari)

@@ -23,6 +23,8 @@ interface Ders extends Kayit {
   seri_istisna: boolean;
   surum: number;
   katilimcilar: string[];
+  /** Grup uyesi olmayan katilimcilarin turu (yoksa `uye`). */
+  katilimciTurleri?: Record<string, 'misafir' | 'telafi'>;
 }
 
 interface DersDurumu {
@@ -200,7 +202,7 @@ function durum(kurumId: string): DersDurumu {
 // --- Gorunum ---------------------------------------------------------------------------------
 
 function dersGorunumu(d: Ders): Kayit {
-  const { katilimcilar: _k, ...kalan } = d;
+  const { katilimcilar: _k, katilimciTurleri: _t, ...kalan } = d;
   return { ...kalan, katilimci_sayisi: d.katilimcilar.length };
 }
 
@@ -216,7 +218,11 @@ function dersDetayi(kurumId: string, d: Ders): Kayit {
     ...dersGorunumu(d),
     katilimcilar: d.katilimcilar
       .filter((o) => !ogrenciMi || o === ogrenciId)
-      .map((o) => ({ ogrenci_id: o, tur: 'uye', gorunen_ad: adi(kurumId, o) })),
+      .map((o) => ({
+        ogrenci_id: o,
+        tur: d.katilimciTurleri?.[o] ?? 'uye',
+        gorunen_ad: adi(kurumId, o),
+      })),
   };
 }
 
@@ -565,6 +571,26 @@ function iptalEt(kurumId: string, s: DersDurumu, d: Ders, g: Kayit): MockYanit {
   };
 }
 
+// --- Katilimci (misafir / telafi) --------------------------------------------------------------
+
+function katilimciEkle(kurumId: string, d: Ders, g: Kayit): MockYanit {
+  if (d.durum === 'iptal') return hata(409, 'ders_planli_degil', 'Bu ders iptal edilmiş.');
+  const ogrenciId = g.ogrenci_id;
+  const tur = g.tur === 'telafi' ? 'telafi' : 'misafir';
+  if (typeof ogrenciId !== 'string') return dogrulama();
+  if (adi(kurumId, ogrenciId) === null) return bulunamadi();
+  if (d.katilimcilar.includes(ogrenciId)) {
+    return hata(409, 'zaten_katilimci', 'Öğrenci bu derse zaten katılımcı.');
+  }
+  d.katilimcilar.push(ogrenciId);
+  d.katilimciTurleri = { ...d.katilimciTurleri, [ogrenciId]: tur };
+  d.surum += 1;
+  return {
+    durum: 201,
+    govde: { ders: dersDetayi(kurumId, d), etkilenen_ders_idleri: [d.id], uyari: [] },
+  };
+}
+
 // --- Yoklama ---------------------------------------------------------------------------------
 
 function yoklamaSatiri(kurumId: string, s: DersDurumu, d: Ders, ogrenciId: string): Kayit | null {
@@ -591,7 +617,7 @@ function yoklamaListesi(kurumId: string, s: DersDurumu, d: Ders): MockYanit {
         .filter((o) => !ogrenciMi || o === ogrenciId)
         .map((o) => ({
           ogrenci_id: o,
-          tur: 'uye',
+          tur: d.katilimciTurleri?.[o] ?? 'uye',
           gorunen_ad: adi(kurumId, o),
           yoklama: yoklamaSatiri(kurumId, s, d, o),
         })),
@@ -786,6 +812,7 @@ export function dersMock(istek: MockIstek): MockYanit {
   if (!alt && yontem === 'PATCH') return guncelle(kurumId, s, d, g);
   if (alt === 'tasi' && yontem === 'POST') return tasi(kurumId, s, d, g);
   if (alt === 'iptal' && yontem === 'POST') return iptalEt(kurumId, s, d, g);
+  if (alt === 'katilimcilar' && yontem === 'POST') return katilimciEkle(kurumId, d, g);
   if (alt === 'yoklamalar' && yontem === 'GET') return yoklamaListesi(kurumId, s, d);
   if (alt === 'yoklamalar' && yontem === 'PUT') {
     return yazabilir ? yoklamaKaydet(kurumId, s, d, istek) : izinYok();

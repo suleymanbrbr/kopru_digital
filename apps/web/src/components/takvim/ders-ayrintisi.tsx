@@ -3,7 +3,7 @@
 import { DersIslemYanitSema, type DersDetaySema } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
 import { useMutation } from '@tanstack/react-query';
-import { CalendarClock, ExternalLink, MapPin, RefreshCw, Repeat } from 'lucide-react';
+import { CalendarClock, ExternalLink, MapPin, RefreshCw, Repeat, UserPlus } from 'lucide-react';
 import { useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
 
@@ -26,10 +26,11 @@ import { useKurum } from '@/kurum/baglam';
 import { hataMesaji, UygulamaHatasi } from '@/lib/api';
 import { bransAdi } from '@/lib/bransler';
 import { dersIstek } from '@/lib/hesap-istek';
+import { useOgrenciler } from '@/lib/ogrenme/veri';
 import type { GrupSecenegi } from '@/lib/operasyon-verisi';
 import { gunEtiketi, saatAraligi, yerelSaat, yerelTarih } from '@/lib/saat';
 
-type Gorunum = 'ozet' | 'tasi' | 'duzenle' | 'iptal';
+type Gorunum = 'ozet' | 'tasi' | 'duzenle' | 'iptal' | 'katilimci';
 type DersDetayi = z.infer<typeof DersDetaySema>;
 
 export interface AyrintiOrtak {
@@ -155,6 +156,8 @@ function Icerik({
     setGorunum('ozet');
   };
   if (gorunum === 'tasi') return <TasiFormu ders={ders} {...ortak} geri={geri} bitti={bitir} />;
+  if (gorunum === 'katilimci')
+    return <KatilimciFormu ders={ders} {...ortak} geri={geri} bitti={bitir} />;
   if (gorunum === 'duzenle')
     return <DuzenleFormu ders={ders} {...ortak} geri={geri} bitti={bitir} />;
   return <IptalFormu ders={ders} {...ortak} geri={geri} bitti={bitir} />;
@@ -234,7 +237,14 @@ function Ozet({
         ) : null}
         {ders.katilimcilar.length > 0 ? (
           <Satir etiket={t('operasyon.takvim.ayrinti.katilimci')}>
-            {ders.katilimcilar.map((k) => k.gorunen_ad ?? t('operasyon.ortak.adsiz')).join(', ')}
+            {ders.katilimcilar
+              .map((k) => {
+                const ad = k.gorunen_ad ?? t('operasyon.ortak.adsiz');
+                return k.tur === 'uye'
+                  ? ad
+                  : `${ad} (${t(`operasyon.takvim.ayrinti.katilimciTuru.${k.tur}`)})`;
+              })
+              .join(', ')}
           </Satir>
         ) : null}
       </dl>
@@ -283,6 +293,17 @@ function Ozet({
                 {t('operasyon.takvim.ayrinti.duzenle')}
               </Dugme>
             </>
+          ) : null}
+          {ders.durum !== 'iptal' ? (
+            <Dugme
+              gorunum="ikincil"
+              onClick={() => {
+                git('katilimci');
+              }}
+            >
+              <UserPlus aria-hidden />
+              {t('operasyon.takvim.ayrinti.katilimciEkle')}
+            </Dugme>
           ) : null}
           {ders.durum !== 'iptal' ? (
             <Dugme
@@ -525,6 +546,99 @@ function TasiFormu({
         geri={geri}
         bekliyor={mut.isPending}
         etiket={cakisma ? t('operasyon.takvim.cakisma.yineTasi') : t('operasyon.takvim.tasi.tasi')}
+      />
+    </form>
+  );
+}
+
+// --- Katilimci ekle (misafir / telafi) -----------------------------------------------------------
+
+function KatilimciFormu({
+  ders,
+  kurumId,
+  geri,
+  bitti,
+}: AyrintiOrtak & { ders: DersDetayi; geri: () => void; bitti: (b: Bildirim) => void }) {
+  const ogrenciler = useOgrenciler(kurumId);
+  const [ogrenciId, setOgrenciId] = useState('');
+  const [tur, setTur] = useState<'misafir' | 'telafi'>('misafir');
+  const [hata, setHata] = useState<string | null>(null);
+  const { mut, yenile } = useIslem({
+    kurumId,
+    dersId: ders.id,
+    yol: '/katilimcilar',
+    yontem: 'POST',
+    bitti,
+    mesaj: () => t('operasyon.takvim.katilimciEkle.eklendi'),
+  });
+  const mevcut = new Set(ders.katilimcilar.map((k) => k.ogrenci_id));
+  const adaylar = ogrenciler.liste.filter((o) => !mevcut.has(o.id));
+
+  const gonder = (e: SyntheticEvent) => {
+    e.preventDefault();
+    if (!ogrenciId) {
+      setHata(t('operasyon.takvim.katilimciEkle.ogrenciGerekli'));
+      return;
+    }
+    setHata(null);
+    mut.mutate({ ogrenci_id: ogrenciId, tur });
+  };
+
+  return (
+    <form onSubmit={gonder} noValidate className="flex flex-col gap-4">
+      <h3 className="text-base font-semibold">{t('operasyon.takvim.katilimciEkle.baslik')}</h3>
+      <p className="text-sm text-metin-ikincil">{t('operasyon.takvim.katilimciEkle.aciklama')}</p>
+      <Alan etiket={t('operasyon.takvim.katilimciEkle.ogrenci')}>
+        {(o) => (
+          <Secim
+            {...o}
+            value={ogrenciId}
+            disabled={ogrenciler.yukleniyor}
+            onChange={(e) => {
+              setOgrenciId(e.target.value);
+            }}
+          >
+            <option value="">{t('operasyon.takvim.katilimciEkle.ogrenciSec')}</option>
+            {adaylar.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.ad || t('operasyon.ortak.adsiz')}
+              </option>
+            ))}
+          </Secim>
+        )}
+      </Alan>
+      {!ogrenciler.yukleniyor && adaylar.length === 0 ? (
+        <p className="text-sm text-metin-ikincil">
+          {t('operasyon.takvim.katilimciEkle.ogrenciYok')}
+        </p>
+      ) : null}
+      <Alan etiket={t('operasyon.takvim.katilimciEkle.tur')}>
+        {(o) => (
+          <Secim
+            {...o}
+            value={tur}
+            onChange={(e) => {
+              setTur(e.target.value === 'telafi' ? 'telafi' : 'misafir');
+            }}
+          >
+            <option value="misafir">{t('operasyon.takvim.katilimciEkle.misafir')}</option>
+            <option value="telafi">{t('operasyon.takvim.katilimciEkle.telafi')}</option>
+          </Secim>
+        )}
+      </Alan>
+      {hata ? <Uyari>{hata}</Uyari> : null}
+      {mut.isError ? <Uyari>{hataMesaji(mut.error)}</Uyari> : null}
+      <SurumUyarisi
+        hata={mut.error}
+        yenile={() => {
+          void yenile();
+          geri();
+        }}
+      />
+      <Dugmeler
+        geri={geri}
+        bekliyor={mut.isPending}
+        etiket={t('operasyon.takvim.katilimciEkle.ekle')}
       />
     </form>
   );

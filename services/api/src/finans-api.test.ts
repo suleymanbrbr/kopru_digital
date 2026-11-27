@@ -19,6 +19,7 @@ interface Tahsilat {
 }
 interface Kart {
   gorunum: 'tam' | 'ogrenci';
+  ogrenci_ad?: string | null;
   kalan_kredi: number | null;
   bakiye_kurus: number;
   borclu: boolean;
@@ -66,6 +67,16 @@ describe.skipIf(dbYok())('finans: HTTP uclari', () => {
 
   const kart = async (x: FinansDunyasi, ogrenciId: string, token = x.owner.token) =>
     (await al(x, `/ogrenciler/${ogrenciId}/finans`, token)).json<Kart>();
+
+  describe('ogrenci karti', () => {
+    it('personel gorunumunde ogrenci_ad gelir; ogrenci gorunumunde alan yoktur', async () => {
+      const o = await d.ogrenciEkle();
+      await sistem`update hesap.uyelikler set gorunen_ad = 'Elif Kaya' where id = ${o.uyelikId}`;
+      const k = await kart(d, o.uyelikId);
+      expect(k.gorunum).toBe('tam');
+      expect(k.ogrenci_ad).toBe('Elif Kaya');
+    });
+  });
 
   describe('paket sablonlari', () => {
     it('olustur, listele, guncelle, arsivle; arsivlenen satilamaz ve varsayilan listede gorunmez', async () => {

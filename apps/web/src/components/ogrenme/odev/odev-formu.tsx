@@ -19,7 +19,7 @@ import { ogrenmeIstek } from '@/lib/hesap-istek';
 import { EK_EN_FAZLA_BAYT, EK_EN_FAZLA_DOSYA } from '@/lib/ogrenme/ek';
 import { odevFormunuDogrula, type OdevFormDegeri, type OdevHedefTuru } from '@/lib/ogrenme/odev';
 import { useOdevSablonlari, useOgrenciler, useOgrenmeYenile } from '@/lib/ogrenme/veri';
-import { useGruplar, useSaatDilimi } from '@/lib/operasyon-verisi';
+import { useGruplar, useKademeler, useSaatDilimi } from '@/lib/operasyon-verisi';
 import { bugunYerel, tarihEkle, yerelUtc } from '@/lib/saat';
 
 const TURLER = ['soru', 'sayfa', 'serbest'] as const;
@@ -45,6 +45,7 @@ export function OdevFormu({
 }) {
   const { saatDilimi } = useSaatDilimi(kurumId);
   const gruplar = useGruplar(kurumId);
+  const kademeler = useKademeler(kurumId, genisHedef);
   const ogrenciler = useOgrenciler(kurumId);
   const sablonlar = useOdevSablonlari(kurumId);
   const yenile = useOgrenmeYenile(kurumId);
@@ -79,7 +80,7 @@ export function OdevFormu({
     : f.baslik || t('ogrenme.odev.baslikOtomatik', { ders: bransAdi(f.brans) });
 
   const hedefSecenekleri: readonly OdevHedefTuru[] = genisHedef
-    ? ['grup', 'ogrenci', 'kurum']
+    ? ['grup', 'ogrenci', 'kademe', 'kurum']
     : ['grup', 'ogrenci'];
 
   const gonderim = useMemo(
@@ -244,6 +245,26 @@ export function OdevFormu({
                 {gruplar.secenekler.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.etiket}
+                  </option>
+                ))}
+              </Secim>
+            )}
+          </Alan>
+        ) : null}
+        {f.hedefTuru === 'kademe' ? (
+          <Alan etiket={t('ogrenme.odev.kademe')} hata={hatalar.hedef}>
+            {(o) => (
+              <Secim
+                {...o}
+                value={hedefId}
+                onChange={(e) => {
+                  guncelle({ hedefId: e.target.value });
+                }}
+              >
+                <option value="">{t('ogrenme.odev.kademeSec')}</option>
+                {kademeler.liste.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.ad}
                   </option>
                 ))}
               </Secim>

@@ -22,6 +22,7 @@ interface Cagri {
   govde: unknown;
   govdeMetni: string;
   icerikTuru: string | null;
+  kullaniciAjani: string | null;
 }
 type Yonlendirici = (c: Cagri) => Response | Promise<Response>;
 
@@ -48,6 +49,7 @@ async function kur(yonlendir: Yonlendirici) {
       govde: metin ? (JSON.parse(metin) as unknown) : undefined,
       govdeMetni: metin,
       icerikTuru: girdi.headers.get('content-type'),
+      kullaniciAjani: girdi.headers.get('user-agent'),
     };
     cagrilar.push(c);
     if (c.yol === '/v1/hesap/ben') {
@@ -224,9 +226,34 @@ describe('sinif kodu ile katilim (ogrenci)', () => {
     expect(e.ayrinti).toBe('istek_beklemiyor');
   });
 
-  it('OTP uclarinda 429 hala otp_cok_deneme', async () => {
-    const { adaptorler } = await kur(() => hata(429, 'cok_fazla_istek'));
+  it('kod gonderme 429 otp_gonderim_siniri olur; kalan sure Retry-After basligindan gelir', async () => {
+    const { adaptorler } = await kur(
+      () =>
+        new Response(JSON.stringify({ error: { code: 'rate_limited', message: 'x' } }), {
+          status: 429,
+          headers: { 'content-type': 'application/json', 'retry-after': '725' },
+        }),
+    );
     const e = await hatayiYakala(adaptorler.auth.otpIste('+905321112233'));
+    expect(e.kod).toBe('otp_gonderim_siniri');
+    expect(e.detay).toEqual({ beklemeSn: 725 });
+  });
+
+  it('kod gonderme 429: sure yalniz govdede ya da hic yoksa', async () => {
+    const govdeli = await kur(() =>
+      json({ error: { code: 'rate_limited', message: 'x', details: { retry_after_sn: 90 } } }, 429),
+    );
+    const e1 = await hatayiYakala(govdeli.adaptorler.auth.otpIste('+905321112233'));
+    expect(e1.detay).toEqual({ beklemeSn: 90 });
+    const bos = await kur(() => hata(429, 'rate_limited'));
+    const e2 = await hatayiYakala(bos.adaptorler.auth.otpIste('+905321112233'));
+    expect(e2.kod).toBe('otp_gonderim_siniri');
+    expect(e2.detay).toEqual({ beklemeSn: null });
+  });
+
+  it('OTP dogrulamada 429 hala otp_cok_deneme', async () => {
+    const { adaptorler } = await kur(() => hata(429, 'rate_limited'));
+    const e = await hatayiYakala(adaptorler.auth.otpDogrula('+905321112233', '123456'));
     expect(e.kod).toBe('otp_cok_deneme');
   });
 });
@@ -344,6 +371,20 @@ describe('davet kabul', () => {
   });
 });
 
+describe('profil adi', () => {
+  it('PATCH /v1/hesap/ben ile gorunen adi gunceller', async () => {
+    const { adaptorler, cagrilar } = await kur(() =>
+      json({ gorunen_ad: 'Ayşe Demir', dil: 'tr', degisen_alanlar: ['gorunen_ad'] }),
+    );
+    expect(await adaptorler.hesap.adGuncelle('Ayşe Demir')).toBe('Ayşe Demir');
+    expect(cagrilar[0]).toMatchObject({
+      yontem: 'PATCH',
+      yol: '/v1/hesap/ben',
+      govde: { gorunen_ad: 'Ayşe Demir' },
+    });
+  });
+});
+
 describe('oturumlarim', () => {
   const liste = {
     oturumlar: [
@@ -375,6 +416,12 @@ describe('oturumlarim', () => {
       [OTURUM, true, 'iPhone'],
       [OTURUM_2, false, null],
     ]);
+  });
+
+  it('api okunur cihaz adi cikarsin diye user-agent baslik gonderir', async () => {
+    const { adaptorler, cagrilar } = await kur(() => json(liste));
+    await adaptorler.hesap.oturumlar();
+    expect(cagrilar[0]?.kullaniciAjani).toBe('Kopru-Mobil/1 (ios)');
   });
 
   it('baska oturumu sonlandirmak yerel belirteci silmez', async () => {

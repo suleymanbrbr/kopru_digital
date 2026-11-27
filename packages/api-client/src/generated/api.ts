@@ -7195,6 +7195,7 @@ export interface paths {
                             model: "paket" | "ders_basi" | "yok";
                             odeyen_ad: string | null;
                             odeyen_telefon: string | null;
+                            ogrenci_ad: string | null;
                             /** Format: uuid */
                             ogrenci_id: string;
                             son_bakiye_hareketleri: {
@@ -8710,6 +8711,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hesap/bransler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktif branslar (global referans listesi, `sira` ve `ad` sirasiyla). Kisisel veri icermez. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            bransler: {
+                                ad: string;
+                                kod: string;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hesap/davetler/kabul": {
         parameters: {
             query?: never;
@@ -9577,6 +9620,8 @@ export interface paths {
                                 /** Format: uuid */
                                 kademe_id: string | null;
                                 kapasite: number | null;
+                                /** @description Yalniz birebir grupta etkin ogrencinin gorunen adi; baska turlerde `null`. */
+                                ogrenci_ad: string | null;
                                 renk: string | null;
                                 /** Format: uuid */
                                 sube_id: string | null;
@@ -10453,6 +10498,52 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hesap/kurumlar/{kurum_id}/kademeler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kurumun kademeleri (arsivlenmemis; sira, ad). Kademe hedefli odev/duyuru secimi icin; kisisel veri icermez. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kurum_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            kademeler: {
+                                ad: string;
+                                /** Format: uuid */
+                                id: string;
+                                seviye: number | null;
+                                sira: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

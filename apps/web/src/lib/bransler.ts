@@ -3,9 +3,9 @@ import { t, type MessageKey } from '@kopru/i18n';
 import { trKarsilastir } from '@/lib/sirala';
 
 /**
- * Brans kodlari `ortak.bransler` referans tablosunun tohumudur (docs/schema/api.md). `api` bu liste
- * icin henuz bir uc nokta sunmuyor; ad metinleri `packages/i18n` icindedir. Uc nokta gelince bu
- * dizi onun yanitiyla degistirilir.
+ * Brans listesi `GET /v1/hesap/bransler` ucundan gelir (`useBransler`, `lib/bransler-sorgu.ts`).
+ * Bu dizi yalniz yedektir: uc yanit verene kadar ya da ulasilamazsa secenekler bos kalmasin diye
+ * `ortak.bransler` tohumunun kodlari kullanilir; ad metinleri `packages/i18n` icindedir.
  */
 export const BRANS_KODLARI = [
   'matematik',
@@ -33,10 +33,15 @@ export function bransAdi(kod: string): string {
   return ad === anahtar ? kod : ad;
 }
 
-/** Turkce siralanmis, "diger" sonda. */
-export function siraliBransler(): { kod: string; ad: string }[] {
-  const liste: { kod: string; ad: string }[] = BRANS_KODLARI.filter((k) => k !== 'diger')
-    .map((kod) => ({ kod, ad: bransAdi(kod) }))
+/** Turkce siralanmis, "diger" sonda. `kaynak` verilmezse yedek kod listesi kullanilir. */
+export function siraliBransler(
+  kaynak?: readonly { kod: string; ad: string }[],
+): { kod: string; ad: string }[] {
+  const girdi = kaynak ?? BRANS_KODLARI.map((kod) => ({ kod, ad: bransAdi(kod) }));
+  const liste = girdi
+    .filter((b) => b.kod !== 'diger')
+    .map((b) => ({ kod: b.kod, ad: b.ad }))
     .sort((a, b) => trKarsilastir(a.ad, b.ad));
-  return [...liste, { kod: 'diger', ad: bransAdi('diger') }];
+  const diger = girdi.find((b) => b.kod === 'diger');
+  return [...liste, { kod: 'diger', ad: diger?.ad ?? bransAdi('diger') }];
 }

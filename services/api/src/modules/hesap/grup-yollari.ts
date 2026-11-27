@@ -13,6 +13,7 @@ import {
   GrupUyeEkleYanitSema,
   GrupUyeListeYanitSema,
   GrupUyesiSema,
+  KademeListeYanitSema,
   errorCodes,
   hesapAtamaDegistiV1,
   hesapGrupDegistiV1,
@@ -37,6 +38,7 @@ import {
 import {
   atamaYaniti,
   benzersizlikIhlaliMi,
+  birebirOgrenciAdlari,
   gorunenAdlar,
   grubaOgrenciEkle,
   grupOlayVerisi,
@@ -160,6 +162,36 @@ export const grupYollari: ServicePlugin = (app) => {
   );
 
   app.get(
+    '/kurumlar/:kurum_id/kademeler',
+    {
+      preHandler: requirePermission('grup.oku'),
+      schema: {
+        tags: ['hesap'],
+        summary:
+          'Kurumun kademeleri (arsivlenmemis; sira, ad). Kademe hedefli odev/duyuru secimi icin; kisisel veri icermez.',
+        params: kurumParam,
+        response: { 200: KademeListeYanitSema },
+      },
+    },
+    async (request) => {
+      const y = yetkiAl(request);
+      return withTenant(db, kiraci(y), async (tx) => {
+        const satirlar = await tx
+          .select({
+            id: kademeler.id,
+            ad: kademeler.ad,
+            seviye: kademeler.seviye,
+            sira: kademeler.sira,
+          })
+          .from(kademeler)
+          .where(and(eq(kademeler.kurum_id, y.kurumId), isNull(kademeler.arsivlendi_at)))
+          .orderBy(asc(kademeler.sira), asc(kademeler.ad), asc(kademeler.id));
+        return { kademeler: satirlar };
+      });
+    },
+  );
+
+  app.get(
     '/kurumlar/:kurum_id/gruplar',
     {
       preHandler: requirePermission('grup.oku'),
@@ -188,9 +220,15 @@ export const grupYollari: ServicePlugin = (app) => {
           .orderBy(asc(gruplar.id))
           .limit(limit + 1);
         const sayfa = satirlar.slice(0, limit);
+        // Birebir grubun etkin ogrencisinin adi: sayfa basina tek IN sorgusu (istemcide N+1 yok).
+        const birebirIdleri = sayfa.filter((s) => s.g.tur === 'birebir').map((s) => s.g.id);
+        const ogrenciAdlari = await birebirOgrenciAdlari(tx, birebirIdleri);
         return {
           kapsam: y.kapsam,
-          gruplar: sayfa.map((s) => grupYaniti(s.g, s.uye_sayisi)),
+          gruplar: sayfa.map((s) => ({
+            ...grupYaniti(s.g, s.uye_sayisi),
+            ogrenci_ad: ogrenciAdlari.get(s.g.id) ?? null,
+          })),
           sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.g.id ?? null) : null,
         };
       });

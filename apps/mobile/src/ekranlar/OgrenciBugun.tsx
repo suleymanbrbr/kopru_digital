@@ -134,7 +134,7 @@ export function OgrenciBugun() {
     >
       <View className="flex-row items-center gap-2">
         <Metin varyant="baslik" accessibilityRole="header" className="flex-1">
-          {t('mobil.bugun.selam', { ad: ad ?? '' })}
+          {ad ? t('mobil.bugun.selam', { ad }) : t('mobil.bugun.selamAdsiz')}
         </Metin>
         <BildirimZili />
       </View>

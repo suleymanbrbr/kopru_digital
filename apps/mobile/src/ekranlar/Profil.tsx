@@ -1,5 +1,6 @@
 import { t } from '@kopru/i18n';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Pressable, Switch, View } from 'react-native';
 
 import { kurumGirisiVarMi } from '../nav/yapilandirma';
@@ -12,7 +13,9 @@ import { Ekran } from '../ui/Ekran';
 import { Ikon } from '../ui/Ikon';
 import { Kart } from '../ui/Kart';
 import { Metin } from '../ui/Metin';
+import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { useAktif, useOturum, useServisler } from '../uygulama/baglam';
+import { hataMesaji } from '../uygulama/hatalar';
 import { useModulAcik } from '../uygulama/operasyon';
 import { CevrimdisiSerit } from './CevrimdisiSerit';
 
@@ -57,6 +60,53 @@ function Satir({
   );
 }
 
+/** Adi bos kullanici (OTP ile acilan hesap) icin: adini girmeye yonlendiren kart. */
+function AdKarti() {
+  const { oturum } = useServisler();
+  const [ad, setAd] = useState('');
+  const [hata, setHata] = useState<string | null>(null);
+  const [kaydediyor, setKaydediyor] = useState(false);
+
+  async function kaydet() {
+    if (ad.trim().length < 2) {
+      setHata(t('mobil.profil.adKisa'));
+      return;
+    }
+    setKaydediyor(true);
+    try {
+      await oturum.adGuncelle(ad.trim());
+    } catch (e) {
+      setHata(hataMesaji(e));
+    } finally {
+      setKaydediyor(false);
+    }
+  }
+
+  return (
+    <Kart className="gap-3" testID="ad-karti">
+      <Metin varyant="ikincil">{t('mobil.profil.adUyari')}</Metin>
+      <MetinGirdisi
+        etiket={t('mobil.profil.adEtiketi')}
+        placeholder={t('mobil.profil.adIpucu')}
+        value={ad}
+        onChangeText={(v) => {
+          setAd(v);
+          setHata(null);
+        }}
+        hata={hata}
+        autoCapitalize="words"
+        textContentType="name"
+        maxLength={100}
+      />
+      <Dugme
+        etiket={t('mobil.profil.adKaydet')}
+        yukleniyor={kaydediyor}
+        onPress={() => void kaydet()}
+      />
+    </Kart>
+  );
+}
+
 export function Profil() {
   const router = useRouter();
   const { oturum, kuyruk } = useServisler();
@@ -83,11 +133,15 @@ export function Profil() {
         {t('mobil.profil.baslik')}
       </Metin>
       <Kart className="gap-1">
-        <Metin varyant="altBaslik">{durum.kullanici.adSoyad}</Metin>
+        <Metin varyant="altBaslik">
+          {durum.kullanici.adSoyad || t('mobil.profil.adsizKullanici')}
+        </Metin>
         <Metin varyant="ikincil">
           {t(`roller.${rol}`)} · {aktif.uyelik.kurumAd}
         </Metin>
       </Kart>
+
+      {durum.kullanici.adSoyad.trim() === '' ? <AdKarti /> : null}
 
       <Kart className="gap-1">
         {kurumGirisiVarMi(rol) ? (

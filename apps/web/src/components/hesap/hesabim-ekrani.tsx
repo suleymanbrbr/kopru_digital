@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BenGuncelleYanitSema,
   SilmeDurumYanitSema,
   SilmeGeriAlYanitSema,
   SilmeKoduGonderYanitSema,
@@ -21,12 +22,82 @@ import { Etiket, Girdi } from '@/components/ui/input';
 import { Kart } from '@/components/ui/kart';
 import { Pencere } from '@/components/ui/pencere';
 import { Uyari } from '@/components/ui/uyari';
+import { useKurum } from '@/kurum/baglam';
 import { hataMesaji, UygulamaHatasi } from '@/lib/api';
 import { hesapIstek } from '@/lib/hesap-istek';
 import { yenidenDene } from '@/lib/sayfali-sorgu';
+import { useOturum } from '@/oturum/saglayici';
 
 const ANAHTAR = ['hesap', 'silme-talebi'] as const;
 type Yontem = 'otp' | 'parola';
+
+/** Profilim: gorunen ad. Adi bos hesaplarda (OTP ile acilan) girmeye yonlendirir. */
+function ProfilKarti({ bildir }: { bildir: (b: Bildirim) => void }) {
+  const { kullaniciAd } = useKurum();
+  const { durum, yenile } = useOturum();
+  const aktifUyelikId = durum.tur === 'hazir' ? durum.oturum.aktifUyelikId : undefined;
+  const [ad, setAd] = useState(kullaniciAd);
+  const [hata, setHata] = useState<string | null>(null);
+  const kaydet = useMutation({
+    mutationFn: (yeni: string) =>
+      hesapIstek('ben', {
+        yontem: 'PATCH',
+        govde: { gorunen_ad: yeni },
+        sema: BenGuncelleYanitSema,
+      }),
+    onSuccess: () => {
+      bildir(basari(t('hesap.profil.kaydedildi')));
+      // Ad istemci oturum durumunda tutulur (kabuk, Bugun); oturum yeniden okunur.
+      yenile(aktifUyelikId ? { uyelikId: aktifUyelikId } : {}).catch(() => undefined);
+    },
+    onError: (e) => {
+      setHata(hataMesaji(e));
+    },
+  });
+  const adsiz = kullaniciAd.trim() === '';
+  return (
+    <Kart className="p-5" id="profil">
+      <h2 className="text-lg font-semibold">{t('hesap.profil.baslik')}</h2>
+      <p className="mt-1 text-sm text-metin-ikincil">
+        {adsiz ? t('hesap.profil.adUyari') : t('hesap.profil.aciklama')}
+      </p>
+      <form
+        className="mt-4 flex max-w-md flex-col gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (ad.trim().length < 2) {
+            setHata(t('hesap.profil.adKisa'));
+            return;
+          }
+          setHata(null);
+          kaydet.mutate(ad.trim());
+        }}
+      >
+        <Etiket htmlFor="profil-ad">{t('hesap.profil.adEtiketi')}</Etiket>
+        <Girdi
+          id="profil-ad"
+          value={ad}
+          maxLength={100}
+          autoComplete="name"
+          placeholder={t('hesap.profil.adIpucu')}
+          aria-invalid={hata !== null}
+          onChange={(e) => {
+            setAd(e.target.value);
+            setHata(null);
+          }}
+        />
+        {hata ? (
+          <p role="alert" className="text-sm text-hata">
+            {hata}
+          </p>
+        ) : null}
+        <Dugme type="submit" className="self-start" disabled={kaydet.isPending}>
+          {kaydet.isPending ? t('hesap.profil.kaydediliyor') : t('hesap.profil.kaydet')}
+        </Dugme>
+      </form>
+    </Kart>
+  );
+}
 
 /** Hesabim: kisisel veri indirme ve hesap silme (KVKK). */
 export function HesabimEkrani() {
@@ -136,6 +207,7 @@ export function HesabimEkrani() {
       </div>
 
       <div className="flex flex-col gap-4">
+        <ProfilKarti bildir={setBildirim} />
         <Kart className="p-5">
           <h2 className="text-lg font-semibold">{t('hesap.kvkk.indirBaslik')}</h2>
           <p className="mt-1 text-sm text-metin-ikincil">{t('hesap.kvkk.indirAciklama')}</p>

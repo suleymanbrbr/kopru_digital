@@ -8,6 +8,7 @@ import { useState, type SyntheticEvent } from 'react';
 import type { z } from 'zod';
 
 import { BosDurum } from '@/components/bos-durum';
+import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import {
   BildirimKutusu,
@@ -25,7 +26,7 @@ import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
-import { bransAdi, siraliBransler } from '@/lib/bransler';
+import { bransAdi } from '@/lib/bransler';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
 import { useOgretmenler } from '@/lib/operasyon-verisi';
 import { useSoruMasalari, useSoruYenile } from '@/lib/soru/veri';
@@ -361,11 +362,7 @@ function MasaOlusturPenceresi({
               }}
             >
               <option value="">{t('soruSor.form.bransSec')}</option>
-              {siraliBransler().map((b) => (
-                <option key={b.kod} value={b.kod}>
-                  {b.ad}
-                </option>
-              ))}
+              <BransSecenekleri />
             </Secim>
           )}
         </Alan>
