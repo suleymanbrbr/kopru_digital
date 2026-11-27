@@ -137,26 +137,27 @@ export function useOgrenciDenemeAyari() {
   });
 }
 
-export function useDenemelerim() {
+/** `etkin=false`: sorgu hic calismaz (ornegin ogretmen ekraninda ogrenci ucu 403 verir). */
+export function useDenemelerim(etkin = true) {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();
   const acik = useModulAcik('deneme');
   return useQuery({
     queryKey: ['deneme', uyelikId, 'denemelerim'],
     queryFn: () => adaptorler.ogrenme.denemelerim(),
-    enabled: !!uyelikId && acik,
+    enabled: !!uyelikId && acik && etkin,
   });
 }
 
 /** Ogretmen: onay kuyrugu (`ogrenciId` yok) ya da tek ogrencinin denemeleri. */
-export function useDenemeler(s: { onay?: 'bekliyor'; ogrenciId?: string }) {
+export function useDenemeler(s: { onay?: 'bekliyor'; ogrenciId?: string }, etkin = true) {
   const { adaptorler } = useServisler();
   const uyelikId = useUyelikId();
   const acik = useModulAcik('deneme');
   return useQuery({
     queryKey: ['deneme', uyelikId, 'liste', s.onay ?? 'tum', s.ogrenciId ?? 'hepsi'],
     queryFn: () => adaptorler.ogrenme.denemeler(s),
-    enabled: !!uyelikId && acik,
+    enabled: !!uyelikId && acik && etkin,
   });
 }
 

@@ -6,6 +6,7 @@ import { View } from 'react-native';
 
 import type { DenemeBolumGirdisi, DenemeKurali } from '../api/ogrenmeTipleri';
 import { bugunTarihi, tarihGecerliMi } from '../lib/saat';
+import { varsayilanKuralKodu } from '../ogrenme/denemeTuru';
 import { bolumKur, netBicimle, yuvarla2, type BolumHatasi } from '../ogrenme/net';
 import { Dugme } from '../ui/Dugme';
 import { BosDurum, HataDurumu, Yukleniyor } from '../ui/Durumlar';
@@ -17,7 +18,13 @@ import { MetinGirdisi } from '../ui/MetinGirdisi';
 import { Secici } from '../ui/Secici';
 import { useAktif, useServisler } from '../uygulama/baglam';
 import { hataMesaji } from '../uygulama/hatalar';
-import { denemeleriTazele, useDenemeKurallari, useOgrenciDenemeAyari } from '../uygulama/ogrenme';
+import {
+  denemeleriTazele,
+  useDenemeKurallari,
+  useDenemeler,
+  useDenemelerim,
+  useOgrenciDenemeAyari,
+} from '../uygulama/ogrenme';
 import { useSaatDilimi } from '../uygulama/operasyon';
 
 interface BolumMetinleri {
@@ -130,6 +137,10 @@ export function DenemeGirisFormu({
   const { tz } = useSaatDilimi();
   const kurallar = useDenemeKurallari();
   const ayar = useOgrenciDenemeAyari();
+  // Varsayilan tur: kisinin son girdigi tur (ogrenci kendi, ogretmen sectigi ogrencinin gecmisi).
+  const ogrenciGecmisi = useDenemelerim(ogrenciMi);
+  const secilenGecmis = useDenemeler({ ogrenciId: ogrenciId ?? '' }, !ogrenciMi && !!ogrenciId);
+  const gecmis = (ogrenciMi ? ogrenciGecmisi.data : secilenGecmis.data) ?? [];
 
   const [kuralKodu, setKuralKodu] = useState<string | null>(null);
   const [ad, setAd] = useState('');
@@ -141,7 +152,9 @@ export function DenemeGirisFormu({
   const [bitti, setBitti] = useState<null | 'onay' | 'kaydedildi'>(null);
 
   const kural =
-    kurallar.data?.find((k) => k.kod === (kuralKodu ?? kurallar.data[0]?.kod)) ?? undefined;
+    kurallar.data?.find(
+      (k) => k.kod === (kuralKodu ?? varsayilanKuralKodu(kurallar.data, gecmis)),
+    ) ?? undefined;
   const bos: BolumMetinleri = { dogru: '', yanlis: '', bos: '' };
 
   const olustur = useMutation({
@@ -158,7 +171,13 @@ export function DenemeGirisFormu({
     },
   });
 
-  if (kurallar.isPending || (ogrenciMi && ayar.isPending)) {
+  // Gecmis yuklenmeden form acilmaz: varsayilan tur sonradan degisip girilen sayilari bozmasin.
+  if (
+    kurallar.isPending ||
+    (ogrenciMi && ayar.isPending) ||
+    ogrenciGecmisi.isLoading ||
+    secilenGecmis.isLoading
+  ) {
     return (
       <Ekran kenarlar={['left', 'right', 'bottom']}>
         <Yukleniyor />

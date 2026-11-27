@@ -409,6 +409,27 @@ describe('ogrenci deneme', () => {
     expect(metinler(r)).toContain('Onaya gönderildi');
   });
 
+  it('varsayilan tur: gecmisi olan ogrencide son girdigi tur (TYT), olmayanda sartname sirasi (LGS)', async () => {
+    const o = await ogrenciOrtami();
+    const gecmis = await o.adaptorler.ogrenme.denemelerim();
+    const son = [...gecmis].sort((a, b) => b.sinavTarihi.localeCompare(a.sinavTarihi))[0]!;
+    expect(son.kuralKodu).toBe('tyt'); // katalogdaki ilk (lgs) degil
+    const olustur = jest.spyOn(o.adaptorler.ogrenme, 'denemeOlustur');
+    const r = await ac(o, <DenemeGirisFormu />);
+    await yaz(r, 'Deneme adı', 'Varsayılan tür');
+    await dokun(r, 'Kaydet');
+    expect(olustur.mock.calls[0]![0].kuralKodu).toBe(son.kuralKodu);
+
+    // Gecmisi bos ogrenci: katalog sirasi degil sartname sirasi (mock katalogu lgs, tyt).
+    const o2 = await ogrenciOrtami();
+    jest.spyOn(o2.adaptorler.ogrenme, 'denemelerim').mockResolvedValue([]);
+    const olustur2 = jest.spyOn(o2.adaptorler.ogrenme, 'denemeOlustur');
+    const r2 = await ac(o2, <DenemeGirisFormu />);
+    await yaz(r2, 'Deneme adı', 'Boş geçmiş');
+    await dokun(r2, 'Kaydet');
+    expect(olustur2.mock.calls[0]![0].kuralKodu).toBe('lgs');
+  });
+
   it('ayni deneme tekrar girilirse deneme_zaten_var mesaji', async () => {
     const o = await ogrenciOrtami();
     const r = await ac(o, <DenemeGirisFormu />);
