@@ -586,6 +586,19 @@ function kurumdaIsle(kurumId: string, kalan: string[], istek: Istek): Yanit {
     return bulunamadi();
   }
 
+  if (kaynak === 'kademeler' && !id && istek.yontem === 'GET') {
+    return {
+      durum: 200,
+      govde: {
+        kademeler: [5, 6, 7, 8, 9, 10, 11, 12].map((seviye) => ({
+          id: `00000000-0000-4000-8000-0000000000${String(seviye).padStart(2, '0')}`,
+          ad: `${String(seviye)}. Sınıf`,
+          seviye,
+          sira: seviye * 10,
+        })),
+      },
+    };
+  }
   if (kaynak !== 'gruplar') return bulunamadi();
 
   // --- gruplar ---
@@ -895,12 +908,37 @@ function kvkkMock(parcalar: string[], istek: Istek, d: Depo): Yanit {
   return bulunamadi();
 }
 
+/** `ortak.bransler` tohumu (migrations/0001_temel.sql). */
+const MOCK_BRANSLER = [
+  ['matematik', 'Matematik', 10],
+  ['geometri', 'Geometri', 11],
+  ['fizik', 'Fizik', 20],
+  ['kimya', 'Kimya', 21],
+  ['biyoloji', 'Biyoloji', 22],
+  ['fen_bilimleri', 'Fen Bilimleri', 23],
+  ['turkce', 'Türkçe', 30],
+  ['edebiyat', 'Edebiyat', 31],
+  ['tarih', 'Tarih', 40],
+  ['inkilap_tarihi', 'İnkılap Tarihi', 41],
+  ['cografya', 'Coğrafya', 42],
+  ['sosyal_bilgiler', 'Sosyal Bilgiler', 43],
+  ['felsefe', 'Felsefe', 44],
+  ['din_kulturu', 'Din Kültürü', 45],
+  ['ingilizce', 'İngilizce', 50],
+  ['almanca', 'Almanca', 51],
+  ['diger', 'Diğer', 999],
+].map(([kod, ad, sira]) => ({ kod, ad, sira }));
+
 function kiracisiz(parcalar: string[], istek: Istek): Yanit {
   const d = depo();
   const { yontem } = istek;
   const g = govdeNesnesi(istek.govde);
 
   if (parcalar[0] === 'ben') return kvkkMock(parcalar, istek, d);
+
+  if (parcalar[0] === 'bransler' && yontem === 'GET') {
+    return { durum: 200, govde: { bransler: MOCK_BRANSLER } };
+  }
 
   if (parcalar[0] === 'oturumlar') {
     if (yontem === 'GET' && parcalar.length === 1) {

@@ -49,6 +49,8 @@ describe.skipIf(dbYok())('guvenlik: api rota envanteri (korumasiz rota birakmaz)
     'GET /v1/hesap/rizalar/guncel',
     'POST /v1/hesap/rizalar',
     'GET /v1/hesap/uyeliklerim',
+    // Global referans listesi (ortak.bransler): kiracısız, kişisel veri yok, yalnız okuma.
+    'GET /v1/hesap/bransler',
     'POST /v1/hesap/kurumlar',
     'POST /v1/hesap/davetler/kabul',
     'GET /v1/hesap/oturumlar',

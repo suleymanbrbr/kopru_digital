@@ -2,12 +2,12 @@
 
 import { t } from '@kopru/i18n';
 
+import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { KonuSecici } from '@/components/ogrenme/konu-secici';
 import { Alan } from '@/components/operasyon/ortak';
 import { Dugme } from '@/components/ui/button';
 import { Girdi } from '@/components/ui/input';
 import { Secim } from '@/components/ui/secim';
-import { siraliBransler } from '@/lib/bransler';
 import type { KaynakSuzgeci } from '@/lib/kayit/veri';
 import type { GrupSecenegi } from '@/lib/operasyon-verisi';
 
@@ -79,11 +79,7 @@ export function KayitSuzgecleri({
             }}
           >
             <option value="">{t('kayitGeriBildirim.suzgec.tumu')}</option>
-            {siraliBransler().map((b) => (
-              <option key={b.kod} value={b.kod}>
-                {b.ad}
-              </option>
-            ))}
+            <BransSecenekleri />
           </Secim>
         )}
       </Alan>

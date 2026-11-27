@@ -1,5 +1,6 @@
 import {
   BenYanitSema,
+  BransListeYanitSema,
   GuncelRizaYanitSema,
   KurumGuncelleGirdiSema,
   KurumOlusturGirdiSema,
@@ -33,6 +34,7 @@ import { z } from 'zod';
 
 import {
   atamalar,
+  bransler,
   grupUyeleri,
   kademeler,
   kullanicilar,
@@ -152,6 +154,27 @@ export const hesapYollari: ServicePlugin = (app) => {
       },
     },
     async (request) => ({ uyelikler: await uyelikleriGetir(db, auth(request).kullaniciId) }),
+  );
+
+  app.get(
+    '/bransler',
+    {
+      schema: {
+        tags: ['hesap'],
+        summary:
+          'Aktif branslar (global referans listesi, `sira` ve `ad` sirasiyla). Kisisel veri icermez.',
+        response: { 200: BransListeYanitSema },
+      },
+    },
+    async (request) => {
+      auth(request);
+      const satirlar = await db.orm
+        .select({ kod: bransler.kod, ad: bransler.ad, sira: bransler.sira })
+        .from(bransler)
+        .where(eq(bransler.aktif, true))
+        .orderBy(asc(bransler.sira), asc(bransler.kod));
+      return { bransler: satirlar };
+    },
   );
 
   // --- Kurum olusturma (onboarding) -----------------------------------------------------------

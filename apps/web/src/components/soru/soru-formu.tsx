@@ -21,7 +21,7 @@ import { Secim } from '@/components/ui/secim';
 import { Uyari } from '@/components/ui/uyari';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
-import { siraliBransler } from '@/lib/bransler';
+import { useBransler } from '@/lib/bransler-sorgu';
 import { ogrenmeIstek } from '@/lib/hesap-istek';
 import { kotaHatasi, sonSecimiOku, sonSecimiYaz, sureMetni } from '@/lib/soru/soru';
 import { useSoruKotam, useSoruYenile } from '@/lib/soru/veri';
@@ -44,7 +44,7 @@ export function SoruFormu({ sorularimaGit }: { sorularimaGit?: () => void }) {
   const [gonderilen, setGonderilen] = useState<Gonderilen | null>(null);
   /** Ayni istek yeniden denendiginde ayni kayit doner (soru cogalmaz); basarida yenilenir. */
   const istekId = useRef(crypto.randomUUID());
-  const bransSecenekleri = siraliBransler();
+  const bransSecenekleri = useBransler();
 
   const gonder = useMutation({
     mutationFn: () =>
