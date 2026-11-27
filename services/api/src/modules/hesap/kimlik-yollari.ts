@@ -78,18 +78,31 @@ export const kimlikYollari: ServicePlugin = (app) => {
           .where(and(kosul, gt(otpIstekleri.created_at, sinir)));
         return Number(satir?.n ?? 0);
       };
-      if ((await sayi(eq(otpIstekleri.tanimlayici, telefon))) >= TELEFON_SAATLIK) {
+      /** Penceredeki en eski istek dusunce bir hak acilir; istemci bu sureyi gosterebilir. */
+      const beklemeSn = async (kosul: SQL | undefined): Promise<number> => {
+        const [satir] = await tx
+          .select({ en_eski: sql<Date | null>`min(${otpIstekleri.created_at})` })
+          .from(otpIstekleri)
+          .where(and(kosul, gt(otpIstekleri.created_at, sinir)));
+        const enEski = satir?.en_eski ? new Date(satir.en_eski).getTime() : Date.now();
+        return Math.max(1, Math.ceil((enEski + SAAT_MS - Date.now()) / 1000));
+      };
+      const telefonKosulu = eq(otpIstekleri.tanimlayici, telefon);
+      if ((await sayi(telefonKosulu)) >= TELEFON_SAATLIK) {
         throw new AppError(
           429,
           errorCodes.rateLimited,
           'Bu numara için çok fazla kod istendi. Bir saat sonra tekrar deneyin.',
+          { retry_after_sn: await beklemeSn(telefonKosulu) },
         );
       }
-      if ((await sayi(sql`${otpIstekleri.ip} = ${ip}::inet`)) >= IP_SAATLIK) {
+      const ipKosulu = sql`${otpIstekleri.ip} = ${ip}::inet`;
+      if ((await sayi(ipKosulu)) >= IP_SAATLIK) {
         throw new AppError(
           429,
           errorCodes.rateLimited,
           'Çok fazla kod istediniz. Bir saat sonra tekrar deneyin.',
+          { retry_after_sn: await beklemeSn(ipKosulu) },
         );
       }
       await tx.insert(otpIstekleri).values({ id: uuidv7(), tanimlayici: telefon, ip });

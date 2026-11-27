@@ -180,6 +180,7 @@ function baglanmamisAdaptorler(): Adaptorler {
       katilimKodu: hata,
       katilimKoduYenile: hata,
       davetKabul: hata,
+      adGuncelle: hata,
       oturumlar: hata,
       oturumSonlandir: hata,
       oturumlariKapat: hata,

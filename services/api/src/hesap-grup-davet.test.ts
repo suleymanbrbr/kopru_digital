@@ -216,6 +216,47 @@ describe.skipIf(dbYok())('hesap: gruplar, atamalar, davetler', () => {
       expect(konular.filter((s) => s === 'evt.hesap.grup_uyesi.degisti.v1')).toHaveLength(3);
     });
 
+    it('kademe listesi: kurumun kademeleri sirali; baska kurum goremez', async () => {
+      const k = await kurumluKullanici(t);
+      const baska = await kurumluKullanici(t, 'kurum', 'Baska Kurum');
+      const ogr = await ekle(k, 'ogrenci');
+      const hoca = await ekle(k, 'ogretmen');
+      const liste = await app.inject({ url: api(k, '/kademeler'), headers: bearer(k.token) });
+      expect(liste.statusCode).toBe(200);
+      const { kademeler } = liste.json<{
+        kademeler: { id: string; ad: string; seviye: number | null; sira: number }[];
+      }>();
+      expect(kademeler.map((x) => x.ad)).toContain('5. Sınıf');
+      expect(kademeler.length).toBeGreaterThanOrEqual(8);
+      expect(kademeler.map((x) => x.sira)).toEqual(
+        [...kademeler.map((x) => x.sira)].sort((a, b) => a - b),
+      );
+      // Ogretmen de okuyabilir (grup.oku); baska kurumun belirteci A'nin kurumunu goremez.
+      expect(
+        (await app.inject({ url: api(k, '/kademeler'), headers: bearer(hoca.token ?? '') }))
+          .statusCode,
+      ).toBe(200);
+      const yabanci = await app.inject({ url: api(k, '/kademeler'), headers: bearer(baska.token) });
+      expect(yabanci.statusCode).toBeGreaterThanOrEqual(403);
+      expect(yabanci.statusCode).toBeLessThan(500);
+      // Belirtecsiz istek 401.
+      expect((await app.inject({ url: api(k, '/kademeler') })).statusCode).toBe(401);
+      // Ogrenci de (grup.oku) kendi kurumunun kademe adlarini gorur; baska kurumunkini gormez.
+      expect(
+        (await app.inject({ url: api(k, '/kademeler'), headers: bearer(ogr.token ?? '') }))
+          .statusCode,
+      ).toBe(200);
+      // Kurumlar birbirinin kademesini icermez.
+      const digeri = await app.inject({
+        url: api(baska, '/kademeler'),
+        headers: bearer(baska.token),
+      });
+      const idler = new Set(
+        digeri.json<{ kademeler: { id: string }[] }>().kademeler.map((x) => x.id),
+      );
+      expect(kademeler.some((x) => idler.has(x.id))).toBe(false);
+    });
+
     it('yetkisiz roller: ogrenci grup acamaz, ogretmen grup acamaz', async () => {
       const k = await kurumluKullanici(t);
       const ogr = await ekle(k, 'ogrenci');

@@ -236,6 +236,13 @@ export function oturumYoneticisiOlustur({
       if (d.asama !== 'giris') return;
       depo.ayarla({ kullanici: bilgi.kullanici, uyelikler: bilgi.uyelikler.filter(mobilUyelikMi) });
     },
+    /** Kendi gorunen adini kaydeder; durumdaki kullanici adini gunceller. */
+    async adGuncelle(ad: string) {
+      const yeni = await adaptorler.hesap.adGuncelle(ad);
+      const d = depo.al();
+      if (d.asama !== 'giris') return;
+      depo.ayarla({ kullanici: { ...d.kullanici, adSoyad: yeni } });
+    },
     /**
      * Sunucu bu cihazin oturumunu zaten kapatti (Oturumlarim'dan sonlandirma); adaptor yerel
      * belirteci sildi. Yalnizca yerel durumu ve onbellegi sifirlar, sunucuya cikis istegi atmaz.

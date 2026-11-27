@@ -44,6 +44,11 @@ export function errorHandler(
   reply: FastifyReply,
 ) {
   if (error instanceof AppError) {
+    // 429 + `details.retry_after_sn`: standart `Retry-After` basligi (istemci bekleme gosterebilir).
+    const bekle = (error.details as { retry_after_sn?: unknown } | undefined)?.retry_after_sn;
+    if (error.statusCode === 429 && typeof bekle === 'number' && bekle > 0) {
+      void reply.header('retry-after', String(Math.ceil(bekle)));
+    }
     return reply
       .status(error.statusCode)
       .send(body(request, error.code, error.message, error.details));

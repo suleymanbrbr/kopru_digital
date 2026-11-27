@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useEffect, useId, useState } from 'react';
 
 import { BosDurum } from '@/components/bos-durum';
+import { BransSecenekleri } from '@/components/brans-secenekleri';
 import { HataDurumu } from '@/components/hata-durumu';
 import { DahaFazla, ListeIskeleti, zamanYaz } from '@/components/hesap/ortak';
 import { KonuSecici } from '@/components/ogrenme/konu-secici';
@@ -17,7 +18,7 @@ import { Rozet } from '@/components/ui/rozet';
 import { Secim } from '@/components/ui/secim';
 import { useKurum } from '@/kurum/baglam';
 import { hataMesaji } from '@/lib/api';
-import { bransAdi, siraliBransler } from '@/lib/bransler';
+import { bransAdi } from '@/lib/bransler';
 import { useOgrenciler } from '@/lib/ogrenme/veri';
 import { useOgretmenler } from '@/lib/operasyon-verisi';
 import { DURUM_TONU, SORU_DURUMLARI, bekliyorMu, goreliZaman, soruBasligi } from '@/lib/soru/soru';
@@ -155,11 +156,7 @@ export function SoruArsivi({
                 }}
               >
                 <option value="">{t('ogrenme.ortak.tumu')}</option>
-                {siraliBransler().map((b) => (
-                  <option key={b.kod} value={b.kod}>
-                    {b.ad}
-                  </option>
-                ))}
+                <BransSecenekleri />
               </Secim>
             )}
           </Alan>

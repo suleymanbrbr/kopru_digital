@@ -202,6 +202,18 @@ describe.skipIf(dbYok())('hesap: KVKK, kurum, uyelik, modul, izin, outbox', () =
       expect(gecis.govde.rol).toBe('ogretmen');
     });
 
+    it('bransler: kimlik ister, aktif branslari sira ile doner', async () => {
+      expect((await app.inject({ url: '/v1/hesap/bransler' })).statusCode).toBe(401);
+      const k = await kurumluKullanici(t, 'kurum', 'Brans Kurumu');
+      const res = await app.inject({ url: '/v1/hesap/bransler', headers: bearer(k.token) });
+      expect(res.statusCode).toBe(200);
+      const liste = res.json<{ bransler: { kod: string; ad: string; sira: number }[] }>().bransler;
+      expect(liste.length).toBeGreaterThanOrEqual(17);
+      expect(liste[0]).toEqual({ kod: 'matematik', ad: 'Matematik', sira: 10 });
+      expect(liste.at(-1)?.kod).toBe('diger');
+      expect(liste.map((b) => b.sira)).toEqual([...liste.map((b) => b.sira)].sort((a, b) => a - b));
+    });
+
     it('uyeliklerim ve kurum bilgisi; PATCH logo/vurgu rengi; gecersiz renk 400; ogrenci PATCH yapamaz', async () => {
       const k = await kurumluKullanici(t, 'kurum', 'Boyalı Kurum');
       const benim = (

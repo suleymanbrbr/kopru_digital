@@ -2,7 +2,7 @@ import { t } from '@kopru/i18n';
 
 /** Odev ekranlarinin saf yardimcilari: form dogrulama, durum etiketleri, teslim sayilari. */
 
-export type OdevHedefTuru = 'ogrenci' | 'grup' | 'kurum';
+export type OdevHedefTuru = 'ogrenci' | 'grup' | 'kademe' | 'kurum';
 
 export interface OdevFormDegeri {
   hedefTuru: OdevHedefTuru;

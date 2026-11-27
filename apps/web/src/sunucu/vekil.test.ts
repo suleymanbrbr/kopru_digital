@@ -74,6 +74,9 @@ describe('izinli yollar', () => {
   });
 
   it('hesap: kurum bilgisi yalniz GET ile okunur', () => {
+    expect(hesapYolIzinliMi(['bransler'], 'GET')).toBe(true);
+    expect(hesapYolIzinliMi(['ben'], 'PATCH')).toBe(true);
+    expect(hesapYolIzinliMi(['ben', 'baska'], 'PATCH')).toBe(false);
     expect(hesapYolIzinliMi(['kurumlar', K], 'GET')).toBe(true);
     expect(hesapYolIzinliMi(['kurumlar', K], 'PATCH')).toBe(false);
     expect(hesapYolIzinliMi(['kurumlar', K, 'gruplar'], 'POST')).toBe(true);

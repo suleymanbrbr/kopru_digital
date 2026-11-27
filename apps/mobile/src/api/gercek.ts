@@ -140,7 +140,8 @@ interface ApiUyelik {
  * 401 -> yetkisiz, 402 -> abonelik_gerekli | plan_limiti (detay: limit, mevcut, ust_sinir),
  * 403 kurum_askida, 409 abonelik_baska_kanalda, 403 -> riza_gerekli | modul_kapali | izin_yok,
  * 410 -> kod_gecersiz | davet_gecersiz, 409 -> zaten_uye | cakisma, 429 -> cok_istek.
- * OTP adaptorleri 429'u `otp_cok_deneme`ye cevirir.
+ * OTP adaptorleri 429'u `otp_cok_deneme`ye (dogrulama) ya da `otp_gonderim_siniri`na (kod
+ * gonderme; kalan sure `Retry-After` / `details.retry_after_sn`) cevirir.
  */
 export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
   const kod = hataGovdesiMi(govde) ? govde.error.code : undefined;
@@ -179,6 +180,15 @@ export function apiHatasiOlustur(durum: number, govde: unknown): ApiHata {
   return new ApiHata('dogrulama', mesaj, sec);
 }
 
+/** 429 yanitinda `Retry-After` basligindan ya da `details.retry_after_sn`den kalan saniye. */
+export function beklemeSnOku(yanit: Response, govde: unknown): number | null {
+  const baslik = Number(yanit.headers.get('Retry-After'));
+  if (Number.isFinite(baslik) && baslik > 0) return Math.ceil(baslik);
+  const detay = hataGovdesiMi(govde) ? govde.error.details : undefined;
+  const sn = (detay as { retry_after_sn?: unknown } | undefined)?.retry_after_sn;
+  return typeof sn === 'number' && sn > 0 ? Math.ceil(sn) : null;
+}
+
 function mobilRolMu(rol: Rol): rol is MobilRol {
   return rol !== 'veli';
 }
@@ -206,6 +216,10 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
   /** Ag/zaman asimi hatalarini `ApiHata`ya cevirir. Yanit durumu burada yorumlanmaz. */
   const aglaFetch: typeof globalThis.fetch = async (girdi, init) => {
     const dene = sec.fetch ?? globalThis.fetch;
+    // Oturumlarim'da okunur cihaz adi icin (api `cihaz-adi.ts`): `Kopru-Mobil/1 (ios)`.
+    if (girdi instanceof Request && kaynak !== 'web' && !girdi.headers.has('User-Agent')) {
+      girdi.headers.set('User-Agent', `Kopru-Mobil/1 (${kaynak})`);
+    }
     const kontrol = new AbortController();
     const zd = { doldu: false };
     const zamanlayici = setTimeout(() => {
@@ -309,13 +323,28 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     return sonuc.data;
   }
 
-  /** OTP uclarinda 429 "cok deneme" olarak bilinir. */
+  /** OTP dogrulama uclarinda 429 "cok deneme" olarak bilinir. */
   function otpAl<T>(sonuc: { data?: T; error?: unknown; response: Response }): T {
     try {
       return veriAl(sonuc);
     } catch (e) {
       if (e instanceof ApiHata && e.kod === 'cok_istek') {
         throw new ApiHata('otp_cok_deneme', e.message, { durum: e.durum ?? 429 });
+      }
+      throw e;
+    }
+  }
+
+  /** Kod gonderme uclarinda 429 gonderim siniridir; kalan bekleme suresi varsa tasinir. */
+  function otpGonderAl<T>(sonuc: { data?: T; error?: unknown; response: Response }): T {
+    try {
+      return veriAl(sonuc);
+    } catch (e) {
+      if (e instanceof ApiHata && e.kod === 'cok_istek') {
+        throw new ApiHata('otp_gonderim_siniri', e.message, {
+          durum: e.durum ?? 429,
+          detay: { beklemeSn: beklemeSnOku(sonuc.response, sonuc.error) },
+        });
       }
       throw e;
     }
@@ -374,7 +403,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
     abonelik,
     auth: {
       async otpIste(telefon) {
-        otpAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));
+        otpGonderAl(await ham.POST('/auth/otp/gonder', { body: { telefon } }));
         // Api yeniden gonderme bekleme suresi dondurmez; istemci tarafi sabit bekleme.
         return { yenidenGondermeSn: 30 };
       },
@@ -604,6 +633,11 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         return { kurumId: d.kurum_id, uyelikId: d.uyelik_id, rol: d.rol };
       },
 
+      async adGuncelle(ad) {
+        const d = veriAl(await yetkili.PATCH('/v1/hesap/ben', { body: { gorunen_ad: ad } }));
+        return d.gorunen_ad ?? ad;
+      },
+
       async oturumlar() {
         const d = veriAl(await yetkili.GET('/v1/hesap/oturumlar'));
         return d.oturumlar.map((o): OturumKaydi => ({
@@ -649,7 +683,7 @@ export function gercekAdaptorler(sec: GercekAdaptorSecenekleri): Adaptorler {
         } satisfies SilmeDurumu;
       },
       async silmeKoduGonder() {
-        const d = otpAl(await yetkili.POST('/v1/hesap/ben/silme-talebi/kod-gonder', {}));
+        const d = otpGonderAl(await yetkili.POST('/v1/hesap/ben/silme-talebi/kod-gonder', {}));
         return { gecerlilikSn: d.gecerlilik_sn };
       },
       async silmeTalebiAc(dogrulama) {
