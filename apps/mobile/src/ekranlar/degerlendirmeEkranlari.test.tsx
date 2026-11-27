@@ -628,6 +628,34 @@ describe('Oneriden "Soru cozdum" (on doldurma ve Basladi dongusu)', () => {
     expect(metinler(rk)).not.toContain('Henüz başlamadı');
   });
 
+  it('gonderim tamamlaninca acik Ogretmenim listesi "Basladi"ya guncellenir', async () => {
+    const o = await ogrenciOrtami();
+    const r = await ac(o, <OgretmenimEkrani />);
+    const test3 = (await o.adaptorler.degerlendirme.kaynakOnerilerim()).find(
+      (x) => x.kaynakTestId === 'kitap-esen-t3',
+    )!;
+    expect(bul(r, `oneri-durum-${test3.id}`).props.accessibilityLabel).toBe('Henüz başlamadı');
+    await o.gonderim.baslat({
+      tur: 'gunluk_soru',
+      baslik: 'Kareköklü Sayılar',
+      govde: {
+        tur: 'gunluk_soru',
+        gun: bugun(),
+        bransKodu: 'matematik',
+        konuId: 'konu-m-koklu',
+        zorluk: 'orta',
+        kaynakTestId: 'kitap-esen-t3',
+        dogru: 4,
+        yanlis: 1,
+        bos: 0,
+        fotograflar: [],
+      },
+      dosyalar: {},
+    });
+    await bekle(80);
+    expect(bul(r, `oneri-durum-${test3.id}`).props.accessibilityLabel).toContain('Başladı');
+  });
+
   it('yalniz kitap onerildiyse kitap secili ve test listesi acik gelir', async () => {
     const o = await ogrenciOrtami();
     const r = await ac(

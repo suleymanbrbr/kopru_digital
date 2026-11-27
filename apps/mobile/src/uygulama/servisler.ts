@@ -311,6 +311,8 @@ export function servisleriKur(): Servisler {
         void queryClient.invalidateQueries({ queryKey: ['gunluk'] });
         // Plan gorevine bagli kayit gorevin gerceklesenini de degistirir.
         void queryClient.invalidateQueries({ queryKey: ['plan'] });
+        // Onerilen kaynak kullanildiysa "Basladi" durumu degisir.
+        void queryClient.invalidateQueries({ queryKey: ['degerlendirme'] });
       } else {
         void queryClient.invalidateQueries({ queryKey: ['soru'] });
       }

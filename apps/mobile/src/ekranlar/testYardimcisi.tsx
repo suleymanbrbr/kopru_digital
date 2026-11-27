@@ -133,6 +133,9 @@ export function ortamKur(): Ortam {
       void queryClient.invalidateQueries({
         queryKey: [g.tur === 'gunluk_soru' ? 'gunluk' : 'soru'],
       });
+      if (g.tur === 'gunluk_soru') {
+        void queryClient.invalidateQueries({ queryKey: ['degerlendirme'] });
+      }
     },
   });
   const queryClient = new QueryClient({
