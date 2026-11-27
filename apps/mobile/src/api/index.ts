@@ -66,6 +66,7 @@ function baglanmamisAdaptorler(): Adaptorler {
       ogrenciDenemeGirisi: hata,
       denemelerim: hata,
       denemeOlustur: hata,
+      denemeGuncelle: hata,
       denemeler: hata,
       denemeOnayla: hata,
       denemeReddet: hata,

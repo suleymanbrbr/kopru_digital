@@ -236,6 +236,7 @@ interface ApiDeneme {
   kaynak: 'ogrenci' | 'ogretmen';
   onay_durumu: Deneme['onayDurumu'];
   red_nedeni: string | null;
+  surum: number;
   bolumler: {
     bolum_kodu: string;
     brans_kodu: string;
@@ -261,6 +262,7 @@ function denemeCevir(d: ApiDeneme): Deneme {
     kaynak: d.kaynak,
     onayDurumu: d.onay_durumu,
     redNedeni: d.red_nedeni,
+    surum: d.surum,
     bolumler: d.bolumler.map((b) => ({
       bolumKodu: b.bolum_kodu,
       bransKodu: b.brans_kodu,
@@ -652,6 +654,31 @@ export function ogrenmeAdaptoru(b: OperasyonBagimliligi): OgrenmeAdapter {
               yanlis: x.yanlis,
               ...(x.bos !== undefined ? { bos: x.bos } : {}),
             })),
+          },
+        }),
+      );
+      return denemeCevir(d);
+    },
+
+    async denemeGuncelle(id, g) {
+      const d = veriAl(
+        await yetkili.PATCH('/v1/ogrenme/kurumlar/{kurum_id}/denemeler/{id}', {
+          params: { path: { kurum_id: b.etkinKurum(), id } },
+          body: {
+            surum: g.surum,
+            ...(g.ad !== undefined ? { ad: g.ad } : {}),
+            ...(g.yayinevi !== undefined ? { yayinevi: g.yayinevi } : {}),
+            ...(g.sinavTarihi !== undefined ? { sinav_tarihi: g.sinavTarihi } : {}),
+            ...(g.bolumler
+              ? {
+                  bolumler: g.bolumler.map((x) => ({
+                    bolum_kodu: x.bolumKodu,
+                    dogru: x.dogru,
+                    yanlis: x.yanlis,
+                    ...(x.bos !== undefined ? { bos: x.bos } : {}),
+                  })),
+                }
+              : {}),
           },
         }),
       );

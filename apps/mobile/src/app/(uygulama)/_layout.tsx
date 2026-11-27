@@ -85,6 +85,10 @@ export default function UygulamaDuzeni() {
           options={{ title: t('mobil.ogrenme.deneme.girisBaslik') }}
         />
         <Stack.Screen
+          name="deneme-duzelt"
+          options={{ title: t('mobil.ogrenme.deneme.duzeltBaslik') }}
+        />
+        <Stack.Screen
           name="deneme-onay"
           options={{ title: t('mobil.ogrenme.deneme.onayKuyrugu') }}
         />

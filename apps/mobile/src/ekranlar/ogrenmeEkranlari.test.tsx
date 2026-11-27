@@ -17,6 +17,7 @@ import { ApiHata } from '../api/tipler';
 import { bugunTarihi } from '../lib/saat';
 import { haftaKaydir } from '../ogrenme/hafta';
 import { BasarisizIsler } from './BasarisizIsler';
+import { DenemeDuzeltEkrani } from './DenemeDuzeltEkrani';
 import { DenemeGirisFormu } from './DenemeGirisFormu';
 import { DenemeOnayKuyrugu } from './DenemeOnayKuyrugu';
 import { KonuSecici, KONU_SECIMI_BOS, type KonuSecimi } from './KonuSecici';
@@ -428,6 +429,51 @@ describe('ogrenci deneme', () => {
     await yaz(r2, 'Deneme adı', 'Boş geçmiş');
     await dokun(r2, 'Kaydet');
     expect(olustur2.mock.calls[0]![0].kuralKodu).toBe('lgs');
+  });
+
+  it('reddedilen deneme: Duzelt butonu duzeltme ekranina gider; duzeltilince yeniden onaya duser', async () => {
+    const o = await ogrenciOrtami();
+    const liste = await o.adaptorler.ogrenme.denemelerim();
+    const red = liste.find((d) => d.onayDurumu === 'reddedildi')!;
+    const r0 = await ac(o, <OgrenciDenemeler />);
+    expect(var_(r0, `deneme-duzelt-${red.id}`)).toBe(true);
+    // Onay bekleyen ve onayli denemede Duzelt yok.
+    const bekleyen = liste.find((d) => d.onayDurumu === 'bekliyor')!;
+    expect(var_(r0, `deneme-duzelt-${bekleyen.id}`)).toBe(false);
+    await testIDDokun(r0, `deneme-duzelt-${red.id}`);
+    expect(mockYonlendirici.push).toHaveBeenCalledWith({
+      pathname: '/deneme-duzelt',
+      params: { id: red.id },
+    });
+
+    const guncelle = jest.spyOn(o.adaptorler.ogrenme, 'denemeGuncelle');
+    const r = await ac(o, <DenemeDuzeltEkrani denemeId={red.id} />);
+    expect(metinler(r)).toContain('Sonucu düzelt');
+    expect(var_(r, 'duzelt-tur')).toBe(true);
+    await yaz(r, 'Deneme adı', 'Düzeltilmiş giriş');
+    await yaz(r, 'Temel matematik: Doğru', '30');
+    await dokun(r, 'Düzelt ve yeniden gönder');
+    expect(guncelle).toHaveBeenCalledTimes(1);
+    expect(guncelle.mock.calls[0]![0]).toBe(red.id);
+    expect(guncelle.mock.calls[0]![1]).toMatchObject({ surum: red.surum, ad: 'Düzeltilmiş giriş' });
+    expect(metinler(r)).toContain('Onaya gönderildi');
+    const son = (await o.adaptorler.ogrenme.denemelerim()).find((d) => d.id === red.id)!;
+    expect(son).toMatchObject({ onayDurumu: 'bekliyor', redNedeni: null, ad: 'Düzeltilmiş giriş' });
+    expect(son.surum).toBe(red.surum + 1);
+  });
+
+  it('onayli ya da olmayan deneme duzeltme ekraninda acilmaz; surum cakismasi mesaj verir', async () => {
+    const o = await ogrenciOrtami();
+    const liste = await o.adaptorler.ogrenme.denemelerim();
+    const onayli = liste.find((d) => d.onayDurumu === 'onaylandi')!;
+    const r = await ac(o, <DenemeDuzeltEkrani denemeId={onayli.id} />);
+    expect(metinler(r)).toContain('düzeltilemiyor');
+    const r2 = await ac(o, <DenemeDuzeltEkrani denemeId="yok" />);
+    expect(metinler(r2)).toContain('düzeltilemiyor');
+    const red = liste.find((d) => d.onayDurumu === 'reddedildi')!;
+    await expect(
+      o.adaptorler.ogrenme.denemeGuncelle(red.id, { surum: red.surum + 5, ad: 'x' }),
+    ).rejects.toMatchObject({ kod: 'cakisma', ayrinti: 'surum_cakismasi' });
   });
 
   it('ayni deneme tekrar girilirse deneme_zaten_var mesaji', async () => {

@@ -236,6 +236,8 @@ export interface Deneme {
   onayDurumu: DenemeOnayDurumu;
   redNedeni: string | null;
   bolumler: DenemeBolumu[];
+  /** Iyimser kilit: duzeltmede aynen geri yollanir. */
+  surum: number;
 }
 
 export interface DenemeBolumGirdisi {
@@ -253,6 +255,15 @@ export interface DenemeGirdisi {
   yayinevi?: string;
   sinavTarihi: string;
   bolumler: DenemeBolumGirdisi[];
+}
+
+/** Ogrencinin onaylanmamis (ozellikle reddedilmis) sonucunu duzeltmesi; red edilen yeniden `bekliyor` olur. */
+export interface DenemeGuncelleGirdisi {
+  surum: number;
+  ad?: string;
+  yayinevi?: string | null;
+  sinavTarihi?: string;
+  bolumler?: DenemeBolumGirdisi[];
 }
 
 export interface DenemeGelisimNoktasi {
@@ -329,6 +340,8 @@ export interface OgrenmeAdapter {
   ogrenciDenemeGirisi: () => Promise<boolean>;
   denemelerim: () => Promise<Deneme[]>;
   denemeOlustur: (g: DenemeGirdisi) => Promise<Deneme>;
+  /** Ogrenci kendi onaylanmamis sonucunu duzeltir (409 `surum_cakismasi`, 409 `deneme_onay_durumu_gecersiz`). */
+  denemeGuncelle: (denemeId: string, g: DenemeGuncelleGirdisi) => Promise<Deneme>;
   /** Ogretmen: tek ogrenci ya da onay kuyrugu (`onay: 'bekliyor'`). */
   denemeler: (s: { onay?: DenemeOnayDurumu; ogrenciId?: string }) => Promise<Deneme[]>;
   denemeOnayla: (denemeId: string) => Promise<void>;

@@ -387,7 +387,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
   }
 
   // --- Deneme tohumu -------------------------------------------------------------------------
-  const denemeler: (Deneme & { surum: number })[] = [];
+  const denemeler: Deneme[] = [];
 
   function bolumHesapla(
     kural: DenemeKurali,
@@ -429,7 +429,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         return { bolumKodu: b.bolumKodu, dogru, yanlis };
       }),
     );
-    const d: Deneme & { surum: number } = {
+    const d: Deneme = {
       id: yeniId('deneme'),
       ogrenciId,
       ogrenciAd: OGRENCI_ADLARI[ogrenciId] ?? null,
@@ -773,7 +773,7 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         throw cakisma('deneme_zaten_var');
       }
       const bolumler = bolumHesapla(kural, g.bolumler);
-      const d: Deneme & { surum: number } = {
+      const d: Deneme = {
         id: yeniId('deneme'),
         ogrenciId,
         ogrenciAd: ogr ? null : (OGRENCI_ADLARI[ogrenciId] ?? null),
@@ -790,6 +790,35 @@ export function mockOgrenme(sec: MockOperasyonSecenekleri): OgrenmeAdapter {
         surum: 1,
       };
       denemeler.push(d);
+      return kopya(d);
+    },
+
+    async denemeGuncelle(denemeId, g) {
+      await gecik();
+      const ogr = ogrenciKimligi();
+      const d = denemeler.find((x) => x.id === denemeId);
+      if (!d || (ogr && (d.ogrenciId !== ogr || d.kaynak !== 'ogrenci'))) throw bulunamadi();
+      if (ogr && !ogrenciGirisiAcik()) {
+        throw new ApiHata('izin_yok', undefined, {
+          durum: 403,
+          ayrinti: 'ogrenci_deneme_girisi_kapali',
+        });
+      }
+      if (ogr && d.onayDurumu === 'onaylandi') throw cakisma('deneme_onay_durumu_gecersiz');
+      if (g.surum !== d.surum) throw cakisma('surum_cakismasi');
+      const kural = kuralBul(d.kuralKodu);
+      if (g.bolumler) {
+        d.bolumler = bolumHesapla(kural, g.bolumler);
+        d.toplamNet = yuvarla2(d.bolumler.reduce((t, b) => t + b.net, 0));
+      }
+      if (g.ad !== undefined) d.ad = g.ad;
+      if (g.yayinevi !== undefined) d.yayinevi = g.yayinevi;
+      if (g.sinavTarihi !== undefined) d.sinavTarihi = g.sinavTarihi;
+      if (ogr) {
+        d.onayDurumu = 'bekliyor';
+        d.redNedeni = null;
+      }
+      d.surum += 1;
       return kopya(d);
     },
 
