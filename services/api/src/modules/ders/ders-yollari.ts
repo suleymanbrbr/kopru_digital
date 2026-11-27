@@ -35,6 +35,8 @@ import {
   cakismaHatasi,
   cakismaKorumali,
   dersParam,
+  grupModuluAcikOlmali,
+  kapaliGruplar,
   kiraci,
   kurumParam,
   kurumSaatDilimi,
@@ -328,9 +330,18 @@ export const dersYollari: ServicePlugin = (app) => {
           tx,
           sayfa.map((d) => d.id),
         );
+        // Grubunda `takvim` modulu kapali olan dersler listeden duser (tekil okuma 403 verir).
+        const kapali = await kapaliGruplar(
+          tx,
+          y,
+          'takvim',
+          sayfa.map((d) => d.grup_id),
+        );
         const son = sayfa.at(-1);
         return {
-          dersler: sayfa.map((d) => dersYaniti(d, sayilar.get(d.id) ?? 0)),
+          dersler: sayfa
+            .filter((d) => !kapali.has(d.grup_id))
+            .map((d) => dersYaniti(d, sayilar.get(d.id) ?? 0)),
           sonraki_imlec: satirlar.length > limit && son ? imlecYaz(son) : null,
         };
       });
@@ -353,6 +364,7 @@ export const dersYollari: ServicePlugin = (app) => {
       const y = yetkiAl(request);
       return withTenant(db, kiraci(y), async (tx) => {
         const d = await dersBul(tx, y, request.params.id);
+        await grupModuluAcikOlmali(tx, y, 'takvim', d.grup_id);
         return dersDetayi(tx, y, d);
       });
     },

@@ -3,12 +3,11 @@
 import {
   GrupListeYanitSema,
   KademeListeYanitSema,
-  GrupUyeListeYanitSema,
   UyeListeYanitSema,
   type GrupTipi,
 } from '@kopru/contracts';
 import { t } from '@kopru/i18n';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { z } from 'zod';
 
@@ -55,7 +54,7 @@ export function useKademeler(kurumId: string, etkin = true) {
   return { liste, adlar, yukleniyor: q.isPending, hata: q.isError };
 }
 
-/** Aktif gruplar (en cok 200) ve birebir gruplarin ogrenci adlari; ders formunda ve takvimde etiket olur. */
+/** Aktif gruplar (en cok 200); birebir grubun ogrenci adi liste yanitiyla gelir (ayri sorgu yok). */
 export function useGruplar(kurumId: string, etkin = true) {
   const gruplar = useQuery({
     queryKey: ['hesap', kurumId, 'gruplar-tumu'],
@@ -67,35 +66,18 @@ export function useGruplar(kurumId: string, etkin = true) {
         sema: GrupListeYanitSema,
       }),
   });
-  const birebirler = useMemo(
-    () => gruplar.data?.gruplar.filter((g) => g.tur === 'birebir') ?? [],
-    [gruplar.data],
-  );
-  const uyeler = useQueries({
-    queries: birebirler.map((g) => ({
-      queryKey: ['hesap', kurumId, 'grup-uyeleri', g.id],
-      staleTime: 60_000,
-      queryFn: () =>
-        hesapIstek(`kurumlar/${kurumId}/gruplar/${g.id}/uyeler`, { sema: GrupUyeListeYanitSema }),
-    })),
-  });
-  const birebirAdlari = uyeler.map((u) => u.data?.uyeler[0]?.gorunen_ad ?? null).join('|');
   const secenekler = useMemo<GrupSecenegi[]>(() => {
-    const liste = (gruplar.data?.gruplar ?? []).map((g) => {
-      const idx = birebirler.findIndex((b) => b.id === g.id);
-      const ad = idx >= 0 ? uyeler[idx]?.data?.uyeler[0]?.gorunen_ad : null;
-      return {
-        id: g.id,
-        tur: g.tur,
-        uyeSayisi: g.uye_sayisi,
-        etiket:
-          g.tur === 'birebir' ? t('operasyon.takvim.birebirEtiket', { ad: ad ?? g.ad }) : g.ad,
-      };
-    });
+    const liste = (gruplar.data?.gruplar ?? []).map((g) => ({
+      id: g.id,
+      tur: g.tur,
+      uyeSayisi: g.uye_sayisi,
+      etiket:
+        g.tur === 'birebir'
+          ? t('operasyon.takvim.birebirEtiket', { ad: g.ogrenci_ad ?? g.ad })
+          : g.ad,
+    }));
     return trSirala(liste, (g) => g.etiket);
-    // `uyeler` her render yeni dizi; ad listesi degisince yeniden hesaplanir.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gruplar.data, birebirler, birebirAdlari]);
+  }, [gruplar.data]);
   const adlar = useMemo(() => new Map(secenekler.map((g) => [g.id, g])), [secenekler]);
   return { secenekler, adlar, yukleniyor: gruplar.isPending, hata: gruplar.isError };
 }

@@ -928,6 +928,10 @@ erDiagram
 
 Modül bağımlılığı: `finans` modülü kapalıysa (kurum/kademe/grup) kredi ve ücret düşümü yapılmaz; yoklama yine kaydedilir.
 
+**Grup düzeyinde modül kapatma (okuma).** Ders modülünde (`takvim`, `yoklama`, `geri_bildirim`, `kayitlar`) grup düzeyinde kapatma yazmalar gibi okumalarda da geçerlidir: tekil okumalar (ders, yoklama listesi, geri bildirim, kaynak) `403 modul_kapali`; liste okumaları (ders listesi, yoklama bekleyen, geri bildirim profil listesi ve özeti, personel kaynak listesi) kapalı grubun kayıtlarını dışarıda bırakır (boş liste). Testler `services/api/src/ders-modul-okuma.test.ts`. Rapor ve devam/anladım göstergeleri kurum düzeyinde denetlenmeye devam eder.
+
+**Öğrenci adı (N+1 yok).** `GET /v1/hesap/kurumlar/{k}/gruplar` satırlarında `ogrenci_ad` (birebir grupta etkin öğrencinin adı, sayfa başına tek IN sorgusu; diğer türlerde `null`); `GET /v1/finans/.../ogrenciler/{id}/finans` `tam` görünümünde `ogrenci_ad`.
+
 ### `finans.kredi_politikalari`
 
 **Kurum bazlı** kredi düşüm politikası. Hangi yoklama durumlarının ve iptal türlerinin kredi düşeceğini belirler. Paket bazlı geçersiz kılma `paketler.kredi_politikasi` (jsonb) ile yapılır.

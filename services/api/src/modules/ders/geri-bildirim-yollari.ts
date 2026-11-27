@@ -15,7 +15,7 @@ import {
   yoklamaHataKodlari,
   type GeriBildirimDeger,
 } from '@kopru/contracts';
-import { AppError, publishInTx, withTenant, type ServicePlugin, type Tx } from '@kopru/service-kit';
+import { AppError, publishInTx, withTenant, type ServicePlugin } from '@kopru/service-kit';
 import { and, desc, eq, exists, gt, inArray, lte, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -26,11 +26,12 @@ import {
   uyelikler,
   yoklamalar,
 } from '../../db/schema.js';
-import { gorunenAdlar, modulAcikMi, requirePermission, type YetkiBaglami } from '../hesap/index.js';
+import { gorunenAdlar, requirePermission, type YetkiBaglami } from '../hesap/index.js';
 import { OUTBOX_TABLOSU, dersBul, dersKapsami } from './ders-deposu.js';
 import {
   dersParam,
   grupModuluAcikOlmali,
+  kapaliGruplar,
   kiraci,
   kurumParam,
   kurumSaatDilimi,
@@ -80,15 +81,6 @@ function ogrenciOlmali(y: YetkiBaglami): void {
   if (y.rol !== 'ogrenci') {
     throw new AppError(403, errorCodes.izinYok, 'Geri bildirimi yalnızca öğrenci verebilir.');
   }
-}
-
-/** Grubunda `geri_bildirim` modulu kapali olan derslerin kimlikleri disarida birakilir. */
-async function kapaliGruplar(tx: Tx, y: YetkiBaglami, grupIdleri: readonly string[]) {
-  const kapali = new Set<string>();
-  for (const g of new Set(grupIdleri)) {
-    if (!(await modulAcikMi(tx, y.kurumId, 'geri_bildirim', { grupId: g }))) kapali.add(g);
-  }
-  return kapali;
 }
 
 /** Geri bildirim uc noktalari (`/v1/ders/kurumlar/:kurum_id/...`). */
@@ -217,6 +209,7 @@ export const geriBildirimYollari: ServicePlugin = (app) => {
       ogrenciOlmali(y);
       return withTenant(db, kiraci(y), async (tx) => {
         const ders = await dersBul(tx, y, request.params.id);
+        await grupModuluAcikOlmali(tx, y, 'geri_bildirim', ders.grup_id);
         const [g] = await tx
           .select()
           .from(geriBildirimler)
@@ -278,6 +271,7 @@ export const geriBildirimYollari: ServicePlugin = (app) => {
         const kapali = await kapaliGruplar(
           tx,
           y,
+          'geri_bildirim',
           satirlar.map((s) => s.grup_id),
         );
         return {
@@ -407,14 +401,22 @@ export const geriBildirimYollari: ServicePlugin = (app) => {
           .limit(limit + 1);
         const sayfa = satirlar.slice(0, limit);
         const son = sayfa.at(-1);
+        const kapali = await kapaliGruplar(
+          tx,
+          y,
+          'geri_bildirim',
+          sayfa.map((s) => s.grup_id),
+        );
         return {
-          geri_bildirimler: sayfa.map((s) => ({
-            ...yanit(s.g),
-            brans_kodu: s.brans_kodu,
-            ders_baslangic_at: s.baslangic_at.toISOString(),
-            ders_bitis_at: s.bitis_at.toISOString(),
-            ogretmen_id: s.ogretmen_id,
-          })),
+          geri_bildirimler: sayfa
+            .filter((s) => !kapali.has(s.grup_id))
+            .map((s) => ({
+              ...yanit(s.g),
+              brans_kodu: s.brans_kodu,
+              ders_baslangic_at: s.baslangic_at.toISOString(),
+              ders_bitis_at: s.bitis_at.toISOString(),
+              ogretmen_id: s.ogretmen_id,
+            })),
           sonraki_imlec: satirlar.length > limit && son ? imlecYaz(son.imlec_at, son.g.id) : null,
         };
       });
@@ -443,8 +445,9 @@ export const geriBildirimYollari: ServicePlugin = (app) => {
         const dilim = await kurumSaatDilimi(tx, y.kurumId);
         const alt = yerelDenUtc(baslangic, '00:00', dilim);
         const ust = yerelDenUtc(tarihEkle(bitis, 1), '00:00', dilim);
-        const satirlar = await tx
+        const tumSatirlar = await tx
           .select({
+            grup_id: dersler.grup_id,
             ogretmen_id: dersler.ogretmen_id,
             brans_kodu: dersler.brans_kodu,
             deger: geriBildirimler.deger,
@@ -460,7 +463,15 @@ export const geriBildirimYollari: ServicePlugin = (app) => {
               sql`${dersler.bitis_at} < ${ust.toISOString()}::timestamptz`,
             ),
           )
-          .groupBy(dersler.ogretmen_id, dersler.brans_kodu, geriBildirimler.deger);
+          .groupBy(dersler.grup_id, dersler.ogretmen_id, dersler.brans_kodu, geriBildirimler.deger);
+        // Grubunda `geri_bildirim` modulu kapali olan derslerin geri bildirimleri orana katilmaz.
+        const kapali = await kapaliGruplar(
+          tx,
+          y,
+          'geri_bildirim',
+          tumSatirlar.map((s) => s.grup_id),
+        );
+        const satirlar = tumSatirlar.filter((s) => !kapali.has(s.grup_id));
         const grupla = <K extends string>(anahtar: (s: (typeof satirlar)[number]) => K) => {
           const harita = new Map<K, typeof satirlar>();
           for (const s of satirlar) {

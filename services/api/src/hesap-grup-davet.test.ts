@@ -282,6 +282,23 @@ describe.skipIf(dbYok())('hesap: gruplar, atamalar, davetler', () => {
       >`select tur, kapasite from hesap.gruplar where id = ${kabul.grup_id}`;
       expect(g).toEqual({ tur: 'birebir', kapasite: 1 });
     });
+
+    it('liste: birebir grupta ogrenci_ad gelir (tek yanit, ayri uyeler sorgusu yok); diger turlerde null', async () => {
+      const k = await kurumluKullanici(t, 'bireysel');
+      const ogr = await ekle(k, 'ogrenci');
+      await sistem`update hesap.uyelikler set gorunen_ad = 'Elif Kaya' where id = ${ogr.uyelikId}`;
+      const normal = await grupAc(k, {});
+      const res = await app.inject({
+        method: 'GET',
+        url: api(k, '/gruplar'),
+        headers: bearer(k.token),
+      });
+      expect(res.statusCode).toBe(200);
+      const liste = res.json<{ gruplar: (Grup & { tur: string; ogrenci_ad: string | null })[] }>();
+      const birebir = liste.gruplar.find((g) => g.tur === 'birebir');
+      expect(birebir?.ogrenci_ad).toBe('Elif Kaya');
+      expect(liste.gruplar.find((g) => g.id === normal.id)?.ogrenci_ad).toBeNull();
+    });
   });
 
   describe('davetler', () => {

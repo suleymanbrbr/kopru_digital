@@ -215,8 +215,10 @@ function TamKart({ k, ad }: { k: OgrenciKartiTam; ad: string }) {
 }
 
 /** Ogrenci karti (ogretmen/sahip/yonetici): kalan ders, bakiye, paketler, hareketler, odeyen. */
-export function OgrenciKartiEkrani({ ogrenciId, ad }: { ogrenciId: string; ad: string }) {
+export function OgrenciKartiEkrani({ ogrenciId, ad: adParam }: { ogrenciId: string; ad: string }) {
   const sorgu = useOgrenciKarti(ogrenciId);
+  // Ad gezinme parametresiyle gelmezse (derin baglanti) kart yanitindaki ad kullanilir.
+  const ad = adParam || (sorgu.data?.gorunum === 'tam' ? (sorgu.data.ogrenciAd ?? '') : '');
   const finans = useModulAcik('finans');
   const plan = useModulAcik('haftalik_plan');
   const deneme = useModulAcik('deneme');

@@ -91,8 +91,15 @@ export const KademeSema = z.object({
 });
 export const KademeListeYanitSema = z.object({ kademeler: z.array(KademeSema) });
 
+/** Liste satiri: birebir grupta etkin ogrencinin gorunen adi (tek sorguyla cozulur); diger turlerde `null`. */
+export const GrupListeSatiriSema = GrupSema.extend({
+  ogrenci_ad: z
+    .string()
+    .nullable()
+    .describe('Yalniz birebir grupta etkin ogrencinin gorunen adi; baska turlerde `null`.'),
+});
 export const GrupListeYanitSema = z.object({
-  gruplar: z.array(GrupSema),
+  gruplar: z.array(GrupListeSatiriSema),
   kapsam: KapsamSema,
   sonraki_imlec: z.uuid().nullable(),
 });

@@ -38,6 +38,7 @@ import {
 import {
   atamaYaniti,
   benzersizlikIhlaliMi,
+  birebirOgrenciAdlari,
   gorunenAdlar,
   grubaOgrenciEkle,
   grupOlayVerisi,
@@ -219,9 +220,15 @@ export const grupYollari: ServicePlugin = (app) => {
           .orderBy(asc(gruplar.id))
           .limit(limit + 1);
         const sayfa = satirlar.slice(0, limit);
+        // Birebir grubun etkin ogrencisinin adi: sayfa basina tek IN sorgusu (istemcide N+1 yok).
+        const birebirIdleri = sayfa.filter((s) => s.g.tur === 'birebir').map((s) => s.g.id);
+        const ogrenciAdlari = await birebirOgrenciAdlari(tx, birebirIdleri);
         return {
           kapsam: y.kapsam,
-          gruplar: sayfa.map((s) => grupYaniti(s.g, s.uye_sayisi)),
+          gruplar: sayfa.map((s) => ({
+            ...grupYaniti(s.g, s.uye_sayisi),
+            ogrenci_ad: ogrenciAdlari.get(s.g.id) ?? null,
+          })),
           sonraki_imlec: satirlar.length > limit ? (sayfa.at(-1)?.g.id ?? null) : null,
         };
       });
