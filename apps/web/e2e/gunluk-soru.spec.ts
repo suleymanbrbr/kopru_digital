@@ -3,7 +3,7 @@ import { deflateSync } from 'node:zlib';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-import { girisYap, test } from './yardimcilar';
+import { durumluTest as test, girisYap } from './yardimcilar';
 
 /**
  * Mock modda gunluk soru takibi ve konu analizi. Roller kurumdan gelir: `Atlas` ogrenci, `Ege` ogretmen,

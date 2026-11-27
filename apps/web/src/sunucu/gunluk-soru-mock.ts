@@ -1,5 +1,6 @@
 import { MOCK_KURUM_ROLLERI } from './hesap-mock';
 import { medyaMockAdres, medyaMockHazirMi } from './medya-mock';
+import { mockDurumDepoAnahtari } from './mock-durum';
 import { mockSimdi } from './mock-zaman';
 import { gunlukSoruKoprusu } from './ogrenme-mock';
 import type { MockIstek, MockYanit } from './vekil';
@@ -212,9 +213,8 @@ function kur(kurumId: string): Depo {
 }
 
 function depo(kurumId: string): Depo {
-  kutu.__kopruGunlukSoruMock ??= {};
-  kutu.__kopruGunlukSoruMock[kurumId] ??= kur(kurumId);
-  return kutu.__kopruGunlukSoruMock[kurumId];
+  const depolar = (kutu.__kopruGunlukSoruMock ??= {});
+  return (depolar[mockDurumDepoAnahtari(kurumId)] ??= kur(kurumId));
 }
 
 // --- Bant tespiti ve oneriler (api ile ayni esikler) -----------------------------------------------

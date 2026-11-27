@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Locator, type Page } from '@playwright/test';
 
-import { girisYap, test } from './yardimcilar';
+import { durumluTest as test, girisYap } from './yardimcilar';
 
 /**
  * Mock modda ogretmen degerlendirmeleri, onerilen kaynaklar ve ogrenci koçluk gorunumu. Roller kurumdan gelir:

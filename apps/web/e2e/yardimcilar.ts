@@ -67,18 +67,27 @@ export async function platformMesaji(
 }
 
 /**
- * Motivasyon mock durumu (`mock_motivasyon` cerezi): durumlu motivasyon testleri kendi ogrenci/ogretmen
- * durumunu kullanir; baska spec'lerin XP, odak, plan, odev vb. eylemleri onu etkilemez (ve tersi).
- * Anahtar iscinin omru boyunca sabittir (seri `describe` icindeki testler durumu paylasir); test
- * basarisiz olup tekrar denenince yeni isci yeni anahtar alir, yani tekrar temiz durumla baslar.
+ * Durumlu mock yalitimi (`mock_durum` cerezi; motivasyon, gunluk soru, degerlendirme/koçluk mock'lari):
+ * durumlu spec'ler kendi durumunu kullanir; baska spec'lerin eylemleri (XP, odak, soru kaydi, degerlendirme
+ * vb.) onu etkilemez (ve tersi). Anahtar `describe` basina (dosya + ust basliklar), `--repeat-each` tekrari
+ * basina ve isci basina turetilir: seri `describe` icindeki testler durumu paylasir, ayni testin tekrari ve
+ * basarisiz olup yeniden denenen grup (yeni isci) temiz durumla baslar. Cerez yalniz mock modunda okunur.
  */
-const motivasyonAnahtari = `m${Math.random().toString(36).slice(2, 10)}`;
-export const motivasyonTest = test.extend({
-  context: async ({ context }, kullan) => {
+const iscininTuzu = Math.random().toString(36).slice(2, 8);
+
+function karma(metin: string): string {
+  let h = 5381;
+  for (const c of metin) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0;
+  return h.toString(36);
+}
+
+export const durumluTest = test.extend({
+  context: async ({ context }, kullan, testInfo) => {
+    const grup = [testInfo.file, ...testInfo.titlePath.slice(1, -1)].join('|');
     await context.addCookies([
       {
-        name: 'mock_motivasyon',
-        value: motivasyonAnahtari,
+        name: 'mock_durum',
+        value: `d${iscininTuzu}${String(testInfo.repeatEachIndex)}${karma(grup)}`.slice(0, 32),
         url: process.env.E2E_BASE_URL ?? `http://localhost:${process.env.E2E_MOCK_PORT ?? '3000'}`,
       },
     ]);
