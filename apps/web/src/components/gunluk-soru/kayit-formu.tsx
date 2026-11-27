@@ -45,6 +45,10 @@ export interface KayitBaslangici {
   konuId?: string;
   gorevId?: string;
   gorevMiktar?: number;
+  /** Ogretmen onerisinden: kaynak kitap (ve test) ya da serbest kaynak metni on secilir. */
+  kitapId?: string;
+  testId?: string;
+  kaynakMetin?: string;
 }
 
 interface Kaydedilen {
@@ -155,6 +159,15 @@ export function KayitFormu({
     const b = baslangic.brans ?? tercihleriOku(kurumId).brans ?? dersler[0]?.brans_kodu ?? '';
     setBrans(b);
     if (b !== '') dersVarsayilanlari(b, true);
+    // Oneriden gelen kaynak, hatirlanan kaynaktan once gelir.
+    if (baslangic.kitapId) {
+      setKaynakTuru('test');
+      setKitapId(baslangic.kitapId);
+      setTestId(baslangic.testId ?? '');
+    } else if (baslangic.kaynakMetin) {
+      setKaynakTuru('serbest');
+      setSerbest(baslangic.kaynakMetin);
+    }
   }
   // Odak "Doğru" alanina: konu ve zorluk hazirsa tek yazimla kayit girilir.
   useEffect(() => {

@@ -1,5 +1,6 @@
 import type { NextRequest, NextResponse } from 'next/server';
 
+import { degerlendirmeMock } from './degerlendirme-mock';
 import { gunlukSoruMock } from './gunluk-soru-mock';
 import { ogrenmeMock } from './ogrenme-mock';
 import { raporMock } from './rapor-mock';
@@ -51,6 +52,11 @@ export const OGRENME_IZINLI_YOLLAR: readonly RegExp[] = [
   ),
   // Kaynak kitaplar (kitap + testler)
   new RegExp(`^${K}\\/kaynak-kitaplar(\\/[^/]+(\\/testler(\\/[^/]+)?)?)?$`),
+  // Ogretmen degerlendirmeleri, onerilen kaynaklar ve kocluk gorunumu (personel ogrenci uclari, ogrenci kendi)
+  new RegExp(`^${K}\\/ogrenciler\\/[^/]+\\/(degerlendirmeler|kaynak-onerileri|kocluk)$`),
+  new RegExp(`^${K}\\/degerlendirmeler\\/[^/]+(\\/geri-cek)?$`),
+  new RegExp(`^${K}\\/kaynak-onerileri\\/[^/]+\\/geri-cek$`),
+  new RegExp(`^${K}\\/(degerlendirmelerim|kaynak-onerilerim|degerlendirme-hatirlatma)$`),
   // Yonetici paneli (Excel dahil)
   new RegExp(`^${K}\\/rapor\\/(ozet|odev|plan|soru|disa-aktar)$`),
 ];
@@ -61,7 +67,11 @@ export function ogrenmeYoluIzinliMi(parcalar: readonly string[], yontem = 'GET')
 
 /** Once "soru sor" mock'u, ilgilenmezse mufredat/odev/plan/deneme mock'u. */
 const mock = (istek: MockIstek) =>
-  raporMock('ogrenme', istek) ?? soruMock(istek) ?? gunlukSoruMock(istek) ?? ogrenmeMock(istek);
+  raporMock('ogrenme', istek) ??
+  soruMock(istek) ??
+  degerlendirmeMock(istek) ??
+  gunlukSoruMock(istek) ??
+  ogrenmeMock(istek);
 
 const tanim: VekilTanimi = { servis: 'ogrenme', izinli: OGRENME_IZINLI_YOLLAR, mock };
 

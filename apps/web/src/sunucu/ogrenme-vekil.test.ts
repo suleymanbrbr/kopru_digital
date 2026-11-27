@@ -57,6 +57,16 @@ describe('ogrenme izinli yollar', () => {
       ['kaynak-kitaplar', 'b'],
       ['kaynak-kitaplar', 'b', 'testler'],
       ['kaynak-kitaplar', 'b', 'testler', 't'],
+      // Ogretmen degerlendirmeleri, onerilen kaynaklar, kocluk
+      ['ogrenciler', 'o', 'degerlendirmeler'],
+      ['ogrenciler', 'o', 'kaynak-onerileri'],
+      ['ogrenciler', 'o', 'kocluk'],
+      ['degerlendirmeler', 'd'],
+      ['degerlendirmeler', 'd', 'geri-cek'],
+      ['kaynak-onerileri', 'k', 'geri-cek'],
+      ['degerlendirmelerim'],
+      ['kaynak-onerilerim'],
+      ['degerlendirme-hatirlatma'],
     ];
     for (const son of uclar) {
       expect(ogrenmeYoluIzinliMi(['kurumlar', K, ...son]), son.join('/')).toBe(true);
@@ -79,6 +89,13 @@ describe('ogrenme izinli yollar', () => {
       ['kurumlar', K, 'ogrenciler', 'o', 'gunluk-soru', 'kayitlar'],
       ['kurumlar', K, 'kaynak-kitaplar', 'b', 'testler', 't', 'x'],
       ['kurumlar', K, 'kaynak-kitaplar', 'b', 'baska'],
+      ['kurumlar', K, 'degerlendirmeler'],
+      ['kurumlar', K, 'degerlendirmeler', 'd', 'baska'],
+      ['kurumlar', K, 'degerlendirmeler', '..', 'geri-cek'],
+      ['kurumlar', K, 'kaynak-onerileri', 'k'],
+      ['kurumlar', K, 'kaynak-onerileri'],
+      ['kurumlar', K, 'ogrenciler', 'o', 'kocluk', 'x'],
+      ['kurumlar', K, 'ogrenciler', 'o', 'degerlendirmeler', 'd'],
       ['admin'],
     ]) {
       expect(ogrenmeYoluIzinliMi(parcalar), parcalar.join('/')).toBe(false);

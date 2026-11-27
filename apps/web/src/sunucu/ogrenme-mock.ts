@@ -1953,6 +1953,54 @@ export function gunlukSoruKoprusu(kurumId: string) {
       s.ogrOdevleri.push(ogrOdevAcilmis(o.id, a.ogrenciId));
       return o;
     },
+    /** Koçluk gorunumu: bu haftanin plani ve odev durumu (ozet sayilar). */
+    planOdevOzeti(ogrenciId: string) {
+      const hafta = pazartesi(bugun());
+      const plan = s.planlar.find(
+        (x) => x.ogrenci_id === ogrenciId && x.hafta_baslangic === hafta && x.durum === 'yayinda',
+      );
+      const gorevler = plan ? s.gorevler.filter((g) => g.plan_id === plan.id) : [];
+      const hedef = (tur: string, alan: 'hedef_miktar' | 'gerceklesen_miktar') =>
+        gorevler
+          .filter((g) => g.hedef_turu === tur)
+          .reduce((n, g) => n + (typeof g[alan] === 'number' ? g[alan] : 0), 0);
+      const benimOdevler = s.ogrOdevleri.filter((r) => r.ogrenci_id === ogrenciId);
+      const son = (r: OgrOdev) =>
+        s.odevler.find((o) => o.id === r.odev_id)?.son_teslim_at as string | null;
+      const acik = benimOdevler.filter((r) => r.durum === 'atandi' || r.durum === 'tekrar_istendi');
+      const yediGun = mockSimdi() - 7 * 86_400_000;
+      return {
+        plan: plan
+          ? {
+              plan_id: plan.id,
+              hafta_baslangic: plan.hafta_baslangic,
+              durum: plan.durum,
+              gorev_sayisi: gorevler.length,
+              tamam_sayisi: gorevler.filter((g) => g.durum === 'tamam').length,
+              soru: {
+                planlanan: hedef('soru', 'hedef_miktar'),
+                gerceklesen: hedef('soru', 'gerceklesen_miktar'),
+              },
+              dakika: {
+                planlanan: hedef('dakika', 'hedef_miktar'),
+                gerceklesen: hedef('dakika', 'gerceklesen_miktar'),
+              },
+            }
+          : null,
+        odev: {
+          acik: acik.length,
+          geciken: acik.filter((r) => {
+            const t = son(r);
+            return t !== null && Date.parse(t) < mockSimdi();
+          }).length,
+          teslim_edildi: benimOdevler.filter(
+            (r) => r.teslim_edildi === true && Date.parse(String(r.teslim_at)) >= yediGun,
+          ).length,
+          inceleme_bekleyen: benimOdevler.filter((r) => r.teslim_edildi === true && !r.incelendi_at)
+            .length,
+        },
+      };
+    },
     /** Teslim edilmis, konulu odevler (analizde zorluk `belirtilmemis`). */
     teslimler(ogrenciId: string) {
       return s.ogrOdevleri

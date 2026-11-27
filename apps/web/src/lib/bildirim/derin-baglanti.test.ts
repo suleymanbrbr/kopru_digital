@@ -68,6 +68,22 @@ describe('derinBaglantiyiCoz', () => {
     expect(coz('kopru://oturumlar', 'ogretmen')).toBe(`/${K}/oturumlar`);
   });
 
+  it('degerlendirme ve kaynak onerisi: ogrenci "Ogretmenim" sekmesi, personel bildirimler', () => {
+    const SEKME = `/${K}/gunluk-soru?sekme=ogretmenim`;
+    for (const b of [
+      'kopru://degerlendirmelerim',
+      'kopru://kaynak-onerilerim',
+      'kopru://degerlendirme/d1',
+      'kopru://kaynak-onerisi/k1',
+    ]) {
+      expect(coz(b, 'ogrenci'), b).toBe(SEKME);
+      expect(coz(b, 'ogretmen'), b).toBe(BILDIRIMLER);
+    }
+    expect(coz('kopru://kocluk/o1', 'ogretmen')).toBe(`/${K}/ogrenciler/o1?sekme=kocluk`);
+    expect(coz('kopru://kocluk/o1', 'ogrenci')).toBe(BILDIRIMLER);
+    expect(coz('kopru://kocluk', 'ogretmen')).toBe(BILDIRIMLER);
+  });
+
   it('duyuru: tum roller duyurular sayfasina (kimlikliyse ayrintiya) gider', () => {
     expect(coz('kopru://duyuru/x', 'ogrenci')).toBe(`/${K}/duyurular/x`);
     expect(coz('kopru://duyuru/x', 'ogretmen')).toBe(`/${K}/duyurular/x`);

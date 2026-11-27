@@ -12,7 +12,7 @@ export interface OgrenmeOrtami {
 }
 
 /** Telefonla (OTP) giris yapip KVKK'yi API'den kabul eder; kurum kimligi verilirse o kurumun belirtecini dondurur. */
-async function telefonlaGir(telefon: string, kurumId?: string) {
+export async function telefonlaGir(telefon: string, kurumId?: string) {
   await api('/auth/otp/gonder', { govde: { telefon } });
   const kod = await sonOtpKodu(telefon);
   const { oturum_belirteci: oturum } = await api<{ oturum_belirteci: string }>(
@@ -70,4 +70,37 @@ export async function ogrenmeOrtaminiKur(
     grupId: grup.id,
     sahipBelirteci: sahip,
   };
+}
+
+export interface Ogretmen {
+  telefon: string;
+  ad: string;
+  uyelikId: string;
+  brans: string;
+}
+
+/**
+ * Kuruma telefonla bir ogretmen davet eder (KVKK kabul edilmis), gruba o bransta atar. Ogretmen yalniz
+ * atandigi gruptaki ogrencileri gorur.
+ */
+export async function ogretmenEkle(
+  o: OgrenmeOrtami,
+  telefon: string,
+  ad: string,
+  brans: string,
+): Promise<Ogretmen> {
+  const davet = await api<{ belirtec: string }>(`/v1/hesap/kurumlar/${o.kurumId}/davetler`, {
+    belirtec: o.sahipBelirteci,
+    govde: { kanal: 'baglanti', rol: 'ogretmen', hedef_ad: ad },
+  });
+  const hoca = await telefonlaGir(telefon);
+  const { uyelik_id: uyelikId } = await api<{ uyelik_id: string }>('/v1/hesap/davetler/kabul', {
+    belirtec: hoca.erisim,
+    govde: { belirtec: davet.belirtec },
+  });
+  await api(`/v1/hesap/kurumlar/${o.kurumId}/gruplar/${o.grupId}/atamalar`, {
+    belirtec: o.sahipBelirteci,
+    govde: { ogretmen_id: uyelikId, brans_kodu: brans },
+  });
+  return { telefon, ad, uyelikId, brans };
 }
