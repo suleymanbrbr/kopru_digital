@@ -91,6 +91,7 @@ describe.skipIf(dbYok())('kimlik: OTP, e-posta, JWT/JWKS', () => {
   it('OTP hiz siniri: ayni telefona saatte 5 istek, 6. istek 429', async () => {
     const telefon = rastgeleTelefon();
     const kodlar: number[] = [];
+    let sonYanit: { headers: Record<string, unknown>; json: () => unknown } | null = null;
     for (let i = 0; i < 6; i++) {
       const res = await app.inject({
         method: 'POST',
@@ -99,8 +100,17 @@ describe.skipIf(dbYok())('kimlik: OTP, e-posta, JWT/JWKS', () => {
         payload: { telefon },
       });
       kodlar.push(res.statusCode);
+      sonYanit = res;
     }
     expect(kodlar).toEqual([200, 200, 200, 200, 200, 429]);
+    // Kalan bekleme suresi hem `Retry-After` basliginda hem `details.retry_after_sn`de doner.
+    const bekle = Number(sonYanit?.headers['retry-after']);
+    expect(bekle).toBeGreaterThan(3500);
+    expect(bekle).toBeLessThanOrEqual(3600);
+    expect(
+      (sonYanit?.json() as { error: { details: { retry_after_sn: number } } }).error.details
+        .retry_after_sn,
+    ).toBe(bekle);
   });
 
   it('OTP hiz siniri: ayni IP den saatte 20 istek, 21. istek 429', async () => {

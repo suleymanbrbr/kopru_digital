@@ -203,6 +203,15 @@ describe('katilim hata mesajlari', () => {
     expect(hataMesaji(new ApiHata('cok_istek'))).not.toMatch(/15 dakika/);
     expect(hataMesaji(new ApiHata('otp_cok_deneme'))).toMatch(/yanlış deneme/);
   });
+  it('OTP gonderim siniri: kalan sureyle ayri mesaj, yanlis deneme mesajina dusmez', () => {
+    const m = (beklemeSn: number | null) =>
+      hataMesaji(new ApiHata('otp_gonderim_siniri', undefined, { detay: { beklemeSn } }));
+    expect(m(725)).toBe('Çok fazla kod istedin. 13 dakika sonra yeniden dene.');
+    expect(m(20)).toBe('Çok fazla kod istedin. 1 dakika sonra yeniden dene.');
+    expect(m(3600)).toBe('Çok fazla kod istedin. 1 saat sonra yeniden dene.');
+    expect(m(null)).toBe('Çok fazla kod istedin. Biraz bekleyip yeniden dene.');
+    expect(m(null)).not.toMatch(/yanlış/);
+  });
   it('409 cakisma ayrintiya gore ozel mesaj verir', () => {
     expect(mesaj('cakisma', 'kapasite_dolu')).toMatch(/kapasitesi dolu/);
     expect(mesaj('cakisma', 'kod_kullanim_doldu')).toMatch(/kullanım sınırı/);
