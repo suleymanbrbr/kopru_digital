@@ -4,7 +4,7 @@ import { ayniKaynakMi, hataYaniti } from './bff';
 import { istemciIpBasliklari } from './istemci-ip';
 import { mockModu } from './kimlik';
 import { apiAdresi } from './kimlik/api';
-import { motivasyonMockXpYaz } from './motivasyon-mock';
+import { motivasyonAnahtariOku, motivasyonMockXpYaz } from './motivasyon-mock';
 
 /**
  * `/api/<servis>/<yol>` -> `api` servisinin `/v1/<servis>/<yol>` ucu icin ortak gecit. Tarayici bellekteki
@@ -26,6 +26,8 @@ export interface MockIstek {
   kaynak?: string;
   /** Mock senaryo anahtari (`mock_senaryo` cerezi): e2e testleri birbirinin durumunu bozmasin diye. */
   senaryo?: string;
+  /** Motivasyon mock durum anahtari (`mock_motivasyon` cerezi): e2e testi kendi ogrenci durumunu kullanir. */
+  motivasyonAnahtari?: string;
 }
 
 export interface MockYanit {
@@ -143,6 +145,7 @@ export async function servisVekili(
   const idempotency = anahtar && UUID.test(anahtar) ? anahtar : undefined;
 
   if (mockModu()) {
+    const motivasyonAnahtari = motivasyonAnahtariOku(request.cookies.get('mock_motivasyon')?.value);
     const sonuc = tanim.mock({
       yontem: request.method,
       yol,
@@ -153,10 +156,12 @@ export async function servisVekili(
       ...(request.cookies.get('mock_senaryo')?.value
         ? { senaryo: request.cookies.get('mock_senaryo')?.value ?? '' }
         : {}),
+      ...(motivasyonAnahtari ? { motivasyonAnahtari } : {}),
       ...(ikiliBayt ? { ikili: ikiliBayt } : {}),
     });
     // Mock'ta olay tuketicisi yok: basarili ogrenci eylemi motivasyon mock'unda XP yazar.
-    if (sonuc.durum < 300) motivasyonMockXpYaz(tanim.servis, request.method, yol);
+    if (sonuc.durum < 300)
+      motivasyonMockXpYaz(tanim.servis, request.method, yol, motivasyonAnahtari);
     return mockYaniti(sonuc);
   }
 

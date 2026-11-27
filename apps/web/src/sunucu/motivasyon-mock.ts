@@ -379,8 +379,18 @@ function gunuYuvarla(d: KurumDurumu): void {
   d.hedefler = { plan_gorevi: 0, odak_dk: 0, odev: 0, soru: 0 };
 }
 
+/**
+ * E2E yalitimi: `mock_motivasyon` cerezi (yalniz mock modunda okunur) bir durum anahtari tasir; bu
+ * anahtarli istekler kendi kurum durumlarini gorur, diger spec'lerin XP/karakter eylemleri onlari
+ * etkilemez. Cerez yoksa varsayilan (ortak) durum. Giris noktalari anahtari senkron ayarlar.
+ */
+const ANAHTAR = /^[a-z0-9]{1,32}$/;
+export const motivasyonAnahtariOku = (cerez: string | undefined): string | undefined =>
+  cerez !== undefined && ANAHTAR.test(cerez) ? cerez : undefined;
+let gecerliAnahtar = '';
+
 const kurum = (kurumId: string): KurumDurumu => {
-  const d = (depo()[kurumId] ??= kurumKur());
+  const d = (depo()[`${gecerliAnahtar}|${kurumId}`] ??= kurumKur());
   gunuYuvarla(d);
   return d;
 };
@@ -596,7 +606,13 @@ const XP_KURALLARI = [
  * Baska bir mock'un basarili ogrenci eylemi: ilgili XP kuralini isletir. Yalniz ogrenci kurumunda ve
  * modul aciksa; eslesmeyen istekte bir sey yapmaz.
  */
-export function motivasyonMockXpYaz(servis: string, yontem: string, yol: string): void {
+export function motivasyonMockXpYaz(
+  servis: string,
+  yontem: string,
+  yol: string,
+  anahtar?: string,
+): void {
+  gecerliAnahtar = anahtar ?? '';
   const m = /^kurumlar\/([^/]+)\//.exec(yol);
   const kurumId = m?.[1];
   if (!kurumId || MOCK_KURUM_ROLLERI[kurumId] !== 'ogrenci' || kapaliMi(kurumId)) return;
@@ -1024,6 +1040,7 @@ function duraklatmaIstegi(
 // --- Ana yonlendirici -------------------------------------------------------------------------
 
 export function motivasyonMock(istek: MockIstek): MockYanit {
+  gecerliAnahtar = istek.motivasyonAnahtari ?? '';
   const m = /^kurumlar\/([^/]+)\/(.*)$/.exec(istek.yol);
   const kurumId = m?.[1];
   const alt = m?.[2];
