@@ -178,6 +178,8 @@ export interface FinansHareketi {
 export interface OgrenciKartiTam {
   gorunum: 'tam';
   ogrenciId: string;
+  /** Ogrencinin gorunen adi (api karti ile birlikte verir). */
+  ogrenciAd: string | null;
   model: FinansModeli;
   kalanKredi: number;
   dusukKrediEsigi: number;

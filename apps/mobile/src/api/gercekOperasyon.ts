@@ -111,7 +111,7 @@ export function operasyonAdaptorleri(b: OperasyonBagimliligi): {
 
     async gruplar() {
       const kurum_id = b.etkinKurum();
-      const liste: { id: string; ad: string; tur: GrupTuru; uye_sayisi: number }[] = [];
+      const liste: DersGrubu[] = [];
       let imlec: string | undefined;
       for (let s = 0; s < SAYFA_UST; s++) {
         const d = veriAl(
@@ -122,29 +122,19 @@ export function operasyonAdaptorleri(b: OperasyonBagimliligi): {
             },
           }),
         );
-        liste.push(...d.gruplar);
+        liste.push(
+          ...d.gruplar.map((g) => ({
+            id: g.id,
+            ad: g.ad,
+            tur: g.tur,
+            uyeSayisi: g.uye_sayisi,
+            ogrenciAd: g.ogrenci_ad,
+          })),
+        );
         if (!d.sonraki_imlec) break;
         imlec = d.sonraki_imlec;
       }
-      // Birebir grubun adi ogrencinin adidir: tek uyeyi okuyup etiketlenir.
-      return Promise.all(
-        liste.map(async (g): Promise<DersGrubu> => {
-          let ogrenciAd: string | null = null;
-          if (g.tur === 'birebir') {
-            try {
-              const u = veriAl(
-                await yetkili.GET('/v1/hesap/kurumlar/{kurum_id}/gruplar/{grup_id}/uyeler', {
-                  params: { path: { kurum_id, grup_id: g.id } },
-                }),
-              );
-              ogrenciAd = u.uyeler[0]?.gorunen_ad ?? null;
-            } catch {
-              ogrenciAd = null;
-            }
-          }
-          return { id: g.id, ad: g.ad, tur: g.tur, uyeSayisi: g.uye_sayisi, ogrenciAd };
-        }),
-      );
+      return liste;
     },
 
     async dersOlustur(g) {
@@ -383,6 +373,7 @@ export function operasyonAdaptorleri(b: OperasyonBagimliligi): {
       return {
         gorunum: 'tam',
         ogrenciId: d.ogrenci_id,
+        ogrenciAd: d.ogrenci_ad,
         model: d.model,
         kalanKredi: d.kalan_kredi,
         dusukKrediEsigi: d.dusuk_kredi_esigi,

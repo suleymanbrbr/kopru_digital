@@ -17768,6 +17768,10 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "ogrenci_ad": {
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "ogrenci_id": {
                           "format": "uuid",
                           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
@@ -17943,6 +17947,7 @@
                       "required": [
                         "gorunum",
                         "ogrenci_id",
+                        "ogrenci_ad",
                         "model",
                         "kalan_kredi",
                         "dusuk_kredi_esigi",
@@ -23530,6 +23535,11 @@
                             "nullable": true,
                             "type": "integer"
                           },
+                          "ogrenci_ad": {
+                            "description": "Yalniz birebir grupta etkin ogrencinin gorunen adi; baska turlerde `null`.",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "renk": {
                             "nullable": true,
                             "type": "string"
@@ -23573,7 +23583,8 @@
                           "arsivlendi_at",
                           "uye_sayisi",
                           "surum",
-                          "created_at"
+                          "created_at",
+                          "ogrenci_ad"
                         ],
                         "type": "object"
                       },

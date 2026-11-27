@@ -262,6 +262,8 @@ export const BakiyeHareketiSema = z.object({
 export const OgrenciFinansTamSema = z.object({
   gorunum: z.literal('tam'),
   ogrenci_id: z.uuid(),
+  /** Ogrencinin gorunen adi (istemci ayri ad sorgusu yapmaz); ad yoksa `null`. */
+  ogrenci_ad: z.string().nullable(),
   model: FinansModeliSema,
   kalan_kredi: z.number().int(),
   dusuk_kredi_esigi: z.number().int(),

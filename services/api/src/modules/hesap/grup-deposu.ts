@@ -253,6 +253,23 @@ export async function gorunenAdlar(tx: Tx, uyelikIdleri: readonly string[]) {
   return new Map(satirlar.map((s) => [s.id, s.ad]));
 }
 
+/** Birebir gruplarin etkin ogrencisinin gorunen adi (grup kimligi -> ad); tek sorgu, N+1 yok. */
+export async function birebirOgrenciAdlari(tx: Tx, grupIdleri: readonly string[]) {
+  const sonuc = new Map<string, string | null>();
+  if (grupIdleri.length === 0) return sonuc;
+  const satirlar = await tx
+    .select({
+      grup_id: grupUyeleri.grup_id,
+      ad: sql<string | null>`coalesce(${uyelikler.gorunen_ad}, ${kullanicilar.gorunen_ad})`,
+    })
+    .from(grupUyeleri)
+    .innerJoin(uyelikler, eq(uyelikler.id, grupUyeleri.ogrenci_id))
+    .innerJoin(kullanicilar, eq(kullanicilar.id, uyelikler.kullanici_id))
+    .where(and(inArray(grupUyeleri.grup_id, [...grupIdleri]), isNull(grupUyeleri.bitis_tarihi)));
+  for (const s of satirlar) sonuc.set(s.grup_id, s.ad);
+  return sonuc;
+}
+
 /** Postgres benzersizlik ihlali (Drizzle sarmalayicisi dahil). */
 export function benzersizlikIhlaliMi(err: unknown): boolean {
   for (let e: unknown = err; e instanceof Error; e = e.cause) {

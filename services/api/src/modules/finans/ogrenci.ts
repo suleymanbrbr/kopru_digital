@@ -25,7 +25,7 @@ import {
   paketSatislari,
   uyelikler,
 } from '../../db/schema.js';
-import { requirePermission, type YetkiBaglami } from '../hesap/index.js';
+import { gorunenAdlar, requirePermission, type YetkiBaglami } from '../hesap/index.js';
 import { bakiyeOzeti, havuzKalan } from './defter.js';
 import { kurumPolitikasiGetir } from './kredi-uygula.js';
 import {
@@ -111,7 +111,7 @@ export const ogrenciYollari: ServicePlugin = (app) => {
       const y = yetkiAl(request);
       const { ogrenci_id } = request.params;
       return withTenant(db(), kiraci(y), async (tx) => {
-        await ogrenciBul(tx, y, ogrenci_id);
+        const ogr = await ogrenciBul(tx, y, ogrenci_id);
         const b = await bakiyeOzeti(tx, y.kurumId, ogrenci_id);
         if (y.rol === 'ogrenci') {
           const [kurum] = await tx
@@ -164,6 +164,7 @@ export const ogrenciYollari: ServicePlugin = (app) => {
         return {
           gorunum: 'tam',
           ogrenci_id,
+          ogrenci_ad: (await gorunenAdlar(tx, [ogr.id])).get(ogr.id) ?? ogr.gorunen_ad ?? null,
           model: modelOlarak(profil?.model),
           kalan_kredi: b.kredi,
           dusuk_kredi_esigi: politika.dusuk_kredi_esigi,
